@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>外部知识库API测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            color: #1890ff;
+            margin-top: 0;
+        }
+        button {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background: #40a9ff;
+        }
+        button:disabled {
+            background: #d9d9d9;
+            cursor: not-allowed;
+        }
+        .result {
+            background: #f6f8fa;
+            border: 1px solid #e1e4e8;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success {
+            border-color: #52c41a;
+            background: #f6ffed;
+        }
+        .error {
+            border-color: #ff4d4f;
+            background: #fff2f0;
+        }
+        .loading {
+            color: #1890ff;
+        }
+        input, select {
+            padding: 8px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>外部知识库API测试页面</h1>
+        <p>这个页面用于测试外部知识库的前端API接口是否正常工作。</p>
+    </div>
+
+    <div class="container">
+        <div class="test-section">
+            <h3>1. 获取提供商列表</h3>
+            <button onclick="testGetProviders()">获取提供商列表</button>
+            <div id="providers-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. 获取支持的提供商类型</h3>
+            <button onclick="testGetProviderTypes()">获取提供商类型</button>
+            <div id="provider-types-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. 获取外部知识库列表</h3>
+            <button onclick="testGetExternalKnowledges()">获取知识库列表</button>
+            <div id="knowledges-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. 测试提供商连接</h3>
+            <input type="number" id="provider-id" placeholder="提供商ID" value="1">
+            <button onclick="testProviderConnection()">测试连接</button>
+            <div id="provider-test-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>5. 测试知识库连接</h3>
+            <input type="number" id="knowledge-id" placeholder="知识库ID" value="1">
+            <button onclick="testKnowledgeConnection()">测试连接</button>
+            <div id="knowledge-test-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>6. 查询外部知识库</h3>
+            <input type="number" id="query-knowledge-id" placeholder="知识库ID" value="1">
+            <input type="text" id="query-text" placeholder="查询文本" value="测试查询">
+            <button onclick="testQueryKnowledge()">查询知识库</button>
+            <div id="query-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>7. 获取角色列表</h3>
+            <button onclick="testGetRoles()">获取角色列表</button>
+            <div id="roles-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟API基础URL
+        const API_BASE_URL = 'http://localhost:8080/api';
+
+        // 通用请求函数
+        async function makeRequest(url, options = {}) {
+            try {
+                const response = await fetch(`${API_BASE_URL}${url}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                return { success: response.ok, data, status: response.status };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        // 显示结果
+        function showResult(elementId, result, loading = false) {
+            const element = document.getElementById(elementId);
+            
+            if (loading) {
+                element.className = 'result loading';
+                element.textContent = '请求中...';
+                return;
+            }
+            
+            element.className = result.success ? 'result success' : 'result error';
+            element.textContent = JSON.stringify(result, null, 2);
+        }
+
+        // 测试函数
+        async function testGetProviders() {
+            showResult('providers-result', null, true);
+            const result = await makeRequest('/external-kb/providers');
+            showResult('providers-result', result);
+        }
+
+        async function testGetProviderTypes() {
+            showResult('provider-types-result', null, true);
+            const result = await makeRequest('/external-kb/provider-types');
+            showResult('provider-types-result', result);
+        }
+
+        async function testGetExternalKnowledges() {
+            showResult('knowledges-result', null, true);
+            const result = await makeRequest('/external-kb/knowledges');
+            showResult('knowledges-result', result);
+        }
+
+        async function testProviderConnection() {
+            const providerId = document.getElementById('provider-id').value;
+            if (!providerId) {
+                alert('请输入提供商ID');
+                return;
+            }
+            
+            showResult('provider-test-result', null, true);
+            const result = await makeRequest(`/external-kb/providers/${providerId}/test`, {
+                method: 'POST'
+            });
+            showResult('provider-test-result', result);
+        }
+
+        async function testKnowledgeConnection() {
+            const knowledgeId = document.getElementById('knowledge-id').value;
+            if (!knowledgeId) {
+                alert('请输入知识库ID');
+                return;
+            }
+            
+            showResult('knowledge-test-result', null, true);
+            const result = await makeRequest(`/external-kb/knowledges/${knowledgeId}/test`, {
+                method: 'POST'
+            });
+            showResult('knowledge-test-result', result);
+        }
+
+        async function testQueryKnowledge() {
+            const knowledgeId = document.getElementById('query-knowledge-id').value;
+            const queryText = document.getElementById('query-text').value;
+            
+            if (!knowledgeId || !queryText) {
+                alert('请输入知识库ID和查询文本');
+                return;
+            }
+            
+            showResult('query-result', null, true);
+            const result = await makeRequest(`/external-kb/knowledges/${knowledgeId}/query`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    query: queryText,
+                    params: { top_k: 3 }
+                })
+            });
+            showResult('query-result', result);
+        }
+
+        async function testGetRoles() {
+            showResult('roles-result', null, true);
+            const result = await makeRequest('/roles');
+            showResult('roles-result', result);
+        }
+
+        // 页面加载完成后自动测试基础接口
+        window.onload = function() {
+            console.log('外部知识库API测试页面已加载');
+            console.log('API基础URL:', API_BASE_URL);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+[
+  {
+    "test_name": "表 external_kb_providers 存在检查",
+    "success": true,
+    "message": "表已创建",
+    "details": null,
+    "timestamp": "2025-06-17T01:21:54.475882"
+  },
+  {
+    "test_name": "表 external_knowledges 存在检查",
+    "success": true,
+    "message": "表已创建",
+    "details": null,
+    "timestamp": "2025-06-17T01:21:54.475909"
+  },
+  {
+    "test_name": "表 role_external_knowledges 存在检查",
+    "success": true,
+    "message": "表已创建",
+    "details": null,
+    "timestamp": "2025-06-17T01:21:54.475913"
+  },
+  {
+    "test_name": "表 external_kb_query_logs 存在检查",
+    "success": true,
+    "message": "表已创建",
+    "details": null,
+    "timestamp": "2025-06-17T01:21:54.475916"
+  },
+  {
+    "test_name": "测试数据检查",
+    "success": true,
+    "message": "提供商: 3, 知识库: 3",
+    "details": null,
+    "timestamp": "2025-06-17T01:21:54.477923"
+  },
+  {
+    "test_name": "获取提供商列表",
+    "success": false,
+    "message": "HTTP 403",
+    "details": null,
+    "timestamp": "2025-06-17T01:21:54.495260"
+  },
+  {
+    "test_name": "创建提供商",
+    "success": false,
+    "message": "HTTP 403",
+    "details": null,
+    "timestamp": "2025-06-17T01:21:54.498221"
+  },
+  {
+    "test_name": "获取提供商ID",
+    "success": false,
+    "message": "HTTP 403",
+    "details": null,
+    "timestamp": "2025-06-17T01:21:54.500547"
+  },
+  {
+    "test_name": "获取角色绑定",
+    "success": false,
+    "message": "HTTP 403",
+    "details": null,
+    "timestamp": "2025-06-17T01:21:57.267253"
+  },
+  {
+    "test_name": "创建角色绑定",
+    "success": false,
+    "message": "HTTP 403",
+    "details": null,
+    "timestamp": "2025-06-17T01:21:57.271650"
+  },
+  {
+    "test_name": "API服务可访问性",
+    "success": false,
+    "message": "HTTP 403",
+    "details": null,
+    "timestamp": "2025-06-17T01:21:57.275698"
+  }
+]
