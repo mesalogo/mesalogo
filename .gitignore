@@ -14,7 +14,10 @@ external-repo-gpustack
 agent-workspace/
 .pnpm-store/*
 test_scripts/*
+# 根 tests/ 是历史 scratchpad,完全 gitignored
+# 但保留 AGENTS.md 让进入这里的 agent 知道"这不是真测试"
 tests/*
+!tests/AGENTS.md
 
 # Node.js / Frontend
 node_modules/*

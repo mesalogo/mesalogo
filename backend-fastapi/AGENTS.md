@@ -133,13 +133,20 @@ Phase 1 MVP 没做 ODM(Open Domain Model)约束。在 SubAgent 里再调 `invoke
 
 ---
 
-## 6. 测试怎么写(底线)
+## 6. 测试
 
-- 位置:`backend-fastapi/tests/`
-- 框架:pytest + pytest-asyncio
-- **修 Bug 必须先写能复现的测试并确认它红**,再修到绿。否则"你不知道自己修没修对"。
-- 不要 mock 掉 supervisor / rule_sandbox——它们本身是测试对象。
-- LLM 调用可以 mock,但 MCP 工具契约 **不要 mock**(mock 了就测不出契约漂移)。
+完整规则见 ⭐ [`tests/AGENTS.md`](./tests/AGENTS.md)(30 秒决策树 / 目录布局 / fixtures 命名 / 红线 / 写新 feature 测试的最小集)。
+
+**本节只列**最容易翻车的几条:
+
+- 位置:`backend-fastapi/tests/`(**不是**根 `/tests/`——那是历史 scratchpad,完全 gitignored)。
+- 目录布局:**镜像 `app/` 结构**。`app/services/heartbeat/clock.py` ↔ `tests/unit/services/heartbeat/test_clock.py`。
+- 分层:`unit/`(毫秒,无 IO)/ `integration/`(秒,DB+Redis)/ `e2e/`(分钟,完整链路)/ `contract/`(签名不退化)。
+- 框架:pytest + anyio(不是 `pytest-asyncio`,见 `tests/AGENTS.md §6`)。
+- **修 Bug 流程不能反**:先写能复现 Bug 的测试,跑确认它**红**,再改代码到绿。否则你不知道修没修对。
+- LLM 可以 mock(用 `tests/fixtures/mocks/llm.py` 的 `MockLLM` 走依赖注入)。
+- **不要 mock** supervisor / rule_sandbox / MCP 工具签名——它们**是**测试对象。
+- 不要复制 `tests/_archive/` 里的写法——那是旧 Flask 时代代码,在 FastAPI/async 体系下根本跑不了。
 
 ---
 
