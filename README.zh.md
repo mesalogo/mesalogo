@@ -119,36 +119,61 @@
 
 ---
 
-## ✨ 亮点 / 即将到来
+## ✨ 路线图
 
-### 🔮 MemoryPalace v0.51 — 自研时态记忆系统
+下面是我们打算去的方向。完整 backlog 见 [`TODO.md`](./TODO.md)。
 
-> **状态:Spec 阶段** · [设计文档](./docs/feature-mempalace-v0.51/)
+### 🔮 近期(开发中)
 
-参考开源项目 [`mempalace`](https://github.com/mempalace/mempalace)(LongMemEval R@5 = 96.6%)的工程实践,在多 Agent ABM 平台语境下重新设计的多层 Agent 记忆系统。
+| 功能 | 说明 | 状态 |
+|---|---|---|
+| **MemoryPalace v0.51** | 自研时态记忆系统(Drawer + Knowledge Graph 两层),替换外部 Graphiti 依赖。通过 `kg_verify` + `fact_check()` 捕捉事实变更。5 层结构 `Realm → Wing → Hall → Room → Closet/Drawer`。([设计文档](./docs/feature-mempalace-v0.51/)) | 📐 Spec 阶段,4 个 PR(P1 骨架 → P4 前端) |
+| **Workflow Graph 可视化编排** | 多 Agent DAG 编辑器:agent / condition / parallel / loop 节点、跨行动空间变量传播、编排模板市场。([计划](./docs/feature-workflow-graph/PLAN.md)) | 🚧 Phase 1 进行中 |
+| **5000 并发架构** | 全 async 化 → Redis 队列 + Worker 分离 → 多机分布式部署。([计划](./docs/feature-parallellab/PLAN-5000-concurrency.md)) | 🚧 Phase 1 / 3(异步化) |
+| **真正的并行 Agent 执行** | 每个 Agent 独立输出队列,多 Agent 面板流式输出不再交错;前端多列渲染,单流取消/超时。 | 📋 规划中 |
+| **SubAgent Phase 2 / 3** | 嵌套 SubAgent + 工具调用、ODM 约束、Token 统计;后续:调用关系可视化、结果缓存、配置模板。([计划](./docs/feature-subagent/PLAN.md)) | ✅ Phase 1 MVP 已上线,Phase 2+ 规划中 |
+| **Planner 子规划模式** | 浏览当前会话的历史计划,支持嵌套子计划,让不同 role 并行做不同子任务。 | 📋 规划中 |
+| **LightRAG 知识库补齐** | 批量 / 增量文档导入、分区隔离(conversation / agent / global)、前端打磨、MCP 工具暴露。([计划](./docs/feature-knowledge-base/lightrag-PLAN.md)) | 🚧 Beta,有缺口 |
 
-**两层结构,缺一不可:**
+### 🚀 中期
 
-- **Drawer 层** — 原文叙事(消息、工具结果、反思),支持衰减与合并
-- **Knowledge Graph 层** — 时态三元组 `(subject, predicate, object, valid_from, valid_to)`,回答"现在为真的事实"
+| 功能 | 说明 | 状态 |
+|---|---|---|
+| **Mesa Python ABM 桥接** | 与现有 NetLogo 桥接并列的一等公民适配器;统一 ABM 桥接服务 + MCP server(`mesa_server.py`、`netlogo_server.py`)。 | 📋 规划中 |
+| **NVIDIA NIM 推理后端** | NIM 微服务作为可插拔 LLM 后端;Nemotron 模型支持;基础 GPU 资源管理。 | 📋 规划中 |
+| **Isaac Sim 物理 ↔ 认知桥接** | 把 Isaac Sim 物理状态与 LLM Agent 认知状态耦合;仓库 / 工厂场景 Demo。 | 📋 规划中 |
+| **ACE 数字人可视化** | NVIDIA ACE Avatar 多角色 Agent 会议;语音交互。 | 📋 规划中 |
+| **OAuth 登录** | Google / Microsoft / Apple / 通用 OIDC + OAuth2。 | 🚧 进行中 |
+| **外部 IM 接入** | 微信 / 钉钉 / 通用 IM webhook,把 Agent 接入企业沟通流。 | 📋 规划中 |
+| **领域实体应用** | RPG Game 世界、RPA(海关场景)、GIS 地图 MCP 工具(`add_map_layer`、`set_map_view`、`draw_map_geometry`…)。([RPA 计划](./docs/feature-nextrpa/PLAN.md)) | 📋 规划中 |
+| **前端打磨** | DeepSeek 的 mermaid 渲染、集中前后端环境变量管理。 | 📋 规划中 |
 
-**为什么重要:**
+### 🏢 长期 — 企业 & 生态
 
-- 脱离外部 Graphiti 依赖(HTTP + Neo4j)→ 全本地,全 async,贴合 5000 并发目标
-- 能识别"用户先说妻子叫张三,后来又说前妻"这种事实变更,通过 `kg_verify` 自动校验
-- `fact_check()` 工具:离线矛盾检测
-- 5 层结构:`Realm → Wing → Hall → Room → Closet/Drawer`
+| 主题 | 说明 |
+|---|---|
+| **大规模仿真** | 单行动空间内 1000+ 并发 Agent 的优化。 |
+| **合成数据管线** | 多 Agent 对话可复现地生成带标注的语料,带标注 hook。 |
+| **多租户 SaaS** | 更严格隔离 / 配额 / 计费原语。 |
+| **私有化部署套件** | 离网安装、离线模型包、License Server。 |
+| **插件市场** | 一方 + 社区 MCP 插件,带签名 / 供应链检查。 |
 
-**路线图:** 4 个独立 PR(`P1 骨架 → P2 closet+hybrid → P3 KG+反思 → P4 适配器+前端`)。
+### ✅ 近期已上线
 
-### 其他正在做的
+- SubAgent Phase 1 MVP(executor / context builder / security / MCP 工具 / 前端卡片)
+- Agent API 暴露(OpenAI 兼容):API Key 管理 + 限流 + Python SDK + OpenAPI 文档
+- 自主任务改为编排框架
+- 上下文摘要服务优化(轮次间剔除原始 tool_call 参数)
+- 全仓库 `print()` → 结构化 `logger` 迁移
+- Claude `<tool_call>` 双向对齐
 
-- 🚧 **Workflow Graph 可视化编排** — 多 Agent DAG 编辑器([`docs/feature-workflow-graph/`](./docs/feature-workflow-graph/))
-- 🚧 **5000 并发架构** — async + Redis 队列 + 多机部署([`docs/feature-parallellab/PLAN-5000-concurrency.md`](./docs/feature-parallellab/PLAN-5000-concurrency.md))
-- 🚧 **NVIDIA NIM / Isaac Sim 集成** — 物理-认知耦合
-- 🚧 **Mesa Python 集成** — 与现有 NetLogo 桥接并存
+### 🐛 待修复 Bug
 
-完整路线图见 [`TODO.md`](./TODO.md)。
+- 普通自主任务有时停不干净(Redis 队列 + scheduler triggers + SSE 需联合 teardown)。
+- 上游模型 HTTP 400 没传到 SSE `done` 事件 → 前端 spinner 卡死。
+- 自动分配模式:根据用户内容自动选最合适的角色回复。
+
+完整 backlog、设计文档、分阶段计划见 [`TODO.md`](./TODO.md)。
 
 ---
 

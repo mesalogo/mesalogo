@@ -119,36 +119,61 @@ The name pays homage to its two ancestors: **Mesa** (Python ABM framework) and *
 
 ---
 
-## ✨ Highlights / Coming Up
+## ✨ Roadmap
 
-### 🔮 MemoryPalace v0.51 — Self-hosted Temporal Memory
+A snapshot of where we're heading. Full source of truth: [`TODO.md`](./TODO.md).
 
-> **Status: Spec phase** · [Design docs](./docs/feature-mempalace-v0.51/)
+### 🔮 Near-term (active development)
 
-A multi-layer agent memory system inspired by the open-source [`mempalace`](https://github.com/mempalace/mempalace) project (LongMemEval R@5 = 96.6%), adapted for our multi-agent ABM context.
+| Feature | What it is | Status |
+|---|---|---|
+| **MemoryPalace v0.51** | Self-hosted temporal memory (Drawer + Knowledge Graph layers, replaces external Graphiti dependency). Catches fact mutations via `kg_verify` + `fact_check()`. 5-layer hierarchy `Realm → Wing → Hall → Room → Closet/Drawer`. ([design docs](./docs/feature-mempalace-v0.51/)) | 📐 Spec phase, 4 PRs planned (P1 skeleton → P4 frontend) |
+| **Workflow Graph orchestration** | Visual DAG editor for multi-agent flows: agent / condition / parallel / loop nodes, cross-action-space variable propagation, orchestration template marketplace. ([plan](./docs/feature-workflow-graph/PLAN.md)) | 🚧 Phase 1 in progress |
+| **5000-concurrency architecture** | Async-first refactor → Redis queue & worker separation → distributed multi-machine deploy. ([plan](./docs/feature-parallellab/PLAN-5000-concurrency.md)) | 🚧 Phase 1 of 3 (async migration) |
+| **True parallel agent execution** | Per-agent isolated output queues so multi-agent panels stream without interleaving; multi-column frontend rendering, cancellation & timeout per stream. | 📋 Planned |
+| **SubAgent Phase 2 / 3** | Nested SubAgents with tool calls, ODM constraints, token accounting; later: call-graph visualization, result cache, config templates. ([plan](./docs/feature-subagent/PLAN.md)) | ✅ Phase 1 MVP shipped, Phase 2+ planned |
+| **Workflow planner — sub-planning** | Browse historical plans of a conversation, nest sub-plans so different roles can pursue different sub-tasks in parallel. | 📋 Planned |
+| **LightRAG knowledge base — completion** | Batch / incremental document import, partition isolation (conversation / agent / global), frontend polish, MCP-tool exposure. ([plan](./docs/feature-knowledge-base/lightrag-PLAN.md)) | 🚧 Beta, gaps to close |
 
-**Two layers, neither sufficient alone:**
+### 🚀 Mid-term
 
-- **Drawer layer** — verbatim narrative (messages, tool results, reflections), supports decay and consolidation
-- **Knowledge Graph layer** — temporal triples `(subject, predicate, object, valid_from, valid_to)` for "what is true *now*" queries
+| Feature | What it is | Status |
+|---|---|---|
+| **Mesa Python ABM bridge** | First-class adapter alongside the existing NetLogo bridge; unified ABM bridge service + MCP servers (`mesa_server.py`, `netlogo_server.py`). | 📋 Planned |
+| **NVIDIA NIM inference backend** | Use NIM microservices as a pluggable LLM backend; Nemotron model support; basic GPU resource management. | 📋 Planned |
+| **Isaac Sim physics ↔ cognition bridge** | Couple Isaac Sim physical state with LLM agent cognitive state; warehouse / factory scenario demos. | 📋 Planned |
+| **ACE digital-human visualization** | NVIDIA ACE avatars for multi-role agent meetings; voice interaction. | 📋 Planned |
+| **OAuth providers** | Google / Microsoft / Apple / generic OIDC + OAuth2 login flows. | 🚧 In progress |
+| **External-platform IM integrations** | WeChat / DingTalk / generic IM webhook for agent-in-the-loop. | 📋 Planned |
+| **Domain entity apps** | RPG game world, RPA (customs scenario), GIS map MCP tools (`add_map_layer`, `set_map_view`, `draw_map_geometry`, …). ([RPA plan](./docs/feature-nextrpa/PLAN.md)) | 📋 Planned |
+| **Frontend polish** | DeepSeek mermaid rendering, unified front-back env-var management. | 📋 Planned |
 
-**Why this matters:**
+### 🏢 Long-term — enterprise & ecosystem
 
-- Drops the external Graphiti dependency (HTTP + Neo4j) → fully local, all async, fits the 5000-concurrency target
-- Catches "the user said his wife's name was X but later said *ex*-wife" with `kg_verify`
-- `fact_check()` tool with offline contradiction detection
-- 5-layer hierarchy: `Realm → Wing → Hall → Room → Closet/Drawer`
+| Theme | What it is |
+|---|---|
+| **Large-scale simulation** | Optimization for 1000+ concurrent agents per action space. |
+| **Synthetic data pipelines** | Reproducible corpus generation from multi-agent dialogues with labeling hooks. |
+| **Multi-tenant SaaS** | Stricter isolation, per-tenant quotas, billing-ready primitives. |
+| **Private deployment kit** | Air-gapped install, offline model bundles, license server. |
+| **Plugin marketplace** | First-party + community MCP plugins with signing / supply-chain checks. |
 
-**Roadmap:** 4 independent PRs (`P1 skeleton → P2 closet+hybrid → P3 KG+reflection → P4 adapter+frontend`).
+### ✅ Recently shipped
 
-### Other in-progress features
+- SubAgent Phase 1 MVP (executor / context builder / security / MCP tools / frontend cards)
+- Agent-API exposure (OpenAI-compatible) with API-key management + rate limiting + Python SDK + OpenAPI docs
+- Autonomous task framework refactored on top of the orchestration engine
+- Summary-service context-window optimization (strips raw tool-call args between rounds)
+- Repo-wide `print()` → structured `logger` migration
+- Claude `<tool_call>` round-trip parity
 
-- 🚧 **Workflow Graph orchestration** — visual DAG editor for multi-agent flows ([`docs/feature-workflow-graph/`](./docs/feature-workflow-graph/))
-- 🚧 **5000-concurrency architecture** — async + Redis queue + multi-machine ([`docs/feature-parallellab/PLAN-5000-concurrency.md`](./docs/feature-parallellab/PLAN-5000-concurrency.md))
-- 🚧 **NVIDIA NIM / Isaac Sim integration** — physics-cognition coupling
-- 🚧 **Mesa Python integration** — alongside existing NetLogo bridge
+### 🐛 Known bugs being chased
 
-See [`TODO.md`](./TODO.md) for the full roadmap.
+- Autonomous task sometimes can't be stopped cleanly (Redis queue + scheduler triggers + SSE need joint teardown).
+- HTTP 400 from upstream model isn't propagated to the SSE `done` event → frontend spinner hangs.
+- Auto-dispatch mode: pick the best-fitting role for an incoming message automatically.
+
+See [`TODO.md`](./TODO.md) for the full backlog, design docs, and per-phase plans.
 
 ---
 
