@@ -51,13 +51,22 @@ abm-llm-v2/
 │   │   ├── supervisor_*.py   监督者/规则/沙箱(= Harness 约束层,谨慎改!)
 │   │   ├── mcp_server_manager.py   MCP 工具注册(7.3 万行,小心)
 │   │   └── parallel_experiment_service.py  并行实验(7.5 万行,小心)
-│   └── app/models.py         ⚠️ 9 万行,加字段前先读 migration-progress.md
+│   ├── app/models.py         ⚠️ 9 万行,加字段前先读 migration-progress.md
+│   └── tests/                ⭐ 正式测试目录,写测试前读 tests/AGENTS.md
+│       ├── unit/             毫秒,纯函数
+│       ├── integration/      秒,带 DB / Redis
+│       ├── e2e/              分钟,完整链路
+│       ├── contract/         OpenAPI / MCP 签名不退化
+│       ├── fixtures/         共享 mocks + factories
+│       └── _archive/         旧 Flask 残留,只读不动
 │
 ├── frontend/                 React 19 + Ant Design 6 + @xyflow/react
 │   └── src/                  改前读 frontend/AGENTS.md(若存在)
 │
 ├── abm-docker/               docker-compose 多服务编排(redis/milvus/neo4j…)
-├── backend-deprecated/       ❌ 旧 Flask 代码,不要读、不要改、不要参考
+├── tests/                    ❌ 根 tests/ 是历史 scratchpad,完全 gitignored
+│                              (只 tests/AGENTS.md 被例外跟踪)
+│                              新测试一律去 backend-fastapi/tests/
 ├── third_party/              ❌ 第三方 submodule,不要改
 ├── docs/                     设计文档(按需读)
 │   ├── feature-*/PLAN.md     各功能方案
@@ -69,6 +78,9 @@ abm-llm-v2/
 │       └── failures/         历史翻车案例(改代码前扫一眼标题)
 └── TODO.md                   当前产品 roadmap(改前读相关条目)
 ```
+
+> 注:`backend-deprecated/` 已彻底移除(见 `docs/agents/failures/2026-05-13-public-branch-secret-leak.md`),
+> 旧 Flask 代码仅在本地 untracked 目录保留作历史参考。
 
 ---
 
@@ -112,6 +124,8 @@ abm-llm-v2/
 | 改 Supervisor / 规则沙箱 | `docs/agents/supervisor-rules.md` |
 | 改 LightRAG / 向量库 | `docs/feature-knowledge-base/lightrag-PLAN.md` |
 | 改编排 / Workflow Graph | `docs/feature-workflow-graph/PLAN.md` |
+| 改 Heartbeat / 自驱动 | `docs/feature-heartbeat/PLAN.md` + `policies.md` + `stop-the-world.md` |
+| **写或改任何测试** | `backend-fastapi/tests/AGENTS.md`(30 秒决策树) |
 | 部署 / Docker / 性能 | `abm-docker/README.md` + `docs/feature-parallellab/PLAN-5000-concurrency.md` |
 
 找不到对应文档 → **创建它**(即使只写一句"占位"),然后把本次的决策写进去。这是 Harness 的"活文档"原则。
