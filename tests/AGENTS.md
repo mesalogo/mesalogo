@@ -1,43 +1,35 @@
-# /tests/AGENTS.md — 这里**不是**真测试目录
+# /tests/AGENTS.md — this is **NOT** the real test directory
 
-> 如果你是 AI agent 进入了这个目录,**先停下**。
+> If you are an AI agent entering this directory, **stop first**.
 
-## 这里是什么
+## What this is
 
-历史 scratchpad。100+ 个 debug 脚本、一次性验证代码、curl-replay。
-**整个目录在根 `.gitignore` 里**(`tests/*` 规则),除了**这份 AGENTS.md**
-(`!tests/AGENTS.md` 例外)以外**全部 untracked**。
+A historical scratchpad (历史 scratchpad). ~100+ debug scripts, one-off verifications, curl replays.
+**The entire directory is gitignored** at the repo root (`tests/*` rule), with **this AGENTS.md** as the only exception (`!tests/AGENTS.md`). Every other `*.py` / `*.sh` / `*.json` / `*.html` / `*.md` here is **untracked**.
 
-进入这里看到的所有 `*.py` / `*.sh` / `*.json` / `*.html` / `*.md`
-都是开发者本地考古产物,**不会**进 git、**不会**进 CI、**不应**被
-现在的代码依赖。它们大多是 Flask 时代的写法,对当前 FastAPI/async
-代码库**没有**参考价值,还会误导。
+These files are local archaeological artifacts. They will **not** enter git, **not** enter CI, and **must not** be referenced by current code. Most are Flask-era code and offer **no useful pattern** for the current FastAPI/async codebase — they will only mislead you.
 
-## 你想做什么
+## What you probably want to do
 
-| 意图 | 去哪 |
+| Intent | Go to |
 |---|---|
-| 写 / 改一个测试 | `backend-fastapi/tests/`(读那里的 `AGENTS.md`) |
-| 找历史上某个 API 怎么调的参考 | grep 这里,只读,**不要复制** |
-| 加一个 debug 脚本 | 放在自己的本地工作区,不要污染这里 |
-| 清理这个目录 | **不要主动清**。根 AGENTS.md §3.3 红线: 不删未跟踪文件 |
+| Write or change a test | `backend-fastapi/tests/` (read the `AGENTS.md` there) |
+| Find a historical reference for some API call | `grep` here, read-only — **do not copy** |
+| Add a debug script | Use your own local workspace; do not pollute this dir |
+| Clean this directory up | **Do not initiate.** Repo-root AGENTS.md §3.3 red line: do not delete untracked files. |
 
-## 红线
+## Red lines (红线)
 
-1. ❌ **不要在这里加新测试**。新测试一律去 `backend-fastapi/tests/<layer>/`。
-2. ❌ **不要把这里的代码当模板抄到 `backend-fastapi/tests/`**。
-   Flask 写法在 FastAPI 体系下根本跑不了。
-3. ❌ **不要 `git add -f`** 任何文件进来。`tests/*` gitignore 是有意为之。
-4. ❌ **不要修改本文件以外的东西**,除非用户明确点名要清这个目录。
+1. ❌ **Do not add new tests here.** New tests go to `backend-fastapi/tests/<layer>/`.
+2. ❌ **Do not template-copy from here into `backend-fastapi/tests/`.** Flask code simply cannot run under FastAPI/async.
+3. ❌ **Do not `git add -f`** anything in here. The `tests/*` gitignore rule is intentional.
+4. ❌ **Do not modify anything except this file**, unless the user explicitly asks to clean this directory.
 
-## 历史背景
+## Historical context
 
-这个目录积累于 2025-05 ~ 2025-09 期间项目从 Flask 迁移到 FastAPI 之前。
-当时还没有正式测试体系,开发者把所有 debug 脚本都堆在这里。
-迁移完成后(2025-10+)正式测试目录迁到 `backend-fastapi/tests/`,
-这里就被冻结了。
+This directory accumulated between 2025-05 and 2025-09, before the project migrated from Flask to FastAPI. There was no formal test suite at the time, so all debug scripts piled up here. After the migration (2025-10+) the real test directory moved to `backend-fastapi/tests/`, and this one was frozen.
 
-参见根 `/AGENTS.md` §2 仓库地形图、`backend-fastapi/tests/AGENTS.md`。
+See repo-root `/AGENTS.md` §2 (repo topology) and `backend-fastapi/tests/AGENTS.md`.
 
 ---
 

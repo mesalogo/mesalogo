@@ -1,37 +1,38 @@
 # tests/_archive/AGENTS.md
 
-> ❌ **不要在这个目录里做任何事**。只读。
+> ❌ **Do nothing in this directory.** Read-only.
 
-## 这是什么
+## What this is
 
-旧 Flask 时代留下的测试代码,从 `backend-deprecated/` 时代复制过来的,
-**在当前 FastAPI/async 代码库下根本跑不起来**:
-- 用 `from app import create_app` / `app.test_client()` / `with app.app_context()`(Flask API)
-- 没有 `async def`,假设全链路是 sync
-- 直接 import 已经不存在的 `app.services.subscription_service` 等模块
+Test code left over from the Flask era (copied from the now-removed `backend-deprecated/`).
+**It cannot run** under the current FastAPI/async codebase:
 
-## 为什么留着
+- Uses `from app import create_app` / `app.test_client()` / `with app.app_context()` (Flask API).
+- No `async def`; assumes the whole stack is sync.
+- Directly imports modules that no longer exist, e.g. `app.services.subscription_service`.
 
-1. 历史检索:某个 API 当年怎么测的、参数怎么传的。
-2. 翻新参考:有时业务逻辑还在,挪去 `tests/<layer>/` 重写。
-3. 法证:看出"测试体系是从这里被遗弃 → 重建"的迁移轨迹。
+## Why we keep it
 
-## 红线
+1. **Historical lookup** — how was a given API tested back then? What parameters did it take?
+2. **Refactor reference** — sometimes the business logic still exists; move it under `tests/<layer>/` and rewrite.
+3. **Forensics** — visible trace of "test suite was abandoned here → rebuilt".
 
-- ❌ 不要新增任何文件
-- ❌ 不要修改这里的代码
-- ❌ 不要在 PR 描述里说"我从 _archive 复制了一份"——一律视作重写
-- ❌ 不要让 pytest 收集这里(`pytest.ini` 的 `norecursedirs` 已包含 `_archive`)
+## Red lines (红线)
 
-## 想做什么 → 去哪
+- ❌ Do not add any new files here.
+- ❌ Do not modify the code here.
+- ❌ Do not say "I copied from `_archive`" in a PR description — that counts as a rewrite.
+- ❌ Do not let pytest collect this directory (`pytest.ini` already excludes via `norecursedirs` + `--ignore`).
 
-| 意图 | 去哪 |
+## What you want to do → where to go
+
+| Intent | Go to |
 |---|---|
-| 写新测试 | `backend-fastapi/tests/<unit|integration|e2e|contract>/` |
-| 找参考 | grep 这里,只读 |
-| 清掉这个目录 | 不要主动清。需用户明确点名 |
+| Write a new test | `backend-fastapi/tests/<unit\|integration\|e2e\|contract>/` |
+| Find a reference | `grep` here, read-only |
+| Wipe this directory | Do not initiate. Requires explicit user confirmation. |
 
-参见 `backend-fastapi/tests/AGENTS.md`。
+See `backend-fastapi/tests/AGENTS.md`.
 
 ---
 
