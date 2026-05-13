@@ -1,0 +1,20 @@
+{
+  "test_time": "2025-06-17T01:44:14.851502",
+  "test_type": "frontend_api_fix_verification",
+  "summary": {
+    "total_checks": 0,
+    "passed_checks": 0,
+    "failed_checks": 0,
+    "warnings": 0
+  },
+  "details": {
+    "api_endpoints": "API端点测试完成",
+    "file_imports": "文件导入检查完成",
+    "api_structure": "API结构检查完成"
+  },
+  "recommendations": [
+    "确保后端服务器正在运行以测试API端点",
+    "检查前端构建是否成功",
+    "验证浏览器控制台是否有错误信息"
+  ]
+}

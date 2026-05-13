@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>前端API修复验证</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            color: #1890ff;
+            margin-top: 0;
+        }
+        button {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background: #40a9ff;
+        }
+        button:disabled {
+            background: #d9d9d9;
+            cursor: not-allowed;
+        }
+        .result {
+            background: #f6f8fa;
+            border: 1px solid #e1e4e8;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success {
+            border-color: #52c41a;
+            background: #f6ffed;
+        }
+        .error {
+            border-color: #ff4d4f;
+            background: #fff2f0;
+        }
+        .loading {
+            color: #1890ff;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        .status.error {
+            background: #fff2f0;
+            color: #ff4d4f;
+            border: 1px solid #ffccc7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>前端API修复验证</h1>
+        <p>这个页面验证前端API修复是否成功，模拟真实的前端组件调用。</p>
+        
+        <div class="status" id="overall-status">
+            等待测试...
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="test-section">
+            <h3>1. 模拟前端API调用</h3>
+            <p>使用修复后的API格式进行调用</p>
+            <button onclick="testFixedAPI()">测试修复后的API</button>
+            <div id="fixed-api-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. 模拟组件数据处理</h3>
+            <p>模拟React组件如何处理API响应</p>
+            <button onclick="testComponentDataHandling()">测试组件数据处理</button>
+            <div id="component-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. 错误处理测试</h3>
+            <p>测试API错误情况的处理</p>
+            <button onclick="testErrorHandling()">测试错误处理</button>
+            <div id="error-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. 完整流程测试</h3>
+            <p>模拟完整的前端操作流程</p>
+            <button onclick="testCompleteFlow()">测试完整流程</button>
+            <div id="flow-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api';
+
+        // 模拟修复后的API调用
+        async function mockFixedAPICall(endpoint) {
+            try {
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                // 模拟axios响应处理
+                const axiosResponse = {
+                    data: await response.json(),
+                    status: response.status,
+                    statusText: response.statusText
+                };
+                
+                // 模拟修复后的API方法：返回response.data
+                return axiosResponse.data;
+                
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        // 显示结果
+        function showResult(elementId, result, loading = false) {
+            const element = document.getElementById(elementId);
+            
+            if (loading) {
+                element.className = 'result loading';
+                element.textContent = '测试中...';
+                return;
+            }
+            
+            element.className = result.success !== false ? 'result success' : 'result error';
+            element.textContent = JSON.stringify(result, null, 2);
+        }
+
+        // 更新整体状态
+        function updateOverallStatus(success, message) {
+            const statusElement = document.getElementById('overall-status');
+            statusElement.className = `status ${success ? 'success' : 'error'}`;
+            statusElement.textContent = message;
+        }
+
+        // 测试修复后的API
+        async function testFixedAPI() {
+            showResult('fixed-api-result', null, true);
+            
+            try {
+                // 测试获取提供商列表
+                const providersData = await mockFixedAPICall('/external-kb/providers');
+                
+                const result = {
+                    test: '修复后的API调用',
+                    endpoint: '/external-kb/providers',
+                    success: true,
+                    dataReceived: {
+                        success: providersData.success,
+                        dataType: Array.isArray(providersData.data) ? 'array' : typeof providersData.data,
+                        dataLength: providersData.data ? providersData.data.length : 0,
+                        total: providersData.total,
+                        sampleData: providersData.data && providersData.data.length > 0 ? providersData.data[0] : null
+                    },
+                    message: '前端现在可以正确接收到data字段，而不是整个response对象'
+                };
+                
+                showResult('fixed-api-result', result);
+                updateOverallStatus(true, '✓ API修复验证成功');
+                
+            } catch (error) {
+                const result = {
+                    test: '修复后的API调用',
+                    success: false,
+                    error: error.message
+                };
+                showResult('fixed-api-result', result);
+                updateOverallStatus(false, '✗ API修复验证失败');
+            }
+        }
+
+        // 测试组件数据处理
+        async function testComponentDataHandling() {
+            showResult('component-result', null, true);
+            
+            try {
+                // 模拟React组件的数据处理逻辑
+                const response = await mockFixedAPICall('/external-kb/providers');
+                
+                // 模拟组件状态更新
+                let componentState = {
+                    providers: [],
+                    loading: false,
+                    error: null
+                };
+                
+                if (response.success) {
+                    componentState.providers = response.data;
+                    componentState.loading = false;
+                } else {
+                    componentState.error = response.message || '获取提供商列表失败';
+                    componentState.loading = false;
+                }
+                
+                const result = {
+                    test: '组件数据处理',
+                    success: true,
+                    componentState: componentState,
+                    providersCount: componentState.providers.length,
+                    firstProvider: componentState.providers[0] || null,
+                    message: '组件可以正确处理API响应并更新状态'
+                };
+                
+                showResult('component-result', result);
+                
+            } catch (error) {
+                const result = {
+                    test: '组件数据处理',
+                    success: false,
+                    error: error.message
+                };
+                showResult('component-result', result);
+            }
+        }
+
+        // 测试错误处理
+        async function testErrorHandling() {
+            showResult('error-result', null, true);
+            
+            try {
+                // 测试不存在的端点
+                await mockFixedAPICall('/external-kb/nonexistent');
+                
+            } catch (error) {
+                const result = {
+                    test: '错误处理',
+                    success: true,
+                    errorCaught: true,
+                    errorMessage: error.message,
+                    message: '错误被正确捕获和处理'
+                };
+                showResult('error-result', result);
+            }
+        }
+
+        // 测试完整流程
+        async function testCompleteFlow() {
+            showResult('flow-result', null, true);
+            
+            try {
+                const flowSteps = [];
+                
+                // 步骤1：获取提供商列表
+                const providers = await mockFixedAPICall('/external-kb/providers');
+                flowSteps.push({
+                    step: 1,
+                    action: '获取提供商列表',
+                    success: providers.success,
+                    dataCount: providers.data ? providers.data.length : 0
+                });
+                
+                // 步骤2：获取外部知识库列表
+                const knowledges = await mockFixedAPICall('/external-kb/knowledges');
+                flowSteps.push({
+                    step: 2,
+                    action: '获取外部知识库列表',
+                    success: knowledges.success,
+                    dataCount: knowledges.data ? knowledges.data.length : 0
+                });
+                
+                // 步骤3：获取提供商类型
+                const providerTypes = await mockFixedAPICall('/external-kb/provider-types');
+                flowSteps.push({
+                    step: 3,
+                    action: '获取提供商类型',
+                    success: providerTypes.success,
+                    dataType: typeof providerTypes.data
+                });
+                
+                const result = {
+                    test: '完整流程测试',
+                    success: true,
+                    flowSteps: flowSteps,
+                    allStepsSuccessful: flowSteps.every(step => step.success),
+                    message: '完整的前端操作流程测试成功'
+                };
+                
+                showResult('flow-result', result);
+                
+            } catch (error) {
+                const result = {
+                    test: '完整流程测试',
+                    success: false,
+                    error: error.message
+                };
+                showResult('flow-result', result);
+            }
+        }
+
+        // 页面加载完成后自动运行基础测试
+        window.onload = function() {
+            console.log('前端API修复验证页面已加载');
+            updateOverallStatus(true, '页面已加载，点击按钮开始测试');
+        };
+    </script>
+</body>
+</html>

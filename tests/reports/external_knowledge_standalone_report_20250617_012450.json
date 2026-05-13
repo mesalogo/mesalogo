@@ -1,0 +1,142 @@
+[
+  {
+    "test_name": "表 external_kb_providers 存在检查",
+    "success": true,
+    "message": "表已创建",
+    "details": null,
+    "timestamp": "2025-06-17T01:24:32.128549"
+  },
+  {
+    "test_name": "表 external_knowledges 存在检查",
+    "success": true,
+    "message": "表已创建",
+    "details": null,
+    "timestamp": "2025-06-17T01:24:32.128569"
+  },
+  {
+    "test_name": "表 role_external_knowledges 存在检查",
+    "success": true,
+    "message": "表已创建",
+    "details": null,
+    "timestamp": "2025-06-17T01:24:32.128573"
+  },
+  {
+    "test_name": "表 external_kb_query_logs 存在检查",
+    "success": true,
+    "message": "表已创建",
+    "details": null,
+    "timestamp": "2025-06-17T01:24:32.128576"
+  },
+  {
+    "test_name": "创建提供商",
+    "success": true,
+    "message": "提供商创建成功，ID: 4",
+    "details": null,
+    "timestamp": "2025-06-17T01:24:35.218935"
+  },
+  {
+    "test_name": "查询提供商",
+    "success": true,
+    "message": "提供商查询成功",
+    "details": null,
+    "timestamp": "2025-06-17T01:24:35.219443"
+  },
+  {
+    "test_name": "更新提供商",
+    "success": true,
+    "message": "提供商更新成功",
+    "details": null,
+    "timestamp": "2025-06-17T01:24:35.221665"
+  },
+  {
+    "test_name": "JSON配置字段",
+    "success": true,
+    "message": "JSON配置保存和读取成功",
+    "details": null,
+    "timestamp": "2025-06-17T01:24:35.223079"
+  },
+  {
+    "test_name": "创建外部知识库",
+    "success": true,
+    "message": "外部知识库创建成功，ID: 4",
+    "details": null,
+    "timestamp": "2025-06-17T01:24:38.136474"
+  },
+  {
+    "test_name": "关联查询",
+    "success": true,
+    "message": "成功查询到知识库和提供商: 测试外部知识库 - 更新后的测试提供商",
+    "details": null,
+    "timestamp": "2025-06-17T01:24:38.137701"
+  },
+  {
+    "test_name": "查询配置JSON",
+    "success": true,
+    "message": "查询配置JSON字段正常",
+    "details": null,
+    "timestamp": "2025-06-17T01:24:38.137719"
+  },
+  {
+    "test_name": "创建角色绑定",
+    "success": true,
+    "message": "角色绑定创建成功，ID: 1",
+    "details": null,
+    "timestamp": "2025-06-17T01:24:40.937747"
+  },
+  {
+    "test_name": "唯一约束测试",
+    "success": true,
+    "message": "唯一约束正常工作",
+    "details": null,
+    "timestamp": "2025-06-17T01:24:40.939061"
+  },
+  {
+    "test_name": "复杂关联查询",
+    "success": true,
+    "message": "成功查询: 通用专家 -> 测试外部知识库 -> 更新后的测试提供商",
+    "details": null,
+    "timestamp": "2025-06-17T01:24:40.940726"
+  },
+  {
+    "test_name": "创建查询日志",
+    "success": true,
+    "message": "查询日志创建成功，ID: 1",
+    "details": null,
+    "timestamp": "2025-06-17T01:24:44.410172"
+  },
+  {
+    "test_name": "创建错误日志",
+    "success": true,
+    "message": "错误日志创建成功",
+    "details": null,
+    "timestamp": "2025-06-17T01:24:44.411752"
+  },
+  {
+    "test_name": "日志统计查询",
+    "success": true,
+    "message": "成功: 1, 错误: 1",
+    "details": null,
+    "timestamp": "2025-06-17T01:24:44.414519"
+  },
+  {
+    "test_name": "外键约束测试",
+    "success": false,
+    "message": "外键约束未生效",
+    "details": null,
+    "timestamp": "2025-06-17T01:24:47.357147"
+  },
+  {
+    "test_name": "必填字段约束",
+    "success": false,
+    "message": "必填字段约束未生效",
+    "details": null,
+    "timestamp": "2025-06-17T01:24:47.358536"
+  },
+  {
+    "test_name": "清理测试数据",
+    "success": false,
+    "message": "清理失败",
+    "details": "Can't call Query.update() or Query.delete() when join(), outerjoin(), select_from(), or from_self() has been called",
+    "timestamp": "2025-06-17T01:24:50.307540"
+  }
+]

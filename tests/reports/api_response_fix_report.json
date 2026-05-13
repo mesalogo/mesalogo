@@ -1,0 +1,24 @@
+{
+  "fix_time": "2025-06-17T01:49:06.763603",
+  "fix_type": "api_response_format_fix",
+  "changes_made": [
+    "将所有API方法转换为async/await模式",
+    "修改返回值从response对象改为response.data",
+    "确保前端组件接收到正确的数据格式",
+    "保持API响应的标准化结构"
+  ],
+  "files_modified": [
+    "frontend/src/services/api/externalKnowledge.js"
+  ],
+  "testing_results": {
+    "api_structure_check": "completed",
+    "response_format_test": "completed",
+    "frontend_simulation": "completed"
+  },
+  "next_steps": [
+    "重启前端开发服务器",
+    "测试前端组件是否正常工作",
+    "验证错误处理是否正确",
+    "检查浏览器控制台错误"
+  ]
+}

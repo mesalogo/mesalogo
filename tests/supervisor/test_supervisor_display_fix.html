@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>监督者显示格式测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .message {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            background-color: #f6ffed;
+        }
+        .message.human {
+            background-color: #f0f8ff;
+        }
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .avatar.user {
+            background-color: #1890ff;
+        }
+        .avatar.supervisor {
+            background-color: #52c41a;
+        }
+        .message-content {
+            flex: 1;
+        }
+        .sender-name {
+            font-weight: bold;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+        .message-text {
+            font-size: 13px;
+            line-height: 1.5;
+            color: #333;
+        }
+        .timestamp {
+            font-size: 11px;
+            color: #999;
+            margin-left: 8px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+        }
+        .test-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 16px;
+            color: #1890ff;
+        }
+        .api-test {
+            background-color: #f9f9f9;
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+        .api-url {
+            font-family: monospace;
+            background-color: #f0f0f0;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        .result {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 4px;
+        }
+        .result.success {
+            background-color: #f6ffed;
+            border: 1px solid #b7eb8f;
+        }
+        .result.error {
+            background-color: #fff2f0;
+            border: 1px solid #ffccc7;
+        }
+        button {
+            background-color: #1890ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 8px;
+        }
+        button:hover {
+            background-color: #40a9ff;
+        }
+        .debug-info {
+            background-color: #f0f0f0;
+            padding: 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>监督者显示格式测试页面</h1>
+    
+    <div class="test-section">
+        <div class="test-title">1. API测试</div>
+        <div class="api-test">
+            <div>测试监督者智能体API响应：</div>
+            <div class="api-url" id="api-url">请先输入任务ID</div>
+            <div>
+                <label>任务ID: </label>
+                <input type="number" id="task-id" placeholder="输入任务ID" value="3">
+                <button onclick="testAPI()">测试API</button>
+                <button onclick="testMessages()">测试消息</button>
+            </div>
+            <div id="api-result" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">2. 显示格式预览</div>
+        <div class="card">
+            <div id="message-preview">
+                <!-- 消息预览将在这里显示 -->
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">3. 调试信息</div>
+        <div class="card">
+            <div id="debug-info" class="debug-info">等待测试数据...</div>
+        </div>
+    </div>
+
+    <script>
+        let supervisorAgents = [];
+        let supervisorMessages = [];
+
+        function updateApiUrl() {
+            const taskId = document.getElementById('task-id').value;
+            if (taskId) {
+                document.getElementById('api-url').textContent = `/api/action-tasks/${taskId}/agents?is_observer=true`;
+            }
+        }
+
+        function showResult(element, success, message, data = null) {
+            element.style.display = 'block';
+            element.className = `result ${success ? 'success' : 'error'}`;
+            element.innerHTML = `
+                <div><strong>${success ? '✅ 成功' : '❌ 失败'}</strong></div>
+                <div>${message}</div>
+                ${data ? `<div class="debug-info">${JSON.stringify(data, null, 2)}</div>` : ''}
+            `;
+        }
+
+        async function testAPI() {
+            const taskId = document.getElementById('task-id').value;
+            if (!taskId) {
+                alert('请输入任务ID');
+                return;
+            }
+
+            updateApiUrl();
+            const resultElement = document.getElementById('api-result');
+            
+            try {
+                const response = await fetch(`/api/action-tasks/${taskId}/agents?is_observer=true`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                supervisorAgents = data.agents || [];
+                
+                showResult(resultElement, true, `获取到 ${supervisorAgents.length} 个监督者智能体`, data);
+                
+                updateDebugInfo();
+                updateMessagePreview();
+                
+            } catch (error) {
+                showResult(resultElement, false, error.message);
+            }
+        }
+
+        async function testMessages() {
+            const taskId = document.getElementById('task-id').value;
+            if (!taskId) {
+                alert('请输入任务ID');
+                return;
+            }
+
+            try {
+                // 假设会话ID为1，实际应用中需要动态获取
+                const response = await fetch(`/api/action-tasks/${taskId}/conversations/1/messages`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                const allMessages = data.messages || [];
+                
+                // 筛选监督者相关消息
+                supervisorMessages = allMessages.filter(msg => msg.source === 'supervisorConversation');
+                
+                updateDebugInfo();
+                updateMessagePreview();
+                
+            } catch (error) {
+                console.error('获取消息失败:', error);
+            }
+        }
+
+        function updateDebugInfo() {
+            const debugElement = document.getElementById('debug-info');
+            
+            const debugInfo = {
+                supervisorAgents: supervisorAgents.map(agent => ({
+                    id: agent.id,
+                    name: agent.name,
+                    role_name: agent.role_name,
+                    is_observer: agent.is_observer
+                })),
+                supervisorMessages: supervisorMessages.map(msg => ({
+                    id: msg.id,
+                    role: msg.role,
+                    agent_id: msg.agent_id,
+                    source: msg.source,
+                    content: msg.content?.substring(0, 50) + '...'
+                }))
+            };
+            
+            debugElement.textContent = JSON.stringify(debugInfo, null, 2);
+        }
+
+        function updateMessagePreview() {
+            const previewElement = document.getElementById('message-preview');
+            
+            if (supervisorMessages.length === 0) {
+                previewElement.innerHTML = '<div style="text-align: center; color: #999;">暂无监督者消息</div>';
+                return;
+            }
+            
+            const messagesHtml = supervisorMessages.map(message => {
+                const isHuman = message.role === 'human';
+                const isSupervisor = message.role === 'supervisor';
+                
+                let senderName = '未知';
+                let avatarClass = '';
+                let avatarText = '?';
+                
+                if (isHuman) {
+                    if (message.agent_id) {
+                        const targetAgent = supervisorAgents.find(a => a.id === message.agent_id);
+                        if (targetAgent) {
+                            senderName = `用户 → ${targetAgent.name}[${targetAgent.role_name || '监督者'}][ID: ${targetAgent.id}]`;
+                        } else {
+                            senderName = '用户 → 监督者';
+                        }
+                    } else {
+                        senderName = '用户';
+                    }
+                    avatarClass = 'user';
+                    avatarText = '用';
+                } else if (isSupervisor && message.agent_id) {
+                    const agent = supervisorAgents.find(a => a.id === message.agent_id);
+                    if (agent) {
+                        senderName = `${agent.name}[${agent.role_name || '监督者'}][ID: ${agent.id}]`;
+                    }
+                    avatarClass = 'supervisor';
+                    avatarText = '督';
+                }
+                
+                return `
+                    <div class="message ${isHuman ? 'human' : ''}">
+                        <div class="avatar ${avatarClass}">${avatarText}</div>
+                        <div class="message-content">
+                            <div class="sender-name">
+                                ${senderName}
+                                <span class="timestamp">${new Date(message.created_at).toLocaleString()}</span>
+                            </div>
+                            <div class="message-text">${message.content}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            previewElement.innerHTML = messagesHtml;
+        }
+
+        // 页面加载时更新API URL
+        document.getElementById('task-id').addEventListener('input', updateApiUrl);
+        updateApiUrl();
+    </script>
+</body>
+</html>
