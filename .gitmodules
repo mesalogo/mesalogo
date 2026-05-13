@@ -1,0 +1,18 @@
+[submodule "third_party/graphiti"]
+	path = third_party/graphiti
+	url = https://github.com/lofyer/graphiti
+[submodule "third_party/Galapagos"]
+	path = third_party/Galapagos
+	url = https://github.com/lofyer/Galapagos
+[submodule "third_party/Docker-DocumentServer"]
+	path = third_party/Docker-DocumentServer
+	url = https://github.com/lofyer/Docker-DocumentServer
+[submodule "third_party/LightRAG"]
+	path = third_party/LightRAG
+	url = https://github.com/lofyer/LightRAG
+[submodule "third_party/docker-vnc-mcp"]
+	path = third_party/docker-vnc-mcp
+	url = https://github.com/lofyer/mcp-proxy-in-docker
+[submodule "website"]
+	path = website
+	url = git@github.com:mesalogo/mesalogo.github.io.git

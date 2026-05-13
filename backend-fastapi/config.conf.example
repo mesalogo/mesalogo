@@ -1,0 +1,78 @@
+# ====================================================================
+# MesaLogo Backend Config (template)
+# Copy to: config.conf  and fill in your own values.  DO NOT commit config.conf.
+# ====================================================================
+
+[BACKEND_CONFIG]
+# 服务地址
+HOST = 0.0.0.0
+PORT = 8080
+
+# 调试配置(生产请关闭 DEBUG)
+DEBUG = False
+DEBUG_LLM_RESPONSE = False
+LOG_LEVEL = INFO
+
+# 安全配置
+# CRITICAL: 生产环境必须改为强随机字符串(可用 `openssl rand -hex 32`)
+SECRET_KEY = CHANGE_ME_TO_A_STRONG_RANDOM_KEY
+LICENSE_SECRET_KEY = CHANGE_ME_TO_A_STRONG_RANDOM_KEY
+
+# 数据库连接
+# 请使用 docker secrets 或 env vars 注入真实密码,不要在此明文写
+DATABASE_URI = mysql+pymysql://USER:PASSWORD@localhost:3306/abm?charset=utf8mb4
+
+# Redis 缓存
+REDIS_URL = redis://localhost:6379/0
+
+# Flask
+MAX_CONTENT_LENGTH = 1073741824
+PERMANENT_SESSION_LIFETIME = 3600
+
+# ================================
+# OAuth 配置
+# ================================
+# Web 前端回调地址
+OAUTH_REDIRECT_URI = http://localhost:3000/oauth/callback
+# 桌面应用回调地址
+OAUTH_DESKTOP_REDIRECT_URI = http://localhost:8080/api/oauth/callback/desktop
+OAUTH_DESKTOP_SCHEME = mesalogo
+
+# Google OAuth (https://console.cloud.google.com/apis/credentials)
+GOOGLE_OAUTH_ENABLED = False
+GOOGLE_CLIENT_ID = YOUR_GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET = YOUR_GOOGLE_CLIENT_SECRET
+
+# Microsoft OAuth (https://entra.microsoft.com)
+MICROSOFT_OAUTH_ENABLED = False
+MICROSOFT_CLIENT_ID = YOUR_MICROSOFT_CLIENT_ID
+MICROSOFT_CLIENT_SECRET = YOUR_MICROSOFT_CLIENT_SECRET
+MICROSOFT_TENANT_ID = common
+
+# Generic OIDC (Okta / Auth0 / Keycloak / etc.)
+OIDC_ENABLED = False
+OIDC_PROVIDER_NAME = oidc
+OIDC_CLIENT_ID =
+OIDC_CLIENT_SECRET =
+OIDC_AUTHORIZE_URL =
+OIDC_TOKEN_URL =
+OIDC_USERINFO_URL =
+OIDC_SCOPE = openid email profile
+OIDC_USER_ID_FIELD = sub
+OIDC_EMAIL_FIELD = email
+OIDC_NAME_FIELD = name
+OIDC_AVATAR_FIELD = picture
+
+# Generic OAuth 2.0
+OAUTH2_ENABLED = False
+OAUTH2_PROVIDER_NAME = oauth2
+OAUTH2_CLIENT_ID =
+OAUTH2_CLIENT_SECRET =
+OAUTH2_AUTHORIZE_URL =
+OAUTH2_TOKEN_URL =
+OAUTH2_USERINFO_URL =
+OAUTH2_SCOPE =
+OAUTH2_USER_ID_FIELD = id
+OAUTH2_EMAIL_FIELD = email
+OAUTH2_NAME_FIELD = name
+OAUTH2_AVATAR_FIELD = avatar_url

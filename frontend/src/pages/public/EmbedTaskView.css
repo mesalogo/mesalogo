@@ -1,0 +1,26 @@
+.embed-task-view {
+  width: 100%;
+  height: 100vh;
+  overflow: auto;
+}
+
+/* 嵌入模式下简化样式 */
+.embed-task-view .public-task-header {
+  padding: 24px 16px;
+}
+
+.embed-task-view .public-task-content {
+  margin-top: -12px;
+  padding: 0 16px 24px;
+}
+
+.embed-task-view .header-content h2 {
+  font-size: 20px;
+}
+
+/* 移除阴影效果，使其更适合嵌入 */
+.embed-task-view .ant-card {
+  box-shadow: none !important;
+  border: 1px solid var(--custom-border, #f0f0f0);
+}
+

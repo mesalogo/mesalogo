@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>角色卡片设计预览</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 40px;
+            font-size: 28px;
+        }
+        
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+        
+        .role-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .role-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            transform: translateY(-4px);
+        }
+        
+        .card-header {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: relative;
+        }
+        
+        .card-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+        }
+        
+        .card-icon {
+            font-size: 20px;
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+        
+        .card-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .tag-blue {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .tag-green {
+            background: rgba(82, 196, 26, 0.2);
+            color: #52c41a;
+        }
+        
+        .tag-orange {
+            background: rgba(250, 173, 20, 0.2);
+            color: #faad14;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        .info-section {
+            margin-bottom: 16px;
+        }
+        
+        .info-section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .info-label {
+            font-size: 12px;
+            color: #8c8c8c;
+            margin-bottom: 8px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .info-content {
+            font-size: 14px;
+            color: #262626;
+            line-height: 1.6;
+        }
+        
+        .model-tag {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #e6f7ff;
+            color: #1890ff;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .description-text {
+            color: #595959;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .prompt-text {
+            color: #595959;
+            background: #fafafa;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-left: 3px solid #1890ff;
+        }
+        
+        .capabilities-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .capability-tag {
+            padding: 4px 10px;
+            background: #f0f5ff;
+            color: #1890ff;
+            border-radius: 4px;
+            font-size: 12px;
+            border: 1px solid #d6e4ff;
+        }
+        
+        .knowledge-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .knowledge-stats {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .knowledge-stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #52c41a;
+            font-weight: 500;
+        }
+        
+        .knowledge-stat.external {
+            background: #e6fffb;
+            border-color: #87e8de;
+            color: #13c2c2;
+        }
+        
+        .knowledge-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .knowledge-tag {
+            padding: 4px 10px;
+            background: #f6ffed;
+            color: #52c41a;
+            border-radius: 4px;
+            font-size: 12px;
+            border: 1px solid #b7eb8f;
+        }
+        
+        .knowledge-tag.external {
+            background: #e6fffb;
+            color: #13c2c2;
+            border-color: #87e8de;
+        }
+        
+        .more-tag {
+            padding: 4px 10px;
+            background: #fafafa;
+            color: #8c8c8c;
+            border-radius: 4px;
+            font-size: 12px;
+            border: 1px solid #d9d9d9;
+            cursor: pointer;
+        }
+        
+        .more-tag:hover {
+            background: #f0f0f0;
+            color: #595959;
+        }
+        
+        .divider {
+            height: 1px;
+            background: #f0f0f0;
+            margin: 16px 0;
+        }
+        
+        .empty-state {
+            color: #bfbfbf;
+            font-size: 13px;
+            font-style: italic;
+        }
+
+        /* 不同主题色的卡片头部 */
+        .card-header.theme-purple {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-header.theme-blue {
+            background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+        }
+        
+        .card-header.theme-green {
+            background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+        }
+        
+        .card-header.theme-orange {
+            background: linear-gradient(135deg, #fa8c16 0%, #d46b08 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 角色卡片视图设计方案</h1>
+        
+        <div class="cards-grid">
+            <!-- 示例卡片 1: 完整信息 -->
+            <div class="role-card">
+                <div class="card-header theme-purple">
+                    <div class="card-header-top">
+                        <div class="card-title">
+                            <span class="card-icon">👤</span>
+                            <span>客服助手</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn" title="编辑">✏️</button>
+                            <button class="action-btn" title="删除">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="card-tags">
+                        <span class="tag tag-blue">内部</span>
+                        <span class="tag tag-blue">🌐 系统</span>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="info-section">
+                        <div class="info-label">🤖 使用的模型</div>
+                        <div class="info-content">
+                            <span class="model-tag">GPT-4 Turbo</span>
+                        </div>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="info-section">
+                        <div class="info-label">📝 描述</div>
+                        <div class="info-content">
+                            <div class="description-text">
+                                专业的客服助手，能够处理用户咨询、投诉和建议，提供友好、专业的服务体验。支持多轮对话和上下文理解。
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="info-section">
+                        <div class="info-label">💬 系统提示词</div>
+                        <div class="info-content">
+                            <div class="prompt-text">
+                                你是一个专业的客服助手。请始终保持礼貌、耐心和专业。在回答用户问题时，要清晰、准确，并提供有价值的建议。如果遇到无法解决的问题，请及时转接人工客服...
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="info-section">
+                        <div class="info-label">⚡ 绑定能力 (5)</div>
+                        <div class="info-content">
+                            <div class="capabilities-list">
+                                <span class="capability-tag">网页搜索</span>
+                                <span class="capability-tag">文档查询</span>
+                                <span class="capability-tag">订单查询</span>
+                                <span class="more-tag">+2 更多</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="info-section">
+                        <div class="info-label">📚 绑定知识库</div>
+                        <div class="info-content">
+                            <div class="knowledge-section">
+                                <div class="knowledge-stats">
+                                    <span class="knowledge-stat">📘 内部: 3</span>
+                                    <span class="knowledge-stat external">🔗 外部: 2</span>
+                                </div>
+                                <div class="knowledge-list">
+                                    <span class="knowledge-tag">产品手册</span>
+                                    <span class="knowledge-tag">FAQ文档</span>
+                                    <span class="knowledge-tag external">Dify知识库</span>
+                                    <span class="more-tag">+2 更多</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 示例卡片 2: 外部角色 -->
+            <div class="role-card">
+                <div class="card-header theme-green">
+                    <div class="card-header-top">
+                        <div class="card-title">
+                            <span class="card-icon">🤖</span>
+                            <span>Dify 智能助手</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn" title="编辑">✏️</button>
+                            <button class="action-btn" title="删除">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="card-tags">
+                        <span class="tag tag-green">外部</span>
+                        <span class="tag tag-blue">👥 共享</span>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="info-section">
+                        <div class="info-label">🔗 外部平台</div>
+                        <div class="info-content">
+                            <span class="model-tag" style="background: #f6ffed; color: #52c41a;">Dify</span>
+                        </div>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="info-section">
+                        <div class="info-label">📝 描述</div>
+                        <div class="info-content">
+                            <div class="description-text">
+                                通过 Dify 平台集成的智能助手，具备强大的对话能力和知识检索功能。
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="info-section">
+                        <div class="info-label">💬 系统提示词</div>
+                        <div class="info-content">
+                            <div class="empty-state">外部角色由平台管理</div>
+                        </div>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="info-section">
+                        <div class="info-label">⚡ 绑定能力</div>
+                        <div class="info-content">
+                            <div class="empty-state">无</div>
+                        </div>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="info-section">
+                        <div class="info-label">📚 绑定知识库</div>
+                        <div class="info-content">
+                            <div class="knowledge-section">
+                                <div class="knowledge-stats">
+                                    <span class="knowledge-stat external">🔗 外部: 1</span>
+                                </div>
+                                <div class="knowledge-list">
+                                    <span class="knowledge-tag external">Dify企业知识库</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 示例卡片 3: 简洁信息 -->
+            <div class="role-card">
+                <div class="card-header theme-blue">
+                    <div class="card-header-top">
+                        <div class="card-title">
+                            <span class="card-icon">💼</span>
+                            <span>数据分析师</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn" title="编辑">✏️</button>
+                            <button class="action-btn" title="删除">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="card-tags">
+                        <span class="tag tag-blue">内部</span>
+                        <span class="tag tag-orange">🔒 私有</span>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="info-section">
+                        <div class="info-label">🤖 使用的模型</div>
+                        <div class="info-content">
+                            <span class="model-tag">默认文本生成 (GPT-3.5)</span>
+                        </div>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="info-section">
+                        <div class="info-label">📝 描述</div>
+                        <div class="info-content">
+                            <div class="description-text">
+                                专注于数据分析和可视化的助手
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="info-section">
+                        <div class="info-label">💬 系统提示词</div>
+                        <div class="info-content">
+                            <div class="prompt-text">
+                                你是一个专业的数据分析师，擅长数据处理、统计分析和数据可视化。
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="info-section">
+                        <div class="info-label">⚡ 绑定能力 (2)</div>
+                        <div class="info-content">
+                            <div class="capabilities-list">
+                                <span class="capability-tag">Python执行</span>
+                                <span class="capability-tag">数据可视化</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="info-section">
+                        <div class="info-label">📚 绑定知识库</div>
+                        <div class="info-content">
+                            <div class="empty-state">无</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 示例卡片 4: 最小信息 -->
+            <div class="role-card">
+                <div class="card-header theme-orange">
+                    <div class="card-header-top">
+                        <div class="card-title">
+                            <span class="card-icon">✍️</span>
+                            <span>内容创作者</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn" title="编辑">✏️</button>
+                            <button class="action-btn" title="删除">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="card-tags">
+                        <span class="tag tag-blue">内部</span>
+                        <span class="tag tag-blue">🌐 系统</span>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="info-section">
+                        <div class="info-label">🤖 使用的模型</div>
+                        <div class="info-content">
+                            <span class="model-tag">Claude 3 Sonnet</span>
+                        </div>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="info-section">
+                        <div class="info-label">📝 描述</div>
+                        <div class="info-content">
+                            <div class="empty-state">无描述</div>
+                        </div>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="info-section">
+                        <div class="info-label">💬 系统提示词</div>
+                        <div class="info-content">
+                            <div class="prompt-text">
+                                你是一个专业的内容创作者，擅长撰写各类文章、文案和创意内容。请确保内容原创、有吸引力且符合目标受众的需求。
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="info-section">
+                        <div class="info-label">⚡ 绑定能力</div>
+                        <div class="info-content">
+                            <div class="empty-state">无</div>
+                        </div>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="info-section">
+                        <div class="info-label">📚 绑定知识库</div>
+                        <div class="info-content">
+                            <div class="empty-state">无</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

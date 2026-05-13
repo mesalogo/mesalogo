@@ -1,0 +1,36 @@
+services:
+  galapagos:
+    image: netlogo-web:latest
+    container_name: galapagos
+    profiles:
+      - galapagos
+    ports:
+      - "9000:9000"
+    environment:
+      # 必填:生产环境请在 abm-docker/.env 设置 PLAY_HTTP_SECRET_KEY 为强随机字符串
+      # 生成示例: openssl rand -base64 36
+      - PLAY_HTTP_SECRET_KEY=${PLAY_HTTP_SECRET_KEY:?PLAY_HTTP_SECRET_KEY must be set in .env}
+      - SBT_OPTS=-Xmx2G -XX:+UseG1GC
+      - JAVA_OPTS=-Xmx2G -XX:+UseG1GC
+    volumes:
+      - ../third_party/Galapagos:/app
+      - ../third_party/Galapagos/public/modelslib:/app/public/modelslib
+      - galapagos_sbt_cache:/root/.sbt
+      - galapagos_ivy_cache:/root/.ivy2
+      - galapagos_npm_cache:/root/.npm
+      - galapagos_node_modules:/app/node_modules
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    networks:
+      - abm-network
+
+networks:
+  abm-network:
+    driver: bridge
+
+volumes:
+  galapagos_sbt_cache:
+  galapagos_ivy_cache:
+  galapagos_npm_cache:
+  galapagos_node_modules:

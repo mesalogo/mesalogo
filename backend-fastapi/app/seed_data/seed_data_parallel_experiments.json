@@ -1,0 +1,101 @@
+[
+  {
+    "name": "客服满意度优化实验",
+    "description": "通过调整客服响应策略参数，寻找最佳服务方式以最大化客户满意度",
+    "is_template": true,
+    "source_action_space_name": "智能助手空间",
+    "config": {
+      "variables": {
+        "response_style": {
+          "type": "enumerated",
+          "values": ["formal", "friendly", "empathetic", "efficient"]
+        },
+        "response_detail_level": {
+          "type": "enumerated",
+          "values": ["concise", "moderate", "detailed"]
+        }
+      },
+      "objectives": [
+        {"variable": "customer_satisfaction", "type": "maximize", "description": "客户满意度评分(0-10)"},
+        {"variable": "issue_resolved", "type": "maximize", "description": "问题是否解决(0或1)"}
+      ],
+      "stop_conditions": [
+        {"expression": "customer_satisfaction > 9"}
+      ],
+      "custom_variables": ["customer_satisfaction", "issue_resolved"],
+      "task_config": {
+        "type": "discussion",
+        "rounds": 6,
+        "topic": "客户购买的商品出现问题（物流延迟/商品损坏/与描述不符），联系客服寻求解决。客户需要在对话结束时评估满意度。",
+        "concurrency": 3
+      },
+      "experiment_protocol": "## 实验协议：客服满意度优化\n\n### 1. 角色分配\n- **客服专员**：根据 response_style 和 response_detail_level 参数调整服务方式\n- **电商客户**：提出问题，评估服务质量，更新满意度指标\n\n### 2. 输入参数行为约束\n- **response_style**：\n  - formal: 使用正式、专业的语言\n  - friendly: 使用亲切、热情的语言\n  - empathetic: 表达理解和同理心\n  - efficient: 简洁高效，直奔主题\n- **response_detail_level**：\n  - concise: 简短回答，只提供必要信息\n  - moderate: 适度详细，包含背景说明\n  - detailed: 详尽解释，提供多种方案\n\n### 3. 输出指标更新规则\n- **customer_satisfaction**: 客户在每轮对话后评估(0-10分)，对话结束时调用 set_task_var('customer_satisfaction', 分数)\n- **issue_resolved**: 问题解决时设为1，调用 set_task_var('issue_resolved', 1)"
+    }
+  },
+  {
+    "name": "教育学习效果优化实验",
+    "description": "通过调整教学策略参数，寻找最佳教学方式以提高学生学习效果",
+    "is_template": true,
+    "source_action_space_name": "教育学习空间",
+    "config": {
+      "variables": {
+        "teaching_style": {
+          "type": "enumerated",
+          "values": ["lecture", "socratic", "interactive", "example_based"]
+        },
+        "difficulty_progression": {
+          "type": "enumerated",
+          "values": ["gradual", "moderate", "challenging"]
+        }
+      },
+      "objectives": [
+        {"variable": "learning_score", "type": "maximize", "description": "学生学习效果评分(0-100)"},
+        {"variable": "engagement_level", "type": "maximize", "description": "学生参与度(0-10)"},
+        {"variable": "concept_mastery", "type": "maximize", "description": "概念掌握程度(0-10)"}
+      ],
+      "custom_variables": ["learning_score", "engagement_level", "concept_mastery"],
+      "task_config": {
+        "type": "discussion",
+        "rounds": 8,
+        "topic": "高中数学函数与导数专题辅导。教师讲解概念，学生学习并提问。学生需要在学习过程中反馈理解程度和参与感受。",
+        "concurrency": 3
+      },
+      "experiment_protocol": "## 实验协议：教育学习效果优化\n\n### 1. 角色分配\n- **学科专家/学习教练**：根据 teaching_style 和 difficulty_progression 参数调整教学方式\n- **高中生**：学习内容，提出问题，反馈学习效果\n\n### 2. 输入参数行为约束\n- **teaching_style**：\n  - lecture: 系统讲解，知识传授为主\n  - socratic: 苏格拉底式提问，引导思考\n  - interactive: 互动讨论，鼓励参与\n  - example_based: 案例教学，从实例出发\n- **difficulty_progression**：\n  - gradual: 循序渐进，小步快跑\n  - moderate: 适度挑战，稳步提升\n  - challenging: 高难度起点，快速进阶\n\n### 3. 输出指标更新规则\n- **learning_score**: 学生在学习结束时自评(0-100)，调用 set_task_var('learning_score', 分数)\n- **engagement_level**: 学生评估参与度(0-10)，调用 set_task_var('engagement_level', 分数)\n- **concept_mastery**: 学生评估概念掌握程度(0-10)，调用 set_task_var('concept_mastery', 分数)"
+    }
+  },
+  {
+    "name": "供应链协调优化实验",
+    "description": "优化供应链多方协调策略，提升供应链响应效率和成本控制",
+    "is_template": true,
+    "source_action_space_name": "供应链风险管理空间",
+    "config": {
+      "variables": {
+        "inventory_buffer": {
+          "type": "enumerated",
+          "values": ["minimal", "moderate", "high"]
+        },
+        "supplier_diversity": {
+          "type": "enumerated",
+          "values": ["single_source", "dual_source", "multi_source"]
+        },
+        "communication_frequency": {
+          "type": "enumerated",
+          "values": ["weekly", "daily", "realtime"]
+        }
+      },
+      "objectives": [
+        {"variable": "supply_chain_resilience", "type": "maximize", "description": "供应链韧性评分(0-10)"},
+        {"variable": "cost_efficiency", "type": "maximize", "description": "成本效率评分(0-10)"},
+        {"variable": "response_time", "type": "minimize", "description": "响应时间(天数)"}
+      ],
+      "custom_variables": ["supply_chain_resilience", "cost_efficiency", "response_time"],
+      "task_config": {
+        "type": "discussion",
+        "rounds": 6,
+        "topic": "芯片供应商通知交货延迟3周，制造商需要与供应商、物流商协调应对方案，评估不同策略下的供应链表现。",
+        "concurrency": 3
+      },
+      "experiment_protocol": "## 实验协议：供应链协调优化\n\n### 1. 角色分配\n- **制造商采购经理**：评估影响，协调决策，更新指标\n- **物流调度主管**：提供物流方案和时效评估\n- **供应商客户经理**：解释情况，提供替代方案\n\n### 2. 输入参数行为约束\n- **inventory_buffer**：\n  - minimal: 精益库存，JIT模式\n  - moderate: 适度安全库存\n  - high: 高安全库存，应对不确定性\n- **supplier_diversity**：\n  - single_source: 单一供应商，成本最优\n  - dual_source: 双供应商，基本备份\n  - multi_source: 多供应商，最大弹性\n- **communication_frequency**：\n  - weekly: 周度沟通\n  - daily: 日度沟通\n  - realtime: 实时信息共享\n\n### 3. 输出指标更新规则\n- **supply_chain_resilience**: 采购经理评估(0-10)，调用 set_task_var('supply_chain_resilience', 分数)\n- **cost_efficiency**: 采购经理评估(0-10)，调用 set_task_var('cost_efficiency', 分数)\n- **response_time**: 物流主管估算响应天数，调用 set_task_var('response_time', 天数)"
+    }
+  }
+]

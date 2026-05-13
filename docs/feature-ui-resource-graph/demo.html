@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>资源关系图 Demo</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .card-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-header h3 { font-size: 16px; font-weight: 600; color: #333; }
+    .card-body { padding: 24px; }
+    .toolbar { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn {
+      padding: 6px 16px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    .btn:hover { border-color: #1677ff; color: #1677ff; }
+    .btn.active { background: #1677ff; border-color: #1677ff; color: #fff; }
+    #chart { width: 100%; height: 700px; }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 16px 24px;
+      border-top: 1px solid #f0f0f0;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #666; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .detail-panel {
+      position: fixed;
+      right: 20px;
+      top: 100px;
+      width: 320px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: none;
+      z-index: 100;
+    }
+    .detail-panel.show { display: block; }
+    .detail-header {
+      padding: 16px;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+.detail-header h4 { font-size: 15px; display: flex; align-items: center; gap: 8px; }
+    .detail-close { cursor: pointer; font-size: 18px; color: #999; }
+    .detail-close:hover { color: #333; }
+    .detail-body { padding: 16px; }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #f5f5f5;
+      font-size: 13px;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { color: #999; }
+    .detail-value { color: #333; font-weight: 500; }
+    .detail-actions {
+      padding: 16px;
+      border-top: 1px solid #f0f0f0;
+      display: flex;
+      gap: 8px;
+    }
+    .detail-actions .btn { flex: 1; text-align: center; }
+    .stats-row { display: flex; gap: 24px; margin-bottom: 16px; }
+    .stat-item { text-align: center; }
+    .stat-value { font-size: 24px; font-weight: 600; color: #1677ff; }
+    .stat-label { font-size: 12px; color: #999; margin-top: 4px; }
+    .layer-label {
+      font-size: 12px;
+      color: #999;
+      padding: 4px 8px;
+      background: #f5f5f5;
+      border-radius: 4px;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <h3>&#128279; 资源关系图</h3>
+        <div class="toolbar">
+          <button class="btn active" onclick="setLayout('circular', this)">环形分组</button>
+          <button class="btn" onclick="setLayout('tree', this)">树形层级</button>
+          <button class="btn" onclick="setLayout('force', this)">力导向</button>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="stats-row">
+          <div class="stat-item">
+            <div class="stat-value" id="totalNodes">0</div>
+            <div class="stat-label">总节点数</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="totalLinks">0</div>
+            <div class="stat-label">总关联数</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="orphanNodes">0</div>
+            <div class="stat-label">孤立节点</div>
+          </div>
+        </div>
+        <div id="chart"></div>
+      </div>
+
+      <div class="legend">
+        <span class="layer-label">模板层:</span>
+        <div class="legend-item"><div class="legend-dot" style="background:#1677ff"></div> ActionSpace (行动空间)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#52c41a"></div> Role (角色)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#fa8c16"></div> Knowledge (知识库)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#eb2f96"></div> RuleSet (规则集)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#fadb14"></div> Capability (能力)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#597ef7"></div> Tool (工具)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#95de64"></div> MarketApp (应用)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ff85c0"></div> SharedEnvVar (共享变量)</div>
+        <span class="layer-label" style="margin-left:16px">实例层:</span>
+        <div class="legend-item"><div class="legend-dot" style="background:#722ed1"></div> ActionTask (任务)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#13c2c2"></div> Agent (智能体)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ff7a45"></div> Experiment (实验)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#69b1ff"></div> Conversation (对话)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-panel" id="detailPanel">
+    <div class="detail-header">
+      <h4><span id="detailTitle"></span></h4>
+      <span class="detail-close" onclick="closeDetail()">&times;</span>
+    </div>
+    <div class="detail-body">
+      <div class="detail-row">
+        <span class="detail-label">类型</span>
+        <span class="detail-value" id="detailType"></span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">层级</span>
+        <span class="detail-value" id="detailLayer"></span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">创建时间</span>
+        <span class="detail-value" id="detailCreatedAt"></span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">创建者</span>
+        <span class="detail-value" id="detailCreatedBy"></span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">关联数量</span>
+        <span class="detail-value" id="detailLinks"></span>
+      </div>
+    </div>
+    <div class="detail-actions">
+      <button class="btn">编辑</button>
+      <button class="btn" style="background:#1677ff;color:#fff;border-color:#1677ff;">查看详情</button>
+    </div>
+  </div>
+
+  <script>
+    var categoryColors = {
+      'ActionSpace': '#1677ff',
+      'Role': '#52c41a',
+      'Knowledge': '#fa8c16',
+      'RuleSet': '#eb2f96',
+      'Capability': '#fadb14',
+      'Tool': '#597ef7',
+      'MarketApp': '#95de64',
+      'SharedEnvVar': '#ff85c0',
+      'ActionTask': '#722ed1',
+      'Agent': '#13c2c2',
+      'ParallelExperiment': '#ff7a45',
+      'Conversation': '#69b1ff',
+      'AgentVariable': '#b37feb',
+      'EnvironmentVar': '#ffc069'
+    };
+
+    var categoryLayer = {
+      'ActionSpace': '模板层',
+      'Role': '模板层',
+      'Knowledge': '模板层',
+      'RuleSet': '模板层',
+      'Capability': '模板层',
+      'Tool': '模板层',
+      'MarketApp': '模板层',
+      'SharedEnvVar': '模板层',
+      'ActionTask': '实例层',
+      'Agent': '实例层',
+      'ParallelExperiment': '实例层',
+      'Conversation': '实例层',
+      'AgentVariable': '实例层',
+      'EnvironmentVar': '实例层'
+    };
+
+    var categoryOrder = [
+      'ActionSpace', 'Role', 'RuleSet', 'Knowledge', 'Capability', 'Tool', 'MarketApp', 'SharedEnvVar',
+      'ActionTask', 'Agent', 'Conversation', 'ParallelExperiment'
+    ];
+
+    var mockData = {
+      nodes: [
+        // 模板层 - ActionSpace
+        { id: 'as-1', name: '产品研发空间', type: 'ActionSpace', created_at: '2024-01-10', created_by: 'admin' },
+        { id: 'as-2', name: '客服支持空间', type: 'ActionSpace', created_at: '2024-01-12', created_by: 'admin' },
+        
+        // 模板层 - Role
+        { id: 'role-1', name: '产品经理助手', type: 'Role', created_at: '2024-01-08', created_by: 'admin' },
+        { id: 'role-2', name: '技术顾问', type: 'Role', created_at: '2024-01-09', created_by: 'user1' },
+        { id: 'role-3', name: '客服专员', type: 'Role', created_at: '2024-01-11', created_by: 'admin' },
+        { id: 'role-4', name: '监督者', type: 'Role', created_at: '2024-01-11', created_by: 'admin' },
+        
+        // 模板层 - Knowledge
+        { id: 'kb-1', name: '产品文档库', type: 'Knowledge', created_at: '2024-01-05', created_by: 'admin' },
+        { id: 'kb-2', name: '技术手册', type: 'Knowledge', created_at: '2024-01-06', created_by: 'user1' },
+        
+        // 模板层 - RuleSet
+        { id: 'rs-1', name: '产品评审规则', type: 'RuleSet', created_at: '2024-01-10', created_by: 'admin' },
+        
+        // 模板层 - Capability
+        { id: 'cap-1', name: '代码执行', type: 'Capability', created_at: '2024-01-01', created_by: 'system' },
+        { id: 'cap-2', name: '网页浏览', type: 'Capability', created_at: '2024-01-01', created_by: 'system' },
+        { id: 'cap-3', name: '知识检索', type: 'Capability', created_at: '2024-01-01', created_by: 'system' },
+        
+        // 模板层 - Tool
+        { id: 'tool-1', name: '代码执行器', type: 'Tool', created_at: '2024-01-01', created_by: 'system' },
+        { id: 'tool-2', name: '网页浏览器', type: 'Tool', created_at: '2024-01-01', created_by: 'system' },
+        
+        // 模板层 - MarketApp
+        { id: 'app-1', name: 'VSCode编辑器', type: 'MarketApp', created_at: '2024-01-01', created_by: 'system' },
+        { id: 'app-2', name: 'OnlyOffice', type: 'MarketApp', created_at: '2024-01-01', created_by: 'system' },
+        
+        // 模板层 - SharedEnvVar
+        { id: 'sev-1', name: 'API_KEY', type: 'SharedEnvVar', created_at: '2024-01-05', created_by: 'admin' },
+        
+        // 实例层 - ActionTask
+        { id: 'task-1', name: '需求分析任务', type: 'ActionTask', created_at: '2024-01-15', created_by: 'user1' },
+        { id: 'task-2', name: '技术方案设计', type: 'ActionTask', created_at: '2024-01-16', created_by: 'user2' },
+        
+        // 实例层 - Agent
+        { id: 'agent-1', name: 'PM助手实例', type: 'Agent', created_at: '2024-01-15', created_by: 'system' },
+        { id: 'agent-2', name: '技术顾问实例', type: 'Agent', created_at: '2024-01-16', created_by: 'system' },
+        
+        // 实例层 - Conversation
+        { id: 'conv-1', name: '需求讨论会话', type: 'Conversation', created_at: '2024-01-15', created_by: 'user1' },
+        { id: 'conv-2', name: '方案评审会话', type: 'Conversation', created_at: '2024-01-16', created_by: 'user2' },
+        
+        // 实例层 - ParallelExperiment
+        { id: 'exp-1', name: '模型对比实验', type: 'ParallelExperiment', created_at: '2024-01-18', created_by: 'user1' }
+      ],
+      links: [
+        // ActionSpace> Role (ActionSpaceRole N:N)
+        { source: 'as-1', target: 'role-1', relation: 'ActionSpaceRole' },
+        { source: 'as-1', target: 'role-2', relation: 'ActionSpaceRole' },
+        { source: 'as-2', target: 'role-3', relation: 'ActionSpaceRole' },
+        
+        // ActionSpace -> Role (ActionSpaceObserver N:N) 监督者
+        { source: 'as-1', target: 'role-4', relation: 'ActionSpaceObserver' },
+        
+        // ActionSpace <-> RuleSet (ActionSpaceRuleSet N:N)
+        { source: 'as-1', target: 'rs-1', relation: 'ActionSpaceRuleSet' },
+        
+        // ActionSpace <-> MarketApp (ActionSpaceApp N:N)
+        { source: 'as-1', target: 'app-1', relation: 'ActionSpaceApp' },
+        { source: 'as-1', target: 'app-2', relation: 'ActionSpaceApp' },
+        
+        // ActionSpace <-> SharedEnvVar (ActionSpaceSharedVariable N:N)
+        { source: 'as-1', target: 'sev-1', relation: 'ActionSpaceSharedVariable' },
+        { source: 'as-2', target: 'sev-1', relation: 'ActionSpaceSharedVariable' },
+        
+        // Role <-> Knowledge (RoleKnowledge N:N)
+        { source: 'role-1', target: 'kb-1', relation: 'RoleKnowledge' },
+        { source: 'role-1', target: 'kb-2', relation: 'RoleKnowledge' },
+        { source: 'role-2', target: 'kb-2', relation: 'RoleKnowledge' },
+        
+        // Role <-> Capability (RoleCapability N:N)
+        { source: 'role-1', target: 'cap-1', relation: 'RoleCapability' },
+        { source: 'role-1', target: 'cap-3', relation: 'RoleCapability' },
+        { source: 'role-2', target: 'cap-1', relation: 'RoleCapability' },
+        { source: 'role-2', target: 'cap-2', relation: 'RoleCapability' },
+        
+        // Role <-> Tool (RoleTool N:N)
+        { source: 'role-1', target: 'tool-1', relation: 'RoleTool' },
+        { source: 'role-2', target: 'tool-1', relation: 'RoleTool' },
+        { source: 'role-2', target: 'tool-2', relation: 'RoleTool' },
+        
+        // ActionSpace -> ActionTask (创建关系)
+        { source: 'as-1', target: 'task-1', relation: 'ActionSpaceTask' },
+        { source: 'as-1', target: 'task-2', relation: 'ActionSpaceTask' },
+        
+        // ActionTask -> Agent
+        { source: 'task-1', target: 'agent-1', relation: 'TaskAgent' },
+        { source: 'task-2', target: 'agent-2', relation: 'TaskAgent' },
+        
+        // Role -> Agent (角色实例化)
+        { source: 'role-1', target: 'agent-1', relation: 'RoleAgent' },
+        { source: 'role-2', target: 'agent-2', relation: 'RoleAgent' },
+        
+        // ActionTask -> Conversation
+        { source: 'task-1', target: 'conv-1', relation: 'TaskConversation' },
+        { source: 'task-2', target: 'conv-2', relation: 'TaskConversation' },
+        
+        // ActionSpace -> ParallelExperiment
+        { source: 'as-1', target: 'exp-1', relation: 'ActionSpaceExperiment' },
+        
+        // ActionTask -> ParallelExperiment (克隆关系)
+        { source: 'task-1', target: 'exp-1', relation: 'ExperimentClone' }
+      ]
+    };
+
+    var chart;
+    var currentLayout = 'circular';
+    var globalLinkCount = {};
+
+    function initChart() {
+      chart = echarts.init(document.getElementById('chart'));
+      calculateLinkCount();
+      updateChart();
+      
+      chart.on('click', function(params) {
+        if (params.dataType === 'node') {
+          showDetail(params.data);
+        }
+      });
+
+      window.addEventListener('resize', function() {
+        chart.resize();
+      });
+    }
+
+    function calculateLinkCount() {
+      globalLinkCount = {};
+      mockData.links.forEach(function(l) {
+        globalLinkCount[l.source] = (globalLinkCount[l.source] || 0) + 1;
+        globalLinkCount[l.target] = (globalLinkCount[l.target] || 0) + 1;
+      });
+    }
+
+    function getCircularLayout() {
+      var nodes = [];
+      var centerX = 450;
+      var centerY = 320;
+      
+      var groupedNodes = {};
+      categoryOrder.forEach(function(cat) { groupedNodes[cat] = []; });
+      mockData.nodes.forEach(function(n) {
+        if (groupedNodes[n.type]) groupedNodes[n.type].push(n);
+      });
+
+      var angleOffset = 0;
+      categoryOrder.forEach(function(cat, catIndex) {
+        var catNodes = groupedNodes[cat];
+        if (catNodes.length === 0) return;
+        
+        var radius = 100 + catIndex * 45;
+        var angleStep = (2 * Math.PI) / Math.max(catNodes.length, 1);
+        
+        catNodes.forEach(function(n, i) {
+          var angle = angleOffset + i * angleStep;
+          nodes.push({
+            id: n.id,
+            name: n.name,
+            type: n.type,
+            layer: categoryLayer[n.type],
+            created_at: n.created_at,
+            created_by: n.created_by,
+            x: centerX + radius * Math.cos(angle),
+            y: centerY + radius * Math.sin(angle),
+            symbolSize: Math.max(25, Math.min(50, 20 + (globalLinkCount[n.id] || 0) * 3)),
+            itemStyle: { color: categoryColors[n.type] },
+            label: { show: true, position: 'right', fontSize: 11, color: '#333' }
+          });
+        });
+        angleOffset += Math.PI / 6;
+      });
+
+      return nodes;
+    }
+
+    function getTreeLayout() {
+      var nodes = [];
+      var levels = {
+        'ActionSpace': 0,
+        'Role': 1,
+        'RuleSet': 1,
+        'MarketApp': 1,
+        'SharedEnvVar': 1,
+        'Knowledge': 2,
+        'Capability': 2,
+        'Tool': 2,
+        'ActionTask': 3,
+        'Agent': 4,
+        'Conversation': 4,
+        'ParallelExperiment': 4
+      };
+
+      var levelNodes = [[], [], [], [], []];
+      mockData.nodes.forEach(function(n) {
+        var level = levels[n.type] || 0;
+        levelNodes[level].push(n);
+      });
+
+      var startY = 50;
+      var levelHeight = 130;
+      var chartWidth = 850;
+
+      levelNodes.forEach(function(lnodes, level) {
+        var y = startY + level * levelHeight;
+        var spacing = chartWidth / (lnodes.length + 1);
+        
+        lnodes.forEach(function(n, i) {
+          nodes.push({
+            id: n.id,
+            name: n.name,
+            type: n.type,
+            layer: categoryLayer[n.type],
+            created_at: n.created_at,
+            created_by: n.created_by,
+            x: spacing * (i + 1),
+            y: y,
+            symbolSize: Math.max(25, Math.min(50, 20 + (globalLinkCount[n.id] || 0) * 3)),
+            itemStyle: { color: categoryColors[n.type] },
+            label: { show: true, position: 'bottom', fontSize: 11, color: '#333' }
+          });
+        });
+      });
+
+      return nodes;
+    }
+
+    function getForceLayout() {
+      return mockData.nodes.map(function(n) {
+        return {
+          id: n.id,
+          name: n.name,
+          type: n.type,
+          layer: categoryLayer[n.type],
+          created_at: n.created_at,
+          created_by: n.created_by,
+          symbolSize: Math.max(25, Math.min(50, 20 + (globalLinkCount[n.id] || 0) * 3)),
+          itemStyle: { color: categoryColors[n.type] },
+          label: { show: true, position: 'bottom', fontSize: 11, color: '#333' }
+        };
+      });
+    }
+
+    function updateChart() {
+      var nodes;
+      var layoutConfig = {};
+
+      if (currentLayout === 'circular') {
+        nodes = getCircularLayout();
+        layoutConfig = { layout: 'none' };
+      } else if (currentLayout === 'tree') {
+        nodes = getTreeLayout();
+        layoutConfig = { layout: 'none' };
+      } else {
+        nodes = getForceLayout();
+        layoutConfig = {
+          layout: 'force',
+          force: {
+            repulsion: 500,
+            gravity: 0.1,
+            edgeLength: [80, 180],
+            layoutAnimation: true
+          }
+        };
+      }
+
+      var links = mockData.links.map(function(l) {
+        return {
+          source: l.source,
+          target: l.target,
+          relation: l.relation,
+          lineStyle: { 
+            color: '#ccc', 
+            width: 1.5, 
+            curveness: currentLayout === 'circular' ? 0.2 : 0
+          }
+        };
+      });
+
+      document.getElementById('totalNodes').textContent = nodes.length;
+      document.getElementById('totalLinks').textContent = links.length;
+      
+      var connectedNodes = new Set();
+      links.forEach(function(l) {
+        connectedNodes.add(l.source);
+        connectedNodes.add(l.target);
+      });
+      var orphanCount = nodes.filter(function(n) { return !connectedNodes.has(n.id); }).length;
+      document.getElementById('orphanNodes').textContent = orphanCount;
+
+      var option = {
+        tooltip: {
+          trigger: 'item',
+          formatter: function(params) {
+            if (params.dataType === 'node') {
+              return '<strong>' + params.data.name + '</strong><br/>' +
+                     '类型: ' + params.data.type + '<br/>' +
+                   '层级: ' + params.data.layer + '<br/>' +
+                     '创建者: ' + params.data.created_by + '<br/>' +
+                     '关联数: ' + (globalLinkCount[params.data.id] || 0);
+            }
+            return params.data.relation;
+          }
+        },
+        series: [{
+          type: 'graph',
+          data: nodes,
+          links: links,
+          roam: true,
+          draggable: true,
+          emphasis: {
+            focus: 'adjacency',
+            lineStyle: { width: 3, color: '#1677ff' }
+          },
+          lineStyle: { opacity: 0.6 }
+        }]
+      };
+
+      Object.assign(option.series[0], layoutConfig);
+      chart.setOption(option, true);
+    }
+
+    function setLayout(layout, btn) {
+      var buttons = document.querySelectorAll('.toolbar .btn');
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove('active');
+      }
+      btn.classList.add('active');
+      currentLayout = layout;
+      updateChart();
+    }
+
+    function showDetail(node) {
+      var panel = document.getElementById('detailPanel');
+      document.getElementById('detailTitle').textContent = node.name;
+      document.getElementById('detailType').textContent = node.type;
+      document.getElementById('detailLayer').textContent = node.layer;
+      document.getElementById('detailCreatedAt').textContent = node.created_at;
+      document.getElementById('detailCreatedBy').textContent = node.created_by;
+      document.getElementById('detailLinks').textContent = (globalLinkCount[node.id] || 0) + ' 个';
+      panel.classList.add('show');
+    }
+
+    function closeDetail() {
+      document.getElementById('detailPanel').classList.remove('show');
+    }
+
+    initChart();
+  </script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+[
+    {
+        "name": "基础问答规则集",
+        "description": "提供问答服务的基本规则集",
+        "rules": ["准确性规则", "不确定性表达规则", "有害信息限制规则"],
+        "conditions": [],
+        "actions": [],
+        "settings": {}
+    },
+    {
+        "name": "团队协作规则集",
+        "description": "多角色协作的规则集",
+        "rules": ["专业角色规则", "尊重观点规则", "专业讨论规则"],
+        "conditions": [],
+        "actions": [],
+        "settings": {}
+    },
+    {
+        "name": "教育学习规则集",
+        "description": "教育和学习场景的规则集",
+        "rules": ["清晰解释规则", "渐进教学规则", "鼓励提问规则", "学习进度评估规则"],
+        "conditions": [],
+        "actions": [],
+        "settings": {}
+    },
+    {
+        "name": "商业与投资决策规则集",
+        "description": "企业战略决策、风险评估和金融投资分析综合规则集",
+        "rules": ["数据支持决策规则", "风险评估规则", "投资风险评估规则"],
+        "conditions": [],
+        "actions": [],
+        "settings": {}
+    },
+    {
+        "name": "法律分析规则集",
+        "description": "法律分析和咨询服务综合规则集",
+        "rules": ["法律准确性规则", "法律限制声明规则"],
+        "conditions": [],
+        "actions": [],
+        "settings": {}
+    },
+
+    {
+        "name": "医疗诊断规则集",
+        "description": "医疗多专家会诊和诊断场景的规则集合",
+        "rules": ["专家意见分歧处理规则", "医疗信息责任声明规则", "资源分配逻辑规则"],
+        "category": "medical",
+        "is_active": true,
+        "settings": {
+            "execution_mode": "sequential"
+        }
+    },
+
+    {
+        "name": "安全监管规则集",
+        "description": "工业安全监管和事故预防综合规则集",
+        "rules": ["准确性规则", "不确定性表达规则", "有害信息限制规则", "温度阈值检查规则"],
+        "conditions": [],
+        "actions": [],
+        "settings": {}
+    },
+    {
+        "name": "环境监测规则集",
+        "description": "环境监测分析和污染控制综合规则集",
+        "rules": ["准确性规则", "不确定性表达规则", "有害信息限制规则", "温度阈值检查规则"],
+        "conditions": [],
+        "actions": [],
+        "settings": {}
+    },
+
+    {
+        "name": "城市规划规则集",
+        "description": "城市规划和发展项目评估综合规则集",
+        "rules": ["数据支持决策规则", "风险评估规则"],
+        "conditions": [],
+        "actions": [],
+        "settings": {}
+    },
+    {
+        "name": "军事决策规则集",
+        "description": "军事战略决策和战术推演综合规则集",
+        "rules": ["数据支持决策规则", "风险评估规则", "专业角色规则", "尊重观点规则", "专业讨论规则", "资源分配逻辑规则"],
+        "conditions": [],
+        "actions": [],
+        "settings": {
+            "execution_mode": "sequential",
+            "security_level": "high"
+        }
+    },
+    {
+        "name": "辩论规则集",
+        "description": "结构化辩论和观点对抗性讨论综合规则集",
+        "rules": ["专业角色规则", "尊重观点规则", "专业讨论规则", "数据支持决策规则", "准确性规则"],
+        "conditions": [],
+        "actions": [],
+        "settings": {
+            "execution_mode": "sequential",
+            "debate_format": "structured"
+        }
+    }
+]

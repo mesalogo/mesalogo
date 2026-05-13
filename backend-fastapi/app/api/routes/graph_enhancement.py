@@ -1,0 +1,950 @@
+"""
+Auto-converted from Flask Blueprint → FastAPI APIRouter
+Source files: graph_enhancement.py
+"""
+import logging
+from typing import Optional
+from fastapi import APIRouter, HTTPException, Query, Request, Depends
+from fastapi.responses import JSONResponse, StreamingResponse
+from core.config import settings
+from core.dependencies import get_current_user, get_admin_user
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter()
+
+# ============================================================
+# Source: graph_enhancement.py
+# ============================================================
+
+"""
+图谱增强API路由
+
+处理与图谱增强相关的所有API请求，包括：
+- 配置管理（增删改查）
+- 状态查询
+- 测试查询
+- 框架集成
+"""
+
+import os
+import json
+import uuid
+from datetime import datetime
+from sqlalchemy.exc import IntegrityError
+
+from app.models import GraphEnhancement, db
+from app.services.graph_enhancement import GraphEnhancementService
+from app.services.memory_capability_service import memory_capability_service
+
+# 创建Blueprint
+
+# 图谱增强服务实例
+graph_service = GraphEnhancementService()
+
+# ==================== 配置管理接口 ====================
+
+@router.get('/graph-enhancement/config')
+def get_graph_enhancement_config():
+    """获取图谱增强配置"""
+    try:
+        # 获取或创建默认配置
+        config = GraphEnhancement.query.filter_by(framework='graphiti').first()
+        if not config:
+            # 创建默认配置
+            config = GraphEnhancement(
+                name='默认图谱增强配置',
+                description='系统默认的图谱增强配置',
+                enabled=False,
+                framework='graphiti'
+            )
+            db.session.add(config)
+            db.session.commit()
+        
+        # 确保framework_config中包含community_config
+        framework_config = config.framework_config or {}
+        if 'community_config' not in framework_config:
+            framework_config['community_config'] = {
+                'auto_build_enabled': False
+            }
+
+        return {
+            'success': True,
+            'data': {
+                'id': config.id,
+                'enabled': config.enabled,
+                'framework': config.framework,
+                'name': config.name,
+                'description': config.description,
+                'framework_config': framework_config,
+                'created_at': config.created_at.isoformat() if config.created_at else None,
+                'updated_at': config.updated_at.isoformat() if config.updated_at else None
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"获取图谱增强配置失败: {e}")
+        return JSONResponse(content={
+            'success': False,
+            'message': f'获取图谱增强配置失败: {str(e)}'
+        }, status_code=500)
+
+@router.post('/graph-enhancement/config')
+async def update_graph_enhancement_config(request: Request):
+    """更新图谱增强配置"""
+    try:
+        data = await request.json()
+        
+        # 获取或创建配置
+        config = GraphEnhancement.query.filter_by(framework='graphiti').first()
+        if not config:
+            config = GraphEnhancement(
+                name='默认图谱增强配置',
+                description='系统默认的图谱增强配置'
+            )
+            db.session.add(config)
+        
+        # 更新基础配置字段
+        if 'enabled' in data:
+            config.enabled = data['enabled']
+        if 'framework' in data:
+            config.framework = data['framework']
+        if 'name' in data:
+            config.name = data['name']
+        if 'description' in data:
+            config.description = data['description']
+
+        # 更新框架配置 - 所有其他配置都存储在这里
+        framework_config = config.framework_config or {}
+
+        if 'framework_config' in data:
+            framework_config.update(data['framework_config'])
+
+        # 保存合并后的配置
+        config.framework_config = framework_config
+
+        # 强制标记JSON字段为已修改
+        from sqlalchemy.orm.attributes import flag_modified
+        flag_modified(config, 'framework_config')
+
+        db.session.commit()
+
+        # 保存配置后，立即更新 graphiti.env 文件
+        if config.framework == 'graphiti':
+            try:
+                logger.info("配置已保存到数据库，开始更新 graphiti.env 文件")
+                env_vars = graph_service.generate_env_vars_for_graphiti()
+                
+                if env_vars:
+                    # 计算 abm-docker 目录路径
+                    routes_dir = os.path.dirname(os.path.abspath(__file__))
+                    api_dir = os.path.dirname(routes_dir)
+                    app_dir = os.path.dirname(api_dir)
+                    backend_dir = os.path.dirname(app_dir)
+                    project_root = os.path.dirname(backend_dir)
+                    abm_docker_dir = os.path.join(project_root, 'abm-docker')
+                    env_file_path = os.path.join(abm_docker_dir, 'graphiti.env')
+                    
+                    # 写入环境变量文件
+                    with open(env_file_path, 'w', encoding='utf-8') as f:
+                        f.write("# Graphiti Service Configuration\n")
+                        f.write("# Auto-generated by ABM-LLM backend\n")
+                        f.write(f"# Generated at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+                        
+                        # Neo4j 配置
+                        f.write("# Neo4j Database Configuration\n")
+                        for key in ['NEO4J_URI', 'NEO4J_USER', 'NEO4J_PASSWORD']:
+                            if key in env_vars:
+                                f.write(f"{key}={env_vars[key]}\n")
+                        f.write("\n")
+                        
+                        # OpenAI API 配置
+                        f.write("# OpenAI API Configuration\n")
+                        for key in ['OPENAI_API_KEY', 'OPENAI_BASE_URL', 'MODEL_NAME', 'SMALL_MODEL_NAME', 'OPENAI_COMPATIBLE']:
+                            if key in env_vars:
+                                f.write(f"{key}={env_vars[key]}\n")
+                        f.write("\n")
+                        
+                        # 嵌入模型配置
+                        f.write("# OpenAI Embedder Configuration\n")
+                        for key in ['OPENAI_EMBEDDER_API_KEY', 'OPENAI_EMBEDDER_MODEL_ID', 'OPENAI_EMBEDDER_DIMENSION', 'OPENAI_EMBEDDER_API_URL']:
+                            if key in env_vars:
+                                f.write(f"{key}={env_vars[key]}\n")
+                        f.write("\n")
+                        
+                        # 重排序配置
+                        f.write("# Reranker/Cross-Encoder Configuration\n")
+                        for key in ['RERANKER_TYPE', 'RERANK_MODEL_ID', 'RERANK_MODEL_API_KEY', 'RERANK_MODEL_API_URL']:
+                            if key in env_vars:
+                                f.write(f"{key}={env_vars[key]}\n")
+                        f.write("\n")
+                        
+                        # 其他配置
+                        f.write("# Optional Configuration\n")
+                        for key in ['GROUP_ID', 'SEMAPHORE_LIMIT', 'API_SERVER_PORT', 'MCP_SERVER_SSE_PORT', 'AUTO_BUILD_COMMUNITY', 'GRAPHITI_TELEMETRY_ENABLED']:
+                            if key in env_vars:
+                                f.write(f"{key}={env_vars[key]}\n")
+                    
+                    logger.info(f"graphiti.env 文件已更新到: {env_file_path}")
+                    
+            except Exception as e:
+                logger.error(f"更新 graphiti.env 文件失败: {e}")
+                import traceback
+                logger.error(traceback.format_exc())
+                # 不阻断配置保存，只记录错误
+
+        # 同步memory能力状态
+        try:
+            sync_success, sync_message = memory_capability_service.sync_memory_capability_with_graph_enhancement()
+            if not sync_success:
+                logger.warning(f"Memory能力同步失败: {sync_message}")
+                # 不阻断配置保存，只记录警告
+            else:
+                logger.info(f"Memory能力同步成功: {sync_message}")
+        except Exception as e:
+            logger.error(f"Memory能力同步异常: {e}")
+            # 不阻断配置保存，只记录错误
+
+        # 如果启用了图谱增强，且框架是 graphiti，初始化服务
+        if config.enabled and config.framework == 'graphiti':
+            try:
+                success, message = graph_service.initialize(config)
+                if not success:
+                    return JSONResponse(content={
+                        'success': False,
+                        'message': f'初始化图谱增强框架失败: {message}'
+                    }, status_code=500)
+            except Exception as e:
+                logger.error(f"初始化图谱增强框架异常: {e}")
+                return JSONResponse(content={
+                    'success': False,
+                    'message': f'初始化图谱增强框架异常: {str(e)}'
+                }, status_code=500)
+        
+        return {
+            'success': True,
+            'message': '图谱增强配置更新成功',
+            'data': {
+                'id': config.id,
+                'enabled': config.enabled,
+                'framework': config.framework
+            }
+        }
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"更新图谱增强配置失败: {e}")
+        return JSONResponse(content={
+            'success': False,
+            'message': f'更新图谱增强配置失败: {str(e)}'
+        }, status_code=500)
+
+# ==================== 状态查询接口 ====================
+
+@router.get('/graph-enhancement/memory-capability-status')
+def get_memory_capability_status():
+    """获取memory能力状态"""
+    try:
+        status = memory_capability_service.get_memory_capability_status()
+
+        return {
+            'success': True,
+            'data': status
+        }
+
+    except Exception as e:
+        logger.error(f"获取memory能力状态失败: {e}")
+        return JSONResponse(content={
+            'success': False,
+            'message': f'获取memory能力状态失败: {str(e)}'
+        }, status_code=500)
+
+@router.get('/graph-enhancement/status')
+def get_graph_enhancement_status():
+    """获取图谱增强状态"""
+    try:
+        config = GraphEnhancement.query.filter_by(framework='graphiti').first()
+        if not config or not config.enabled:
+            return {
+                'success': True,
+                'data': {
+                    'enabled': False,
+                    'status': 'disabled',
+                    'message': '图谱增强未启用'
+                }
+            }
+        
+        # 只有 graphiti 框架才通过此接口获取状态
+        if config.framework != 'graphiti':
+            return {
+                'success': True,
+                'data': {
+                    'enabled': config.enabled,
+                    'framework': config.framework,
+                    'status': 'unknown',
+                    'message': f'{config.framework} 请使用对应的独立 API'
+                }
+            }
+        
+        # 获取框架状态
+        status_info = graph_service.get_status(config)
+        
+        return {
+            'success': True,
+            'data': status_info
+        }
+        
+    except Exception as e:
+        logger.error(f"获取图谱增强状态失败: {e}")
+        return JSONResponse(content={
+            'success': False,
+            'message': f'获取图谱增强状态失败: {str(e)}'
+        }, status_code=500)
+
+# ==================== 测试查询接口 ====================
+
+@router.post('/graph-enhancement/test-query')
+async def test_graph_enhancement_query(request: Request):
+    """测试图谱增强查询"""
+    try:
+        data = await request.json()
+
+        query = data.get('query', '')
+        if not query:
+            raise HTTPException(status_code=400, detail={
+                'success': False,
+                'message': '查询内容不能为空'
+            })
+
+        config = GraphEnhancement.query.filter_by(framework='graphiti').first()
+        if not config or not config.enabled:
+            raise HTTPException(status_code=400, detail={
+                'success': False,
+                'message': '图谱增强未启用'
+            })
+
+        # 根据框架类型构建查询参数
+        if config.framework == 'graphiti':
+            # Graphiti 框架参数
+            query_params = {
+                'max_facts': data.get('max_facts', 10),
+                'group_ids': data.get('group_ids', [])
+            }
+        else:
+            # GraphRAG 等其他框架参数
+            query_params = {
+                'mode': data.get('mode', config.default_query_mode),
+                'top_k': data.get('top_k', config.top_k),
+                'chunk_top_k': data.get('chunk_top_k', config.chunk_top_k),
+                'response_type': data.get('response_type', 'Multiple Paragraphs')
+            }
+
+        start_time = datetime.now()
+        success, result = graph_service.query(config, query, query_params)
+        end_time = datetime.now()
+
+        response_time = (end_time - start_time).total_seconds()
+
+        if success:
+            return {
+                'success': True,
+                'data': {
+                    'query': query,
+                    'result': result,
+                    'response_time': response_time,
+                    'query_params': query_params,
+                    'framework': config.framework
+                }
+            }
+        else:
+            return JSONResponse(content={
+                'success': False,
+                'message': f'查询失败: {result}'
+            }, status_code=500)
+
+    except Exception as e:
+        logger.error(f"测试图谱增强查询失败: {e}")
+        return JSONResponse(content={
+            'success': False,
+            'message': f'测试图谱增强查询失败: {str(e)}'
+        }, status_code=500)
+
+
+@router.post('/graph-enhancement/test-advanced-query')
+async def test_advanced_graph_enhancement_query(request: Request):
+    """高级图谱增强查询测试"""
+    try:
+        data = await request.json()
+
+        query = data.get('query', '')
+        if not query:
+            raise HTTPException(status_code=400, detail={
+                'success': False,
+                'message': '查询内容不能为空'
+            })
+
+        config = GraphEnhancement.query.filter_by(framework='graphiti').first()
+        if not config or not config.enabled:
+            raise HTTPException(status_code=400, detail={
+                'success': False,
+                'message': '图谱增强未启用'
+            })
+
+        # 构建高级查询参数
+        if config.framework == 'graphiti':
+            query_params = {
+                'query': query,
+                'search_mode': data.get('search_mode', 'cross_encoder'),
+                'max_facts': data.get('max_facts', 15),
+                'group_ids': data.get('group_ids', []),
+                'reranker_min_score': data.get('reranker_min_score', 0.6),
+                'sim_min_score': data.get('sim_min_score', 0.5),
+                'enable_filters': data.get('enable_filters', False),
+                'node_labels': data.get('node_labels', []),
+                'edge_types': data.get('edge_types', [])
+            }
+        else:
+            # 其他框架保持原有逻辑
+            query_params = {
+                'mode': data.get('mode', config.default_query_mode),
+                'top_k': data.get('top_k', config.top_k),
+                'chunk_top_k': data.get('chunk_top_k', config.chunk_top_k),
+                'response_type': data.get('response_type', 'Multiple Paragraphs')
+            }
+
+        start_time = datetime.now()
+        success, result = graph_service.query_advanced(config, query, query_params)
+        end_time = datetime.now()
+
+        response_time = (end_time - start_time).total_seconds()
+
+        if success:
+            # Graphiti: 将 MCP /search_advanced 的结果包装成前端期望的结构
+            # 前端期望：
+            # - 顶部元信息位于 data.*（如 response_time, search_config, total_results, framework）
+            # - 事实列表位于 data.result.facts
+            if config.framework == 'graphiti' and isinstance(result, dict) and (result.get('facts') is not None or result.get('search_config') is not None):
+                facts = result.get('facts') or []
+                wrapped = {
+                    'query': query,
+                    'result': result,  # 保持原始结构在 result 下，供前端使用 result.result.facts
+                    'response_time': result.get('response_time', response_time),
+                    'search_config': result.get('search_config'),
+                    'query_type': result.get('query_type'),
+                    'total_results': result.get('total_results', len(facts)),
+                    'config_description': result.get('config_description'),
+                    'framework': config.framework,
+                }
+                return {'success': True, 'data': wrapped}
+
+            # 其他框架：保持原有结构化与文本结果的处理逻辑
+            if isinstance(result, dict) and 'type' in result:
+                # 结构化结果
+                return {
+                    'success': True,
+                    'data': {
+                        'query': query,
+                        'result': result,
+                        'response_time': response_time,
+                        'search_config': query_params.get('search_strategy', 'default'),
+                        'query_type': query_params.get('query_type', 'general'),
+                        'total_results': result.get('total_count', 0),
+                        'config_description': f"使用{query_params.get('search_strategy', 'default')}策略进行{query_params.get('query_type', 'general')}查询",
+                        'framework': config.framework
+                    }
+                }
+            else:
+                # 传统文本结果
+                return {
+                    'success': True,
+                    'data': {
+                        'query': query,
+                        'result': result,
+                        'response_time': response_time,
+                        'search_config': query_params.get('search_strategy', 'default'),
+                        'query_type': query_params.get('query_type', 'general'),
+                        'total_results': len(result.split('\n\n')) if isinstance(result, str) else 0,
+                        'config_description': f"使用{query_params.get('search_strategy', 'default')}策略进行{query_params.get('query_type', 'general')}查询",
+                        'framework': config.framework
+                    }
+                }
+        else:
+            return JSONResponse(content={
+                'success': False,
+                'message': f'查询失败: {result}'
+            }, status_code=500)
+
+    except Exception as e:
+        logger.error(f"高级图谱增强查询测试失败: {e}")
+        return JSONResponse(content={
+            'success': False,
+            'message': f'高级图谱增强查询测试失败: {str(e)}'
+        }, status_code=500)
+
+
+# ==================== 数据管理接口 ====================
+
+@router.post('/graph-enhancement/rebuild-index')
+def rebuild_graph_enhancement_index():
+    """重建图谱增强索引"""
+    try:
+        config = GraphEnhancement.query.filter_by(framework='graphiti').first()
+        if not config or not config.enabled:
+            raise HTTPException(status_code=400, detail={
+                'success': False,
+                'message': '图谱增强未启用'
+            })
+        
+        # 重建索引
+        success, message = graph_service.rebuild_index(config)
+        
+        return {
+            'success': success,
+            'message': message
+        }
+        
+    except Exception as e:
+        logger.error(f"重建图谱增强索引失败: {e}")
+        return JSONResponse(content={
+            'success': False,
+            'message': f'重建图谱增强索引失败: {str(e)}'
+        }, status_code=500)
+
+@router.post('/graph-enhancement/clear-graph')
+def clear_graph_enhancement_data():
+    """清空图谱增强数据"""
+    try:
+        config = GraphEnhancement.query.filter_by(framework='graphiti').first()
+        if not config or not config.enabled:
+            raise HTTPException(status_code=400, detail={
+                'success': False,
+                'message': '图谱增强未启用'
+            })
+
+        # 清空数据
+        success, message = graph_service.clear_data(config)
+
+        return {
+            'success': success,
+            'message': message
+        }
+
+    except Exception as e:
+        logger.error(f"清空图谱增强数据失败: {e}")
+        return JSONResponse(content={
+            'success': False,
+            'message': f'清空图谱增强数据失败: {str(e)}'
+        }, status_code=500)
+
+@router.post('/graph-enhancement/add-documents')
+async def add_documents_to_graph(request: Request):
+    """添加文档到图谱增强系统"""
+    try:
+        data = await request.json()
+
+        documents = data.get('documents', [])
+        if not documents:
+            raise HTTPException(status_code=400, detail={
+                'success': False,
+                'message': '文档列表不能为空'
+            })
+
+        config = GraphEnhancement.query.filter_by(framework='graphiti').first()
+        if not config or not config.enabled:
+            raise HTTPException(status_code=400, detail={
+                'success': False,
+                'message': '图谱增强未启用'
+            })
+
+        # 添加文档
+        success, message = graph_service.add_documents(config, documents)
+
+        return {
+            'success': success,
+            'message': message,
+            'document_count': len(documents)
+        }
+
+    except Exception as e:
+        logger.error(f"添加文档到图谱增强系统失败: {e}")
+        return JSONResponse(content={
+            'success': False,
+            'message': f'添加文档失败: {str(e)}'
+        }, status_code=500)
+
+@router.post('/graph-enhancement/service-control')
+async def control_graphiti_service(request: Request):
+    """控制Graphiti容器化服务"""
+    try:
+        data = await request.json()
+        action = data.get('action')
+
+        if action not in ['start', 'stop']:
+            raise HTTPException(status_code=400, detail={
+                'success': False,
+                'message': '无效的操作类型，支持: start, stop'
+            })
+
+        import subprocess
+
+        # 获取配置以读取端口映射
+        config = GraphEnhancement.query.filter_by(framework='graphiti').first()
+        framework_config = config.framework_config or {} if config else {}
+        
+        # 读取端口映射配置
+        service_port = framework_config.get('service_port', '8000:8000')
+        mcp_service_port = framework_config.get('mcp_service_port', '8001:8001')
+        
+        # 构建docker-compose命令 - 使用 abm-docker 目录下的配置
+        # __file__ 是 graph_enhancement.py 的绝对路径
+        # 例如: /path/to/project/backend/app/api/routes/graph_enhancement.py
+        # 需要: /path/to/project/abm-docker
+        
+        # 方法：从 __file__ 向上4级到 backend，再向上1级到 project，然后进入 abm-docker
+        routes_dir = os.path.dirname(os.path.abspath(__file__))  # .../backend/app/api/routes
+        api_dir = os.path.dirname(routes_dir)                     # .../backend/app/api
+        app_dir = os.path.dirname(api_dir)                        # .../backend/app
+        backend_dir = os.path.dirname(app_dir)                    # .../backend
+        project_root = os.path.dirname(backend_dir)               # .../project
+        abm_docker_dir = os.path.join(project_root, 'abm-docker')
+        
+        logger.info(f"[路径计算] __file__: {__file__}")
+        logger.info(f"[路径计算] Routes dir: {routes_dir}")
+        logger.info(f"[路径计算] Backend dir: {backend_dir}")
+        logger.info(f"[路径计算] Project root: {project_root}")
+        logger.info(f"[路径计算] ABM Docker dir: {abm_docker_dir}")
+        logger.info(f"[路径计算] ABM Docker exists: {os.path.exists(abm_docker_dir)}")
+        
+        # 如果是启动操作，需要动态更新 docker-compose 配置中的端口映射
+        if action == 'start':
+            try:
+                compose_file_path = os.path.join(abm_docker_dir, 'docker-compose.graphiti.yml')
+                logger.info(f"Compose file path: {compose_file_path}")
+                
+                # 读取现有配置
+                with open(compose_file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                # 使用简单的字符串替换更新端口映射
+                import re
+                # 替换第一个端口映射（API 服务）
+                content = re.sub(
+                    r'- "\d+:\d+"  # FastAPI service',
+                    f'- "{service_port}"  # FastAPI service',
+                    content
+                )
+                # 替换第二个端口映射（MCP 服务）
+                content = re.sub(
+                    r'- "\d+:\d+"  # MCP SSE service',
+                    f'- "{mcp_service_port}"  # MCP SSE service',
+                    content
+                )
+                
+                # 写回配置文件
+                with open(compose_file_path, 'w', encoding='utf-8') as f:
+                    f.write(content)
+                
+                logger.info(f"已更新 Graphiti 端口映射: API={service_port}, MCP={mcp_service_port}")
+            except Exception as e:
+                logger.warning(f"更新端口映射失败，使用默认配置: {e}")
+
+        if action == 'start':
+            cmd = ['docker', 'compose', '--profile', 'graphiti', 'up', '-d']
+        elif action == 'stop':
+            cmd = ['docker', 'compose', '--profile', 'graphiti', 'down']
+
+        # 执行命令
+        try:
+            # 如果是启动操作，先更新 graphiti.env 文件
+            if action == 'start':
+                try:
+                    env_vars = graph_service.generate_env_vars_for_graphiti()
+                    if env_vars:
+                        logger.info(f"更新 graphiti.env 文件")
+                        
+                        # 环境变量文件路径
+                        env_file_path = os.path.join(abm_docker_dir, 'graphiti.env')
+                        
+                        # 写入文件
+                        with open(env_file_path, 'w', encoding='utf-8') as f:
+                            f.write("# Graphiti Service Configuration\n")
+                            f.write("# Auto-generated by ABM-LLM backend\n")
+                            f.write(f"# Generated at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+                            
+                            # Neo4j 配置
+                            f.write("# Neo4j Database Configuration\n")
+                            for key in ['NEO4J_URI', 'NEO4J_USER', 'NEO4J_PASSWORD']:
+                                if key in env_vars:
+                                    f.write(f"{key}={env_vars[key]}\n")
+                            f.write("\n")
+                            
+                            # OpenAI API 配置
+                            f.write("# OpenAI API Configuration\n")
+                            for key in ['OPENAI_API_KEY', 'OPENAI_BASE_URL', 'MODEL_NAME', 'SMALL_MODEL_NAME', 'OPENAI_COMPATIBLE']:
+                                if key in env_vars:
+                                    f.write(f"{key}={env_vars[key]}\n")
+                            f.write("\n")
+                            
+                            # 嵌入模型配置
+                            f.write("# OpenAI Embedder Configuration\n")
+                            for key in ['OPENAI_EMBEDDER_API_KEY', 'OPENAI_EMBEDDER_MODEL_ID', 'OPENAI_EMBEDDER_DIMENSION', 'OPENAI_EMBEDDER_API_URL']:
+                                if key in env_vars:
+                                    f.write(f"{key}={env_vars[key]}\n")
+                            f.write("\n")
+                            
+                            # 重排序配置
+                            f.write("# Reranker/Cross-Encoder Configuration\n")
+                            for key in ['RERANKER_TYPE', 'RERANK_MODEL_ID', 'RERANK_MODEL_API_KEY', 'RERANK_MODEL_API_URL']:
+                                if key in env_vars:
+                                    f.write(f"{key}={env_vars[key]}\n")
+                            f.write("\n")
+                            
+                            # 其他配置
+                            f.write("# Optional Configuration\n")
+                            for key in ['GROUP_ID', 'SEMAPHORE_LIMIT', 'API_SERVER_PORT', 'MCP_SERVER_SSE_PORT', 'AUTO_BUILD_COMMUNITY', 'GRAPHITI_TELEMETRY_ENABLED']:
+                                if key in env_vars:
+                                    f.write(f"{key}={env_vars[key]}\n")
+                        
+                        logger.info(f"graphiti.env 文件已更新到: {env_file_path}")
+                        
+                        # 记录更新的环境变量（脱敏）
+                        for key, value in env_vars.items():
+                            safe_val = str(value or '')
+                            if 'API_KEY' in key.upper() or 'PASSWORD' in key.upper():
+                                if len(safe_val) > 8:
+                                    masked_value = f"{safe_val[:4]}...{safe_val[-4:]}"
+                                else:
+                                    masked_value = "***"
+                                logger.info(f"  {key}={masked_value}")
+                            else:
+                                logger.info(f"  {key}={safe_val}")
+                                
+                except Exception as e:
+                    logger.error(f"更新 graphiti.env 文件失败: {e}")
+                    logger.error(traceback.format_exc())
+                    return JSONResponse(content={
+                        'success': False,
+                        'message': f'更新配置文件失败: {str(e)}'
+                    }, status_code=500)
+
+            result = subprocess.run(
+                cmd,
+                cwd=abm_docker_dir,
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+
+            if result.returncode == 0:
+                action_text = {'start': '启动', 'stop': '停止', 'restart': '重启'}[action]
+                return {
+                    'success': True,
+                    'message': f'Graphiti服务{action_text}成功',
+                    'output': result.stdout
+                }
+            else:
+                return JSONResponse(content={
+                    'success': False,
+                    'message': f'服务操作失败: {result.stderr}',
+                    'output': result.stderr
+                }, status_code=500)
+
+        except subprocess.TimeoutExpired:
+            raise HTTPException(status_code=500, detail={
+                'success': False,
+                'message': '操作超时，请检查Docker服务状态'
+            })
+        except FileNotFoundError:
+            raise HTTPException(status_code=500, detail={
+                'success': False,
+                'message': 'docker-compose命令未找到，请确保Docker已安装'
+            })
+
+    except Exception as e:
+        error_detail = traceback.format_exc()
+        logger.error(f"控制Graphiti服务失败: {e}")
+        logger.error(f"详细错误信息:\n{error_detail}")
+        return JSONResponse(content={
+            'success': False,
+            'message': f'服务控制失败: {str(e)}',
+            'error_detail': error_detail
+        }, status_code=500)
+
+
+# ==================== 图谱可视化接口 ====================
+
+@router.get('/graph-enhancement/visualization/data')
+def get_graph_visualization_data(request: Request):
+    """获取图谱可视化数据"""
+    try:
+        # 获取查询参数
+        group_id = request.query_params.get('group_id')
+
+        # 检查图谱增强是否启用
+        config = GraphEnhancement.query.filter_by(framework='graphiti').first()
+        if not config or not config.enabled:
+            raise HTTPException(status_code=400, detail={
+                'success': False,
+                'message': '图谱增强未启用，请先在设置中启用并配置'
+            })
+
+        # 获取可视化数据
+        success, data = graph_service.get_visualization_data(config, group_id)
+
+        if success:
+            return {
+                'success': True,
+                'data': data
+            }
+        else:
+            raise HTTPException(status_code=500, detail={
+                'success': False,
+                'message': data
+            })
+
+    except Exception as e:
+        logger.error(f"获取图谱可视化数据失败: {e}")
+        return JSONResponse(content={
+            'success': False,
+            'message': f'获取图谱数据失败: {str(e)}'
+        }, status_code=500)
+
+
+@router.get('/graph-enhancement/visualization/info')
+def get_graph_visualization_info():
+    """获取图谱数据库信息"""
+    try:
+        # 检查图谱增强是否启用
+        config = GraphEnhancement.query.filter_by(framework='graphiti').first()
+        if not config or not config.enabled:
+            raise HTTPException(status_code=400, detail={
+                'success': False,
+                'message': '图谱增强未启用'
+            })
+
+        # 获取数据库信息
+        success, info = graph_service.get_visualization_info(config)
+
+        if success:
+            return {
+                'success': True,
+                'data': info
+            }
+        else:
+            raise HTTPException(status_code=500, detail={
+                'success': False,
+                'message': info
+            })
+
+    except Exception as e:
+        logger.error(f"获取图谱数据库信息失败: {e}")
+        return JSONResponse(content={
+            'success': False,
+            'message': f'获取数据库信息失败: {str(e)}'
+        }, status_code=500)
+
+
+@router.get('/graph-enhancement/visualization/config')
+def get_graph_visualization_config():
+    """获取图谱可视化配置信息"""
+    try:
+        config = GraphEnhancement.query.filter_by(framework='graphiti').first()
+        if not config:
+            raise HTTPException(status_code=404, detail={
+                'success': False,
+                'message': '未找到图谱增强配置'
+            })
+
+        framework_config = config.framework_config or {}
+
+        # 返回可视化相关的配置信息（不包含敏感信息如密码）
+        viz_config = {
+            'enabled': config.enabled,
+            'framework': config.framework,
+            'name': config.name,
+            'description': config.description,
+            'database_type': framework_config.get('database_type', 'neo4j'),
+            'neo4j_uri': framework_config.get('neo4j_uri', 'bolt://localhost:7687'),
+            'neo4j_user': framework_config.get('neo4j_user', 'neo4j'),
+            'database_name': framework_config.get('database_name', 'neo4j'),
+            # 不返回密码等敏感信息
+        }
+
+        return {
+            'success': True,
+            'data': viz_config
+        }
+
+    except Exception as e:
+        logger.error(f"获取图谱可视化配置失败: {e}")
+        return JSONResponse(content={
+            'success': False,
+            'message': f'获取图谱可视化配置失败: {str(e)}'
+        }, status_code=500)
+
+
+@router.post('/graph-enhancement/build-communities')
+def build_communities():
+    """手动构建社区"""
+    try:
+        config = GraphEnhancement.query.filter_by(framework='graphiti').first()
+        if not config or not config.enabled:
+            raise HTTPException(status_code=400, detail={
+                'success': False,
+                'message': '图谱增强未启用'
+            })
+
+        # 检查框架是否为graphiti
+        if config.framework != 'graphiti':
+            raise HTTPException(status_code=400, detail={
+                'success': False,
+                'message': '社区构建功能仅支持Graphiti框架'
+            })
+
+        # 获取Graphiti服务URL
+        framework_config = config.framework_config or {}
+        service_url = framework_config.get('service_url', 'http://localhost:8000')
+
+        if not service_url:
+            raise HTTPException(status_code=400, detail={
+                'success': False,
+                'message': '未配置Graphiti服务URL'
+            })
+
+        # 异步发送构建请求
+        import requests
+        import threading
+
+        def send_build_request():
+            """异步发送构建请求"""
+            import logging
+            logger = logging.getLogger(__name__)
+
+            try:
+                logger.info(f"发送社区构建请求到: {service_url}/build-communities")
+                response = requests.post(f"{service_url}/build-communities", timeout=300)
+                if response.status_code == 200:
+                    logger.info("社区构建请求发送成功")
+                else:
+                    logger.error(f"社区构建请求失败，状态码: {response.status_code}")
+            except Exception as e:
+                logger.error(f"发送社区构建请求失败: {e}")
+
+        # 在后台线程中发送请求
+        thread = threading.Thread(target=send_build_request)
+        thread.daemon = True
+        thread.start()
+
+        # 立即返回成功响应
+        return {
+            'success': True,
+            'message': '社区构建请求已发送，构建过程将在后台进行'
+        }
+
+    except Exception as e:
+        logger.error(f"构建社区失败: {e}")
+        return JSONResponse(content={
+            'success': False,
+            'message': f'构建社区失败: {str(e)}'
+        }, status_code=500)
+

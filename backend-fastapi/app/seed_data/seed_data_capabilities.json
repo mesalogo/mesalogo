@@ -1,0 +1,789 @@
+[
+    {
+        "name": "environment_variables",
+        "description": "允许智能体感知、修改和创建环境变量（包括任务变量和智能体变量），作为决策和状态管理的基础",
+        "type": "core",
+        "provider": "default",
+        "parameters": {
+            "operation": {
+                "type": "string",
+                "description": "操作类型",
+                "enum": [
+                    "list",
+                    "set",
+                    "add"
+                ]
+            },
+            "variable_scope": {
+                "type": "string",
+                "description": "变量作用域",
+                "enum": [
+                    "task",
+                    "agent"
+                ]
+            },
+            "variable_name": {
+                "type": "string",
+                "description": "变量名称"
+            },
+            "variable_value": {
+                "type": "string",
+                "description": "变量值"
+            }
+        },
+        "response_format": {
+            "success": {
+                "type": "boolean",
+                "description": "操作是否成功"
+            },
+            "variables": {
+                "type": "object",
+                "description": "变量列表或操作结果"
+            }
+        },
+        "examples": [
+            {
+                "input": {
+                    "operation": "list",
+                    "variable_scope": "task"
+                },
+                "output": {
+                    "success": true,
+                    "variables": {
+                        "project_deadline": "2023-12-31",
+                        "budget_remaining": "50000"
+                    }
+                }
+            },
+            {
+                "input": {
+                    "operation": "set",
+                    "variable_scope": "task",
+                    "variable_name": "project_deadline",
+                    "variable_value": "2024-01-15"
+                },
+                "output": {
+                    "success": true,
+                    "variables": {
+                        "previous_value": "2023-12-31"
+                    }
+                }
+            }
+        ],
+        "settings": {
+            "audit_trail": true,
+            "refresh_rate": "per_round"
+        }
+    },
+    {
+        "name": "workspace_management",
+        "description": "Agent project workspace management capability, including file storage and retrieval for personal workspaces and shared workspaces.\n\n## Access Control\n**You can only access files within the following directories:**\n- `{task_workspace}/` (your task workspace)\n\n**Any attempt to access paths outside these directories will fail with an \"Access denied\" error.**\n\n## Workspace Structure\n```\n{task_workspace}/\n{agent_workspace_structure}├── ProjectSummary.md              # Project conclusions and key decisions\n└── ProjectIndex.md                # Directory structure and file locations\n```\n\n## Key Files\n{agent_workspace_files}- `ProjectSummary.md`: Project conclusions and key decisions\n- `ProjectIndex.md`: Directory structure and file locations\n\n## Important: File Path Rules\n1. **Always use full paths** starting with `{task_workspace}/`\n2. **Correct path example**: `{task_workspace}/ProjectSummary.md`\n3. **Wrong path example**: `ProjectSummary.md` (relative paths will fail!)\n4. **Wrong path example**: `/backend/ProjectSummary.md` (outside allowed directories!)\n{agent_workspace_usage}\n\n## Current Project Structure\n```\n{project_index_content}\n```\n\n## Tool Usage Guide\n\n### edit_file Tool\n**Important:** When editing files, it is recommended to first use the `dryRun: true` parameter to preview changes before actually executing.\n\n**Key: edits Parameter Format Requirements**\n- `edits` must be a **real JSON array**, not a string!\n- Wrong example: `\"edits\": \"[{...}]\"` (this is a string, will cause an error!)\n- Correct example: `\"edits\": [{...}]` (this is an array)\n- Each array element must contain `oldText` and `newText` fields\n- `oldText` must **exactly match** the text in the file (including spaces and newlines)\n- It is recommended to first use `read_file` to read the file content to ensure `oldText` is accurate\n\n**Correct edit_file call format:**\n```json\n{\n  \"path\": \"{task_workspace}/filename.md\",\n  \"edits\": [\n    {\n      \"oldText\": \"exact matching old text\",\n      \"newText\": \"replacement new text\"\n    }\n  ],\n  \"dryRun\": true\n}\n```\n\n**Wrong format (will cause Invalid arguments error):**\n```json\n{\n  \"path\": \"{task_workspace}/filename.md\",\n  \"edits\": \"[{\\\"oldText\\\": \\\"...\\\", \\\"newText\\\": \\\"...\\\"}]\"\n}\n```\n\n### Usage Tips\n- Use `read_file` to get the current file content first\n- Use `edit_file` with `dryRun: true` to preview changes before applying\n- Use `list_directory` tool to list files in a directory\n- Update key decisions and results to `ProjectSummary.md`\n- Create new files and organize the project directory as needed",
+        "type": "core",
+        "provider": "default",
+        "parameters": {
+            "workspace_type": {
+                "type": "string",
+                "description": "Workspace type",
+                "enum": [
+                    "personal",
+                    "shared",
+                    "both"
+                ]
+            },
+            "content": {
+                "type": "string",
+                "description": "Project file content to store"
+            }
+        },
+        "response_format": {
+            "success": {
+                "type": "boolean",
+                "description": "Whether storage was successful"
+            },
+            "file_id": {
+                "type": "string",
+                "description": "Unique identifier of the project file"
+            }
+        },
+        "examples": [
+            {
+                "input": {
+                    "workspace_type": "personal",
+                    "content": "The customer emphasized that product security is the top priority"
+                },
+                "output": {
+                    "success": true,
+                    "file_id": "workspace-12345"
+                }
+            }
+        ],
+        "settings": {
+            "retention_policy": "importance_based",
+            "dynamic_placeholders": [
+                "task_workspace",
+                "agent_workspace_structure",
+                "agent_workspace_files",
+                "agent_workspace_usage",
+                "project_index_content"
+            ]
+        }
+    },
+    {
+        "name": "planner_management",
+        "description": "允许智能体创建和管理结构化的执行计划，包括创建计划、更新计划项状态、查询计划进度等",
+        "type": "core",
+        "provider": "default",
+        "parameters": {
+            "action": {
+                "type": "string",
+                "description": "要执行的计划操作",
+                "enum": [
+                    "create_plan",
+                    "update_item",
+                    "get_plan"
+                ]
+            },
+            "plan_id": {
+                "type": "string",
+                "description": "计划ID（用于更新和查询操作）"
+            },
+            "title": {
+                "type": "string",
+                "description": "计划标题"
+            },
+            "description": {
+                "type": "string",
+                "description": "计划描述"
+            },
+            "items": {
+                "type": "array",
+                "description": "计划项列表",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "title": {
+                            "type": "string",
+                            "description": "任务标题"
+                        },
+                        "description": {
+                            "type": "string",
+                            "description": "任务描述"
+                        }
+                    }
+                }
+            },
+            "item_id": {
+                "type": "string",
+                "description": "计划项ID（用于更新操作）"
+            },
+            "status": {
+                "type": "string",
+                "description": "计划项状态",
+                "enum": [
+                    "pending",
+                    "in_progress",
+                    "completed",
+                    "cancelled"
+                ]
+            }
+        },
+        "response_format": {
+            "success": {
+                "type": "boolean",
+                "description": "操作是否成功"
+            },
+            "plan": {
+                "type": "object",
+                "description": "计划对象",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "items": {
+                        "type": "array"
+                    }
+                }
+            },
+            "message": {
+                "type": "string",
+                "description": "操作结果消息"
+            }
+        },
+        "examples": [
+            {
+                "input": {
+                    "action": "create_plan",
+                    "title": "产品开发执行计划",
+                    "description": "完整的产品开发流程计划",
+                    "items": [
+                        {
+                            "title": "需求分析",
+                            "description": "分析客户需求和市场需求"
+                        },
+                        {
+                            "title": "技术方案设计",
+                            "description": "制定技术架构和实施方案"
+                        },
+                        {
+                            "title": "开发实施",
+                            "description": "按照方案进行开发"
+                        },
+                        {
+                            "title": "测试验证",
+                            "description": "功能测试和性能测试"
+                        }
+                    ]
+                },
+                "output": {
+                    "success": true,
+                    "plan": {
+                        "id": 1,
+                        "title": "产品开发执行计划",
+                        "status": "active",
+                        "items": [
+                            {
+                                "id": 1,
+                                "title": "需求分析",
+                                "status": "pending"
+                            },
+                            {
+                                "id": 2,
+                                "title": "技术方案设计",
+                                "status": "pending"
+                            },
+                            {
+                                "id": 3,
+                                "title": "开发实施",
+                                "status": "pending"
+                            },
+                            {
+                                "id": 4,
+                                "title": "测试验证",
+                                "status": "pending"
+                            }
+                        ]
+                    },
+                    "message": "执行计划创建成功"
+                }
+            },
+            {
+                "input": {
+                    "action": "update_item",
+                    "plan_id": 1,
+                    "item_id": 1,
+                    "status": "completed"
+                },
+                "output": {
+                    "success": true,
+                    "message": "计划项状态已更新为：completed"
+                }
+            },
+            {
+                "input": {
+                    "action": "get_plan",
+                    "plan_id": 1
+                },
+                "output": {
+                    "success": true,
+                    "plan": {
+                        "id": 1,
+                        "title": "产品开发执行计划",
+                        "status": "active",
+                        "progress": {
+                            "total": 4,
+                            "completed": 1,
+                            "in_progress": 1,
+                            "pending": 2,
+                            "percentage": 25
+                        },
+                        "items": [
+                            {
+                                "id": 1,
+                                "title": "需求分析",
+                                "status": "completed"
+                            },
+                            {
+                                "id": 2,
+                                "title": "技术方案设计",
+                                "status": "in_progress"
+                            },
+                            {
+                                "id": 3,
+                                "title": "开发实施",
+                                "status": "pending"
+                            },
+                            {
+                                "id": 4,
+                                "title": "测试验证",
+                                "status": "pending"
+                            }
+                        ]
+                    }
+                }
+            }
+        ],
+        "settings": {
+            "auto_update_plan_status": true,
+            "notify_on_completion": true,
+            "max_items_per_plan": 50
+        }
+    },
+    {
+        "name": "explicit_reasoning",
+        "description": "在回应前进行显性推理过程，展示详细的思考步骤和决策依据",
+        "type": "advanced",
+        "provider": "default",
+        "parameters": {
+            "depth": {
+                "type": "string",
+                "description": "推理深度",
+                "enum": [
+                    "basic",
+                    "intermediate",
+                    "advanced"
+                ]
+            },
+            "question": {
+                "type": "string",
+                "description": "需要推理的问题"
+            }
+        },
+        "response_format": {
+            "reasoning_steps": {
+                "type": "array",
+                "description": "推理步骤"
+            },
+            "conclusion": {
+                "type": "string",
+                "description": "推理结论"
+            }
+        },
+        "examples": [
+            {
+                "input": {
+                    "depth": "advanced",
+                    "question": "是否应该升级数据库架构?"
+                },
+                "output": {
+                    "reasoning_steps": [
+                        "1. 考虑当前性能问题",
+                        "2. 分析系统负载预测",
+                        "3. 评估升级成本和风险",
+                        "4. 比较不同方案的投资回报"
+                    ],
+                    "conclusion": "基于性能瓶颈和未来扩展需求，建议升级到分布式数据库架构"
+                }
+            }
+        ],
+        "settings": {
+            "show_alternatives": true
+        }
+    },
+    {
+        "name": "team_coordination",
+        "description": "协调多个智能体的工作，分配任务并监督协作过程",
+        "type": "advanced",
+        "provider": "default",
+        "parameters": {
+            "task": {
+                "type": "string",
+                "description": "需要协调的任务"
+            },
+            "participants": {
+                "type": "array",
+                "description": "参与者列表"
+            }
+        },
+        "response_format": {
+            "assignments": {
+                "type": "object",
+                "description": "任务分配"
+            },
+            "timeline": {
+                "type": "array",
+                "description": "协作时间线"
+            }
+        },
+        "examples": [
+            {
+                "input": {
+                    "task": "开发新的用户注册流程",
+                    "participants": [
+                        "产品经理",
+                        "UI设计师",
+                        "后端开发",
+                        "测试工程师"
+                    ]
+                },
+                "output": {
+                    "assignments": {
+                        "产品经理": "定义需求",
+                        "UI设计师": "设计界面",
+                        "后端开发": "实现API",
+                        "测试工程师": "编写测试用例"
+                    },
+                    "timeline": [
+                        {
+                            "phase": "需求分析",
+                            "duration": "3天"
+                        },
+                        {
+                            "phase": "设计",
+                            "duration": "4天"
+                        },
+                        {
+                            "phase": "开发",
+                            "duration": "7天"
+                        },
+                        {
+                            "phase": "测试",
+                            "duration": "4天"
+                        }
+                    ]
+                }
+            }
+        ],
+        "settings": {
+            "feedback_loops": true
+        }
+    },
+    {
+        "name": "behavior_monitoring",
+        "description": "观察和分析其他智能体的行为模式，识别潜在问题和优化机会",
+        "type": "supervision",
+        "provider": "default",
+        "parameters": {
+            "target_agents": {
+                "type": "array",
+                "description": "观察目标"
+            },
+            "focus_areas": {
+                "type": "array",
+                "description": "关注的行为领域"
+            }
+        },
+        "response_format": {
+            "observations": {
+                "type": "array",
+                "description": "行为观察结果"
+            },
+            "patterns": {
+                "type": "array",
+                "description": "识别的模式"
+            }
+        },
+        "examples": [
+            {
+                "input": {
+                    "target_agents": [
+                        "all"
+                    ],
+                    "focus_areas": [
+                        "decision_making",
+                        "collaboration",
+                        "information_sharing"
+                    ]
+                },
+                "output": {
+                    "observations": [
+                        {
+                            "agent": "产品经理",
+                            "behavior": "未充分考虑技术约束"
+                        },
+                        {
+                            "agent": "开发工程师",
+                            "behavior": "过度关注细节实现而非用户需求"
+                        }
+                    ],
+                    "patterns": [
+                        {
+                            "pattern": "需求沟通不足",
+                            "frequency": "high",
+                            "impact": "导致返工和时间浪费"
+                        }
+                    ]
+                }
+            }
+        ],
+        "settings": {
+            "monitoring_frequency": "continuous",
+            "privacy_level": "high"
+        }
+    },
+    {
+        "name": "intervention",
+        "description": "在必要时干预交互过程，纠正错误决策或提供额外信息",
+        "type": "supervision",
+        "provider": "default",
+        "parameters": {
+            "intervention_type": {
+                "type": "string",
+                "description": "干预类型",
+                "enum": [
+                    "information",
+                    "correction",
+                    "guidance",
+                    "redirection"
+                ]
+            },
+            "target_agent": {
+                "type": "string",
+                "description": "干预目标"
+            },
+            "content": {
+                "type": "string",
+                "description": "干预内容"
+            }
+        },
+        "response_format": {
+            "success": {
+                "type": "boolean",
+                "description": "干预是否成功"
+            },
+            "effect": {
+                "type": "string",
+                "description": "干预效果"
+            }
+        },
+        "examples": [
+            {
+                "input": {
+                    "intervention_type": "correction",
+                    "target_agent": "开发工程师",
+                    "content": "你的数据库设计方案未考虑高并发情况，建议重新评估"
+                },
+                "output": {
+                    "success": true,
+                    "effect": "开发工程师接受建议，修改了数据库设计方案"
+                }
+            }
+        ],
+        "settings": {
+            "intervention_threshold": "medium",
+            "require_confirmation": true
+        }
+    },
+    {
+        "name": "knowledge_access",
+        "description": "允许智能体查询和访问绑定的知识库与记忆，获取相关信息以辅助决策和回答",
+        "type": "optional",
+        "provider": "default",
+        "parameters": {
+            "query": {
+                "type": "string",
+                "description": "查询的问题或关键词"
+            },
+            "knowledge_types": {
+                "type": "array",
+                "description": "要查询的知识库类型",
+                "enum": [
+                    "internal",
+                    "external",
+                    "memory",
+                    "all"
+                ],
+                "default": [
+                    "all"
+                ]
+            },
+            "max_results": {
+                "type": "integer",
+                "description": "最大返回结果数量",
+                "default": 5,
+                "minimum": 1,
+                "maximum": 20
+            },
+            "similarity_threshold": {
+                "type": "number",
+                "description": "相似度阈值",
+                "default": 0.7,
+                "minimum": 0.0,
+                "maximum": 1.0
+            }
+        },
+        "response_format": {
+            "results": {
+                "type": "array",
+                "description": "查询结果列表",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "source": {
+                            "type": "string",
+                            "description": "知识来源"
+                        },
+                        "content": {
+                            "type": "string",
+                            "description": "相关内容"
+                        },
+                        "similarity": {
+                            "type": "number",
+                            "description": "相似度分数"
+                        },
+                        "metadata": {
+                            "type": "object",
+                            "description": "元数据信息"
+                        }
+                    }
+                }
+            },
+            "total_found": {
+                "type": "integer",
+                "description": "找到的总结果数"
+            },
+            "query_time": {
+                "type": "number",
+                "description": "查询耗时（毫秒）"
+            }
+        },
+        "examples": [
+            {
+                "input": {
+                    "query": "如何优化数据库性能",
+                    "knowledge_types": [
+                        "internal",
+                        "external"
+                    ],
+                    "max_results": 3
+                },
+                "output": {
+                    "results": [
+                        {
+                            "source": "内部知识库-数据库优化指南",
+                            "content": "数据库性能优化的关键策略包括：1. 索引优化 2. 查询优化 3. 缓存策略...",
+                            "similarity": 0.92,
+                            "metadata": {
+                                "document": "db_optimization_guide.pdf",
+                                "section": "性能调优"
+                            }
+                        },
+                        {
+                            "source": "外部知识库-技术文档",
+                            "content": "MySQL性能调优最佳实践：使用EXPLAIN分析查询计划，合理设计索引结构...",
+                            "similarity": 0.87,
+                            "metadata": {
+                                "provider": "技术文档库",
+                                "last_updated": "2024-01-15"
+                            }
+                        }
+                    ],
+                    "total_found": 8,
+                    "query_time": 245.6
+                }
+            },
+            {
+                "input": {
+                    "query": "项目进度",
+                    "knowledge_types": [
+                        "memory"
+                    ],
+                    "max_results": 2
+                },
+                "output": {
+                    "results": [
+                        {
+                            "source": "对话记忆",
+                            "content": "上次讨论中提到项目当前进度为75%，预计下周完成前端开发",
+                            "similarity": 0.89,
+                            "metadata": {
+                                "conversation_id": "conv_123",
+                                "timestamp": "2024-01-20T10:30:00Z"
+                            }
+                        }
+                    ],
+                    "total_found": 3,
+                    "query_time": 156.2
+                }
+            }
+        ],
+        "settings": {
+            "security_level": 1,
+            "default_enabled": true,
+            "cache_results": true,
+            "cache_duration": 300,
+            "enable_semantic_search": true,
+            "enable_hybrid_search": true
+        }
+    },
+    {
+        "name": "memory",
+        "description": "## Instructions for Using Graphiti's MCP Tools for Agent Memory\n\n### Before Starting Any Task\n\n- **Always search first:** Use the `search_nodes` tool to look for relevant preferences and procedures before beginning work.\n- **Search for facts too:** Use the `search_facts` tool to discover relationships and factual information that may be relevant to your task.\n- **Filter by entity type:** Specify `Preference`, `Procedure`, or `Requirement` in your node search to get targeted results.\n- **Review all matches:** Carefully examine any preferences, procedures, or facts that match your current task.\n\n### Always Save New or Updated Information\n\n- **Capture requirements and preferences immediately:** When a user expresses a requirement or preference, use `add_memory` to store it right away.\n  - _Best practice:_ Split very long requirements into shorter, logical chunks.\n- **Be explicit if something is an update to existing knowledge.** Only add what's changed or new to the graph.\n- **Document procedures clearly:** When you discover how a user wants things done, record it as a procedure.\n- **Record factual relationships:** When you learn about connections between entities, store these as facts.\n- **Be specific with categories:** Label preferences and procedures with clear categories for better retrieval later.\n\n### During Your Work\n\n- **Respect discovered preferences:** Align your work with any preferences you've found.\n- **Follow procedures exactly:** If you find a procedure for your current task, follow it step by step.\n- **Apply relevant facts:** Use factual information to inform your decisions and recommendations.\n- **Stay consistent:** Maintain consistency with previously identified preferences, procedures, and facts.\n\n### Best Practices\n\n- **Search before suggesting:** Always check if there's established knowledge before making recommendations.\n- **Combine node and fact searches:** For complex tasks, search both nodes and facts to build a complete picture.\n- **Use `center_node_uuid`:** When exploring related information, center your search around a specific node.\n- **Prioritize specific matches:** More specific information takes precedence over general information.\n- **Be proactive:** If you notice patterns in user behavior, consider storing them as preferences or procedures.\n\n**Remember:** The knowledge graph is your memory. Use it consistently to provide personalized assistance that respects the user's established preferences, procedures, and factual context.",
+        "type": "mcp_integration",
+        "provider": "default",
+        "parameters": {
+            "query": {
+                "type": "string",
+                "description": "搜索查询或要存储的内容"
+            },
+            "operation": {
+                "type": "string",
+                "description": "操作类型",
+                "enum": [
+                    "search",
+                    "add",
+                    "update",
+                    "delete"
+                ]
+            }
+        },
+        "response_format": {
+            "success": {
+                "type": "boolean",
+                "description": "操作是否成功"
+            },
+            "results": {
+                "type": "array",
+                "description": "搜索结果或操作结果"
+            }
+        },
+        "examples": [
+            {
+                "input": {
+                    "operation": "search",
+                    "query": "用户偏好"
+                },
+                "output": {
+                    "success": true,
+                    "results": [
+                        {
+                            "type": "Preference",
+                            "content": "用户偏好使用简洁的界面设计",
+                            "uuid": "pref-123"
+                        }
+                    ]
+                }
+            },
+            {
+                "input": {
+                    "operation": "add",
+                    "query": "用户要求所有报告必须包含数据来源"
+                },
+                "output": {
+                    "success": true,
+                    "results": [
+                        {
+                            "type": "Requirement",
+                            "uuid": "req-456",
+                            "message": "已保存新的需求"
+                        }
+                    ]
+                }
+            }
+        ],
+        "settings": {
+            "security_level": 1,
+            "default_enabled": false,
+            "mcp_servers": [
+                "graphiti-server"
+            ],
+            "auto_partition": true,
+            "partition_strategy": "by_space"
+        }
+    }
+]

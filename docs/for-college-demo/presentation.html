@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 监督 AI —— 多智能体自动化治理如何重塑计量·标准·质量教育</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Inter:wght@300;400;600;700;900&family=Noto+Serif+SC:wght@600;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+
+        :root {
+            --c-cyan: #0A9B80;
+            --c-blue: #2E6CC4;
+            --c-red: #D94452;
+            --c-amber: #C48A1A;
+            --c-purple: #7C5CBF;
+            --c-text: #1A1A2E;
+            --c-text-secondary: #5A5A72;
+            --c-text-light: #9898A8;
+            --c-border: #E2E2EA;
+            --c-bg-warm: #FAFAF8;
+        }
+
+        /* ===== 全局重置 ===== */
+        .reveal {
+            font-family: 'Noto Sans SC', 'Inter', -apple-system, sans-serif;
+            font-size: 28px;
+            color: var(--c-text);
+        }
+        .reveal .slides { text-align: left; }
+        .reveal .slides section {
+            padding: 50px 70px;
+            background: #fff;
+        }
+        .reveal .slide-background { background: #fff !important; }
+
+        /* ===== 标题层级 ===== */
+        .reveal h1, .reveal h2, .reveal h3 {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-weight: 700;
+            color: var(--c-text);
+            text-transform: none;
+            letter-spacing: -0.02em;
+            text-shadow: none;
+        }
+        .reveal h1 { font-size: 2.4em; line-height: 1.15; }
+        .reveal h2 { font-size: 1.5em; line-height: 1.3; margin-bottom: 0.5em; }
+        .reveal h3 {
+            font-size: 0.7em;
+            font-weight: 600;
+            color: var(--c-text-light);
+            letter-spacing: 0.08em;
+            margin-bottom: 0.2em;
+        }
+        .reveal p { line-height: 1.75; margin-bottom: 0.6em; }
+
+        /* ===== 颜色工具类 ===== */
+        .cyan { color: var(--c-cyan); }
+        .blue { color: var(--c-blue); }
+        .red { color: var(--c-red); }
+        .amber { color: var(--c-amber); }
+        .purple { color: var(--c-purple); }
+        .light { color: var(--c-text-light); }
+        .secondary { color: var(--c-text-secondary); }
+
+        /* ===== 大数字 ===== */
+        .mega {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        /* ===== 引用块（无背景，只有左线） ===== */
+        .quote {
+            border-left: 3px solid var(--c-cyan);
+            padding: 0 0 0 20px;
+            margin: 24px 0;
+            font-size: 0.88em;
+            color: var(--c-text-secondary);
+            line-height: 1.7;
+        }
+        .quote em { font-style: italic; color: var(--c-text-light); font-size: 0.85em; }
+
+        /* ===== 来源标注 ===== */
+        .source {
+            font-size: 0.42em;
+            color: var(--c-text-light);
+            margin-top: 1.2em;
+        }
+
+        /* ===== 两栏 ===== */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: start;
+        }
+
+        /* ===== 三栏 ===== */
+        .three-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 36px;
+            align-items: start;
+        }
+
+        /* ===== 卡片（极简，无背景） ===== */
+        .card {
+            border-top: 3px solid var(--c-border);
+            padding: 20px 0 0 0;
+        }
+        .card-title {
+            font-size: 0.85em;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--c-text);
+        }
+        .card-body {
+            font-size: 0.68em;
+            color: var(--c-text-secondary);
+            line-height: 1.65;
+        }
+
+        /* ===== 表格（干净线条） ===== */
+        table.t {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.62em;
+            margin: 16px 0;
+        }
+        table.t th {
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--c-text);
+            border-bottom: 2px solid var(--c-text);
+            background: none;
+        }
+        table.t td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--c-border);
+            color: var(--c-text-secondary);
+        }
+        table.t tr:last-child td { border-bottom: none; }
+
+        /* ===== 流程步骤（横线连接，无背景块） ===== */
+        .steps {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            margin: 28px 0;
+        }
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 0 8px;
+        }
+        .step-num {
+            font-size: 0.48em;
+            font-weight: 700;
+            color: var(--c-cyan);
+            margin-bottom: 6px;
+        }
+        .step-title {
+            font-size: 0.72em;
+            font-weight: 700;
+            color: var(--c-text);
+            margin-bottom: 4px;
+        }
+        .step-body {
+            font-size: 0.5em;
+            color: var(--c-text-light);
+            line-height: 1.5;
+        }
+        .step-arrow {
+            font-size: 0.9em;
+            color: var(--c-text-light);
+            padding-top: 18px;
+            flex-shrink: 0;
+        }
+
+        /* ===== 四宫格（极简） ===== */
+        .quad {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            margin: 20px 0;
+        }
+        .quad-cell {
+            padding: 22px 20px;
+            border-bottom: 1px solid var(--c-border);
+        }
+        .quad-cell:nth-child(odd) { border-right: 1px solid var(--c-border); }
+        .quad-cell:nth-child(n+3) { border-bottom: none; }
+        .quad-icon { font-size: 1.3em; margin-bottom: 6px; }
+        .quad-title { font-size: 0.72em; font-weight: 700; color: var(--c-text); margin-bottom: 4px; }
+        .quad-desc { font-size: 0.52em; color: var(--c-text-secondary); line-height: 1.55; }
+
+        /* ===== 代码块（低调） ===== */
+        .code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.58em;
+            color: var(--c-text-secondary);
+            line-height: 1.6;
+            padding: 14px 18px;
+            border: 1px solid var(--c-border);
+            border-radius: 6px;
+            background: var(--c-bg-warm);
+        }
+        .code .kw { color: var(--c-red); font-weight: 600; }
+        .code .str { color: var(--c-blue); }
+        .code .fn { color: var(--c-purple); }
+
+        /* ===== 标签条 ===== */
+        .tags {
+            display: flex;
+            gap: 8px;
+            margin: 12px 0;
+            flex-wrap: wrap;
+        }
+        .tag {
+            font-size: 0.48em;
+            padding: 3px 12px;
+            border-radius: 3px;
+            color: var(--c-text-secondary);
+            border: 1px solid var(--c-border);
+            background: none;
+        }
+        .tag.hl {
+            color: var(--c-cyan);
+            border-color: var(--c-cyan);
+        }
+
+        /* ===== 封面 ===== */
+        .cover {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 100%;
+        }
+        .cover h1 {
+            font-family: 'Noto Serif SC', 'Noto Sans SC', serif;
+            font-size: 3.2em;
+            font-weight: 900;
+            color: var(--c-text);
+            margin-bottom: 0.15em;
+        }
+        .cover .sub {
+            font-size: 0.72em;
+            color: var(--c-text-secondary);
+            font-weight: 400;
+            max-width: 560px;
+            line-height: 1.6;
+        }
+        .cover .badge {
+            margin-top: 36px;
+            font-size: 0.48em;
+            letter-spacing: 0.12em;
+            color: var(--c-text-light);
+            border-bottom: 1px solid var(--c-border);
+            padding-bottom: 4px;
+        }
+
+        /* ===== 分隔页 ===== */
+        .divider {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+        }
+        .divider .label {
+            font-size: 0.6em;
+            font-weight: 700;
+            color: var(--c-cyan);
+            letter-spacing: 0.2em;
+            margin-bottom: 12px;
+        }
+        .divider h2 {
+            font-family: 'Noto Serif SC', 'Noto Sans SC', serif;
+            font-size: 2.8em;
+            font-weight: 900;
+            margin-bottom: 0.1em;
+        }
+        .divider .sub {
+            font-size: 0.78em;
+            color: var(--c-text-light);
+        }
+
+        /* ===== 结束页 ===== */
+        .ending {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 100%;
+        }
+        .ending .big {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.45em;
+            font-weight: 700;
+            line-height: 1.85;
+            max-width: 620px;
+            color: var(--c-text);
+        }
+        .ending .small {
+            margin-top: 28px;
+            font-size: 0.68em;
+            color: var(--c-text-light);
+        }
+
+        /* ===== 三角模型 ===== */
+        .tri-top {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .tri-top span {
+            display: inline-block;
+            font-size: 0.85em;
+            font-weight: 700;
+            color: var(--c-text);
+            border-bottom: 3px solid var(--c-cyan);
+            padding-bottom: 6px;
+        }
+        .tri-row {
+            display: flex;
+            gap: 32px;
+            justify-content: center;
+        }
+        .tri-node {
+            text-align: center;
+            width: 190px;
+        }
+        .tri-node .icon { font-size: 2em; margin-bottom: 8px; }
+        .tri-node .title { font-size: 0.82em; font-weight: 900; margin-bottom: 4px; }
+        .tri-node .desc { font-size: 0.52em; color: var(--c-text-secondary); line-height: 1.5; }
+
+        /* ===== 横线分割 ===== */
+        .sep {
+            width: 48px;
+            height: 3px;
+            background: var(--c-cyan);
+            margin: 16px 0;
+        }
+
+        /* ===== 学思践悟大字 ===== */
+        .xspw-item {
+            display: flex;
+            align-items: baseline;
+            margin: 18px 0;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--c-border);
+        }
+        .xspw-item:last-child { border-bottom: none; }
+        .xspw-char {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 2.2em;
+            font-weight: 900;
+            width: 90px;
+            flex-shrink: 0;
+        }
+        .xspw-text {
+            font-size: 0.72em;
+            color: var(--c-text-secondary);
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ====== P01 封面 ====== -->
+<section>
+    <div class="cover">
+        <div class="badge">世界教育大会 · 中国计量大学</div>
+        <h1 style="margin-top:24px;">AI 监督 AI</h1>
+        <p class="sub">
+            多智能体自动化治理如何重塑<br>
+            <span class="cyan">计量</span> · <span class="blue">标准</span> · <span class="amber">质量</span> 教育
+        </p>
+        <p style="margin-top:40px; font-size:0.5em; color:var(--c-text-light); letter-spacing:0.06em;">
+            学思践悟 — 从"人盯 AI"到"规则治 AI"的教育范式跃迁
+        </p>
+    </div>
+</section>
+
+<!-- ====== P02 转场 ====== -->
+<section>
+    <div class="divider">
+        <div class="label">PART 0</div>
+        <h2>全世界都在问</h2>
+        <div class="sub">谁来管 AI？</div>
+    </div>
+</section>
+
+<!-- ====== P03 数据冲击① ====== -->
+<section>
+    <h3>OECD《数字教育展望 2026》</h3>
+    <h2>一个令人震惊的实验</h2>
+    <div class="sep"></div>
+    <div class="two-col" style="margin-top:24px;">
+        <div style="text-align:center;">
+            <div class="mega cyan" style="font-size:4.5em;">↑48%</div>
+            <p style="font-size:0.72em; margin-top:8px;">练习正确率提升</p>
+            <p style="font-size:0.52em; color:var(--c-text-light);">使用 ChatGPT 辅助练习</p>
+        </div>
+        <div style="text-align:center;">
+            <div class="mega red" style="font-size:4.5em;">↓17%</div>
+            <p style="font-size:0.72em; margin-top:8px;">闭卷考试成绩下降</p>
+            <p style="font-size:0.52em; color:var(--c-text-light);">实际学习效果</p>
+        </div>
+    </div>
+    <div class="quote" style="margin-top:28px; border-color:var(--c-red);">
+        OECD 称之为<strong>"元认知懒惰"</strong>——学生跳过思考过程，直接接受 AI 的现成答案。<br>
+        <strong style="color:var(--c-red);">使用 AI 完成任务 ≠ 真正学到知识</strong>
+    </div>
+    <p class="source">Bastani et al., 2024 · 土耳其 1,000 名高中生随机对照实验</p>
+</section>
+
+<!-- ====== P04 数据冲击② ====== -->
+<section>
+    <h3>OECD TALIS 2024 全球教师调查</h3>
+    <div style="text-align:center; margin-top:60px;">
+        <div class="mega amber" style="font-size:6em;">75%</div>
+        <h2 style="margin-top:16px; font-size:1.2em;">
+            的教师说自己<span class="red">缺乏</span>使用 AI 进行教学的能力
+        </h2>
+        <p style="font-size:0.68em; color:var(--c-text-light); margin-top:20px;">
+            10% 的学校选择了最简单的办法——直接禁止 AI
+        </p>
+    </div>
+</section>
+
+<!-- ====== P05 核心矛盾 ====== -->
+<section>
+    <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:85%; text-align:center;">
+        <p style="font-size:1.5em; font-weight:600;">AI 不能没人管</p>
+        <p style="font-size:2.8em; font-weight:900; color:var(--c-red); margin:16px 0;">×</p>
+        <p style="font-size:1.5em; font-weight:600;">人管不过来 AI</p>
+        <div class="sep" style="width:48px; margin:32px auto;"></div>
+        <p style="font-size:3.2em; font-weight:900; color:var(--c-amber);">= ？</p>
+    </div>
+</section>
+
+<!-- ====== P06 核心主张 ====== -->
+<section>
+    <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:85%; text-align:center;">
+        <p style="font-family:'Noto Serif SC',serif; font-size:3.2em; font-weight:900; color:var(--c-text);">
+            让 <span class="cyan">AI</span> 管 <span class="cyan">AI</span>
+        </p>
+        <div class="sep" style="width:48px; margin:20px auto;"></div>
+        <p style="font-size:0.78em; color:var(--c-text-secondary); max-width:520px; line-height:1.7;">
+            用人类制定的<strong class="amber">"计量标准"</strong>约束下的 AI 管 AI
+        </p>
+        <div class="tags" style="justify-content:center; margin-top:28px;">
+            <span class="tag hl">计量</span>
+            <span class="tag hl">标准</span>
+            <span class="tag hl">质量</span>
+            <span class="tag">中国计量大学 · 47 年基因</span>
+        </div>
+    </div>
+</section>
+
+<!-- ====== P07 转场 ====== -->
+<section>
+    <div class="divider">
+        <div class="label">PART 1 · 核心创新</div>
+        <h2>监督者智能体</h2>
+        <div class="sub">AI 的"自动化质量监管员"</div>
+    </div>
+</section>
+
+<!-- ====== P08 OECD三种模式 ====== -->
+<section>
+    <h3>OECD 分析框架</h3>
+    <h2>教师与 AI 的三种协作模式</h2>
+    <div class="sep"></div>
+    <div class="three-col" style="margin-top:20px;">
+        <div class="card" style="opacity:0.45;">
+            <div class="card-title" style="color:var(--c-text-light);">❌ 替代 Replacement</div>
+            <div class="card-body">AI 完全取代教师某项工作<br><span class="red">教师丧失专业成长，师生关系弱化</span></div>
+        </div>
+        <div class="card" style="opacity:0.45;">
+            <div class="card-title" style="color:var(--c-text-light);">⚠️ 互补 Complementarity</div>
+            <div class="card-body">AI 辅助教师，教师保持参与<br><span class="amber">效率提升，但教师仍需全程盯着 AI</span></div>
+        </div>
+        <div class="card" style="border-color:var(--c-cyan);">
+            <div class="card-title" style="color:var(--c-cyan);">✨ 增强 Augmentation</div>
+            <div class="card-body">教师 + AI 协同，产出优于任何单方<br><strong class="cyan">OECD 说这是理想路径——但怎么实现？</strong></div>
+        </div>
+    </div>
+    <div class="quote" style="margin-top:24px;">
+        OECD 画了一张理想的蓝图，却没有给钥匙。<br>
+        <strong class="cyan">我们给了这把钥匙。</strong>
+    </div>
+    <p class="source">OECD Digital Education Outlook 2026, Cukurova, M. (Chapter 7, p.130-144)</p>
+</section>
+
+<!-- ====== P09 架构对比 ====== -->
+<section>
+    <h3>核心架构</h3>
+    <h2>从"人盯 AI"到"AI 管 AI"</h2>
+    <div class="sep"></div>
+    <div class="two-col" style="margin-top:20px;">
+        <div>
+            <p style="font-size:0.68em; font-weight:700; color:var(--c-red); margin-bottom:12px;">❌ 传统模式</p>
+            <div style="font-size:0.62em; color:var(--c-text-secondary); line-height:2.2; padding-left:16px; border-left:2px solid var(--c-border); opacity:0.6;">
+                学生 ← AI 助教 ← <strong style="color:var(--c-red);">👤 人类教师全程监督</strong><br>
+                ⚠️ 精力瓶颈<br>
+                ⚠️ 75% 教师说没能力<br>
+                ⚠️ 1 个教师盯不住 30 个学生
+            </div>
+        </div>
+        <div>
+            <p style="font-size:0.68em; font-weight:700; color:var(--c-cyan); margin-bottom:12px;">✅ 我们的模式</p>
+            <div style="font-size:0.62em; color:var(--c-text-secondary); line-height:2.2; padding-left:16px; border-left:3px solid var(--c-cyan);">
+                👤 <strong class="amber">教师：制定规则</strong>（只需设计一次）<br>
+                &nbsp;&nbsp;↓<br>
+                🤖 <strong class="cyan">监督者智能体</strong>（实时审查每句话）<br>
+                &nbsp;&nbsp;↓<br>
+                学生 ← AI 智能体团队
+            </div>
+        </div>
+    </div>
+    <p style="text-align:center; margin-top:28px; font-size:0.82em;">
+        教师从 <span class="red" style="text-decoration:line-through;">监工</span> 升级为 <strong class="cyan">标准制定者</strong>
+    </p>
+</section>
+
+<!-- ====== P10 四大机制 ====== -->
+<section>
+    <h3>监督者智能体</h3>
+    <h2>四大核心机制</h2>
+    <div class="sep"></div>
+    <div class="quad">
+        <div class="quad-cell">
+            <div class="quad-icon">🔇</div>
+            <div class="quad-title">隐形存在</div>
+            <div class="quad-desc">学生无感知，后台全审查<br><span class="cyan" style="font-family:'JetBrains Mono',monospace; font-size:0.92em;">is_observer = true</span></div>
+        </div>
+        <div class="quad-cell">
+            <div class="quad-icon">⚡</div>
+            <div class="quad-title">事件驱动监督</div>
+            <div class="quad-desc"><strong>即时监督</strong> = 在线检测（每句话后）<br><strong>轮次监督</strong> = 抽样检验（每轮后）</div>
+        </div>
+        <div class="quad-cell">
+            <div class="quad-icon">⚙️</div>
+            <div class="quad-title">双引擎规则检查</div>
+            <div class="quad-desc">LLM 语义判断 + JS 沙盒精确执行<br>该模糊时模糊，该精确时精确</div>
+        </div>
+        <div class="quad-cell">
+            <div class="quad-icon">📋</div>
+            <div class="quad-title">完整审计追溯</div>
+            <div class="quad-desc">上下文 + 变量状态 + 检查结果<br>全过程可追溯</div>
+        </div>
+    </div>
+</section>
+
+<!-- ====== P11 质检类比 ====== -->
+<section>
+    <h3>与计量大学 DNA 深度联结</h3>
+    <h2>把质检流程搬进 AI 系统</h2>
+    <div class="sep"></div>
+    <table class="t" style="margin-top:20px;">
+        <thead>
+            <tr><th style="width:42%;">🏭 工业质检</th><th style="width:6%;text-align:center;color:var(--c-text-light);">→</th><th>🤖 AI 教育监督</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>在线检测（每件检）</td><td style="text-align:center;color:var(--c-text-light);">→</td><td>即时监督（每句话检查）</td></tr>
+            <tr><td>抽样检验（按批次）</td><td style="text-align:center;color:var(--c-text-light);">→</td><td>轮次监督（每轮检查）</td></tr>
+            <tr><td>质检标准 / SOP</td><td style="text-align:center;color:var(--c-text-light);">→</td><td>双引擎规则体系</td></tr>
+            <tr><td>质检员</td><td style="text-align:center;color:var(--c-text-light);">→</td><td>监督者智能体</td></tr>
+            <tr><td>质检报告</td><td style="text-align:center;color:var(--c-text-light);">→</td><td>规则触发审计日志</td></tr>
+            <tr><td>质量管理体系 (ISO 9001)</td><td style="text-align:center;color:var(--c-text-light);">→</td><td>行动空间规则集架构</td></tr>
+        </tbody>
+    </table>
+</section>
+
+<!-- ====== P12 三控模型 ====== -->
+<section>
+    <h2>AI 教育的"事前-事中-事后"质量控制</h2>
+    <div class="sep"></div>
+    <div class="steps" style="margin-top:36px;">
+        <div class="step">
+            <div class="step-num">事前控制</div>
+            <div class="step-title">📝 教师制定规则</div>
+            <div class="step-body">教学红线 + 引导策略<br>像写 ISO 标准一样</div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+            <div class="step-num">事中控制</div>
+            <div class="step-title">⚡ 监督者实时审查</div>
+            <div class="step-body">每句话 / 每轮自动检查<br>违规即纠偏</div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+            <div class="step-num">事后控制</div>
+            <div class="step-title">📋 审计日志追溯</div>
+            <div class="step-body">完整记录每次检查<br>支持事后审查修正</div>
+        </div>
+    </div>
+    <div class="quote" style="text-align:center; margin-top:32px;">
+        这不是新东西——这是<strong>质量管理工程</strong>教了二十多年的核心知识<br>
+        今天，我们把它用在了 <strong class="cyan">AI 行为的质量管理</strong>上
+    </div>
+</section>
+
+<!-- ====== P13 转场 ====== -->
+<section>
+    <div class="divider">
+        <div class="label">PART 2</div>
+        <h2>双引擎规则系统</h2>
+        <div class="sub">给 AI 行为立"国标"</div>
+    </div>
+</section>
+
+<!-- ====== P14 两种规则 ====== -->
+<section>
+    <h2>一个引擎不够——为什么需要"双引擎"</h2>
+    <div class="sep"></div>
+    <div class="two-col" style="margin-top:20px;">
+        <div>
+            <div class="card" style="border-color:var(--c-amber);">
+                <div class="card-title"><span class="amber">🧠 自然语言规则引擎</span></div>
+                <div class="card-body">
+                    <strong>处理模糊判断</strong><br><br>
+                    <div class="quote" style="border-color:var(--c-amber); font-size:0.92em;">
+                        "当学生表现出挫败感时，应给予鼓励而非继续追问"
+                    </div>
+                    · 大模型语义理解<br>
+                    · 类比：<strong>ISO 管理体系标准</strong><br>
+                    · 管"方向与原则"
+                </div>
+            </div>
+        </div>
+        <div>
+            <div class="card" style="border-color:var(--c-blue);">
+                <div class="card-title"><span class="blue">⚙️ 逻辑规则引擎</span></div>
+                <div class="card-body">
+                    <strong>处理精确计算</strong><br><br>
+                    <div class="code">
+                        <span class="kw">if</span> (wrong_attempts > <span class="str">3</span>)<br>
+                        &nbsp;&nbsp;<span class="fn">reduce_difficulty</span>();
+                    </div>
+                    <br>
+                    · JS 安全沙盒（5秒超时 · 50MB · 隔离）<br>
+                    · 类比：<strong>ISO 技术标准</strong><br>
+                    · 管"数值与公式"
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ====== P15 场景演示 ====== -->
+<section>
+    <h3>场景演示</h3>
+    <h2>标准化工程课——"国际标准草案审议模拟"</h2>
+    <div class="sep"></div>
+    <div class="tags" style="margin:14px 0;">
+        <span class="tag">🇨🇳 中国代表</span>
+        <span class="tag">🇩🇪 德国代表</span>
+        <span class="tag">🇺🇸 美国代表</span>
+        <span class="tag">🏭 产业界</span>
+        <span class="tag">🔬 实验室</span>
+        <span class="tag">🌍 发展中国家</span>
+    </div>
+    <div class="two-col" style="gap:28px; margin-top:12px;">
+        <div>
+            <p style="font-size:0.66em; font-weight:700; color:var(--c-amber);">LLM 规则</p>
+            <div class="quote" style="border-color:var(--c-amber); font-size:0.78em;">
+                "在讨论国际标准时，必须考虑发展中国家的技术转移能力"
+            </div>
+        </div>
+        <div>
+            <p style="font-size:0.66em; font-weight:700; color:var(--c-blue);">逻辑规则</p>
+            <div class="code">
+                <span class="kw">if</span> (tolerance < <span class="str">0.001</span><br>
+                &nbsp;&nbsp;&& developing) {<br>
+                &nbsp;&nbsp;<span class="fn">flag</span>(<span class="str">"公差超出检测能力"</span>);<br>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="quote" style="border-color:var(--c-red); margin-top:18px; font-size:0.78em;">
+        <strong>第 3 轮</strong>：德国代表提出超高精度公差 (0.0005) → 监督者触发逻辑规则 → 自动介入纠偏
+    </div>
+</section>
+
+<!-- ====== P16 循环 ====== -->
+<section>
+    <h2>学生亲手体验——"标准如何塑造行为"</h2>
+    <div class="sep"></div>
+    <div class="steps" style="margin-top:44px;">
+        <div class="step">
+            <div class="step-title">📝 编写规则</div>
+            <div class="step-body">教师/学生定义</div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+            <div class="step-title">🤖 AI 讨论</div>
+            <div class="step-body">按规则约束运行</div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+            <div class="step-title">👁️ 观察涌现</div>
+            <div class="step-body">规则如何影响行为</div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+            <div class="step-title">🔧 修改规则</div>
+            <div class="step-body">调整参数再观察</div>
+        </div>
+    </div>
+    <p style="text-align:center; margin-top:48px; font-size:0.85em; color:var(--c-text-secondary);">
+        不是背条文，而是亲手编写规则，观察规则如何驱动复杂系统运转<br>
+        <strong class="cyan">——这才是标准化工程教育的灵魂</strong>
+    </p>
+</section>
+
+<!-- ====== P17 转场 ====== -->
+<section>
+    <div class="divider">
+        <div class="label">PART 3</div>
+        <h2>平行实验室</h2>
+        <div class="sub">AI 教育的"质检中心"</div>
+    </div>
+</section>
+
+<!-- ====== P18 验证困境 ====== -->
+<section>
+    <h2>全行业的困境——说有效，拿证据</h2>
+    <div class="sep"></div>
+    <div class="quote" style="margin-top:24px;">
+        "大多数研究基于短期干预，长期效果证据缺失"<br>
+        <em>—— OECD 2026</em>
+    </div>
+    <div class="quote" style="border-color:var(--c-amber);">
+        "Validation is the central challenge"<br>
+        <em>—— Springer 2025</em>
+    </div>
+    <h3 style="margin-top:20px; color:var(--c-text);">竞品实验能力对比</h3>
+    <table class="t">
+        <thead>
+            <tr><th>能力</th><th>AutoGen</th><th>CrewAI</th><th>LangGraph</th><th class="cyan">MesaLogo</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>参数扫描</td><td class="red">❌</td><td class="red">❌</td><td class="red">❌</td><td class="cyan"><strong>✅</strong></td></tr>
+            <tr><td>对照实验</td><td class="red">❌</td><td class="red">❌</td><td class="red">❌</td><td class="cyan"><strong>✅</strong></td></tr>
+            <tr><td>可复现验证</td><td class="red">❌</td><td class="red">❌</td><td class="red">❌</td><td class="cyan"><strong>✅</strong></td></tr>
+            <tr><td>变量历史追踪</td><td class="red">❌</td><td class="red">❌</td><td class="red">❌</td><td class="cyan"><strong>✅</strong></td></tr>
+        </tbody>
+    </table>
+</section>
+
+<!-- ====== P19 实验流程 ====== -->
+<section>
+    <h2>27 组对照实验，一键生成</h2>
+    <div class="sep"></div>
+    <div class="steps" style="margin-top:32px;">
+        <div class="step">
+            <div class="step-num">STEP 1</div>
+            <div class="step-title">定义场景模板</div>
+            <div class="step-body">绑定行动空间</div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+            <div class="step-num">STEP 2</div>
+            <div class="step-title">设定变量组合</div>
+            <div class="step-body">辅导风格 × 介入频率 × 智能体数<br>3 × 3 × 3</div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+            <div class="step-num" style="color:var(--c-cyan); font-size:0.65em;">STEP 3</div>
+            <div class="step-title"><span class="cyan">27 组独立实验</span></div>
+            <div class="step-body">笛卡尔积 · 变量隔离<br>历史追踪 · 断点续传</div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+            <div class="step-num">STEP 4</div>
+            <div class="step-title">统计分析</div>
+            <div class="step-body">哪种配置最优？<br>效果能否复现？</div>
+        </div>
+    </div>
+    <p style="text-align:center; margin-top:36px; font-size:0.82em; color:var(--c-text-secondary);">
+        不是跑一次 Demo——是<strong class="cyan">做科学实验</strong>
+    </p>
+</section>
+
+<!-- ====== P20 计量精神 ====== -->
+<section>
+    <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:85%; text-align:center;">
+        <p style="font-size:0.65em; color:var(--c-text-light); letter-spacing:0.1em;">计量学第一课</p>
+        <p style="font-family:'Noto Serif SC',serif; font-size:2.4em; font-weight:900; margin:16px 0; line-height:1.4;">
+            没有测量<br>就没有科学
+        </p>
+        <div class="sep" style="margin:16px auto;"></div>
+        <div style="max-width:480px; margin-top:12px;">
+            <p style="font-size:0.68em; color:var(--c-text-secondary); line-height:1.9;">
+                说"AI 辅导有效"不够——<br>
+                <span class="cyan">效应量是多少？</span><br>
+                <span class="cyan">在什么条件下有效？</span><br>
+                <span class="cyan">换一组参数还有效吗？</span><br>
+                <span class="cyan">结果能不能复现？</span>
+            </p>
+        </div>
+        <p style="margin-top:28px; font-size:0.72em; color:var(--c-text-secondary);">
+            平行实验室 = AI 教育的<strong class="amber">"国家计量院"</strong>
+        </p>
+    </div>
+</section>
+
+<!-- ====== P21 转场 ====== -->
+<section>
+    <div class="divider">
+        <div class="label">CONCLUSION</div>
+        <h2>学思践悟</h2>
+        <div class="sub">计量 · 标准 · 质量——教育新三角</div>
+    </div>
+</section>
+
+<!-- ====== P22 三大回顾 ====== -->
+<section>
+    <h2>今天讲了三件事</h2>
+    <div class="sep"></div>
+    <div class="three-col" style="margin-top:24px;">
+        <div class="card" style="border-color:var(--c-cyan); text-align:center;">
+            <div style="font-size:1.6em; margin-bottom:8px;">🤖</div>
+            <div class="card-title" style="text-align:center;">监督者智能体</div>
+            <div class="card-body" style="text-align:center;">AI 管 AI<br>教师 → 标准制定者</div>
+            <p style="font-size:0.55em; color:var(--c-cyan); margin-top:10px; text-align:center; font-weight:600;">← 质量 →</p>
+        </div>
+        <div class="card" style="border-color:var(--c-amber); text-align:center;">
+            <div style="font-size:1.6em; margin-bottom:8px;">⚙️</div>
+            <div class="card-title" style="text-align:center;">双引擎规则</div>
+            <div class="card-body" style="text-align:center;">给 AI 立标准<br>语义 + 确定性</div>
+            <p style="font-size:0.55em; color:var(--c-amber); margin-top:10px; text-align:center; font-weight:600;">← 标准 →</p>
+        </div>
+        <div class="card" style="border-color:var(--c-blue); text-align:center;">
+            <div style="font-size:1.6em; margin-bottom:8px;">🧪</div>
+            <div class="card-title" style="text-align:center;">平行实验室</div>
+            <div class="card-body" style="text-align:center;">给效果做质检<br>27 组对照实验</div>
+            <p style="font-size:0.55em; color:var(--c-blue); margin-top:10px; text-align:center; font-weight:600;">← 计量 →</p>
+        </div>
+    </div>
+</section>
+
+<!-- ====== P23 三角模型 ====== -->
+<section>
+    <h2 style="text-align:center;">计量 · 标准 · 质量——教育新三角</h2>
+    <div class="sep" style="margin:16px auto;"></div>
+    <div style="margin-top:36px;">
+        <div class="tri-top">
+            <span>学思践悟 · AI 教育新范式</span>
+        </div>
+        <div class="tri-row">
+            <div class="tri-node">
+                <div class="icon">📐</div>
+                <div class="title blue">计 量</div>
+                <div class="desc">平行实验室<br>度量 AI 教学效果</div>
+            </div>
+            <div class="tri-node">
+                <div class="icon">📏</div>
+                <div class="title amber">标 准</div>
+                <div class="desc">双引擎规则<br>标准化 AI 教学行为</div>
+            </div>
+            <div class="tri-node">
+                <div class="icon">🛡️</div>
+                <div class="title cyan">质 量</div>
+                <div class="desc">监督者智能体<br>保障 AI 教学质量</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ====== P24 学思践悟 ====== -->
+<section>
+    <h2 style="text-align:center;">学 · 思 · 践 · 悟</h2>
+    <div class="sep" style="margin:16px auto 32px;"></div>
+    <div style="max-width:640px; margin:0 auto;">
+        <div class="xspw-item">
+            <span class="xspw-char cyan">学</span>
+            <span class="xspw-text">AI 在规则约束下协作讨论，学生观察涌现行为</span>
+        </div>
+        <div class="xspw-item">
+            <span class="xspw-char amber">思</span>
+            <span class="xspw-text">学生亲手编写规则，理解"标准如何塑造行为"</span>
+        </div>
+        <div class="xspw-item">
+            <span class="xspw-char blue">践</span>
+            <span class="xspw-text">AI 通过 MCP 驱动 NetLogo / GIS / 代码，对话到执行闭环</span>
+        </div>
+        <div class="xspw-item">
+            <span class="xspw-char purple">悟</span>
+            <span class="xspw-text">平行实验室输出检验报告，从"跑 Demo"到"做科学"</span>
+        </div>
+    </div>
+</section>
+
+<!-- ====== P25 结束金句 ====== -->
+<section>
+    <div class="ending">
+        <div class="big">
+            当 AI 学会了自我监管，<br>
+            人类才真正准备好了<br>
+            与 AI 共处。
+        </div>
+        <div class="small">
+            这就是"计量精神"给 AI 教育的最好礼物
+        </div>
+    </div>
+</section>
+
+<!-- ====== P26 感谢 ====== -->
+<section>
+    <div class="ending">
+        <p style="font-family:'Noto Serif SC',serif; font-size:3em; font-weight:900; color:var(--c-text);">谢谢</p>
+        <p style="font-size:0.85em; color:var(--c-text-light); margin-top:8px;">Thank You</p>
+        <div class="tags" style="justify-content:center; margin-top:36px;">
+            <span class="tag hl">学思践悟</span>
+            <span class="tag hl">AI 监督 AI</span>
+            <span class="tag">中国计量大学</span>
+            <span class="tag">世界教育大会 2026</span>
+        </div>
+    </div>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script>
+Reveal.initialize({
+    hash: true,
+    slideNumber: 'c/t',
+    width: 1280,
+    height: 720,
+    margin: 0.04,
+    transition: 'fade',
+    transitionSpeed: 'slow',
+    backgroundTransition: 'none',
+    center: false,
+    controls: true,
+    progress: true,
+    plugins: []
+});
+</script>
+</body>
+</html>

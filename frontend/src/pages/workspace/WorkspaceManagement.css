@@ -1,0 +1,435 @@
+/* 分区项目空间管理页面样式 */
+
+:root {
+  --partition-workspace-bottom-margin: 24px; /* 与浏览器底部的固定边距 */
+}
+
+.workspace-management {
+  height: calc(100vh - 120px);
+}
+
+.workspace-management .ant-card {
+  height: 100%;
+}
+
+.workspace-management .ant-card-body {
+  height: calc(100% - 57px);
+  overflow: hidden;
+}
+
+/* 分区项目空间标签页样式 */
+.partition-workspace-tab {
+  display: flex;
+  flex-direction: column;
+  /*
+   * 高度计算：
+   * 100vh - 顶部导航(64px) - 页面标题区域(约80px) - Tab标签栏(约46px) - Card内边距(约48px) - 底部边距(var)
+   */
+  height: calc(100vh - 238px - var(--partition-workspace-bottom-margin));
+  min-height: 400px; /* 最小高度，防止内容过小 */
+}
+
+.partition-workspace-tab > div:last-child {
+  flex: 1;
+  min-height: 0; /* 重要：允许flex子项收缩 */
+  height: calc(100% - 40px); /* 减去描述文字的高度 */
+}
+
+/* 任务智能体选择器样式 */
+.task-agent-selector {
+  height: 100%;
+  position: relative;
+}
+
+.task-agent-selector .ant-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.task-agent-selector .ant-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 0;
+  overflow: hidden;
+}
+
+/* 左侧边栏固定宽度，便于编辑时的左右分屏 */
+.partition-memory-tab .task-agent-selector {
+  min-width: 333px;
+  max-width: 333px;
+}
+
+.task-agent-selector .tree-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 16px;
+}
+
+.task-agent-selector .ant-tree {
+  background: transparent;
+}
+
+.task-agent-selector .ant-tree-node-content-wrapper {
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.task-agent-selector .ant-tree-node-content-wrapper:hover {
+  background-color: var(--custom-hover-bg, #f5f5f5);
+}
+
+.task-agent-selector .ant-tree-node-selected .ant-tree-node-content-wrapper {
+  background-color: var(--tree-selected-bg, #e6f7ff);
+  border: 1px solid var(--tree-selected-border, #91d5ff);
+}
+
+/* 任务节点特殊样式（顶级节点） */
+.task-agent-selector .ant-tree > .ant-tree-treenode .ant-tree-node-content-wrapper {
+  font-weight: 500;
+}
+
+.task-agent-selector .ant-tree > .ant-tree-treenode .ant-tree-node-content-wrapper:hover {
+  background-color: var(--tree-hover-bg, #f0f8ff);
+  border: 1px solid var(--tree-hover-border, #d9e8ff);
+}
+
+/* 任务节点不显示选中状态 */
+.task-agent-selector .ant-tree > .ant-tree-treenode .ant-tree-node-content-wrapper.ant-tree-node-selected {
+  background-color: transparent !important;
+  border: none !important;
+}
+
+.task-agent-selector .ant-tree > .ant-tree-treenode .ant-tree-node-content-wrapper.ant-tree-node-selected:hover {
+  background-color: var(--tree-hover-bg, #f0f8ff) !important;
+  border: 1px solid var(--tree-hover-border, #d9e8ff) !important;
+}
+
+/* 子节点（智能体和共享工作区）保持正常的选中样式 */
+.task-agent-selector .ant-tree-child-tree .ant-tree-node-content-wrapper {
+  font-weight: normal;
+}
+
+.task-agent-selector .ant-tree-child-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
+  background-color: var(--tree-selected-bg, #e6f7ff) !important;
+  border: 1px solid var(--tree-selected-border, #91d5ff) !important;
+}
+
+/* 子节点缩进样式 */
+.task-agent-selector .ant-tree-child-tree {
+  margin-left: 8px;
+}
+
+.task-agent-selector .ant-tree-child-tree .ant-tree-node-content-wrapper {
+  margin-left: 16px;
+  font-weight: normal;
+}
+
+/* 确保树形组件中的图标和文字大小一致 */
+.task-agent-selector .ant-tree-switcher {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.task-agent-selector .ant-tree-switcher .anticon {
+  font-size: 14px;
+}
+
+.task-agent-selector .ant-tree-node-content-wrapper .ant-tree-title {
+  display: flex;
+  align-items: center;
+}
+
+.task-agent-selector .ant-tree-title .anticon {
+  font-size: 14px;
+  margin-right: 6px;
+}
+
+.task-agent-selector .ant-tree-title .ant-typography {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* 记忆查看器样式 */
+.memory-viewer {
+  height: 100%;
+}
+
+.memory-viewer .ant-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.memory-viewer .ant-card-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+}
+
+/* 编辑模式下的样式优化 */
+.memory-viewer .memory-editor {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 确保编辑器容器占满可用高度 */
+.memory-viewer .ant-card-body .memory-editor {
+  height: calc(100vh - 300px); /* 减去顶部导航、标题、按钮等的高度 */
+  min-height: 500px;
+}
+
+/* 编辑区域和预览区域的样式同步 */
+.memory-editor .ant-input {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* 预览区域的Markdown样式 */
+.memory-editor .markdown-content {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.memory-editor .markdown-content h1,
+.memory-editor .markdown-content h2,
+.memory-editor .markdown-content h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.memory-editor .markdown-content p {
+  margin-bottom: 12px;
+}
+
+.memory-editor .markdown-content pre {
+  background-color: var(--md-code-bg, #f6f8fa);
+  border-radius: 4px;
+  padding: 12px;
+  overflow-x: auto;
+}
+
+/* 记忆列表样式 */
+.memory-viewer .ant-list-item {
+  transition: all 0.2s ease;
+}
+
+.memory-viewer .ant-list-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Markdown内容样式 */
+.markdown-content {
+  line-height: 1.6;
+  color: var(--custom-text, #333);
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+}
+
+.markdown-content h1 {
+  font-size: 1.5em;
+  border-bottom: 1px solid var(--custom-border, #eee);
+  padding-bottom: 0.3em;
+}
+
+.markdown-content h2 {
+  font-size: 1.3em;
+}
+
+.markdown-content h3 {
+  font-size: 1.1em;
+}
+
+.markdown-content p {
+  margin-bottom: 1em;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin-bottom: 1em;
+  padding-left: 2em;
+}
+
+.markdown-content li {
+  margin-bottom: 0.25em;
+}
+
+.markdown-content code {
+  background: var(--md-code-bg, #f6f8fa);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-size: 0.9em;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+.markdown-content pre {
+  background: var(--md-code-bg, #f6f8fa);
+  padding: 1em;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin-bottom: 1em;
+}
+
+.markdown-content pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid var(--custom-border, #dfe2e5);
+  padding-left: 1em;
+  margin: 1em 0;
+  color: var(--custom-text-secondary, #6a737d);
+}
+
+.markdown-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 1em;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid var(--custom-border, #dfe2e5);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.markdown-content th {
+  background: var(--md-code-bg, #f6f8fa);
+  font-weight: 600;
+}
+
+/* 记忆编辑器样式 */
+.memory-editor {
+  height: 100%;
+}
+
+.memory-editor .ant-input {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .memory-management .ant-col:first-child {
+    margin-bottom: 16px;
+  }
+
+  .partition-memory-tab {
+    height: calc(100vh - 156px - var(--partition-memory-bottom-margin)); /* 小屏幕时减少一些高度 */
+  }
+}
+
+@media (max-width: 768px) {
+  .memory-management {
+    height: auto;
+  }
+
+  .memory-management .ant-row {
+    flex-direction: column;
+  }
+
+  .memory-management .ant-col {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: none !important;
+  }
+
+  .partition-memory-tab {
+    height: calc(100vh - 136px - var(--partition-memory-bottom-margin)); /* 移动端进一步减少高度 */
+    min-height: 300px;
+  }
+
+  .partition-memory-tab > div:last-child {
+    flex-direction: column;
+  }
+
+  .partition-memory-tab .task-agent-selector {
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--custom-border, #f0f0f0);
+    padding-right: 0 !important;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+  }
+
+  .partition-memory-tab .memory-viewer {
+    padding-left: 0 !important;
+  }
+}
+
+@media (min-height: 900px) {
+  /* 大屏幕时可以使用更多高度 */
+  .partition-memory-tab {
+    height: calc(100vh - 166px - var(--partition-memory-bottom-margin));
+  }
+}
+
+/* 加载状态样式 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+/* 空状态样式 */
+.empty-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  flex-direction: column;
+}
+
+.empty-container .ant-empty-description {
+  color: var(--custom-text-secondary, #999);
+  margin-top: 16px;
+}
+
+/* 自定义滚动条样式 */
+.task-agent-selector .tree-container::-webkit-scrollbar,
+.memory-viewer .ant-card-body::-webkit-scrollbar,
+.memory-viewer .markdown-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.task-agent-selector .tree-container::-webkit-scrollbar-track,
+.memory-viewer .ant-card-body::-webkit-scrollbar-track,
+.memory-viewer .markdown-content::-webkit-scrollbar-track {
+  background: var(--scrollbar-track, #f1f1f1);
+  border-radius: 3px;
+}
+
+.task-agent-selector .tree-container::-webkit-scrollbar-thumb,
+.memory-viewer .ant-card-body::-webkit-scrollbar-thumb,
+.memory-viewer .markdown-content::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb, #c1c1c1);
+  border-radius: 3px;
+}
+
+.task-agent-selector .tree-container::-webkit-scrollbar-thumb:hover,
+.memory-viewer .ant-card-body::-webkit-scrollbar-thumb:hover,
+.memory-viewer .markdown-content::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover, #a8a8a8);
+}

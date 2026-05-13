@@ -1,0 +1,58 @@
+#!/bin/bash
+# ====================================================================
+# MesaLogo desktop app — macOS build script (template)
+#
+# Copy to: build-mac.sh  and fill in your own Apple Developer credentials.
+# DO NOT commit build-mac.sh after filling secrets.
+#
+# How to get your credentials:
+# - APPLE_ID:  your Apple Developer account email
+# - APPLE_APP_SPECIFIC_PASSWORD:  https://appleid.apple.com -> Sign-In and Security -> App-Specific Passwords
+# - APPLE_TEAM_ID:  https://developer.apple.com/account -> Membership Details
+# ====================================================================
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+FRONTEND_DIR="$SCRIPT_DIR/../frontend"
+DESKTOP_DIR="$SCRIPT_DIR"
+
+echo "=== MesaLogo Desktop App Build Script (Electron) ==="
+
+# 1. Build the frontend
+echo "[1/5] Building frontend..."
+cd "$FRONTEND_DIR"
+pnpm build
+
+# 2. Copy frontend build into desktop-app/dist
+echo "[2/5] Copying frontend build to desktop-app/dist..."
+rm -rf "$DESKTOP_DIR/dist"
+cp -r "$FRONTEND_DIR/build" "$DESKTOP_DIR/dist"
+
+# 3. Patch index.html with absolute paths (required for Electron + SPA routing)
+echo "[3/5] Patching paths for Electron..."
+sed -i '' 's|<head>|<head><base href="/">|' "$DESKTOP_DIR/dist/index.html"
+echo "  Patched index.html with base href"
+
+# 4. Install dependencies if needed
+echo "[4/5] Checking dependencies..."
+cd "$DESKTOP_DIR"
+if [ ! -d "node_modules" ]; then
+  npm install
+fi
+
+# 5. Build Electron app (with code signing + notarization)
+echo "[5/5] Building Electron application with Notarization..."
+export APPLE_ID="YOUR_APPLE_ID@example.com"
+export APPLE_APP_SPECIFIC_PASSWORD="xxxx-xxxx-xxxx-xxxx"
+export APPLE_TEAM_ID="YOUR_TEAM_ID"
+
+# Use git branch as version (e.g. branch "0.51" -> version "0.51")
+GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD | tr -cd 'a-zA-Z0-9.-')
+DYNAMIC_VERSION="${GIT_BRANCH}"
+
+echo "  Injecting dynamic version: $DYNAMIC_VERSION"
+npx electron-builder --mac -c.extraMetadata.version="$DYNAMIC_VERSION"
+
+echo "=== Build complete! ==="
+echo "Output: $DESKTOP_DIR/release/"

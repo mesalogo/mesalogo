@@ -1,0 +1,23 @@
+# ====================================================================
+# MesaLogo Docker Backend Config (template)
+# Copy to: config.conf  and fill in your own values.  DO NOT commit config.conf.
+# ====================================================================
+
+[BACKEND_CONFIG]
+# 后端服务地址
+DEBUG = False
+DEBUG_LLM_RESPONSE = False
+# 日志级别: DEBUG, INFO, WARNING, ERROR, CRITICAL
+LOG_LEVEL = INFO
+HOST = localhost
+PORT = 8080
+
+# 数据库配置(留空则使用 SQLite)
+# MariaDB/MySQL 格式: mysql+pymysql://USER:PASSWORD@HOST:PORT/DB?charset=utf8mb4
+# 请改用强密码,不要使用默认值
+DATABASE_URI = mysql+pymysql://USER:CHANGE_ME_TO_STRONG_PASSWORD@abm-mariadb:3306/abm?charset=utf8mb4
+
+
+[FRONTEND_CONFIG]
+HOST = localhost
+PORT = 3000

@@ -1,0 +1,95 @@
+services:
+  onlyoffice-documentserver:
+    image: onlyoffice/documentserver
+    container_name: onlyoffice-documentserver
+    profiles:
+      - onlyoffice
+    depends_on:
+      - onlyoffice-postgresql
+      - onlyoffice-rabbitmq
+    environment:
+      - DB_TYPE=postgres
+      - DB_HOST=onlyoffice-postgresql
+      - DB_PORT=5432
+      - DB_NAME=onlyoffice
+      - DB_USER=onlyoffice
+      - AMQP_URI=amqp://guest:guest@onlyoffice-rabbitmq
+      # JWT配置
+      - JWT_ENABLED=false
+      - JWT_SECRET=secret
+      # 允许内网访问
+      - ALLOW_META_IP_ADDRESS=true
+      - ALLOW_PRIVATE_IP_ADDRESS=true
+      - USE_UNAUTHORIZED_STORAGE=true
+    ports:
+      - '18080:80'
+      - '18443:443'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/info/info.json"]
+      interval: 30s
+      retries: 5
+      start_period: 60s
+      timeout: 10s
+    stdin_open: true
+    restart: always
+    stop_grace_period: 60s
+    volumes:
+       - onlyoffice_data:/var/www/onlyoffice/Data
+       - onlyoffice_logs:/var/log/onlyoffice
+       - onlyoffice_cache:/var/lib/onlyoffice/documentserver/App_Data/cache/files
+       - onlyoffice_files:/var/www/onlyoffice/documentserver-example/public/files
+       - onlyoffice_fonts:/usr/share/fonts
+    networks:
+      - abm-network
+
+  onlyoffice-rabbitmq:
+    container_name: onlyoffice-rabbitmq
+    image: rabbitmq:3
+    profiles:
+      - onlyoffice
+    restart: always
+    expose:
+      - '5672'
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "status"]
+      interval: 10s
+      retries: 3
+      start_period: 10s
+      timeout: 10s
+    networks:
+      - abm-network
+
+  onlyoffice-postgresql:
+    container_name: onlyoffice-postgresql
+    image: postgres:15
+    profiles:
+      - onlyoffice
+    environment:
+      - POSTGRES_DB=onlyoffice
+      - POSTGRES_USER=onlyoffice
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    restart: always
+    expose:
+      - '5432'
+    volumes:
+      - onlyoffice_postgresql_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U onlyoffice"]
+      interval: 10s
+      retries: 3
+      start_period: 10s
+      timeout: 10s
+    networks:
+      - abm-network
+
+networks:
+  abm-network:
+    driver: bridge
+
+volumes:
+  onlyoffice_data:
+  onlyoffice_logs:
+  onlyoffice_cache:
+  onlyoffice_files:
+  onlyoffice_fonts:
+  onlyoffice_postgresql_data:

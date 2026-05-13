@@ -1,0 +1,16 @@
+services:
+  paddle-ocr-vl:
+    image: ccr-2vdh3abv-pub.cnc.bj.baidubce.com/paddlepaddle/paddleocr-genai-vllm-server:latest-offline
+    container_name: paddle-ocr-vl
+    volumes:
+      - ./vllm-config.yml:/vllm-config.yml
+    ports:
+      - 8050:8080
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: ["gpu"]
+    command: paddleocr genai_server --model_name PaddleOCR-VL-0.9B --host 0.0.0.0 --port 8080 --backend vllm --backend_config /vllm-config.yml

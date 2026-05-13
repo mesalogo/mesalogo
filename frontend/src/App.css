@@ -1,0 +1,775 @@
+/* ===================================
+   全局基础样式
+   =================================== */
+
+:root {
+  /* 基础背景色 */
+  --custom-bg: #ffffff;
+  --custom-bg-layout: #f0f2f5;
+  /* 文字颜色 */
+  --custom-text: rgba(0, 0, 0, 0.85);
+  --custom-text-secondary: rgba(0, 0, 0, 0.45);
+  /* 边框和卡片 */
+  --custom-border: #f0f0f0;
+  --custom-card-bg: #ffffff;
+  --custom-header-bg: #f8fafd;
+  --custom-card-cover-bg: #f5f7fa;
+  --custom-hover-bg: #f1f5f9;
+  --custom-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.06);
+  /* 代码和消息 */
+  --md-code-bg: #f6f8fa;
+  --msg-human-bg: #e6f7ff;
+  /* 树形控件 */
+  --tree-selected-bg: #e6f7ff;
+  --tree-selected-border: #91d5ff;
+  --tree-hover-bg: #f0f8ff;
+  --tree-hover-border: #d9e8ff;
+  /* 滚动条 */
+  --scrollbar-track: #f1f1f1;
+  --scrollbar-thumb: #c1c1c1;
+  --scrollbar-thumb-hover: #a8a8a8;
+  /* 遮罩层 */
+  --overlay-bg: rgba(255, 255, 255, 0.7);
+  /* 毛玻璃效果 - RGB值用于rgba()透明度计算 */
+  --card-bg-rgb: 255, 255, 255;
+}
+
+:root[data-theme='dark'] {
+  /* 基础背景色 */
+  --custom-bg: #141414;
+  --custom-bg-layout: #0a0a0a;
+  /* 文字颜色 */
+  --custom-text: rgba(255, 255, 255, 0.85);
+  --custom-text-secondary: rgba(255, 255, 255, 0.45);
+  /* 边框和卡片 */
+  --custom-border: #303030;
+  --custom-card-bg: #1f1f1f;
+  --custom-header-bg: #1f1f1f;
+  --custom-card-cover-bg: #2a2a2a;
+  --custom-hover-bg: #2a2a2a;
+  --custom-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.15);
+  /* 代码和消息 */
+  --md-code-bg: #2d2d2d;
+  --msg-human-bg: #111d2c;
+  /* 树形控件 */
+  --tree-selected-bg: #111d2c;
+  --tree-selected-border: #153450;
+  --tree-hover-bg: #1a1a2e;
+  --tree-hover-border: #303050;
+  /* 滚动条 */
+  --scrollbar-track: #2a2a2a;
+  --scrollbar-thumb: #4a4a4a;
+  --scrollbar-thumb-hover: #5a5a5a;
+  /* 遮罩层 */
+  --overlay-bg: rgba(0, 0, 0, 0.7);
+  /* 毛玻璃效果 - RGB值用于rgba()透明度计算 */
+  --card-bg-rgb: 31, 31, 31;
+}
+
+/* ===================================
+   毛玻璃效果工具类
+   用法: 添加 class="glass-effect" 到需要毛玻璃效果的元素
+   示例: <div class="glass-effect">...</div>
+   =================================== */
+.glass-effect {
+  background-color: rgba(var(--card-bg-rgb), 0.8) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+}
+
+/* 暗色主题全局设置 */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--custom-bg-layout);
+  color: var(--custom-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ===================================
+   布局样式
+   =================================== */
+
+.layout {
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  background: #1677ff;
+}
+
+.content {
+  padding: 24px;
+  background: var(--custom-bg-layout);
+  min-height: calc(100vh - 64px - 70px);
+}
+
+.setup-card {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ===================================
+   Ant Design 组件样式覆盖
+   （这些样式无法完全通过 theme.ts 实现）
+   =================================== */
+
+/* 卡片样式 - 保留关键交互效果 */
+.ant-card {
+  border-radius: 12px;
+  box-shadow: var(--custom-shadow);
+  overflow: hidden;
+  border: none;
+  transition: all 0.3s ease;
+  background: var(--custom-card-bg);
+}
+
+.ant-card.ant-card-hoverable:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 16px 48px rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme='dark'] .ant-card.ant-card-hoverable:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 16px 48px rgba(0, 0, 0, 0.3);
+}
+
+.ant-card.ant-card-small {
+  border-radius: 8px;
+}
+
+.ant-card-head {
+  border-bottom: 1px solid var(--custom-border);
+}
+
+/* 表格样式 */
+.ant-table {
+  font-size: 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.ant-table-thead > tr > th {
+  background-color: var(--custom-header-bg) !important;
+  color: var(--custom-text);
+  font-weight: 600;
+  border-bottom: 1px solid var(--custom-border);
+  padding: 18px 24px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ant-table-tbody > tr > td {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--custom-border);
+}
+
+.ant-table-wrapper {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* 修复表格固定列 z-index 过高导致覆盖 topbar 的问题 */
+.ant-table-cell.ant-table-cell-fix-left,
+.ant-table-cell.ant-table-cell-fix-right,
+.ant-table-cell.ant-table-cell-fix-start,
+.ant-table-cell.ant-table-cell-fix-end {
+  z-index: 2 !important;
+}
+
+.ant-table-thead .ant-table-cell.ant-table-cell-fix-left,
+.ant-table-thead .ant-table-cell.ant-table-cell-fix-right,
+.ant-table-thead .ant-table-cell.ant-table-cell-fix-start,
+.ant-table-thead .ant-table-cell.ant-table-cell-fix-end {
+  z-index: 3 !important;
+}
+
+/* 确保表格容器的伪元素阴影也不会覆盖 topbar */
+.ant-table-container::before,
+.ant-table-container::after {
+  z-index: 2 !important;
+}
+
+.table-row:hover {
+  background-color: var(--custom-hover-bg) !important;
+  cursor: pointer;
+}
+
+.modern-table-cell {
+  padding: 16px;
+}
+
+.workspace-table-row td {
+  vertical-align: middle;
+  padding: 8px 16px;
+}
+
+/* 菜单样式 - 特殊交互覆盖（theme.ts 中的 token 无法完全实现这些效果）*/
+.ant-menu-item {
+  margin: 4px 0 !important;
+  height: 40px !important;
+  line-height: 40px !important;
+}
+
+.ant-menu-item-selected {
+  background: rgba(22, 119, 255, 0.08) !important;
+  color: #1677ff !important;
+}
+
+.ant-menu-item:hover {
+  color: #1677ff !important;
+  background: rgba(22, 119, 255, 0.04) !important;
+}
+
+.ant-menu-submenu-title:hover {
+  color: #1677ff !important;
+  background: rgba(22, 119, 255, 0.04) !important;
+}
+
+.ant-menu-submenu-selected > .ant-menu-submenu-title {
+  color: #1677ff !important;
+}
+
+/* 标签页样式 - 特殊交互覆盖 */
+.ant-tabs-tab {
+  padding: 12px 4px !important;
+  margin: 0 20px 0 0 !important;
+}
+
+.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #2563eb !important;
+  font-weight: 600;
+}
+
+.ant-tabs-ink-bar {
+  background-color: #2563eb !important;
+  height: 3px !important;
+}
+
+/* Tabs 底部分割线 */
+.ant-tabs-nav::before {
+  border-bottom-color: #e0e0e0 !important;
+}
+
+:root[data-theme='dark'] .ant-tabs-nav::before {
+  border-bottom-color: var(--custom-border) !important;
+}
+
+/* ===================================
+   自定义业务组件样式
+   =================================== */
+
+/* 统计卡片 */
+.stat-card {
+  padding: 24px;
+  border-radius: 12px;
+  background: var(--custom-card-bg);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.stat-card .stat-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--custom-text-secondary);
+  margin-bottom: 12px;
+}
+
+.stat-card .stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--custom-text);
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.stat-card .stat-description {
+  font-size: 14px;
+  color: var(--custom-text-secondary);
+}
+
+/* 状态徽章 */
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+}
+
+.status-badge.active {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+}
+
+.status-badge.inactive {
+  background-color: rgba(100, 116, 139, 0.1);
+  color: #64748b;
+}
+
+.status-badge.completed {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+/* 现代化列表项 */
+.modern-list-item {
+  border-radius: 12px;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+  background: var(--custom-card-bg);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+}
+
+.modern-list-item:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+/* 设置面板 */
+.settings-panel {
+  margin-top: 24px;
+  background: var(--custom-card-bg);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--custom-border);
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+}
+
+.setting-item span {
+  color: var(--custom-text-secondary);
+}
+
+/* ===================================
+   表单样式
+   =================================== */
+
+.form-item {
+  margin-bottom: 16px;
+}
+
+.form-item label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+/* ===================================
+   角色管理 - 能力和工具卡片
+   =================================== */
+
+.capability-card,
+.tool-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  margin-bottom: 16px;
+}
+
+.capability-card:hover,
+.tool-card:hover {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.capability-card .ant-card-head,
+.tool-card .ant-card-head {
+  border-bottom: 1px solid var(--custom-border);
+  padding: 12px 16px;
+}
+
+.capability-card .ant-card-body,
+.tool-card .ant-card-body {
+  padding: 16px;
+}
+
+.capability-card .ant-form-item,
+.tool-card .ant-form-item {
+  margin-bottom: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.capability-card .ant-form-item:hover,
+.tool-card .ant-form-item:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.capability-card .ant-checkbox-wrapper,
+.tool-card .ant-checkbox-wrapper {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+/* 能力卡片分类样式 */
+.capability-card[data-type="core"] {
+  border-left: 4px solid #1677ff;
+}
+
+.capability-card[data-type="advanced"] {
+  border-left: 4px solid #722ed1;
+}
+
+.capability-card[data-type="supervision"] {
+  border-left: 4px solid #fa8c16;
+}
+
+.capability-card[data-type="execution"] {
+  border-left: 4px solid #eb2f96;
+}
+
+.capability-card[data-type="specialized"] {
+  border-left: 4px solid #13c2c2;
+}
+
+/* 工具卡片分类样式 */
+.tool-card[data-category="数据处理"] {
+  border-left: 4px solid #1677ff;
+}
+
+.tool-card[data-category="信息获取"] {
+  border-left: 4px solid #722ed1;
+}
+
+.tool-card[data-category="代码执行"] {
+  border-left: 4px solid #52c41a;
+}
+
+.tool-card[data-category="文档处理"] {
+  border-left: 4px solid #fa8c16;
+}
+
+.tool-card[data-category="系统集成"] {
+  border-left: 4px solid #eb2f96;
+}
+
+.tool-card[data-category="其他"] {
+  border-left: 4px solid #8c8c8c;
+}
+
+/* ===================================
+   任务详情 Tab 页面通用卡片样式
+   =================================== */
+
+/* Tab 页面中的卡片 - 更紧凑的布局 */
+.task-detail-tab-card .ant-card-head {
+  padding: 10px 16px;
+  min-height: auto;
+}
+
+.task-detail-tab-card .ant-card-body {
+  padding: 12px 16px;
+}
+
+/* 紧凑变体 - 用于智能体卡片等需要更窄水平内边距的场景 */
+.task-detail-tab-card-compact .ant-card-head {
+  padding: 10px 16px;
+  min-height: auto;
+}
+
+.task-detail-tab-card-compact .ant-card-body {
+  padding: 12px 8px;
+}
+
+/* Tab 卡片内部的表格也更紧凑 */
+.task-detail-tab-card .ant-table-thead > tr > th {
+  padding: 10px 12px;
+}
+
+.task-detail-tab-card .ant-table-tbody > tr > td {
+  padding: 10px 12px;
+}
+
+/* ===================================
+   任务和行动空间卡片
+   =================================== */
+
+.task-card .ant-card-body,
+.action-space-card .ant-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+}
+
+.task-card .task-info-section,
+.action-space-card .space-info-section {
+  margin-top: auto;
+  padding: 0;
+}
+
+.task-card .task-info-section .ant-divider,
+.action-space-card .space-info-section .ant-divider {
+  margin: 16px 0;
+  border-color: var(--custom-border);
+}
+
+.task-card .task-info-section .info-content,
+.action-space-card .space-info-section .info-content {
+  padding: 4px 0;
+}
+
+.task-card .ant-card-actions,
+.action-space-card .ant-card-actions {
+  margin-top: auto;
+  border-top: 1px solid var(--custom-border);
+}
+
+.add-action-space-card:hover,
+.add-task-card:hover {
+  border-color: #1677ff;
+  background-color: var(--tree-hover-bg);
+}
+
+.action-space-card .ant-typography {
+  -webkit-box-orient: vertical;
+}
+
+.task-list-item:hover {
+  background-color: var(--custom-hover-bg);
+}
+
+/* ===================================
+   标签样式
+   =================================== */
+
+.action-space-tags {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  min-height: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.action-space-tags-container {
+  max-width: 100%;
+  min-height: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  position: relative;
+  cursor: pointer;
+}
+
+.action-space-tags-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 100%;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.9));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.action-space-tags-container.overflow::after {
+  opacity: 1;
+}
+
+.space-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  margin: 0 4px 4px 0;
+  font-size: 12px;
+  border-radius: 12px;
+  font-weight: 500;
+  background-color: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.65);
+  border: none;
+}
+
+.space-tag.industry {
+  background-color: rgba(24, 144, 255, 0.1);
+  color: rgba(24, 144, 255, 0.85);
+}
+
+.space-tag.scenario {
+  background-color: rgba(82, 196, 26, 0.1);
+  color: rgba(82, 196, 26, 0.85);
+}
+
+.space-tag-filter {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  margin: 0 6px 6px 0;
+  font-size: 12px;
+  border-radius: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  background-color: var(--custom-hover-bg);
+  color: var(--custom-text-secondary);
+  border: 1px solid var(--custom-border);
+}
+
+.space-tag-filter:hover {
+  background-color: var(--tree-selected-bg);
+  color: #1677ff;
+  border-color: var(--tree-selected-border);
+}
+
+.space-tag-filter.selected.industry {
+  background-color: rgba(24, 144, 255, 0.1);
+  color: #1677ff;
+  border-color: var(--tree-selected-border);
+}
+
+.space-tag-filter.selected.scenario {
+  background-color: rgba(82, 196, 26, 0.1);
+  color: #52c41a;
+  border-color: #b7eb8f;
+}
+
+/* ===================================
+   代码块样式
+   =================================== */
+
+pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+code {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+pre code.language-json,
+pre code.language-bash,
+pre code.language-shell {
+  display: block;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-width: 100%;
+}
+
+/* ===================================
+   加载动画
+   =================================== */
+
+.loading-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-dot {
+  width: 10px;
+  height: 10px;
+  margin: 0 5px;
+  border-radius: 50%;
+  background-color: #1677ff;
+  opacity: 0;
+  animation: loadingDot 1.4s infinite ease-in-out;
+}
+
+.loading-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.loading-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.loading-dot:nth-child(4) {
+  animation-delay: 0.6s;
+}
+
+@keyframes loadingDot {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+.loading-spinner {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  margin-bottom: 20px;
+}
+
+.loading-spinner:before {
+  content: '';
+  box-sizing: border-box;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: #1677ff;
+  border-bottom-color: #1677ff;
+  animation: spinnerAnimation 1.2s linear infinite;
+}
+
+@keyframes spinnerAnimation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* 隐藏滚动条，目前用于对话历史区域 */
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Opera */
+}
+
