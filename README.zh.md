@@ -128,6 +128,7 @@
 | 功能 | 说明 | 状态 |
 |---|---|---|
 | **MemoryPalace v0.51** | 自研时态记忆系统(Drawer + Knowledge Graph 两层),替换外部 Graphiti 依赖。通过 `kg_verify` + `fact_check()` 捕捉事实变更。5 层结构 `Realm → Wing → Hall → Room → Closet/Drawer`。([设计文档](./docs/feature-mempalace-v0.51/)) | 📐 Spec 阶段,4 个 PR(P1 骨架 → P4 前端) |
+| **Agent Heartbeat** | 每个 Agent 一个可配置周期的"心跳",即使没人和它聊天也会按节拍跳动 —— 驱动 `reflect` / `plan_progress` / `speak_if_due` / `poll` / `noop` 五种策略。骨架是 ABM tick(Mesa / NetLogo 风格),肉是 Generative-Agent 内在循环,边界以 ActionSpace 为容器。([设计文档](./docs/feature-heartbeat/PLAN.md)) | 📐 Spec 阶段,P1 骨架 → P4 跨进程 |
 | **Workflow Graph 可视化编排** | 多 Agent DAG 编辑器:agent / condition / parallel / loop 节点、跨行动空间变量传播、编排模板市场。([计划](./docs/feature-workflow-graph/PLAN.md)) | 🚧 Phase 1 进行中 |
 | **5000 并发架构** | 全 async 化 → Redis 队列 + Worker 分离 → 多机分布式部署。([计划](./docs/feature-parallellab/PLAN-5000-concurrency.md)) | 🚧 Phase 1 / 3(异步化) |
 | **真正的并行 Agent 执行** | 每个 Agent 独立输出队列,多 Agent 面板流式输出不再交错;前端多列渲染,单流取消/超时。 | 📋 规划中 |
