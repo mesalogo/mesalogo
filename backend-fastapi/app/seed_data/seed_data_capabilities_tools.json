@@ -1,0 +1,20 @@
+{
+  "environment_variables": {
+    "variables-server": ["set_task_var", "add_task_var", "list_task_vars", "set_agent_var", "add_agent_var", "list_agent_vars"]
+  },
+  "workspace_management": {
+    "filesystem":  ["read_file", "read_multiple_files", "write_file", "edit_file", "list_directory", "create_directory", "directory_tree", "move_file", "search_files", "get_file_info", "list_allowed_directories"]
+  },
+  "planner_management": {
+    "planner-server": ["create_plan", "update_plan_item", "get_plan"]
+  },
+  "explicit_reasoning": {
+    "sequential-thinking": ["sequentialthinking"]
+  },
+  "knowledge_access": {
+    "knowledge-base": ["query_knowledge", "list_knowledge_bases"]
+  },
+  "memory": {
+    "graphiti-server": ["add_memory", "search_memory_nodes", "search_memory_facts", "get_episodes", "delete_entity_edge", "delete_episode", "get_entity_edge", "clear_graph"]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "_comment": "Desktop app config template. Copy to: config.json. DO NOT commit config.json.",
+  "backend": {
+    "url": "http://localhost:8080/api"
+  },
+  "update": {
+    "url": "https://your-update-server.example.com"
+  }
+}

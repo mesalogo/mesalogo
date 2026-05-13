@@ -1,0 +1,24 @@
+{
+  "_comment": "Docker-deployment MCP server template. Copy to: mcp_config.json. DO NOT commit mcp_config.json. For the full structure and the list of supported MCP servers, see ../backend-fastapi/mcp_config.json.example. This file is read by the containerized backend.",
+
+  "mcpServers": {
+    "knowledge-base": {
+      "args": ["-s", "-X", "POST", "http://localhost:8080/api/mcp/knowledge-base"],
+      "comm_type": "stdio",
+      "command": "curl",
+      "description": "Unified knowledge base query (Dify / RAGFlow / built-in)",
+      "enabled": true,
+      "env": {},
+      "internal": true
+    },
+    "variables-server": {
+      "args": ["-s", "-X", "POST", "http://localhost:8080/api/mcp/variables"],
+      "comm_type": "stdio",
+      "command": "curl",
+      "description": "Environment + agent variables",
+      "enabled": true,
+      "env": {},
+      "internal": true
+    }
+  }
+}

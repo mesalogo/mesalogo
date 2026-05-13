@@ -1,0 +1,35 @@
+[
+  {
+    "name": "ProjectIndex 默认模板",
+    "description": "项目索引文件的默认模板，用于创建行动任务时自动生成项目目录结构说明",
+    "category": "shared",
+    "content": "# {{task_title}} 项目索引\n\n## 工作目录结构说明\n- 项目共享工作目录: `ActionTask-{{task_id}}/`\n- 项目总结文件: `ActionTask-{{task_id}}/ProjectSummary.md`\n\n## 智能体工作目录\n{{#agent_list}}\n- {{agent_name}}[{{agent_role}}][ID: {{agent_id}}] 工作目录: `ActionTask-{{task_id}}/Agent-{{agent_id}}/`\n  - 个人工作空间说明: `ActionTask-{{task_id}}/Agent-{{agent_id}}/AgentWorkspace.md`\n{{/agent_list}}\n",
+    "settings": {
+      "is_default": true,
+      "file_type": "ProjectIndex",
+      "variables": ["task_id", "task_title", "agent_list", "agent_id", "agent_name", "agent_role"]
+    }
+  },
+  {
+    "name": "ProjectSummary 默认模板",
+    "description": "项目总结文件的默认模板，用于创建行动任务时自动生成项目总结记录",
+    "category": "shared",
+    "content": "# {{task_title}} 项目总结\n\n行动任务\"{{task_title}}\"[ID: {{task_id}}]的项目总结记录。\n创建时间: {{create_time}}\n任务状态: 进行中\n\n### 参与智能体\n{{#agent_list}}\n- {{agent_name}}[{{agent_role}}][ID: {{agent_id}}]\n{{/agent_list}}\n\n## 项目记录\n智能体可在此记录项目目标、执行过程、结果总结和后续行动。\n\n",
+    "settings": {
+      "is_default": true,
+      "file_type": "ProjectSummary",
+      "variables": ["task_id", "task_title", "create_time", "agent_list", "agent_id", "agent_name", "agent_role"]
+    }
+  },
+  {
+    "name": "AgentWorkspace 默认模板",
+    "description": "智能体个人工作空间的默认模板，用于创建行动任务时为每个智能体生成个人工作目录说明",
+    "category": "agent",
+    "content": "# {{agent_display}} 个人工作空间说明\n\n## 工作目录说明\n这是{{agent_display}}在行动任务\"{{task_title}}\"[ID: {{task_id}}]中的个人工作目录。\n\n## 目录结构\n- 工作目录: `ActionTask-{{task_id}}/Agent-{{agent_id}}/`\n- 个人工作空间说明: `ActionTask-{{task_id}}/Agent-{{agent_id}}/AgentWorkspace.md`（本文件）\n- 项目共享工作目录: `ActionTask-{{task_id}}/`\n\n## 使用说明\n- 智能体可以在个人工作目录 `Agent-{{agent_id}}/` 下创建任何文件和文件夹\n- 项目共享工作目录 `ActionTask-{{task_id}}/` 可供所有智能体共享使用\n- 本文件用于记录个人工作空间的使用说明和工作记录\n\n## 重要信息\n- 创建时间: {{create_time}}\n\n## 工作记录与经验\n\n",
+    "settings": {
+      "is_default": true,
+      "file_type": "AgentWorkspace",
+      "variables": ["task_id", "task_title", "agent_id", "agent_display", "create_time"]
+    }
+  }
+]

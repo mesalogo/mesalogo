@@ -1,0 +1,66 @@
+services:
+  graphiti:
+    image: graphiti:latest
+    container_name: graphiti
+    profiles:
+      - graphiti
+    ports:
+      - "8002:8000"  # FastAPI service
+      - "8003:8001"  # MCP SSE service
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthcheck')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    env_file:
+      - graphiti.env
+    environment:
+      - MCP_SERVER_HOST=0.0.0.0
+      - PATH=/root/.local/bin:${PATH}
+      - MCP_ALLOW_ORIGIN=*
+    command: ["python", "mcp_server/graphiti_mcp_server2.py", "--transport", "sse", "--host", "0.0.0.0", "--dual-server"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - abm-network
+
+  neo4j:
+    image: neo4j:5.26.2
+    container_name: neo4j
+    profiles:
+      - graphiti
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://localhost:7474 || exit 1",
+        ]
+      interval: 1s
+      timeout: 10s
+      retries: 10
+      start_period: 3s
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j_data:/data
+    environment:
+      - NEO4J_AUTH=neo4j/password
+    networks:
+      - abm-network
+
+networks:
+  abm-network:
+    driver: bridge
+
+volumes:
+  neo4j_data:

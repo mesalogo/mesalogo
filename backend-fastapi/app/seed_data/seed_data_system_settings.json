@@ -1,0 +1,274 @@
+[
+    {
+        "key": "timezone",
+        "value": "Asia/Shanghai",
+        "value_type": "string",
+        "description": "平台时区设置",
+        "category": "system",
+        "is_secret": false
+    },
+    {
+        "key": "platform_language",
+        "value": "zh-CN",
+        "value_type": "string",
+        "description": "平台界面显示语言",
+        "category": "system",
+        "is_secret": false
+    },
+    {
+        "key": "streaming_enabled",
+        "value": "true",
+        "value_type": "boolean",
+        "description": "是否启用流式输出",
+        "category": "system",
+        "is_secret": false
+    },
+    {
+        "key": "max_conversation_history_length",
+        "value": "30",
+        "value_type": "number",
+        "description": "上下文历史消息长度（建议：20-50，太长会引入噪音，太短会丢失上下文）",
+        "category": "conversation",
+        "is_secret": false
+    },
+    {
+        "key": "auto_summarize_context",
+        "value": "true",
+        "value_type": "boolean",
+        "description": "是否自动总结上下文（当消息数超过上下文长度时自动总结，建议开启）",
+        "category": "conversation",
+        "is_secret": false
+    },
+    {
+        "key": "auto_summarize_context_autonomous",
+        "value": "true",
+        "value_type": "boolean",
+        "description": "自主任务中是否自动总结上下文（建议开启）",
+        "category": "conversation",
+        "is_secret": false
+    },
+    {
+        "key": "include_thinking_content_in_context",
+        "value": "false",
+        "value_type": "boolean",
+        "description": "是否在上下文中包含思考内容",
+        "category": "conversation",
+        "is_secret": false
+    },
+    {
+        "key": "split_tool_calls_in_history",
+        "value": "true",
+        "value_type": "boolean",
+        "description": "是否将工具调用拆分为独立的历史消息",
+        "category": "conversation",
+        "is_secret": false
+    },
+    {
+        "key": "create_agent_workspace",
+        "value": "false",
+        "value_type": "boolean",
+        "description": "是否创建智能体独立工作空间",
+        "category": "conversation",
+        "is_secret": false
+    },
+    {
+        "key": "use_builtin_vector_db",
+        "value": "true",
+        "value_type": "boolean",
+        "description": "是否使用内置向量数据库（Milvus）",
+        "category": "vector_database",
+        "is_secret": false
+    },
+    {
+        "key": "vector_db_provider",
+        "value": "aliyun",
+        "value_type": "string",
+        "description": "外部向量数据库提供商（aliyun, tidb, aws-opensearch, aws-bedrock, azure-cognitive-search, azure-cosmos-db, gcp-vertex-ai, gcp-firestore, pinecone, weaviate, qdrant, chroma, milvus, elasticsearch, custom）",
+        "category": "vector_database",
+        "is_secret": false
+    },
+    {
+        "key": "builtin_vector_db_host",
+        "value": "localhost",
+        "value_type": "string",
+        "description": "内置向量数据库（Milvus）地址",
+        "category": "vector_database",
+        "is_secret": false
+    },
+    {
+        "key": "builtin_vector_db_port",
+        "value": "19530",
+        "value_type": "number",
+        "description": "内置向量数据库（Milvus）端口",
+        "category": "vector_database",
+        "is_secret": false
+    },
+    {
+        "key": "enable_assistant_generation",
+        "value": "true",
+        "value_type": "boolean",
+        "description": "是否启用辅助生成功能",
+        "category": "assistant",
+        "is_secret": false
+    },
+    {
+        "key": "assistant_generation_model",
+        "value": "default",
+        "value_type": "string",
+        "description": "辅助生成使用的模型",
+        "category": "assistant",
+        "is_secret": false
+    },
+    {
+        "key": "prompt_template_roleSystemPrompt",
+        "value": "请根据以下角色信息生成一个专业的系统提示词：\n\n角色名称：{{name}}\n角色描述：{{description}}\n\n要求：\n1. 系统提示词应该清晰地定义角色的身份、专业领域和能力\n2. 包含角色的行为准则和回答风格\n3. 明确角色的职责范围和限制\n4. 使用专业、准确的语言\n5. 长度适中，既要详细又要简洁\n\n请直接返回系统提示词内容，不需要额外的解释。",
+        "value_type": "string",
+        "description": "角色系统提示词生成模板",
+        "category": "assistant_generation",
+        "is_secret": false
+    },
+    {
+        "key": "prompt_template_actionSpaceBackground",
+        "value": "请根据以下多智能体行动空间信息生成专业的背景设定：\n\n行动空间名称：{{name}}\n行动空间描述：{{description}}\n\n要求：\n1. 背景设定应该详细描述行动空间的环境、场景和上下文\n2. 包含相关的历史背景、现状分析和发展趋势\n3. 明确行动空间的目标和意义\n4. 使用生动、具体的语言描述\n5. 为参与者提供充分的情境信息\n\n请直接返回背景设定内容，不需要额外的解释。",
+        "value_type": "string",
+        "description": "行动空间背景设定生成模板",
+        "category": "assistant_generation",
+        "is_secret": false
+    },
+    {
+        "key": "prompt_template_actionSpaceRules",
+        "value": "请根据以下行动空间信息生成专业的基本规则：\n\n行动空间名称：{{name}}\n行动空间描述：{{description}}\n\n要求：\n1. 基本规则应该明确定义行动空间内的行为准则和约束条件\n2. 包含参与者的权限和责任范围\n3. 规定交互方式和协作机制\n4. 明确决策流程和执行标准\n5. 包含风险控制和异常处理规则\n6. 使用清晰、准确的语言表述\n7. 条理清晰，便于理解和执行\n\n请直接返回基本规则内容，不需要额外的解释。",
+        "value_type": "string",
+        "description": "行动空间基本规则生成模板",
+        "category": "assistant_generation",
+        "is_secret": false
+    },
+    {
+        "key": "prompt_template_actionTaskDescription",
+        "value": "请根据以下信息生成详细的行动任务描述：\n\n任务名称：{{title}}\n行动空间名称：{{action_space_name}}\n行动空间描述：{{action_space_description}}\n参与角色：{{roles}}\n\n要求：\n1. 任务描述应该明确任务的目标和预期成果\n2. 详细说明任务的执行步骤和关键节点\n3. 明确各角色的职责分工和协作方式\n4. 包含任务的评估标准和成功指标\n5. 考虑可能的风险和应对措施\n6. 使用清晰、具体的语言描述\n7. 确保任务的可执行性和可衡量性\n\n请直接返回任务描述内容，不需要额外的解释。",
+        "value_type": "string",
+        "description": "行动任务描述生成模板",
+        "category": "assistant_generation",
+        "is_secret": false
+    },
+    {
+        "key": "http_connection_timeout",
+        "value": "10",
+        "value_type": "number",
+        "description": "HTTP请求建立连接的超时时间（秒）",
+        "category": "timeout",
+        "is_secret": false
+    },
+    {
+        "key": "http_read_timeout",
+        "value": "120",
+        "value_type": "number",
+        "description": "HTTP请求读取数据的超时时间（秒）",
+        "category": "timeout",
+        "is_secret": false
+    },
+    {
+        "key": "stream_socket_timeout",
+        "value": "60",
+        "value_type": "number",
+        "description": "流式响应Socket读取的超时时间（秒）",
+        "category": "timeout",
+        "is_secret": false
+    },
+    {
+        "key": "default_model_timeout",
+        "value": "60",
+        "value_type": "number",
+        "description": "模型配置的默认请求超时时间（秒）",
+        "category": "timeout",
+        "is_secret": false
+    },
+    {
+        "key": "document_parser_tool",
+        "value": "mineru",
+        "value_type": "string",
+        "description": "当前启用的文档解析器（mineru, paddleocr_vl）",
+        "category": "document_parser",
+        "is_secret": false
+    },
+    {
+        "key": "document_parser_mineru_config",
+        "value": "{\"backend_type\": \"local\", \"executable_path\": \"/opt/homebrew/Caskroom/miniconda/base/envs/ready2rag/bin/mineru\", \"timeout\": 300, \"server_url\": \"\", \"extra_args\": \"--source modelscope\"}",
+        "value_type": "json",
+        "description": "MinerU文档解析器配置",
+        "category": "document_parser",
+        "is_secret": false
+    },
+    {
+        "key": "document_parser_paddleocr_vl_config",
+        "value": "{\"executable_path\": \"paddleocr\", \"vl_rec_backend\": \"vllm-server\", \"server_url\": \"http://127.0.0.1:8118/v1\", \"extra_args\": \"\", \"timeout\": 300}",
+        "value_type": "json",
+        "description": "PaddleOCR-VL文档解析器配置（远程服务模式）",
+        "category": "document_parser",
+        "is_secret": false
+    },
+    {
+        "key": "pdf_converter_config",
+        "value": "{\"executable_path\": \"soffice\", \"timeout\": 120}",
+        "value_type": "json",
+        "description": "PDF转换工具配置（用于将Office文档转换为PDF）",
+        "category": "document_parser",
+        "is_secret": false
+    },
+    {
+        "key": "job_manager_max_workers",
+        "value": "10",
+        "value_type": "number",
+        "description": "后台任务最大并发数（控制所有类型的后台任务）",
+        "category": "system",
+        "is_secret": false
+    },
+    {
+        "key": "tool_call_context_rounds",
+        "value": "5",
+        "value_type": "number",
+        "description": "工具调用后再次请求LLM时保留的工具调用历史轮数（每轮=1次tool_call+tool_result，建议3-5轮，仅隔离模式生效）",
+        "category": "conversation",
+        "is_secret": false
+    },
+    {
+        "key": "tool_result_max_length",
+        "value": "2000",
+        "value_type": "number",
+        "description": "历史上下文中工具调用结果的最大字符数（0表示不截断，建议：1500-3000，太短会丢失关键信息）",
+        "category": "conversation",
+        "is_secret": false
+    },
+    {
+        "key": "compress_tool_definitions",
+        "value": "false",
+        "value_type": "boolean",
+        "description": "是否压缩工具定义以减少Token消耗（启用后可节省约70%的工具定义Token，但描述信息会被简化）",
+        "category": "conversation",
+        "is_secret": false
+    },
+    {
+        "key": "tool_call_correction",
+        "value": "false",
+        "value_type": "boolean",
+        "description": "启用工具调用纠正：当工具连续失败达到阈值时，自动注入提示引导LLM调整策略",
+        "category": "conversation",
+        "is_secret": false
+    },
+    {
+        "key": "tool_call_correction_threshold",
+        "value": "5",
+        "value_type": "number",
+        "description": "工具调用纠正阈值：连续失败多少次后触发纠正提示（建议3-5次）",
+        "category": "conversation",
+        "is_secret": false
+    },
+    {
+        "key": "prompt_template_experimentProtocolGeneration",
+        "value": "请根据以下并行实验配置，生成一份清晰的实验行为协议。\n\n## 实验信息\n- 实验名称：{{experiment_name}}\n- 行动空间：{{action_space_name}}\n- 行动空间描述：{{action_space_description}}\n- 参与角色：{{roles}}\n- 实验主题：{{topic}}\n\n## 扫描变量（输入参数）\n{{variables_json}}\n\n## 目标变量（输出指标）\n{{objectives_json}}\n\n## 要求\n请生成一份 Markdown 格式的实验行为协议，包含以下部分：\n\n### 1. 实验主题\n简要说明本次模拟实验的主题和目的。\n\n### 2. 输入参数（行为约束）\n为每个扫描变量生成：\n- 变量含义的语义描述\n- 具体的行为指令（当变量为某值时，agent应该如何行动）\n- 强调这是实验控制变量，必须严格遵守\n\n### 3. 输出指标（评估与更新）\n为每个目标变量生成：\n- 变量含义\n- 评估标准（具体的打分规则或判断依据）\n- 更新时机（何时更新这个变量）\n- 更新方式（调用 set_task_var 函数）\n\n### 4. 模拟要求\n- 根据角色定义自然互动\n- 严格遵守输入参数的行为约束\n- 在适当时机更新输出指标\n\n重要：请直接输出 Markdown 格式的协议内容，不要包含额外的解释或代码块标记。禁止在协议中使用任何 emoji 表情符号。",
+        "value_type": "string",
+        "description": "实验行为协议生成模板",
+        "category": "assistant_generation",
+        "is_secret": false
+    }
+]

@@ -1,0 +1,252 @@
+[
+  {
+    "app_id": "vscode-server",
+    "name": "代码管理",
+    "enabled": true,
+    "launchable": true,
+    "sort_order": 100,
+    "scope": "space",
+    "config": {
+      "basic": {
+        "description": "在线代码编辑器，支持多种编程语言，集成版本控制功能",
+        "icon": "code",
+        "category": "开发工具",
+        "version": "1.0.0",
+        "author": "系统内置",
+        "tags": ["代码编辑", "版本控制", "Git"]
+      },
+      "launch": {
+        "type": "tab",
+        "url": "/vscode",
+        "settings": {}
+      },
+      "metadata": {
+        "documentation": {
+          "userGuide": "/docs/vscode-guide"
+        }
+      },
+      "stats": {
+        "install_count": 0,
+        "launch_count": 0
+      }
+    }
+  },
+  {
+    "app_id": "netlogo-modeling",
+    "name": "NetLogo建模",
+    "enabled": true,
+    "launchable": true,
+    "sort_order": 90,
+    "scope": "space",
+    "config": {
+      "basic": {
+        "description": "ABM建模平台，基于NetLogo引擎的智能体建模工具，支持复杂系统仿真、多智能体交互建模和可视化分析，适用于社会科学、生物学、经济学等领域的复杂适应系统研究",
+        "icon": "partition",
+        "category": "建模工具",
+        "version": "2.1.0",
+        "author": "系统内置",
+        "tags": ["NetLogo", "ABM建模", "智能体建模", "复杂系统", "仿真", "可视化"]
+      },
+      "launch": {
+        "type": "tab",
+        "url": "http://localhost:9000",
+        "settings": {}
+      },
+      "metadata": {
+        "documentation": {
+          "userGuide": "/docs/netlogo-guide"
+        }
+      },
+      "stats": {
+        "install_count": 0,
+        "launch_count": 0
+      }
+    }
+  },
+  {
+    "app_id": "gis-mapping",
+    "name": "GIS地图",
+    "enabled": true,
+    "launchable": true,
+    "sort_order": 80,
+    "scope": "space",
+    "config": {
+      "basic": {
+        "description": "地理信息系统工具，支持地图可视化和空间数据分析",
+        "icon": "global",
+        "category": "数据分析",
+        "version": "1.2.0",
+        "author": "系统内置",
+        "tags": ["地图", "GIS", "空间分析"]
+      },
+      "launch": {
+        "type": "component",
+        "component": "GISMappingComponent",
+        "settings": {}
+      },
+      "metadata": {
+        "documentation": {
+          "userGuide": "/docs/gis-guide"
+        }
+      },
+      "stats": {
+        "install_count": 0,
+        "launch_count": 0
+      }
+    }
+  },
+  {
+    "app_id": "online-office",
+    "name": "在线办公",
+    "enabled": true,
+    "launchable": false,
+    "sort_order": 60,
+    "scope": "global",
+    "config": {
+      "basic": {
+        "description": "OnlyOffice在线办公套件集成开关。启用后，可在工作空间的文件预览中对Word、Excel、PowerPoint等文档进行在线编辑，支持协同编辑和实时保存功能。此应用为功能开关，无需单独启动。",
+        "icon": "file-text",
+        "category": "办公工具",
+        "version": "1.0.0",
+        "author": "系统内置",
+        "tags": ["办公", "文档编辑", "OnlyOffice", "协同编辑", "实时保存"]
+      },
+      "server": {
+        "documentServerUrl": "http://localhost:18080",
+        "backendBaseUrl": "http://host.docker.internal:8080",
+        "jwtSecret": ""
+      },
+      "launch": {
+        "type": "component",
+        "component": "OnlyOfficeEditor",
+        "settings": {
+          "supportedTypes": ["docx", "doc", "odt", "rtf", "txt", "xlsx", "xls", "ods", "csv", "pptx", "ppt", "odp"]
+        }
+      },
+      "metadata": {
+        "documentation": {
+          "userGuide": "/docs/onlyoffice-guide"
+        }
+      },
+      "stats": {
+        "install_count": 0,
+        "launch_count": 0
+      }
+    }
+  },
+  {
+    "app_id": "data-visualization",
+    "name": "数据可视化",
+    "enabled": true,
+    "launchable": true,
+    "sort_order": 70,
+    "scope": "space",
+    "config": {
+      "basic": {
+        "description": "强大的数据可视化工具，支持多种图表类型和交互式分析",
+        "icon": "bar-chart",
+        "category": "数据分析",
+        "version": "1.5.0",
+        "author": "系统内置",
+        "tags": ["数据可视化", "图表", "分析"]
+      },
+      "launch": {
+        "type": "iframe",
+        "url": "/visualization",
+        "settings": {
+          "sandbox": "allow-scripts allow-same-origin",
+          "allowFullscreen": true,
+          "width": "100%",
+          "height": "700px"
+        }
+      },
+      "metadata": {
+        "documentation": {
+          "userGuide": "/docs/visualization-guide"
+        }
+      },
+      "stats": {
+        "install_count": 0,
+        "launch_count": 0
+      }
+    }
+  },
+  {
+    "app_id": "next-rpa",
+    "name": "Next RPA",
+    "enabled": true,
+    "launchable": true,
+    "sort_order": 50,
+    "scope": "space",
+    "config": {
+      "basic": {
+        "description": "基于 MCP 协议的桌面自动化应用，支持鼠标控制、键盘输入、窗口管理、屏幕操作和剪贴板操作，实现PC端的RPA自动化流程",
+        "icon": "robot",
+        "category": "自动化工具",
+        "version": "1.0.0",
+        "author": "系统内置",
+        "tags": ["RPA", "MCP", "桌面自动化", "MCPControl", "Windows自动化"]
+      },
+      "connection": {
+        "mode": "local",
+        "cloudProvider": {
+          "apiKey": "",
+          "endpoint": ""
+        },
+        "localConfig": {
+          "sseUrl": "http://192.168.1.100:3232/mcp",
+          "port": 3232
+        }
+      },
+      "transport": {
+        "type": "sse",
+        "url": ""
+      },
+      "security": {
+        "enableHttps": false,
+        "certPath": "",
+        "keyPath": ""
+      },
+      "provider": {
+        "global": "keysender",
+        "keyboard": "",
+        "mouse": "",
+        "screen": "",
+        "clipboard": "",
+        "autohotkeyPath": ""
+      },
+      "environment": {
+        "recommendedResolution": "1280x720",
+        "runInVM": true,
+        "singleScreen": true
+      },
+      "runtime": {
+        "screenshotQuality": 80,
+        "operationTimeout": 30,
+        "enableClipboard": true,
+        "logLevel": "info"
+      },
+      "launch": {
+        "type": "component",
+        "component": "NextRPAComponent",
+        "settings": {}
+      },
+      "metadata": {
+        "documentation": {
+          "userGuide": "/docs/next-rpa-guide",
+          "reference": "https://github.com/claude-did-this/MCPControl"
+        },
+        "requirements": {
+          "os": "Windows",
+          "nodejs": "LTS",
+          "python": "3.12+",
+          "buildTools": "Visual Studio Build Tools"
+        }
+      },
+      "stats": {
+        "install_count": 0,
+        "launch_count": 0
+      }
+    }
+  }
+]

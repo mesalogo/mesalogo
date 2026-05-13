@@ -1,0 +1,28 @@
+services:
+  mariadb:
+    container_name: abm-mariadb
+    image: mariadb:latest
+    profiles:
+      - mariadb
+    environment:
+      # MARIADB_ROOT_PASSWORD must be set in your .env file. No default to
+      # avoid exposing a known password if the .env is missing.
+      MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?MARIADB_ROOT_PASSWORD is required, set it in abm-docker/.env}
+      MYSQL_DATABASE: ${MARIADB_DATABASE:-abm}
+    ports:
+      - "3306:3306"
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/mariadb-conf:/etc/mysql/conf.d
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - abm-network
+
+networks:
+  abm-network:
+    driver: bridge

@@ -1,0 +1,161 @@
+[
+    {
+        "name": "智能助手空间",
+        "description": "用于日常交互的智能助手空间，提供问答、创意和任务执行等功能。",
+        "settings": {
+            "default_mode": "sequential",
+            "max_agents": 5,
+            "enable_environment_variables": true
+        }
+    },
+
+    {
+        "name": "产品创新研发空间",
+        "description": "产品研发协同工作空间，集成产品设计、工程分析、市场调研、成本控制等专业功能模块，采用三阶段研发方法收集创新点子，评估方案可行性，整合各方观点形成最终方案，集成用户需求分析引擎提前评估产品与目标用户匹配度。",
+        "settings": {
+            "default_mode": "panel",
+            "max_agents": 8,
+            "enable_environment_variables": true,
+            "enable_ideation": true,
+            "enable_feasibility_assessment": true,
+            "enable_user_testing": true,
+            "enable_cross_functional_collaboration": true
+        }
+    },
+    {
+        "name": "供应链风险管理空间",
+        "description": "供应链风险智能分析系统，整合物流监测、地区风险评估、气象灾害预警、市场需求预测等专业分析模块，通过持续监控供应链数据、全球新闻事件和市场异常信号，发现表面无关事件间的潜在连锁效应，提前30-90天预警'黑天鹅'事件。",
+        "settings": {
+            "default_mode": "panel",
+            "max_agents": 8,
+            "enable_environment_variables": true,
+            "enable_risk_assessment": true,
+            "enable_global_monitoring": true,
+            "enable_scenario_planning": true,
+            "enable_cascade_analysis": true
+        }
+    },
+
+    {
+        "name": "教育学习空间",
+        "description": "综合教学辅导系统，集成学科专家知识库、学习方法指导和心理激励机制，提供个性化学习计划，采用苏格拉底式问答引导思考，提供多角度解释和实时反馈。",
+        "settings": {
+            "default_mode": "sequential",
+            "max_agents": 8,
+            "enable_assessment": true,
+            "enable_environment_variables": true,
+            "enable_learning_path": true,
+            "enable_progress_tracking": true,
+            "enable_student_profile": true
+        }
+    },
+    {
+        "name": "商业与投资决策空间",
+        "description": "企业战略与投资决策综合支持系统，整合市场分析、财务评估、运营分析、技术评估、股票分析、债券评估、宏观经济研判、税务规划等专业功能模块，通过结构化讨论和多维度分析框架提供全面分析视角和客观建议，缩短决策周期，提升信息利用效率。",
+        "settings": {
+            "default_mode": "panel",
+            "max_agents": 15,
+            "enable_voting": true,
+            "enable_environment_variables": true,
+            "enable_resource_analysis": true,
+            "enable_market_intelligence": true,
+            "enable_risk_assessment": true,
+            "enable_market_data_integration": true,
+            "enable_portfolio_optimization": true,
+            "enable_investor_profiling": true
+        }
+    },
+
+    {
+        "name": "法律案例多维分析空间",
+        "description": "法律案件分析系统，集成多个专业法律领域分析引擎，通过对抗性论证框架分析相关法律依据，检索和分析相似判例，计算不同诉讼策略的成功概率，预测可能判决结果和上诉空间。",
+        "settings": {
+            "default_mode": "panel",
+            "max_agents": 8,
+            "enable_environment_variables": true,
+            "enable_evidence_management": true,
+            "enable_precedent_search": true,
+            "enable_risk_assessment": true,
+            "enable_cost_analysis": true,
+            "enable_case_simulation": true
+        }
+    },
+
+    {
+        "name": "医疗诊断与会诊空间",
+        "description": "多学科医疗专家智能会诊系统，通过结构化辩论流程，组织各专科系统分析病例数据，提出初步诊断，进行证据交叉验证，评估治疗方案风险收益比，形成综合诊疗建议。",
+        "settings": {
+            "default_mode": "panel",
+            "max_agents": 8,
+            "enable_environment_variables": true,
+            "enable_diagnosis_verification": true,
+            "enable_treatment_planning": true,
+            "enable_evidence_evaluation": true,
+            "enable_cross_validation": true
+        }
+    },
+    {
+        "name": "工业安全与监管空间",
+        "description": "工业安全监管和事故预防专用空间，支持风险评估和合规管理。",
+        "settings": {
+            "default_mode": "collaborative",
+            "max_agents": 5,
+            "enable_environment_variables": true,
+            "enable_risk_assessment": true,
+            "enable_compliance_checking": true
+        }
+    },
+    {
+        "name": "环境监测与分析空间",
+        "description": "环境监测数据分析和污染控制专用空间，支持环保项目评估。",
+        "settings": {
+            "default_mode": "collaborative",
+            "max_agents": 5,
+            "enable_environment_variables": true,
+            "enable_data_visualization": true,
+            "enable_pollution_source_tracking": true
+        }
+    },
+    {
+        "name": "城市规划空间",
+        "description": "城市规划协商数字中心，集成专业规划分析引擎和多方利益表达系统，基于规划数据和社区反馈进行多维度分析，使用直观可视化工具展示不同方案的权衡取舍，引导利益相关者理解彼此诉求，预测规划决策的长期社会经济影响。",
+        "settings": {
+            "default_mode": "panel",
+            "max_agents": 8,
+            "enable_environment_variables": true,
+            "enable_map_visualization": true,
+            "enable_demographic_analysis": true,
+            "enable_stakeholder_engagement": true,
+            "enable_impact_assessment": true
+        }
+    },
+    {
+        "name": "军事决策模拟空间",
+        "description": "军事战略决策模拟系统，整合战场态势分析、情报评估、资源调配和战术推演等专业模块，通过多维度战场模拟和博弈论分析，评估不同战略选择的可能结果，形成最优战略方案，同时考虑政治、外交和伦理因素的影响。",
+        "settings": {
+            "default_mode": "panel",
+            "max_agents": 8,
+            "enable_environment_variables": true,
+            "enable_scenario_simulation": true,
+            "enable_intelligence_analysis": true,
+            "enable_resource_optimization": true,
+            "enable_risk_assessment": true,
+            "enable_tactical_planning": true,
+            "enable_strategic_evaluation": true
+        }
+    },
+    {
+        "name": "辩论行动空间",
+        "description": "专业辩论交流平台，支持正反方观点对抗性讨论，通过结构化辩论流程，促进深度思考和多角度分析，适用于政策讨论、伦理问题探讨、学术辩论等场景，鼓励基于事实和逻辑的理性交流。",
+        "settings": {
+            "default_mode": "panel",
+            "max_agents": 6,
+            "enable_environment_variables": true,
+            "enable_voting": true,
+            "enable_fact_checking": true,
+            "enable_argument_evaluation": true,
+            "enable_structured_debate": true,
+            "enable_audience_questions": true
+        }
+    }
+]

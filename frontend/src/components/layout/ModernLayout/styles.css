@@ -1,0 +1,171 @@
+/* 现代布局样式 */
+.modern-layout {
+  min-height: 100vh;
+}
+
+/* Header 样式 */
+.modern-layout-header {
+  transition: all 0.3s;
+}
+
+/* 全局菜单抽屉 */
+.global-menu-drawer .ant-drawer-body {
+  padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 强制抽屉定位 - 相对于 Layout，从Header后开始 */
+.modern-layout {
+  overflow: hidden;
+}
+
+/* Header z-index: 高于抽屉(900)但低于Modal(1000) */
+.modern-layout-header {
+  z-index: 950 !important;
+  position: fixed !important;
+}
+
+/* 抽屉通过组件的zIndex prop设置为900 */
+.global-menu-drawer {
+  top: 56px !important;
+  height: calc(100vh - 56px) !important;
+  position: absolute !important;
+}
+
+.global-menu-drawer .ant-drawer-mask {
+  top: 0 !important;
+  height: 100% !important;
+}
+
+.global-menu-drawer .ant-drawer-content-wrapper {
+  top: 0 !important;
+  height: 100% !important;
+  margin-top: 0 !important;
+}
+
+.global-menu-drawer .ant-drawer-content {
+  height: 100%;
+  border-top: 1px solid var(--custom-border);
+}
+
+/* 菜单列 */
+.menu-column {
+  min-height: 200px;
+}
+
+/* 列之间的分隔线 - 除了最后一列都有右边框 */
+.menu-column:not(:last-child) {
+  border-right: 1px solid var(--custom-border);
+  padding-right: 12px;
+}
+
+/* 除了第一列都有左内边距 */
+.menu-column:not(:first-child) {
+  padding-left: 12px;
+}
+
+/* 菜单项 Hover 效果 */
+.menu-section-item:hover {
+  background: var(--custom-hover-bg) !important;
+}
+
+.menu-child-item {
+  position: relative;
+}
+
+.menu-child-item:hover {
+  background: var(--custom-hover-bg) !important;
+  color: #1677ff !important;
+}
+
+.menu-child-item:hover::before {
+  content: '→';
+  position: absolute;
+  left: 12px;
+  color: #1677ff;
+  font-weight: bold;
+}
+
+/* 快捷入口项 hover 效果 */
+.shortcut-item:hover {
+  background: var(--custom-hover-bg) !important;
+  color: #1677ff !important;
+}
+
+/* 上下文侧边栏 */
+.contextual-sidebar .ant-menu-item-selected {
+  background: var(--tree-selected-bg) !important;
+  color: #1677ff !important;
+}
+
+.contextual-sidebar .ant-menu-item:hover {
+  background: var(--custom-hover-bg) !important;
+}
+
+/* 内容区过渡动画 */
+.modern-layout-content {
+  transition: margin-left 0.3s ease;
+}
+
+/* 抽屉打开动画 */
+@keyframes slideRight {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.global-menu-drawer .ant-drawer-wrapper {
+  animation: slideRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 菜单列渐显动画 */.menu-column {
+  animation: fadeIn 0.4s ease-out;
+  animation-fill-mode: both;
+}
+
+.menu-column:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.menu-column:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.menu-column:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.menu-column:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 响应式适配 */
+@media (max-width: 1024px) {
+  .global-menu-drawer .ant-drawer-content-wrapper {
+    width: 520px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .global-menu-drawer .ant-drawer-content-wrapper {
+    width: 100% !important;
+  }
+}

@@ -1,0 +1,66 @@
+# ===== FastAPI 核心 =====
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9
+starlette>=0.38.0
+
+# ===== 原有依赖（保留） =====
+# 数据库
+SQLAlchemy>=2.0.0
+alembic
+pymysql
+redis
+
+# 高性能 JSON 序列化（Redis 缓存用）
+orjson
+
+# 认证
+PyJWT
+python-jose[cryptography]
+passlib[bcrypt]
+werkzeug  # password hashing (models.py 使用)
+
+# 配置
+PyYAML
+python-dotenv
+
+# 图像处理
+Pillow
+
+# Excel处理
+openpyxl
+
+# 并发 / HTTP
+httpx
+requests
+
+# 时区处理
+pytz
+
+# MCP工具
+uv
+mcp
+
+# OAuth
+authlib
+
+# 向量数据库
+tidb-vector[client]
+sentence-transformers
+FlagEmbedding
+pymilvus
+
+# 文档分段
+chonkie
+
+# 文档解析
+paddlepaddle
+paddleocr
+mineru
+
+# BM25检索和中文分词
+hanlp
+rank-bm25
+
+# asyncio 兼容
+nest-asyncio

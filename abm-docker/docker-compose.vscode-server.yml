@@ -1,0 +1,25 @@
+services:
+  code-server:
+    image: lscr.io/linuxserver/code-server:latest
+    container_name: code-server
+    profiles:
+      - vscode-server
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Shanghai
+      - PASSWORD=${VSCODE_PASSWORD:-}
+      - SUDO_PASSWORD=${VSCODE_SUDO_PASSWORD:-password}
+      - DEFAULT_WORKSPACE=/config/workspace
+    volumes:
+      - ./volumes/vscode-config:/config
+      - ./volumes/backend-workspace:/config/workspace
+    ports:
+      - "11443:8443"
+    restart: unless-stopped
+    networks:
+      - abm-network
+
+networks:
+  abm-network:
+    driver: bridge

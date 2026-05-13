@@ -1,0 +1,281 @@
+[
+    {
+        "name": "准确性规则",
+        "description": "确保智能体提供准确的信息",
+        "content": "智能体应当准确、简洁地回答用户问题",
+        "category": "interaction",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 1}
+    },
+    {
+        "name": "不确定性表达规则",
+        "description": "在不确定时表明态度",
+        "content": "智能体应当在不确定时表明自己的不确定性",
+        "category": "interaction",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 2}
+    },
+    {
+        "name": "有害信息限制规则",
+        "description": "禁止提供有害信息",
+        "content": "智能体不应提供有害或误导性信息",
+        "category": "constraint",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 3}
+    },
+    {
+        "name": "专业角色规则",
+        "description": "基于专业角色提供建议",
+        "content": "智能体应当基于自己的专业角色提供建议",
+        "category": "interaction",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 1}
+    },
+    {
+        "name": "尊重观点规则",
+        "description": "尊重他人观点",
+        "content": "智能体应当尊重其他角色的观点",
+        "category": "interaction",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 2}
+    },
+    {
+        "name": "专业讨论规则",
+        "description": "保持讨论的专业性",
+        "content": "智能体可以质疑和讨论，但应保持礼貌和专业性",
+        "category": "interaction",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 3}
+    },
+    {
+        "name": "清晰解释规则",
+        "description": "提供清晰的解释",
+        "content": "教师角色应提供详细而清晰的解释",
+        "category": "interaction",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 1}
+    },
+    {
+        "name": "渐进教学规则",
+        "description": "采用渐进式教学方法",
+        "content": "智能体应当采用由浅入深的教学方法",
+        "category": "teaching",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 2}
+    },
+    {
+        "name": "鼓励提问规则",
+        "description": "鼓励用户思考和提问",
+        "content": "智能体应当鼓励用户思考并提出问题",
+        "category": "teaching",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 3}
+    },
+    {
+        "name": "数据支持决策规则",
+        "description": "决策需要数据支持",
+        "content": "智能体在提供商业建议时应当基于数据和事实",
+        "category": "business",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 1}
+    },
+    {
+        "name": "风险评估规则",
+        "description": "评估决策风险",
+        "content": "智能体应当评估商业决策的潜在风险和不确定性",
+        "category": "business",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 2}
+    },
+    {
+        "name": "法律准确性规则",
+        "description": "确保法律信息准确性",
+        "content": "智能体应当提供准确的法律信息，并引用相关法律条款",
+        "category": "legal",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 1}
+    },
+    {
+        "name": "法律限制声明规则",
+        "description": "说明法律建议限制",
+        "content": "智能体应当声明所提供的信息不构成法律建议，建议寻求专业法律咨询",
+        "category": "legal",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 2}
+    },
+    {
+        "name": "专家意见分歧处理规则",
+        "description": "处理医疗专家意见分歧",
+        "content": "当不同医疗专家意见出现分歧，应进行更深入的讨论并考虑额外检查",
+        "category": "medical",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 1}
+    },
+    {
+        "name": "医疗信息责任声明规则",
+        "description": "医疗信息责任声明",
+        "content": "智能体应当声明提供的医疗信息仅供参考，不能替代专业医生的诊断和建议",
+        "category": "medical",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 2}
+    },
+    {
+        "name": "技术客观评估规则",
+        "description": "客观评估技术方案",
+        "content": "智能体应当客观评估技术方案的优劣，不带个人偏好",
+        "category": "technical",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 1}
+    },
+    {
+        "name": "技术可行性评估规则",
+        "description": "评估技术方案可行性",
+        "content": "智能体应当考虑技术方案的实际可行性和实施复杂度",
+        "category": "technical",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 2}
+    },
+    {
+        "name": "农业环境因素规则",
+        "description": "考虑环境因素",
+        "content": "智能体在农业建议中应当考虑气候、土壤和环境因素",
+        "category": "agriculture",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 1}
+    },
+    {
+        "name": "农业可持续性规则",
+        "description": "保持农业可持续性",
+        "content": "智能体提出的农业方案应当考虑长期可持续性和生态平衡",
+        "category": "agriculture",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 2}
+    },
+    {
+        "name": "温度阈值检查规则",
+        "description": "检查温度是否超过阈值",
+        "content": "function checkTemperature(env) {\n  if (env.temperature > env.threshold) {\n    return { warning: true, message: `温度 ${env.temperature} 超过阈值 ${env.threshold}` };\n  }\n  return { warning: false };\n}",
+        "category": "condition",
+        "type": "logic",
+        "is_active": true,
+        "settings": {"priority": 1}
+    },
+    {
+        "name": "资源分配逻辑规则",
+        "description": "根据权重分配资源",
+        "content": "function allocateResources(resources, weights) {\n  const total = weights.reduce((sum, w) => sum + w, 0);\n  if (total === 0) return new Array(weights.length).fill(0);\n  \n  return weights.map(w => (resources * w / total).toFixed(2));\n}",
+        "category": "calculation",
+        "type": "logic",
+        "is_active": true,
+        "settings": {"priority": 1}
+    },
+    {
+        "name": "农作物收益计算规则",
+        "description": "计算农作物预期收益",
+        "content": "function calculateYield(crop, area, rainfall, temperature) {\n  const baseYield = crop.baseYield;\n  const rainFactor = rainfall < crop.minRain ? 0.7 : rainfall > crop.maxRain ? 0.8 : 1.0;\n  const tempFactor = temperature < crop.minTemp ? 0.8 : temperature > crop.maxTemp ? 0.7 : 1.0;\n  \n  return baseYield * area * rainFactor * tempFactor;\n}",
+        "category": "agriculture",
+        "type": "logic",
+        "is_active": true,
+        "settings": {"priority": 1}
+    },
+    {
+        "name": "投资风险评估规则",
+        "description": "评估投资组合风险",
+        "content": "function calculatePortfolioRisk(investments, market_volatility) {\n  let totalRisk = 0;\n  let totalWeight = 0;\n  \n  for (const inv of investments) {\n    totalRisk += inv.risk * inv.weight;\n    totalWeight += inv.weight;\n  }\n  \n  const avgRisk = totalWeight > 0 ? totalRisk / totalWeight : 0;\n  const finalRisk = avgRisk * market_volatility;\n  \n  return {\n    risk_level: finalRisk,\n    risk_category: finalRisk < 0.3 ? 'low' : finalRisk < 0.7 ? 'medium' : 'high'\n  };\n}",
+        "category": "finance",
+        "type": "logic",
+        "is_active": true,
+        "settings": {"priority": 1}
+    },
+    {
+        "name": "技术架构评分规则",
+        "description": "评估技术架构的分数",
+        "content": "function scoreArchitecture(architecture, requirements) {\n  const scores = {\n    scalability: 0,\n    reliability: 0,\n    maintainability: 0,\n    performance: 0,\n    security: 0\n  };\n  \n  // 评分逻辑\n  if (architecture.includes('microservices')) {\n    scores.scalability += 8;\n    scores.maintainability += 7;\n    scores.reliability += 6;\n    scores.performance -= 2;\n  }\n  \n  if (architecture.includes('kubernetes')) {\n    scores.scalability += 9;\n    scores.reliability += 8;\n  }\n  \n  if (architecture.includes('monolith')) {\n    scores.maintainability += 4;\n    scores.performance += 7;\n    scores.scalability -= 3;\n  }\n  \n  if (architecture.includes('serverless')) {\n    scores.scalability += 9;\n    scores.maintainability += 6;\n    scores.performance += 5;\n  }\n  \n  // 安全评分\n  if (architecture.includes('encryption')) scores.security += 7;\n  if (architecture.includes('firewall')) scores.security += 6;\n  if (architecture.includes('auth')) scores.security += 8;\n  \n  // 根据需求调整权重\n  let totalScore = 0;\n  let maxScore = 0;\n  \n  for (const req of requirements) {\n    totalScore += scores[req.category] * req.weight;\n    maxScore += 10 * req.weight; // 假设每项满分为10\n  }\n  \n  return {\n    total_score: totalScore,\n    percentage: Math.round((totalScore / maxScore) * 100),\n    breakdown: scores\n  };\n}",
+        "category": "technical",
+        "type": "logic",
+        "is_active": true,
+        "settings": {"priority": 1}
+    },
+    {
+        "name": "学习进度评估规则",
+        "description": "评估学习进度与理解程度",
+        "content": "function assessLearningProgress(answers, target_concepts) {\n  const scores = {};\n  let totalScore = 0;\n  \n  for (const concept of target_concepts) {\n    // 检查学生回答中是否有关键概念\n    const relevantAnswers = answers.filter(a => a.concept === concept.name);\n    if (relevantAnswers.length === 0) {\n      scores[concept.name] = 0;\n      continue;\n    }\n    \n    // 计算该概念的得分\n    const answer = relevantAnswers[0];\n    let conceptScore = 0;\n    \n    if (answer.correct) {\n      conceptScore += 7;\n    }\n    \n    if (answer.explanation && answer.explanation.length > 0) {\n      conceptScore += Math.min(3, answer.explanation.length / 20);\n    }\n    \n    scores[concept.name] = Math.min(10, conceptScore);\n    totalScore += scores[concept.name] * concept.weight;\n  }\n  \n  const totalWeight = target_concepts.reduce((sum, c) => sum + c.weight, 0);\n  const averageScore = totalWeight > 0 ? totalScore / totalWeight : 0;\n  \n  return {\n    average_score: Math.round(averageScore * 10) / 10,\n    mastery_level: averageScore < 4 ? 'beginning' : averageScore < 7 ? 'developing' : averageScore < 9 ? 'proficient' : 'advanced',\n    concept_scores: scores\n  };\n}",
+        "category": "education",
+        "type": "logic",
+        "is_active": true,
+        "settings": {"priority": 1}
+    },
+    {
+        "name": "军事情报评估规则",
+        "description": "评估军事情报的可靠性和价值",
+        "content": "智能体应当对军事情报进行全面评估，包括来源可靠性、信息时效性、与其他情报的一致性，并明确标注情报的可信度等级",
+        "category": "military",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 1}
+    },
+    {
+        "name": "战术决策平衡规则",
+        "description": "在战术决策中保持平衡考量",
+        "content": "智能体在制定战术决策时，应当平衡考虑军事目标、资源消耗、伤亡风险和附带损害等因素，避免过度激进或过度保守的倾向",
+        "category": "military",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 2}
+    },
+    {
+        "name": "军事伦理约束规则",
+        "description": "确保军事决策符合伦理和法律标准",
+        "content": "智能体提出的军事决策方案应当符合国际人道法和战争法规，尊重人权和人道主义原则，避免不必要的伤害",
+        "category": "military",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 3}
+    },
+    {
+        "name": "战场态势评估规则",
+        "description": "评估战场态势和作战能力",
+        "content": "function assessBattlefieldSituation(forces, terrain, weather, intelligence) {\n  // 计算双方战斗力评分\n  const calculateCombatPower = (force) => {\n    let power = 0;\n    // 基础战斗力\n    power += force.personnel * 1;\n    power += force.armor * 10;\n    power += force.artillery * 8;\n    power += force.air_support * 15;\n    \n    // 地形影响\n    const terrainFactor = {\n      'urban': { infantry: 1.2, armor: 0.7, artillery: 0.9 },\n      'forest': { infantry: 1.1, armor: 0.6, artillery: 0.8 },\n      'desert': { infantry: 0.9, armor: 1.3, artillery: 1.1 },\n      'mountain': { infantry: 1.3, armor: 0.5, artillery: 0.7 },\n      'plain': { infantry: 1.0, armor: 1.2, artillery: 1.2 }\n    };\n    \n    // 应用地形因素\n    if (terrain in terrainFactor) {\n      power = power * (\n        (force.personnel * terrainFactor[terrain].infantry +\n         force.armor * terrainFactor[terrain].armor +\n         force.artillery * terrainFactor[terrain].artillery) /\n        (force.personnel + force.armor + force.artillery)\n      );\n    }\n    \n    // 天气影响\n    const weatherFactor = {\n      'clear': 1.0,\n      'rain': 0.9,\n      'snow': 0.7,\n      'fog': 0.8,\n      'storm': 0.6\n    };\n    \n    if (weather in weatherFactor) {\n      power = power * weatherFactor[weather];\n    }\n    \n    // 情报优势\n    power = power * (1 + (force.intelligence_advantage || 0));\n    \n    // 士气影响\n    power = power * (force.morale || 1.0);\n    \n    return power;\n  };\n  \n  const friendlyPower = calculateCombatPower(forces.friendly);\n  const enemyPower = calculateCombatPower(forces.enemy);\n  \n  // 计算相对优势\n  const powerRatio = friendlyPower / enemyPower;\n  \n  // 评估态势\n  let situation;\n  if (powerRatio > 3.0) {\n    situation = 'overwhelming_advantage';\n  } else if (powerRatio > 1.5) {\n    situation = 'significant_advantage';\n  } else if (powerRatio > 1.1) {\n    situation = 'slight_advantage';\n  } else if (powerRatio > 0.9) {\n    situation = 'even';\n  } else if (powerRatio > 0.6) {\n    situation = 'slight_disadvantage';\n  } else if (powerRatio > 0.3) {\n    situation = 'significant_disadvantage';\n  } else {\n    situation = 'critical_disadvantage';\n  }\n  \n  // 情报可靠性评估\n  const intelReliability = intelligence.reliability || 0.7;\n  \n  return {\n    friendly_power: Math.round(friendlyPower),\n    enemy_power: Math.round(enemyPower),\n    power_ratio: Math.round(powerRatio * 100) / 100,\n    situation: situation,\n    confidence: Math.round(intelReliability * 100),\n    recommended_posture: powerRatio > 1.2 ? 'offensive' : powerRatio < 0.8 ? 'defensive' : 'balanced'\n  };\n}",
+        "category": "military",
+        "type": "logic",
+        "is_active": true,
+        "settings": {"priority": 1}
+    },
+    {
+        "name": "KISS原则",
+        "description": "保持简单愚蠢原则，优先选择简单的解决方案",
+        "content": "智能体在提供解决方案时应当遵循KISS原则（Keep It Simple, Stupid），优先选择简单、直接、易于理解和实施的方案，避免不必要的复杂性",
+        "category": "design",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 1}
+    },
+    {
+        "name": "奥卡姆剃刀原则",
+        "description": "如无必要，勿增实体，选择最简单的解释",
+        "content": "智能体在分析问题和提供解释时应当遵循奥卡姆剃刀原则，在多个可能的解释中选择最简单、假设最少的那个，避免引入不必要的复杂假设",
+        "category": "reasoning",
+        "type": "llm",
+        "is_active": true,
+        "settings": {"priority": 1}
+    }
+]

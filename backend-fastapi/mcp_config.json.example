@@ -1,0 +1,169 @@
+{
+  "_comment": "MCP server configuration template. Copy to: mcp_config.json. DO NOT commit mcp_config.json. Each entry registers an MCP server (stdio / sse / streamable_http). 'enabled': false means the entry exists but is not loaded; flip to true once you've configured it.",
+
+  "mcpServers": {
+
+    "_internal_servers_comment": "These are bundled with MesaLogo. Keep them as-is unless you change the backend port.",
+
+    "knowledge-base": {
+      "args": ["-s", "-X", "POST", "http://localhost:8080/api/mcp/knowledge-base"],
+      "comm_type": "stdio",
+      "command": "curl",
+      "description": "统一知识库查询服务",
+      "enabled": true,
+      "env": {},
+      "internal": true
+    },
+    "planner-server": {
+      "args": ["-s", "-X", "POST", "http://localhost:8080/api/mcp/planner"],
+      "comm_type": "stdio",
+      "command": "curl",
+      "description": "Planner — agents create and manage execution plans",
+      "enabled": true,
+      "env": {},
+      "internal": true
+    },
+    "variables-server": {
+      "args": ["-s", "-X", "POST", "http://localhost:8080/api/mcp/variables"],
+      "comm_type": "stdio",
+      "command": "curl",
+      "description": "Environment + agent variables",
+      "enabled": true,
+      "env": {},
+      "internal": true
+    },
+    "skill-server": {
+      "args": ["-s", "-X", "POST", "http://localhost:8080/api/mcp/skills"],
+      "comm_type": "stdio",
+      "command": "curl",
+      "description": "Skill management (read_skill / run_skill_script / get_skill_asset)",
+      "enabled": true,
+      "env": {},
+      "internal": true
+    },
+    "subagent-server": {
+      "args": ["-s", "-X", "POST", "http://localhost:8080/api/mcp/subagent"],
+      "comm_type": "stdio",
+      "command": "curl",
+      "description": "SubAgent collaboration (invoke_agent / invoke_agents / list_available_agents)",
+      "enabled": true,
+      "env": {},
+      "internal": true
+    },
+
+    "_external_examples_comment": "Below are popular community MCP servers. Set enabled=true after installing the underlying CLI (npx / uvx / docker).",
+
+    "filesystem": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "./agent-workspace/"
+      ],
+      "comm_type": "stdio",
+      "command": "npx",
+      "description": "Local filesystem access",
+      "enabled": false,
+      "env": {},
+      "internal": false
+    },
+    "sequential-thinking": {
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "comm_type": "stdio",
+      "command": "npx",
+      "description": "Deep sequential reasoning",
+      "enabled": false,
+      "env": {},
+      "internal": false
+    },
+    "Office-Word-MCP-Server": {
+      "args": [
+        "--directory", "./agent-workspace",
+        "--from", "office-word-mcp-server",
+        "word_mcp_server"
+      ],
+      "comm_type": "stdio",
+      "command": "uvx",
+      "description": "Word document operations",
+      "enabled": false,
+      "env": {},
+      "internal": false
+    },
+    "excel-mcp-server": {
+      "args": ["excel-mcp-server", "stdio"],
+      "comm_type": "stdio",
+      "command": "uvx",
+      "description": "Excel operations",
+      "enabled": false,
+      "env": {},
+      "internal": false
+    },
+    "office-powerpoint-mcp-server": {
+      "args": [
+        "--directory", "./agent-workspace",
+        "--from", "office-powerpoint-mcp-server",
+        "ppt_mcp_server"
+      ],
+      "comm_type": "stdio",
+      "command": "uvx",
+      "description": "PowerPoint operations",
+      "enabled": false,
+      "env": {},
+      "internal": false
+    },
+    "arxiv": {
+      "args": ["arxiv-mcp-server", "--storage-path", "./agent-workspace"],
+      "comm_type": "stdio",
+      "command": "uvx",
+      "description": "arXiv paper search",
+      "enabled": false,
+      "env": {},
+      "internal": false
+    },
+    "playwright": {
+      "args": ["@playwright/mcp@latest"],
+      "comm_type": "stdio",
+      "command": "npx",
+      "description": "Browser automation via Playwright",
+      "enabled": false,
+      "env": {},
+      "internal": false
+    },
+    "context7": {
+      "args": ["-y", "@upstash/context7-mcp"],
+      "command": "npx",
+      "description": "Library documentation lookup",
+      "enabled": false
+    },
+    "memory": {
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "comm_type": "stdio",
+      "command": "npx",
+      "description": "Vector-DB-backed agent memory (will be replaced by MemoryPalace v0.51)",
+      "enabled": false,
+      "env": {},
+      "internal": false
+    },
+    "searxng": {
+      "args": ["-y", "mcp-searxng"],
+      "comm_type": "stdio",
+      "command": "npx",
+      "description": "SearXNG web search",
+      "enabled": false,
+      "env": {
+        "SEARXNG_URL": "http://YOUR_SEARXNG_HOST:5080"
+      },
+      "internal": false
+    },
+
+    "_self_hosted_examples_comment": "Examples for self-hosted services on your own LAN. Replace HOSTs with your own.",
+
+    "your-internal-service": {
+      "comm_type": "streamable_http",
+      "description": "Example self-hosted MCP server",
+      "enabled": false,
+      "env": {},
+      "internal": false,
+      "url": "http://YOUR_INTERNAL_HOST:8000/mcp"
+    }
+  }
+}

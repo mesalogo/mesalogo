@@ -1,0 +1,82 @@
+[
+    {
+        "_comment": "Seed model template. Copy this file to seed_data_models.json and fill in your real api_key values. The real file is git-ignored. Each entry registers an LLM model in the system at first boot.",
+        "name": "openai-gpt-4o",
+        "base_url": "https://api.openai.com/v1",
+        "api_key": "sk-YOUR_OPENAI_API_KEY_HERE",
+        "provider": "OpenAI",
+        "model_id": "gpt-4o",
+        "context_window": 128000,
+        "max_output_tokens": 4096,
+        "request_timeout": 60,
+        "is_default_text": true,
+        "modalities": ["text_input", "image_input", "text_output"],
+        "capabilities": ["function_calling"]
+    },
+    {
+        "name": "qwen-plus",
+        "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "api_key": "sk-YOUR_DASHSCOPE_API_KEY_HERE",
+        "provider": "Aliyun",
+        "model_id": "qwen-plus",
+        "context_window": 131072,
+        "max_output_tokens": 4096,
+        "request_timeout": 60,
+        "modalities": ["text_input", "text_output"],
+        "capabilities": ["function_calling"]
+    },
+    {
+        "name": "qwen-turbo",
+        "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "api_key": "sk-YOUR_DASHSCOPE_API_KEY_HERE",
+        "provider": "Aliyun",
+        "model_id": "qwen-turbo",
+        "context_window": 1048576,
+        "max_output_tokens": 4096,
+        "request_timeout": 60,
+        "modalities": ["text_input", "text_output"],
+        "capabilities": []
+    },
+    {
+        "name": "qwen3-32b",
+        "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "api_key": "sk-YOUR_DASHSCOPE_API_KEY_HERE",
+        "provider": "Aliyun",
+        "model_id": "qwen3-32b",
+        "context_window": 131072,
+        "max_output_tokens": 4096,
+        "request_timeout": 60,
+        "modalities": ["text_input", "text_output"],
+        "capabilities": []
+    },
+    {
+        "name": "qwen2.5-vl-embedding",
+        "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "api_key": "sk-YOUR_DASHSCOPE_API_KEY_HERE",
+        "provider": "Aliyun",
+        "model_id": "qwen2.5-vl-embedding",
+        "context_window": 32000,
+        "request_timeout": 30,
+        "is_default_embedding": true,
+        "modalities": ["image_input", "vector_output"],
+        "capabilities": [],
+        "additional_params": {
+            "dimensions": 2048
+        }
+    },
+    {
+        "name": "text-embedding-v4",
+        "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "api_key": "sk-YOUR_DASHSCOPE_API_KEY_HERE",
+        "provider": "Aliyun",
+        "model_id": "text-embedding-v4",
+        "context_window": 32000,
+        "request_timeout": 30,
+        "is_default_embedding": true,
+        "modalities": ["text_input", "vector_output"],
+        "capabilities": [],
+        "additional_params": {
+            "dimensions": 1024
+        }
+    }
+]

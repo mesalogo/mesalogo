@@ -1,0 +1,267 @@
+# Environment variables
+#.env
+#.env.local
+#.env.development.local
+#.env.test.local
+#.env.production.local
+third_party/vscode-server/config/
+backend-deprecated/knowledgebase/
+backend-fastapi/knowledgebase/
+logs/
+app.db
+frontend/node_modules/.cache/.eslintcache
+external-repo-gpustack
+agent-workspace/
+.pnpm-store/*
+test_scripts/*
+tests/*
+
+# Node.js / Frontend
+node_modules/*
+frontend/node_modules/*
+frontend/.pnp
+frontend/.pnp.js
+frontend/build/
+frontend/coverage/
+frontend/.next/
+frontend/out/
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.yarn-integrity
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+#build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+.env/
+.ENV/
+env.bak/
+venv.bak/
+.conda/
+conda-env/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+*~
+.*.sw[op]
+.project
+.classpath
+.settings/
+.vs/
+*.sublime-workspace
+*.sublime-project
+
+# Jupyter Notebook
+.ipynb_checkpoints
+notebooks/
+
+# Coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Database
+*.db
+*.sqlite3
+*.sqlite3-journal
+data.db
+*.db.backup_*
+backend-fastapi/data/
+backend-deprecated/data/
+
+# Coverage / cache
+.coverage
+.coverage.*
+
+# Certificates / private keys
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+*.jks
+id_rsa
+id_rsa.*
+!*.example
+
+# Logs
+logs/
+*.log
+
+# Local folders
+instance/
+local_data/
+private/
+testing/
+tmp/
+temp/
+
+# Large or data files
+*.model
+*.h5
+*.csv
+*.json.gz
+*.pkl
+*.bin
+*.jsonl
+*.parquet
+*.hdf5
+*.dat
+*.weights
+*.pt
+*.onnx
+*.tflite
+data/raw/
+data/processed/
+
+# OS specific
+Thumbs.db
+.DS_Store
+.directory
+desktop.ini
+
+# =====================================================================
+# Configurations with sensitive information (DO NOT commit real values)
+# Each of these has a *.example template committed to the repo.
+# Copy the .example file, fill in your values, do NOT commit the result.
+# =====================================================================
+
+# Generic patterns
+secrets.json
+credentials.json
+settings.local.*
+*.local.env
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# MesaLogo-specific (real files are gitignored, .example templates are tracked)
+abm-docker/.env
+abm-docker/lightrag.env
+abm-docker/config.conf
+abm-docker/mcp_config.json
+backend-fastapi/config.conf
+backend-fastapi/mcp_config.json
+backend-fastapi/app/seed_data/seed_data_models.json
+frontend/.env
+desktop-app/.env
+desktop-app/config.json
+desktop-app/build-mac.sh
+tools/license.json
+
+# Legacy deprecated backend (kept untracked; will be removed before public release)
+backend-deprecated/config.conf
+backend-deprecated/mcp_config.json
+backend-deprecated/app/seed_data/seed_data_models.json
+
+# Allow tracked .example templates (override the deny patterns above)
+!abm-docker/.env.example
+!abm-docker/lightrag.env.example
+!abm-docker/config.conf.example
+!abm-docker/mcp_config.json.example
+!backend-fastapi/config.conf.example
+!backend-fastapi/mcp_config.json.example
+!backend-fastapi/app/seed_data/seed_data_models.json.example
+!frontend/.env.example
+!desktop-app/config.json.example
+!desktop-app/build-mac.sh.example
+!tools/license.json.example
+
+# Legacy config.json catch-all (do not commit any config.json by default)
+config.json
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+abm-docker/dir2map/*
+!abm-docker/dir2map/README.md
+abm-docker/volumes/*
+!abm-docker/volumes/README.md
+#abm-docker/config.conf
+#abm-docker/mcp_config.json
+
+# Graphiti data
+abm-docker/graphiti.env
+abm-docker/neo4j_data/
+
+# LightRAG data
+abm-docker/lightrag/data/
+
+# Backup files
+*.bak
+*.backup
+*~
+*.swp
+*.old
+*#
+
+# External utilities
+node/
+.nvmrc
+.node-version
+.python-version
+
+# Temporary files
+TODO
+NOTES
+CHANGELOG.local
+.scratch/
+
+# License (tracked: license.json.example only)
+license.json
+backend/data/license_request.txt
+backend-fastapi/data/license_request.txt
+
+# 已废弃的 Flask 后端,本地保留供历史参考,不再追踪
+backend-deprecated/

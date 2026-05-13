@@ -1,0 +1,110 @@
+[
+  {
+    "name": "free",
+    "display_name": "免费版",
+    "description": "适合个人体验和学习",
+    "badge_color": "#999999",
+    "price_monthly": 0,
+    "price_yearly": 0,
+    "currency": "CNY",
+    "sort_order": 0,
+    "is_active": true,
+    "is_default": true,
+    "is_public": true,
+    "limits": {
+      "max_tasks": 10,
+      "max_agents": 3,
+      "max_spaces": 2,
+      "max_knowledge_bases": 1,
+      "max_storage_mb": 512,
+      "max_daily_conversations": 50,
+      "max_monthly_tokens": 100000
+    },
+    "features": {
+      "parallel_experiment": false,
+      "custom_model": false,
+      "api_access": false
+    }
+  },
+  {
+    "name": "pro",
+    "display_name": "专业版",
+    "description": "适合个人深度使用",
+    "badge_color": "#1890ff",
+    "price_monthly": 49,
+    "price_yearly": 490,
+    "currency": "CNY",
+    "sort_order": 1,
+    "is_active": true,
+    "is_default": false,
+    "is_public": true,
+    "limits": {
+      "max_tasks": 100,
+      "max_agents": 20,
+      "max_spaces": 10,
+      "max_knowledge_bases": 5,
+      "max_storage_mb": 5120,
+      "max_daily_conversations": 500,
+      "max_monthly_tokens": 1000000
+    },
+    "features": {
+      "parallel_experiment": true,
+      "custom_model": true,
+      "api_access": false
+    }
+  },
+  {
+    "name": "team",
+    "display_name": "团队版",
+    "description": "适合小团队协作",
+    "badge_color": "#722ed1",
+    "price_monthly": 199,
+    "price_yearly": 1990,
+    "currency": "CNY",
+    "sort_order": 2,
+    "is_active": true,
+    "is_default": false,
+    "is_public": true,
+    "limits": {
+      "max_tasks": 500,
+      "max_agents": 100,
+      "max_spaces": 50,
+      "max_knowledge_bases": 20,
+      "max_storage_mb": 51200,
+      "max_daily_conversations": 5000,
+      "max_monthly_tokens": 10000000
+    },
+    "features": {
+      "parallel_experiment": true,
+      "custom_model": true,
+      "api_access": true
+    }
+  },
+  {
+    "name": "enterprise",
+    "display_name": "企业版",
+    "description": "适合企业私有化部署，无限制使用",
+    "badge_color": "#faad14",
+    "price_monthly": 0,
+    "price_yearly": 0,
+    "currency": "CNY",
+    "sort_order": 3,
+    "is_active": true,
+    "is_default": false,
+    "is_public": false,
+    "limits": {
+      "max_tasks": -1,
+      "max_agents": -1,
+      "max_spaces": -1,
+      "max_knowledge_bases": -1,
+      "max_storage_mb": -1,
+      "max_daily_conversations": -1,
+      "max_monthly_tokens": -1
+    },
+    "features": {
+      "parallel_experiment": true,
+      "custom_model": true,
+      "api_access": true
+    }
+  }
+]
