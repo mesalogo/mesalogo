@@ -1,66 +1,67 @@
 # backend-fastapi / AGENTS.md
 
-> 进入 `backend-fastapi/` 目录做任何改动前先读这个文件。
-> 假设你已读过仓库根目录的 `/AGENTS.md`;本文件只写**只在后端生效**的规则。
+> Read this file before any change under `backend-fastapi/`.
+> Assumes you have read the repo-root `/AGENTS.md`. This file only covers **backend-only** rules.
+> Language policy: English-first, Chinese as glossary (`English (中文术语)` on first use).
 
 ---
 
-## 1. 技术栈心智模型
+## 1. Stack mental model (技术栈心智模型)
 
-- **Web**:FastAPI 0.115+(**不是 Flask**,不要沿用 `backend-deprecated/` 的写法)
-- **ASGI**:uvicorn(开发)/ gunicorn + uvicorn workers(生产,见 `gunicorn.conf.py`)
-- **ORM**:SQLAlchemy 2.0 风格(async session)+ Alembic 迁移
-- **DB**:MariaDB(主)+ Redis(缓存/队列)+ Milvus(向量)+ 可选 TiDB vector
-- **Agent/LLM**:httpx.AsyncClient + MCP(`mcp` 官方 SDK)
-- **并发模型**:全链路 async/await;**任何 blocking IO 都是 Bug**。
-- **asyncio 兼容**:项目装了 `nest-asyncio`,说明历史上有嵌套 loop 问题。不要假设 `asyncio.run()` 在任何地方都能用。
+- **Web**: FastAPI 0.115+ (**not Flask**; do not carry over patterns from `backend-deprecated/`)
+- **ASGI**: uvicorn (dev) / gunicorn + uvicorn workers (prod, see `gunicorn.conf.py`)
+- **ORM**: SQLAlchemy 2.0 style (async session) + Alembic migrations (迁移)
+- **DB**: MariaDB (primary) + Redis (cache / queue) + Milvus (vector / 向量) + optional TiDB vector
+- **Agent / LLM**: `httpx.AsyncClient` + MCP (Model Context Protocol, official `mcp` SDK)
+- **Concurrency model**: async/await end-to-end. **Any blocking I/O is a bug.**
+- **asyncio compatibility**: the project installs `nest-asyncio`, which means there's a history of nested-loop problems. Do not assume `asyncio.run()` works anywhere.
 
 ---
 
-## 2. `app/services/` 区域划分
+## 2. `app/services/` layout (区域划分)
 
-| 目录/文件 | 含义 | 触碰风险 |
+| Path | Meaning | Touch risk |
 |---|---|---|
-| `conversation/`, `conversation_service.py` | 对话核心,SSE 流生成 | 🟥 高 — 动一行可能让前端整个对话卡死 |
-| `subagent/` | SubAgent 执行引擎(Phase 1 MVP 已上线) | 🟧 中 — 先读 `docs/feature-subagent/PLAN.md` |
-| `scheduler/` | 自主任务调度 + 触发器 | 🟧 中 — 有"任务停不下来"的历史 Bug |
-| `parallel_experiment_service.py` | 并行实验编排(7.5 万行) | 🟥 高 — 不要重构,只做最小修复 |
-| `mcp_server_manager.py` | MCP 工具注册中心(7.3 万行) | 🟥 高 — 工具契约改动会影响所有 Agent |
-| `supervisor_*.py`, `rule_sandbox.py` | Harness 约束层(监督者 + 规则 + 沙箱) | 🟥 高 — 放行错一个动作 = 系统性风险 |
-| `memory_*`, `vector_db*`, `lightrag/` | 记忆 / 向量 / RAG | 🟧 中 |
-| `statistics_service.py`(4.4 万行) | 统计 | 🟨 低 |
-| `license_service.py`, `oauth_service.py` | 计费 / 认证 | 🟥 高 — 不要未经用户确认改 |
+| `conversation/`, `conversation_service.py` | Conversation core, SSE stream generation | 🟥 high — one wrong line can hang the frontend |
+| `subagent/` | SubAgent execution engine (Phase 1 MVP shipped) | 🟧 medium — read `docs/feature-subagent/PLAN.md` first |
+| `scheduler/` | Autonomous-task scheduling + triggers | 🟧 medium — has the "task won't stop" historical bug |
+| `parallel_experiment_service.py` | Parallel experiment orchestration (~75k LOC) | 🟥 high — minimal fixes only, no refactor |
+| `mcp_server_manager.py` | MCP tool registry (~73k LOC) | 🟥 high — tool contract changes affect every agent |
+| `supervisor_*.py`, `rule_sandbox.py` | Harness constraint layer (supervisor + rule + sandbox / 监督者 + 规则 + 沙箱) | 🟥 high — one wrong permission = systemic risk |
+| `memory_*`, `vector_db*`, `lightrag/` | Memory / vector / RAG | 🟧 medium |
+| `statistics_service.py` (~44k LOC) | Statistics | 🟨 low |
+| `license_service.py`, `oauth_service.py` | Billing / auth | 🟥 high — do not change without explicit user approval |
 
-**通用原则**:代码行数 > 1 万行的文件 = 核心且脆弱。改之前先 `grep` 依赖它的调用点,评估爆炸半径。
+**General rule**: files larger than 10k LOC are core and fragile. Before changing one, `grep` for its callers and assess the blast radius.
 
 ---
 
-## 3. 你最容易翻的车(按发生频率)
+## 3. Most common failure modes (by frequency)
 
-### 3.1 在 async 函数里用了 sync IO
+### 3.1 Sync I/O inside an async function
 
 ```python
-# ❌ 翻车
+# ❌ broken
 import requests
 async def foo():
-    r = requests.get(url)   # 阻塞整个 event loop,5000 并发直接崩
+    r = requests.get(url)   # blocks the entire event loop; kills 5000-concurrency
 
-# ✅ 正解
+# ✅ correct
 import httpx
 async def foo():
     async with httpx.AsyncClient() as c:
         r = await c.get(url)
 
-# ✅ 如果必须调 sync 库(如某些 LLM SDK)
+# ✅ if you must call a sync library (e.g. some LLM SDKs)
 result = await asyncio.to_thread(sync_fn, arg)
 ```
 
-### 3.2 SSE 流里 `raise` 但没发 done 事件
+### 3.2 SSE stream raises but never emits `done`
 
-前端等的是 `event: done` 这一帧。`raise HTTPException` 之后 SSE 已经被 FastAPI 吞掉,前端 spinner 永远转。
+The frontend is waiting for `event: done`. After `raise HTTPException` the SSE response is already consumed by FastAPI — the frontend spinner spins forever.
 
 ```python
-# ✅ 正解模式
+# ✅ correct pattern
 async def stream():
     try:
         async for chunk in agent_loop():
@@ -69,93 +70,95 @@ async def stream():
         logger.exception("agent loop failed")
         yield sse_event("error", {"message": str(e)})
     finally:
-        yield sse_event("done", {})   # ← 必须!
+        yield sse_event("done", {})   # ← mandatory
 ```
 
-### 3.3 加了新字段但忘了 Alembic 迁移
+### 3.3 Added a column but forgot the Alembic migration
 
-`app/models.py` 9 万行,直接改 class 属性 = 生产环境启动时报 schema mismatch。
+`app/models.py` is ~90k LOC. Editing class attributes directly causes a schema mismatch on production startup.
 
 ```bash
 cd backend-fastapi
 alembic revision --autogenerate -m "add foo column to bar"
-# 人工 review 生成的 py,确认 upgrade/downgrade 对称
-alembic upgrade head    # 本地先跑通
+# Manually review the generated .py — verify upgrade/downgrade are symmetric.
+alembic upgrade head    # Run locally first.
 ```
 
-### 3.4 新 MCP 工具没注册就调用
+### 3.4 New MCP tool not registered → agent can't see it
 
-MCP 工具必须:
-1. 在 `app/mcp_servers/<your_server>.py` 实现
-2. 在 `mcp_config.json` 声明
-3. 在 `MCPServerManager` 注册
-4. 在 prompt 注入说明里描述用法
+An MCP tool requires **all** of:
 
-少任何一步,Agent 看不到这个工具,或者能看到但调用时 500。参考 `docs/agents/mcp-tool-writing.md`(不存在就创建)。
+1. Implementation in `app/mcp_servers/<your_server>.py`
+2. Declaration in `mcp_config.json`
+3. Registration in `MCPServerManager`
+4. Prompt-injection description of usage
 
-### 3.5 Redis 缓存不失效
+Miss any step and the agent either can't see the tool, or sees it but 500s when calling. See `docs/agents/mcp-tool-writing.md` (create the file if missing).
 
-项目已集成 Redis(见最近的 commit `83fffd8e feat: Redis 缓存集成`)。改了底层数据,必须删掉对应缓存 key,否则前端显示陈旧数据,还不会报错。
+### 3.5 Redis cache not invalidated
 
-### 3.6 SubAgent 嵌套死循环 / 上下文爆炸
+The project integrates Redis (see commit `83fffd8e feat: Redis 缓存集成`). When you mutate underlying data, delete the corresponding cache key — otherwise the frontend shows stale data **without** any error.
 
-Phase 1 MVP 没做 ODM(Open Domain Model)约束。在 SubAgent 里再调 `invoke_agent` **可能无限递归**。现阶段的缓解:
-- `invoke_agent` 调用需在 `subagent/security.py` 检查深度 ≤ 2
-- 新增任何会被 SubAgent 调用的工具,问自己:这个工具会不会反过来触发 SubAgent?
+### 3.6 SubAgent infinite recursion / context explosion
 
-### 3.7 导入路径混乱(backend vs backend-deprecated vs backend-fastapi)
+Phase 1 MVP does not enforce ODM (Open Domain Model / 开放领域约束). Calling `invoke_agent` inside a SubAgent **may infinite-loop**. Current mitigation:
 
-**只 import `app.*`、`core.*`**。看到 `from backend.xxx import ...` 的例子,**一定是 deprecated 代码**,不要抄。
+- `invoke_agent` checks depth ≤ 2 in `subagent/security.py`.
+- When adding any tool callable by a SubAgent, ask: can this tool transitively trigger another SubAgent?
 
----
+### 3.7 Import path confusion (backend vs backend-deprecated vs backend-fastapi)
 
-## 4. 加新路由的清单
-
-1. 路由函数放在 `app/api/routes/<module>.py`
-2. 在 `app/api/__init__.py` 或 `main.py` 挂载 router
-3. 经过权限中间件(`LicenseMiddleware` / auth)必须考虑白名单
-4. 给出 pydantic 响应 model(前端会读 OpenAPI)
-5. 大响应 / 实时流用 SSE(`StreamingResponse`),**不要用 WebSocket**(项目目前全链路 SSE)
-6. 写完用 `curl -i` 验真,再写前端
-7. 在 `tests/` 加一个最小测试,能 hit 到新路由
+**Only import from `app.*` and `core.*`.** If you see `from backend.xxx import ...`, that **is** deprecated code — do not copy it.
 
 ---
 
-## 5. 性能 / 5000 并发注意事项
+## 4. Checklist for adding a new route (新路由)
 
-`docs/feature-parallellab/PLAN-5000-concurrency.md` 是目标状态。近期任何 PR 都要问自己:
-
-- 有没有引入新的同步 IO?(见 3.1)
-- 有没有在循环里逐个 await(N+1)?应该 `asyncio.gather`
-- 有没有在 request 周期里做重计算?该扔进 `job_queue/`
-- 数据库查询有没有 N+1?该用 `selectinload` / `joinedload`
-- 缓存命中率?(能否加 Redis 缓存)
-
----
-
-## 6. 测试
-
-完整规则见 ⭐ [`tests/AGENTS.md`](./tests/AGENTS.md)(30 秒决策树 / 目录布局 / fixtures 命名 / 红线 / 写新 feature 测试的最小集)。
-
-**本节只列**最容易翻车的几条:
-
-- 位置:`backend-fastapi/tests/`(**不是**根 `/tests/`——那是历史 scratchpad,完全 gitignored)。
-- 目录布局:**镜像 `app/` 结构**。`app/services/heartbeat/clock.py` ↔ `tests/unit/services/heartbeat/test_clock.py`。
-- 分层:`unit/`(毫秒,无 IO)/ `integration/`(秒,DB+Redis)/ `e2e/`(分钟,完整链路)/ `contract/`(签名不退化)。
-- 框架:pytest + anyio(不是 `pytest-asyncio`,见 `tests/AGENTS.md §6`)。
-- **修 Bug 流程不能反**:先写能复现 Bug 的测试,跑确认它**红**,再改代码到绿。否则你不知道修没修对。
-- LLM 可以 mock(用 `tests/fixtures/mocks/llm.py` 的 `MockLLM` 走依赖注入)。
-- **不要 mock** supervisor / rule_sandbox / MCP 工具签名——它们**是**测试对象。
-- 不要复制 `tests/_archive/` 里的写法——那是旧 Flask 时代代码,在 FastAPI/async 体系下根本跑不了。
+1. Route function in `app/api/routes/<module>.py`.
+2. Mount the router in `app/api/__init__.py` or `main.py`.
+3. Consider the auth/license middleware allowlist (`LicenseMiddleware` / auth).
+4. Provide a pydantic response model (the frontend reads from OpenAPI).
+5. Large or real-time responses use SSE (`StreamingResponse`) — **not** WebSocket (the project is SSE end-to-end).
+6. Verify with `curl -i` before writing the frontend.
+7. Add a minimum test in `tests/` that actually hits the route.
 
 ---
 
-## 7. 配置 / Secrets
+## 5. Performance / 5000-concurrency notes
 
-- 开发用 `config.conf`(ini 格式)+ `.env`
-- **永远不要把 config.conf 或任何 key 提交**(`.gitignore` 已涵盖,但注意不要被 Agent 主动 `git add -f` 绕过)
-- 新增配置项:`core/config.py` 的 `settings` 里声明默认值 + 文档
+`docs/feature-parallellab/PLAN-5000-concurrency.md` is the target state. For any recent PR, self-check:
+
+- Any new sync I/O introduced? (see 3.1)
+- Any `await` in a loop one-by-one (N+1)? It should be `asyncio.gather`.
+- Any heavy compute in the request cycle? Move it to `job_queue/`.
+- Any N+1 DB queries? Use `selectinload` / `joinedload`.
+- Cache hit rate? Can Redis caching help?
 
 ---
 
-_last human review: 2026-04-19_
+## 6. Tests
+
+Full rules: ⭐ [`tests/AGENTS.md`](./tests/AGENTS.md) (30-second decision tree, directory layout, fixture naming, red lines, minimum set for new features).
+
+**This section** only lists the easiest mistakes:
+
+- Location: `backend-fastapi/tests/`. **Not** the repo-root `/tests/` — that's historical scratchpad, fully gitignored.
+- Layout: **mirror `app/`**. `app/services/heartbeat/clock.py` ↔ `tests/unit/services/heartbeat/test_clock.py`.
+- Layers: `unit/` (ms, no I/O) / `integration/` (s, DB+Redis) / `e2e/` (min, full pipeline) / `contract/` (signatures non-regression).
+- Framework: pytest + anyio (**not** `pytest-asyncio`, see `tests/AGENTS.md §6`).
+- **Bug-fix flow is non-negotiable**: first write a test that **reproduces** the bug and watch it **fail**, then fix to green. Otherwise you don't know if you fixed it.
+- LLM **may** be mocked — use `MockLLM` from `tests/fixtures/mocks/llm.py` via dependency injection.
+- **Do not mock** supervisor / rule_sandbox / MCP tool signatures — they **are** the test subjects.
+- Do not copy patterns from `tests/_archive/` — that's old Flask-era code that simply cannot run on FastAPI/async.
+
+---
+
+## 7. Config / secrets (配置 / 密钥)
+
+- Dev uses `config.conf` (INI format) + `.env`.
+- **Never commit `config.conf` or any key.** `.gitignore` covers this, but watch out for an agent doing `git add -f` to bypass it.
+- New config entries: declare a default in `core/config.py` `settings` with a doc comment.
+
+---
+
+_last human review: 2026-05-13_
