@@ -141,10 +141,7 @@
 | 功能 | 说明 | 状态 |
 |---|---|---|
 | **Mesa Python ABM 桥接** | 与现有 NetLogo 桥接并列的一等公民适配器;统一 ABM 桥接服务 + MCP server(`mesa_server.py`、`netlogo_server.py`)。 | 📋 规划中 |
-| **NVIDIA NIM 推理后端** | NIM 微服务作为可插拔 LLM 后端;Nemotron 模型支持;基础 GPU 资源管理。 | 📋 规划中 |
 | **Isaac Sim 物理 ↔ 认知桥接** | 把 Isaac Sim 物理状态与 LLM Agent 认知状态耦合;仓库 / 工厂场景 Demo。 | 📋 规划中 |
-| **ACE 数字人可视化** | NVIDIA ACE Avatar 多角色 Agent 会议;语音交互。 | 📋 规划中 |
-| **OAuth 登录** | Google / Microsoft / Apple / 通用 OIDC + OAuth2。 | 🚧 进行中 |
 | **外部 IM 接入** | 微信 / 钉钉 / 通用 IM webhook,把 Agent 接入企业沟通流。 | 📋 规划中 |
 | **领域实体应用** | RPG Game 世界、RPA(海关场景)、GIS 地图 MCP 工具(`add_map_layer`、`set_map_view`、`draw_map_geometry`…)。([RPA 计划](./docs/feature-nextrpa/PLAN.md)) | 📋 规划中 |
 | **前端打磨** | DeepSeek 的 mermaid 渲染、集中前后端环境变量管理。 | 📋 规划中 |
@@ -167,12 +164,8 @@
 - 上下文摘要服务优化(轮次间剔除原始 tool_call 参数)
 - 全仓库 `print()` → 结构化 `logger` 迁移
 - Claude `<tool_call>` 双向对齐
-
-### 🐛 待修复 Bug
-
-- 普通自主任务有时停不干净(Redis 队列 + scheduler triggers + SSE 需联合 teardown)。
-- 上游模型 HTTP 400 没传到 SSE `done` 事件 → 前端 spinner 卡死。
-- 自动分配模式:根据用户内容自动选最合适的角色回复。
+- OAuth 登录:Google / Microsoft / Apple / AWS Cognito / 通用 OIDC + OAuth2(桌面 + Web 回调)
+- Redis 缓存集成
 
 完整 backlog、设计文档、分阶段计划见 [`TODO.md`](./TODO.md)。
 

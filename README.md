@@ -141,10 +141,7 @@ A snapshot of where we're heading. Full source of truth: [`TODO.md`](./TODO.md).
 | Feature | What it is | Status |
 |---|---|---|
 | **Mesa Python ABM bridge** | First-class adapter alongside the existing NetLogo bridge; unified ABM bridge service + MCP servers (`mesa_server.py`, `netlogo_server.py`). | 📋 Planned |
-| **NVIDIA NIM inference backend** | Use NIM microservices as a pluggable LLM backend; Nemotron model support; basic GPU resource management. | 📋 Planned |
 | **Isaac Sim physics ↔ cognition bridge** | Couple Isaac Sim physical state with LLM agent cognitive state; warehouse / factory scenario demos. | 📋 Planned |
-| **ACE digital-human visualization** | NVIDIA ACE avatars for multi-role agent meetings; voice interaction. | 📋 Planned |
-| **OAuth providers** | Google / Microsoft / Apple / generic OIDC + OAuth2 login flows. | 🚧 In progress |
 | **External-platform IM integrations** | WeChat / DingTalk / generic IM webhook for agent-in-the-loop. | 📋 Planned |
 | **Domain entity apps** | RPG game world, RPA (customs scenario), GIS map MCP tools (`add_map_layer`, `set_map_view`, `draw_map_geometry`, …). ([RPA plan](./docs/feature-nextrpa/PLAN.md)) | 📋 Planned |
 | **Frontend polish** | DeepSeek mermaid rendering, unified front-back env-var management. | 📋 Planned |
@@ -167,12 +164,8 @@ A snapshot of where we're heading. Full source of truth: [`TODO.md`](./TODO.md).
 - Summary-service context-window optimization (strips raw tool-call args between rounds)
 - Repo-wide `print()` → structured `logger` migration
 - Claude `<tool_call>` round-trip parity
-
-### 🐛 Known bugs being chased
-
-- Autonomous task sometimes can't be stopped cleanly (Redis queue + scheduler triggers + SSE need joint teardown).
-- HTTP 400 from upstream model isn't propagated to the SSE `done` event → frontend spinner hangs.
-- Auto-dispatch mode: pick the best-fitting role for an incoming message automatically.
+- OAuth providers: Google / Microsoft / Apple / AWS Cognito / generic OIDC + OAuth2 (desktop + web callback flows)
+- Redis caching integration across hot paths
 
 See [`TODO.md`](./TODO.md) for the full backlog, design docs, and per-phase plans.
 
