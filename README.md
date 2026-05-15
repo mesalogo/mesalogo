@@ -101,7 +101,8 @@ The name pays homage to its two ancestors: **Mesa** (Python ABM framework) and *
 - ✅ **Parallel experiment lab** for parameter sweeps
 - ✅ **NetLogo bridge** for combining ABM physics with LLM cognition
 - ✅ **OpenAI-compatible API** for headless integration
-- ✅ **Multi-tenancy** with role-based access control
+- ✅ **Multi-user** with OAuth login (Google / Microsoft / Apple / AWS Cognito / generic OIDC + OAuth2), per-user data isolation, and per-user quotas
+- ✅ **Self-hosted deployment** via docker-compose (MariaDB + Redis + Milvus + LightRAG + optional Neo4j / Graphiti / OnlyOffice)
 - ✅ **Streaming SSE** for real-time agent output
 - ✅ **Redis caching** for high-throughput scenarios
 
@@ -150,10 +151,8 @@ A snapshot of where we're heading. Full source of truth: [`TODO.md`](./TODO.md).
 
 | Theme | What it is |
 |---|---|
-| **Large-scale simulation** | Optimization for 1000+ concurrent agents per action space. |
 | **Synthetic data pipelines** | Reproducible corpus generation from multi-agent dialogues with labeling hooks. |
-| **Multi-tenant SaaS** | Stricter cross-tenant isolation, billing pipeline. |
-| **Private deployment kit** | Air-gapped install, offline model bundles, license server. |
+| **Multi-tenant SaaS** | Cross-organization tenant isolation + billing pipeline (multi-user is already shipped; this is the cross-tenant tier above it). |
 | **Plugin marketplace** | First-party + community MCP plugins with signing / supply-chain checks. |
 
 ### ✅ Recently shipped
@@ -166,7 +165,8 @@ A snapshot of where we're heading. Full source of truth: [`TODO.md`](./TODO.md).
 - Claude `<tool_call>` round-trip parity
 - OAuth providers: Google / Microsoft / Apple / AWS Cognito / generic OIDC + OAuth2 (desktop + web callback flows)
 - Redis caching integration across hot paths
-- Per-user quota system (tasks / agents / spaces / knowledge bases / storage / monthly tokens) with admin bypass
+- Multi-user system: User + OAuth + per-user data isolation + per-user quotas (tasks / agents / spaces / knowledge bases / storage / monthly tokens) with admin bypass
+- Self-hosted deployment confirmed: one-command docker-compose brings up backend + frontend + MariaDB + Redis + Milvus + LightRAG (Neo4j / Graphiti / OnlyOffice optional)
 
 See [`TODO.md`](./TODO.md) for the full backlog, design docs, and per-phase plans.
 
