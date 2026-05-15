@@ -101,7 +101,8 @@
 - ✅ **并行实验室**:参数扫描
 - ✅ **NetLogo 桥接**:ABM 物理 + LLM 认知
 - ✅ **OpenAI 兼容 API**:无头集成
-- ✅ **多租户 + RBAC**
+- ✅ **多用户**:OAuth 登录(Google / Microsoft / Apple / AWS Cognito / 通用 OIDC + OAuth2),每用户数据隔离 + 每用户配额
+- ✅ **私有化部署**:一条 docker-compose 起整套(MariaDB + Redis + Milvus + LightRAG,可选 Neo4j / Graphiti / OnlyOffice)
 - ✅ **SSE 流式输出**
 - ✅ **Redis 缓存**:支持高吞吐场景
 
@@ -150,10 +151,8 @@
 
 | 主题 | 说明 |
 |---|---|
-| **大规模仿真** | 单行动空间内 1000+ 并发 Agent 的优化。 |
 | **合成数据管线** | 多 Agent 对话可复现地生成带标注的语料,带标注 hook。 |
-| **多租户 SaaS** | 更严格的跨租户隔离 + 计费管线。 |
-| **私有化部署套件** | 离网安装、离线模型包、License Server。 |
+| **多租户 SaaS** | 跨组织租户隔离 + 计费管线(多用户已经做了,这是更上一层的跨租户隔离)。 |
 | **插件市场** | 一方 + 社区 MCP 插件,带签名 / 供应链检查。 |
 
 ### ✅ 近期已上线
@@ -166,7 +165,8 @@
 - Claude `<tool_call>` 双向对齐
 - OAuth 登录:Google / Microsoft / Apple / AWS Cognito / 通用 OIDC + OAuth2(桌面 + Web 回调)
 - Redis 缓存集成
-- 每用户配额系统(tasks / agents / spaces / 知识库 / 存储 / 月度 token,管理员跳过)
+- 多用户系统:User + OAuth + 每用户数据隔离 + 每用户配额(tasks / agents / spaces / 知识库 / 存储 / 月度 token,管理员跳过)
+- 私有化部署确认:一条 docker-compose 起后端 + 前端 + MariaDB + Redis + Milvus + LightRAG(可选 Neo4j / Graphiti / OnlyOffice)
 
 完整 backlog、设计文档、分阶段计划见 [`TODO.md`](./TODO.md)。
 
