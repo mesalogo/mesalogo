@@ -152,7 +152,7 @@ A snapshot of where we're heading. Full source of truth: [`TODO.md`](./TODO.md).
 |---|---|
 | **Large-scale simulation** | Optimization for 1000+ concurrent agents per action space. |
 | **Synthetic data pipelines** | Reproducible corpus generation from multi-agent dialogues with labeling hooks. |
-| **Multi-tenant SaaS** | Stricter isolation, per-tenant quotas, billing-ready primitives. |
+| **Multi-tenant SaaS** | Stricter cross-tenant isolation, billing pipeline. |
 | **Private deployment kit** | Air-gapped install, offline model bundles, license server. |
 | **Plugin marketplace** | First-party + community MCP plugins with signing / supply-chain checks. |
 
@@ -166,6 +166,7 @@ A snapshot of where we're heading. Full source of truth: [`TODO.md`](./TODO.md).
 - Claude `<tool_call>` round-trip parity
 - OAuth providers: Google / Microsoft / Apple / AWS Cognito / generic OIDC + OAuth2 (desktop + web callback flows)
 - Redis caching integration across hot paths
+- Per-user quota system (tasks / agents / spaces / knowledge bases / storage / monthly tokens) with admin bypass
 
 See [`TODO.md`](./TODO.md) for the full backlog, design docs, and per-phase plans.
 

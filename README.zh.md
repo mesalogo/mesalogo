@@ -152,7 +152,7 @@
 |---|---|
 | **大规模仿真** | 单行动空间内 1000+ 并发 Agent 的优化。 |
 | **合成数据管线** | 多 Agent 对话可复现地生成带标注的语料,带标注 hook。 |
-| **多租户 SaaS** | 更严格隔离 / 配额 / 计费原语。 |
+| **多租户 SaaS** | 更严格的跨租户隔离 + 计费管线。 |
 | **私有化部署套件** | 离网安装、离线模型包、License Server。 |
 | **插件市场** | 一方 + 社区 MCP 插件,带签名 / 供应链检查。 |
 
@@ -166,6 +166,7 @@
 - Claude `<tool_call>` 双向对齐
 - OAuth 登录:Google / Microsoft / Apple / AWS Cognito / 通用 OIDC + OAuth2(桌面 + Web 回调)
 - Redis 缓存集成
+- 每用户配额系统(tasks / agents / spaces / 知识库 / 存储 / 月度 token,管理员跳过)
 
 完整 backlog、设计文档、分阶段计划见 [`TODO.md`](./TODO.md)。
 
