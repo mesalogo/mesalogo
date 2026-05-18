@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
-FastAPI 迁移全面自动化测试
+FastAPI 全路由健康检查脚本
 
-全面覆盖所有 53 个路由模块的所有端点，验证:
+注意:这是 __main__ 脚本(同步 requests),不是 pytest 单测。
+名字以 check_ 开头,避免被 pytest 误收集(见 /tests/AGENTS.md)。
+
+全面覆盖所有路由模块的所有端点，验证:
 1. 路由可达（不返回 404）
 2. 无 500 内部错误（jsonify/paginate/Flask 残留）
 3. JSON 响应格式正确
@@ -11,7 +14,7 @@ FastAPI 迁移全面自动化测试
 
 用法:
     # 先启动 FastAPI 服务: python run_app.py
-    python scripts/test_api_comprehensive.py [--base-url http://localhost:8080]
+    python scripts/check_api_routes.py [--base-url http://localhost:8080]
 """
 import sys
 import os

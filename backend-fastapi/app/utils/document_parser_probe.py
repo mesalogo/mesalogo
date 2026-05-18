@@ -1,6 +1,12 @@
 """
-文档解析器测试服务
-提供各种文档解析器的测试功能
+文档解析器探针 (document parser probe)
+
+提供 "测试解析器是否正常工作" 的内部探活功能,供 /api/document-parser
+路由的 "测试连接" 按钮调用。
+
+注意:这不是 pytest 单测,是生产代码。
+重命名历史: 2026-05-18 从 document_parser_test.py 改名为 document_parser_probe.py,
+函数 test_parser 改名为 run_parser_probe,以消除 "test_ 前缀=单测" 的认知噪音。
 """
 
 import logging
@@ -29,7 +35,7 @@ from app.utils.document_parser_config import (
 DEMO_FILE_PATH = 'knowledgebase/demo_files/demo1.pdf'
 
 
-def test_parser(parser_name=None):
+def run_parser_probe(parser_name=None):
     """
     测试指定的文档解析器
     

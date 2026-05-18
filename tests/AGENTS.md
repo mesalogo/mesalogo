@@ -1,78 +1,145 @@
-# /tests/ — Reference snippets archive (参考片段归档)
+# tests/AGENTS.md
 
-> This directory holds **historical reference snippets** — small scripts written between 2025-05 and 2025-09 to probe APIs, replicate bugs, or validate end-to-end behavior during the Flask → FastAPI migration.
+> Read this before writing tests under repo-root `/tests/`.
+> Assumes you have read repo-root `/AGENTS.md` and `backend-fastapi/AGENTS.md`.
+> Language policy: English-first, Chinese as glossary on first use.
 >
-> They are **reference material**, not the real test suite.
-> - ⛔ **Do not run them as a regression suite.** Most won't run as-is — they hardcode dataset IDs, expect a particular DB state, or call services that have since changed.
-> - ✅ **Do read them** when you need to remember "how did we call X back then?" — they preserve the exact request shape that was confirmed working.
-> - ✅ Treat them as immutable history. If you need a real test, write it under `backend-fastapi/tests/` (see `backend-fastapi/tests/AGENTS.md`).
+> History (重要): on 2026-05-18 this directory was promoted from
+> `backend-fastapi/tests/` to repo-root `/tests/`. The root `conftest.py`
+> still injects `backend-fastapi/` into `sys.path`, so `from app.* import ...`
+> and `from core.* import ...` continue to work unchanged. **Run pytest from
+> the repo root** (`pytest tests/...`), not from inside `backend-fastapi/`.
 
-## Sanitization status (2026-05-13)
+## 0. 30-second decision tree (决策树)
 
-Every file here has been scrubbed of real secrets, internal IPs, and customer credentials:
+```
+What does the thing under test involve?
 
-| Category | Replaced with |
-|---|---|
-| RAGFlow tenant API key | `ragflow-REPLACE_ME` |
-| FastGPT tenant API key | `fastgpt-REPLACE_ME` |
-| Dify application key | `app-REPLACE_ME` |
-| TiDB Cloud credential (real user/password/host) | `USER:PASSWORD@tidb.example.com:4000` |
-| Internal lab IPs (RAGFlow / Milvus / Dify hosts) | `localhost:<original-port>` |
-| Internal product domain | `app.example.com` |
-| AWS docs example key | unchanged (AKIAIOSFODNN7EXAMPLE is publicly published by AWS) |
-
-**To run a script**, you will need to set the matching environment variables (e.g. `RAGFLOW_API_KEY`, `RAGFLOW_HOST`) or hand-edit the placeholders in the file. **Do not commit real credentials.**
-
-> See repo-root [`AGENTS.md` §3.1](../AGENTS.md) for the secret-scan red line.
-> See [`docs/agents/failures/2026-05-13-public-branch-secret-leak.md`](../docs/agents/failures/2026-05-13-public-branch-secret-leak.md) for the incident that caused this scrub.
-
-## Index (索引)
-
-| Subdir | Topic | Files |
-|---|---|---|
-| [`supervisor/`](./supervisor/) | Supervisor / rule / intervention probes — supervisor API, message-processor integration, rule-checker, streaming, frontend handoff | 18 |
-| [`ragflow/`](./ragflow/) | RAGFlow retrieval / dataset / adapter / direct API tests | 14 |
-| [`fastgpt/`](./fastgpt/) | FastGPT adapter / score parsing / similarity / URL fix probes | 10 |
-| [`dify/`](./dify/) | Dify params / rerank / user identifier / dynamic params merge | 8 |
-| [`external_knowledge/`](./external_knowledge/) | External-KB phase 1 / 2 / standalone, table creation, document management | 7 |
-| [`vector/`](./vector/) | Milvus connection / embedding-direct / universal vector DB / vector functionality | 6 |
-| [`variable/`](./variable/) | Shared environment variables, external variables table, variable-stop-planning | 8 |
-| [`planning/`](./planning/) | Planning-agent display / default-enabled / feature smoke | 5 |
-| [`frontend/`](./frontend/) | Frontend integration HTML/JS/PY snippets (mostly archived UI verifications) | 5 |
-| [`message/`](./message/) | Message model migration before/after, source field, model stream | 5 |
-| [`target_agent/`](./target_agent/) | target_agent_ids API probes | 3 |
-| [`autonomous/`](./autonomous/) | Autonomous-task scheduling / interrupt / round auto-check | 3 |
-| [`api_fix/`](./api_fix/) | Misc API fix verifications (default model, SSE callback, simple API) | 8 |
-| [`misc/`](./misc/) | Single-purpose probes that don't fit elsewhere (agent role binding, graph enhancement, observer scope, UI) | 8 |
-| [`reports/`](./reports/) | JSON dumps of past API responses and migration reports (data, not code) | 5 |
-
-## Red lines (红线 — what NOT to do)
-
-1. ❌ **Do not write new tests here.** New tests go to `backend-fastapi/tests/<unit\|integration\|e2e\|contract>/`. This dir is closed for new code.
-2. ❌ **Do not copy-paste a snippet into `backend-fastapi/tests/`.** All snippets are Flask-era / sync-style; they cannot run under FastAPI/async. Rewrite from scratch following the new test conventions.
-3. ❌ **Do not put real secrets back in.** All hardcoded keys/IPs/passwords were replaced with placeholders. If a future change reintroduces a real value, the public-branch secret scan will fail and we'll have another postmortem.
-4. ❌ **Do not delete files without explicit user approval.** Repo-root `AGENTS.md` §3.3 forbids cleanup operations on archived material.
-
-## How to use a snippet (使用方法)
-
-```bash
-# 1. Identify the snippet you want.
-ls tests/ragflow/
-
-# 2. Open it; check the placeholder values it expects.
-cat tests/ragflow/test_fixed_ragflow.py
-
-# 3. Either: (a) export real values to your local shell, then run with python directly, OR
-#    (b) edit the file in place to inject your values (do NOT commit the edit).
-RAGFLOW_HOST=192.0.2.50:7080 RAGFLOW_API_KEY=ragflow-... python tests/ragflow/test_fixed_ragflow.py
+A pure function / one method               → tests/unit/<mirror app/services path>/test_X.py
+A FastAPI route / DB behavior              → tests/integration/api|db|services/
+Nested SubAgent / full SSE pipeline        → tests/e2e/scenarios/
+OpenAPI / MCP tool signature drift         → tests/contract/<openapi|mcp_tools>/
+Reproducing a production bug               → put in the closest layer; commit message: "repro Bug #N"
+Not sure                                   → put in unit/
 ```
 
-## Historical context
+**Iron rule (铁律)**: no mega-tests that span multiple layers; one test function tests one thing.
 
-Between 2025-05 and 2025-09 the project ran on Flask without a formal test suite, so engineers piled debug scripts into this folder. After the FastAPI/async migration (2025-10+) the real test directory moved to `backend-fastapi/tests/`. In 2026-05 these snippets were rescued, secret-scrubbed, classified by topic, and committed as immutable reference material rather than thrown away.
+## 1. Directory layout (mirrors `app/`)
 
-The first push of the `public` branch to GitHub leaked real OAuth secrets / MySQL credentials / RAGFlow / FastGPT / Dify / TiDB Cloud credentials sourced from this folder and `backend-deprecated/`. **Do not let it happen again.**
+```
+/tests/                 (repo-root)
+├── AGENTS.md           you are reading this
+├── conftest.py         root fixtures: anyio_backend / settings_override / mock_llm / redis_fake
+│                       (injects ../backend-fastapi into sys.path)
+├── unit/               ms-scale, pure functions, no I/O
+│   └── services/<feature>/
+├── integration/        second-scale, with DB (SQLite in-memory) / fakeredis / real FastAPI
+│   ├── api/ db/ mcp/ services/
+├── e2e/                minute-scale, full pipeline, only LLM is mocked
+│   ├── scenarios/ smoke/
+├── contract/           guards against API / tool-signature regression
+│   ├── openapi/ mcp_tools/
+├── fixtures/           shared factories + mocks + data
+│   ├── factories.py mocks/ data/
+├── _archive/           historical FastAPI-era leftovers, read-only, do not touch
+└── _legacy_snippets/   Flask-era (2025-05~09) reference scripts, read-only, not collected
+
+/pytest.ini             repo-root pytest config (testpaths=tests, markers, ignores)
+```
+
+Rule for new test files: **the test path must mirror the production code path.**
+`app/services/heartbeat/clock.py` ↔ `tests/unit/services/heartbeat/test_clock.py`.
+
+## 2. Markers (strict mode)
+
+| Marker | Meaning |
+|---|---|
+| `unit` | default; ms, no I/O |
+| `integration` | with DB / Redis / MCP |
+| `e2e` | full pipeline, minute-scale |
+| `contract` | signature / schema non-regression |
+| `slow` | > 5s |
+| `external` | requires real external network |
+| `heartbeat` / `subagent` / `supervisor` / `memory` / `knowledge` / `workflow` | feature tags |
+
+`pytest.ini` runs with `strict-markers` — **any undeclared marker is an error**. New markers must be registered in `pytest.ini` first.
+
+Running tests:
+```
+pytest -m "unit"                       # tight loop while writing
+pytest -m "not slow and not external"  # full local run
+pytest -m heartbeat                    # one feature at a time
+pytest --collect-only -q               # collect, don't run
+```
+
+## 3. Fixtures (naming is the contract)
+
+- Root `conftest.py`: `anyio_backend` (asyncio), `settings_override`, `redis_fake`, `mock_llm`, `caplog_info`.
+- Layer conftest auto-tags items in its subtree (`unit/conftest.py` adds `pytest.mark.unit`, etc.).
+- Names:
+  - Fixture name = noun (`agent`, `client`).
+  - Factory function = `make_<X>` (`make_agent`).
+  - Mock object = `mock_<X>` (`mock_llm`).
+- Factories build **in-memory** objects; they do **not** hit the DB. Integration tests do the persistence explicitly: `db_session.add(make_agent())`.
+
+## 4. Red lines (红线 — violation = guaranteed regression)
+
+1. ❌ **No Flask patterns** (`create_app()`, `app.test_client()`, `with app.app_context()`). `_archive/` is full of these — **do not** copy-paste from there. The FastAPI canonical form is the `client` fixture in `tests/integration/conftest.py` (`httpx.AsyncClient` + `ASGITransport`).
+2. ❌ **No sync I/O** (`requests`, `time.sleep`, large synchronous file reads). Same rule as repo-root AGENTS §3.2.
+3. ❌ **Do not mock the supervisor, rule_sandbox, or MCP tool signatures.** They **are** the system under test. What you may mock: LLM calls and external APIs.
+4. ❌ **No `print()`**. Use `caplog` / `caplog_info`. Production code completed the `print → logger` migration; tests must not regress that.
+5. ❌ **No "sleep then assert"** (flaky). Use `asyncio.Event` + `wait_for(timeout)`.
+6. ❌ **Unit tests must not depend on network / DB / Redis.** If they do, they're not unit tests — move them to `integration/`.
+7. ❌ **Do not reverse the bug-fix order**: first write a failing test that reproduces the bug, **watch it fail**, then fix to green. Otherwise you don't know if you fixed it.
+8. ❌ **No `@pytest.mark.skip` to "survive"**. Delete the test; explain why in the commit message.
+9. ❌ **`_archive/` is read-only**. Do not add files there. Do not say "I copied from _archive" in a PR.
+
+## 5. Mock LLM — the only standard way
+
+```python
+# tests/fixtures/mocks/llm.py is already provided
+async def test_X(mock_llm, agent):
+    mock_llm.reply_with("hi!")
+    assert await agent.run("hello") == "hi!"
+    assert mock_llm.calls[-1].messages[-1]["content"] == "hello"
+```
+
+Inject `mock_llm` via dependency injection (依赖注入). Do **not** use `unittest.mock.patch` against OpenAI SDK internals — that's brittle; the next SDK upgrade breaks it.
+
+## 6. Async conventions
+
+- Use `pytest-anyio` (**not** `pytest-asyncio`).
+- Root `conftest.py`'s `anyio_backend` session fixture pins backend to `"asyncio"`.
+- Test functions just declare `async def test_X(...)`; `anyio_mode = auto` is on.
+- For concurrent scenarios use `asyncio.gather`. Do **not** use threads.
+
+## 7. Database patterns
+
+- **Unit tests do not hit a real DB.** Use `make_<model>()` factories to build in-memory objects.
+- **Integration tests**: the `db_session` fixture wraps each test in a transaction with auto-rollback. Tests should `flush()`, **never** `commit()`.
+- **Migration tests**: every new Alembic migration must come with an upgrade↔downgrade roundtrip case in `tests/integration/db/test_migrations.py`.
+
+## 8. Minimum test set for a new feature
+
+Example for Agent Heartbeat (`docs/feature-heartbeat/PLAN.md`):
+
+| File | Tests | Layer |
+|---|---|---|
+| `unit/services/heartbeat/test_clock.py` | TickClock fires on schedule + `stop()` actually stops | unit |
+| `unit/services/heartbeat/test_registry.py` | register / deregister consistency | unit |
+| `unit/services/heartbeat/test_policy_<name>.py` | one per policy | unit |
+| `unit/services/heartbeat/test_overlap_skip.py` | previous tick still running → outcome=`overlap_skip` | unit |
+| `integration/services/test_heartbeat_lifecycle.py` | lifespan startup/shutdown | integration |
+| `e2e/scenarios/test_heartbeat_space_close.py` | closing the action space stops heartbeats immediately (`stop-the-world.md` §3 — mandatory) | e2e |
+
+## 9. When to come back here
+
+- Before writing a new test → §0 decision tree
+- Before mocking anything → §4 red lines
+- Adding a fixture / helper → §3 naming
+- Tempted to `@skip` → §4.8 don't
 
 ---
 
-_last review: 2026-05-13_
+_last review: 2026-05-18_ (moved from `backend-fastapi/tests/` to repo-root `/tests/`; `pytest.ini` moved to repo root; added `_legacy_snippets/`)

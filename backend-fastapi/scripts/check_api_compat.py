@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """
-API 兼容性测试 — 验证 FastAPI 迁移后所有端点的路径和响应格式与 Flask 一致
+API 兼容性手动检查脚本 — 验证 FastAPI 迁移后所有端点的路径和响应格式与 Flask 一致
+
+注意:这是 __main__ 脚本(同步 requests),不是 pytest 单测。
+名字以 check_ 开头,避免被 pytest 误收集(见 /tests/AGENTS.md)。
 
 用法:
     # 先启动 FastAPI 服务: python run_app.py
-    # 然后运行测试:
-    python scripts/test_api_compat.py [--base-url http://localhost:8080]
+    # 然后运行检查:
+    python scripts/check_api_compat.py [--base-url http://localhost:8080]
 """
 import sys
 import os

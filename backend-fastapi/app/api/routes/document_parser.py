@@ -22,7 +22,7 @@ router = APIRouter()
 提供文档解析器相关的API接口
 """
 
-from app.utils.document_parser_test import test_parser
+from app.utils.document_parser_probe import run_parser_probe
 from app.utils.document_parser_config import (
     get_active_document_parser,
     get_supported_formats,
@@ -72,7 +72,7 @@ async def test_document_parser(request: Request):
         logger.info(f"收到文档解析器测试请求: parser_name={parser_name}")
         
         # 执行测试
-        result = test_parser(parser_name)
+        result = run_parser_probe(parser_name)
         
         # 返回结果
         if result['success']:

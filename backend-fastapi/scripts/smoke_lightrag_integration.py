@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 """
-LightRAG 知识库集成测试脚本
+LightRAG 知识库集成 smoke 脚本
 
-测试流程：
+注意:这是 __main__ 脚本(同步 requests),不是 pytest 单测。
+名字以 smoke_ 开头,避免被 pytest 误收集(见 /tests/AGENTS.md)。
+原位置: backend-fastapi/test_lightrag_integration.py (2026-05-18 移入 scripts/)。
+
+冒烟流程：
 1. 创建 LightRAG 类型知识库
 2. 上传文档到 LightRAG
 3. 查询测试（5 种模式）

@@ -231,7 +231,7 @@ backend-fastapi/app/tasks/
 backend-fastapi/migrations/versions/
 └── XXXX_mempalace_p3_kg_tunnel_diary.py
 
-backend-fastapi/tests/memory_palace/
+tests/memory_palace/
 ├── test_kg_contradiction.py
 ├── test_kg_temporal.py
 ├── test_tunnel_discover.py

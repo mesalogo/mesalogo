@@ -1,9 +1,13 @@
 """
-backend-fastapi/tests/conftest.py
+tests/conftest.py  (repo-root)
 
 根 fixture 注册中心。Layer-specific fixture 放各层自己的 conftest。
 
 约定见 tests/AGENTS.md §3。
+
+History: 2026-05-18 the test tree was moved up from backend-fastapi/tests/ to
+repo-root /tests/. The sys.path anchor below still injects backend-fastapi/ so
+that `from app.* import ...` / `from core.* import ...` keep working.
 """
 from __future__ import annotations
 
@@ -14,7 +18,9 @@ from pathlib import Path
 import pytest
 
 # ─── 让 tests/ 下的代码能 import app.* / core.* ───
-_BACKEND_ROOT = Path(__file__).resolve().parent.parent  # backend-fastapi/
+# tests/ 现在位于仓库根,所以 parent.parent 是仓库根;真正的后端代码在 backend-fastapi/。
+_REPO_ROOT = Path(__file__).resolve().parent.parent  # repo root
+_BACKEND_ROOT = _REPO_ROOT / "backend-fastapi"
 if str(_BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(_BACKEND_ROOT))
 

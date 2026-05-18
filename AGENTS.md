@@ -54,22 +54,23 @@ abm-llm-v2/
 │   │   ├── supervisor_*.py   Supervisor / rule sandbox = Harness constraint layer. Touch with care.
 │   │   ├── mcp_server_manager.py   MCP tool registry (~73k LOC, fragile)
 │   │   └── parallel_experiment_service.py  Parallel-experiment runner (~75k LOC, fragile)
-│   ├── app/models.py         ⚠️ ~90k LOC. Read migration-progress.md before adding fields.
-│   └── tests/                ⭐ The real test directory. Read tests/AGENTS.md before writing tests.
-│       ├── unit/             ms-scale, pure functions
-│       ├── integration/      s-scale, with DB / Redis
-│       ├── e2e/              minute-scale, full pipeline
-│       ├── contract/         OpenAPI / MCP signature non-regression
-│       ├── fixtures/         shared mocks + factories
-│       └── _archive/         old Flask leftovers, read-only
+│   └── app/models.py         ⚠️ ~90k LOC. Read migration-progress.md before adding fields.
 │
+├── tests/                    ⭐ The real test directory (promoted from backend-fastapi/tests/ on 2026-05-18).
+│   │                         Read tests/AGENTS.md before writing tests.
+│   ├── unit/                 ms-scale, pure functions
+│   ├── integration/          s-scale, with DB / Redis
+│   ├── e2e/                  minute-scale, full pipeline
+│   ├── contract/             OpenAPI / MCP signature non-regression
+│   ├── fixtures/             shared mocks + factories
+│   ├── _archive/             old Flask leftovers, read-only
+│   └── _legacy_snippets/     Flask-era reference snippets, read-only, not collected by pytest
+│
+├── pytest.ini                Repo-root pytest config (testpaths=tests).
 ├── frontend/                 React 19 + Ant Design 6 + @xyflow/react
 │   └── src/                  Read frontend/AGENTS.md (if present) before changing.
 │
 ├── abm-docker/               docker-compose multi-service stack (redis/milvus/neo4j/…)
-├── tests/                    ❌ Root tests/ is historical scratchpad, fully gitignored
-│                              (only tests/AGENTS.md is exempt and tracked).
-│                              New tests go to backend-fastapi/tests/.
 ├── third_party/              ❌ Submodules. Do not modify.
 ├── docs/                     Design docs (read on demand)
 │   ├── feature-*/PLAN.md     Per-feature plans
@@ -129,7 +130,7 @@ Before writing or changing code, read the matching doc as needed (all under `doc
 | LightRAG / vector store | `docs/feature-knowledge-base/lightrag-PLAN.md` |
 | Workflow Graph orchestration | `docs/feature-workflow-graph/PLAN.md` |
 | Heartbeat / self-driven agents | `docs/feature-heartbeat/PLAN.md` + `policies.md` + `stop-the-world.md` |
-| **Writing or modifying any test** | `backend-fastapi/tests/AGENTS.md` (30-second decision tree) |
+| **Writing or modifying any test** | `tests/AGENTS.md` (30-second decision tree) |
 | Deployment / Docker / performance | `abm-docker/README.md` + `docs/feature-parallellab/PLAN-5000-concurrency.md` |
 
 If no matching doc exists → **create one** (even just a "placeholder" line), then write your decision into it. This is the Harness "living docs" principle.
@@ -173,7 +174,7 @@ cd abm-docker && make up
 1. `python3 -c "import main"` succeeds (no syntax/import errors).
 2. The relevant route `curl http://localhost:8080/<endpoint>` returns the expected JSON (not just an empty 200).
 3. The frontend page actually opens and you see data flow (not just "the page doesn't crash").
-4. Relevant existing tests pass: `pytest backend-fastapi/tests/...`. If you changed business logic without tests, **first write a test that reproduces the original problem.**
+4. Relevant existing tests pass: `pytest tests/...` (run from repo root). If you changed business logic without tests, **first write a test that reproduces the original problem.**
 5. Changed `models.py` → generate an Alembic migration and run `upgrade`/`downgrade` locally.
 
 ---
@@ -197,5 +198,5 @@ If you hit a failure mode **not covered by this file**, that's exactly the "envi
 
 ---
 
-_last human review: 2026-05-13_
+_last human review: 2026-05-18_ (test tree promoted from `backend-fastapi/tests/` to repo-root `/tests/`)
 _inspiration: Harness Engineering (Mitchell Hashimoto, 2026-02) + OpenAI 1M-line report_

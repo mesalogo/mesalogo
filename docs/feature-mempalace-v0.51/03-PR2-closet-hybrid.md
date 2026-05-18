@@ -178,7 +178,7 @@ backend-fastapi/app/services/memory_palace/
 backend-fastapi/migrations/versions/
 └── XXXX_mempalace_p2_closet.py    # closet 表 + drawer/closet FULLTEXT 索引
 
-backend-fastapi/tests/memory_palace/
+tests/memory_palace/
 ├── test_closet_builder.py
 ├── test_bm25.py
 ├── test_hybrid_recall.py

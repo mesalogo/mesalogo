@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """
-Stripe 支付功能测试脚本
+Stripe 支付功能手动检查脚本
 
-测试内容：
+注意:这是 __main__ 脚本(同步 requests),不是 pytest 单测。
+名字以 check_ 开头,避免被 pytest 误收集(见 /tests/AGENTS.md)。
+
+检查内容：
 1. Stripe 配置 API（获取/更新/测试连接）
 2. 支付记录 API（查询）
 3. 创建 Checkout Session API
 4. Webhook 处理逻辑
 
 运行方式：
-cd backend && python scripts/test_stripe_payment.py
+cd backend-fastapi && python scripts/check_stripe_payment.py
 """
 
 import os

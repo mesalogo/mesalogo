@@ -28,12 +28,13 @@ Test code left over from the Flask era (copied from the now-removed `backend-dep
 
 | Intent | Go to |
 |---|---|
-| Write a new test | `backend-fastapi/tests/<unit\|integration\|e2e\|contract>/` |
+| Write a new test | `/tests/<unit\|integration\|e2e\|contract>/` (repo root) |
 | Find a reference | `grep` here, read-only |
 | Wipe this directory | Do not initiate. Requires explicit user confirmation. |
 
-See `backend-fastapi/tests/AGENTS.md`.
+See `/tests/AGENTS.md`.
 
 ---
 
 _archived: 2026-05-13_
+_path updated: 2026-05-18 (test tree moved to repo-root `/tests/`)_

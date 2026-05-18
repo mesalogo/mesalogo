@@ -138,18 +138,20 @@ Phase 1 MVP does not enforce ODM (Open Domain Model / 开放领域约束). Calli
 
 ## 6. Tests
 
-Full rules: ⭐ [`tests/AGENTS.md`](./tests/AGENTS.md) (30-second decision tree, directory layout, fixture naming, red lines, minimum set for new features).
+Full rules: ⭐ [`/tests/AGENTS.md`](../tests/AGENTS.md) (30-second decision tree, directory layout, fixture naming, red lines, minimum set for new features).
 
 **This section** only lists the easiest mistakes:
 
-- Location: `backend-fastapi/tests/`. **Not** the repo-root `/tests/` — that's historical scratchpad, fully gitignored.
+- Location: **repo-root `/tests/`** (promoted from `backend-fastapi/tests/` on 2026-05-18). `tests/conftest.py` injects `backend-fastapi/` into `sys.path`, so `from app.* import ...` / `from core.* import ...` still work.
 - Layout: **mirror `app/`**. `app/services/heartbeat/clock.py` ↔ `tests/unit/services/heartbeat/test_clock.py`.
 - Layers: `unit/` (ms, no I/O) / `integration/` (s, DB+Redis) / `e2e/` (min, full pipeline) / `contract/` (signatures non-regression).
-- Framework: pytest + anyio (**not** `pytest-asyncio`, see `tests/AGENTS.md §6`).
+- Framework: pytest + anyio (**not** `pytest-asyncio`, see `/tests/AGENTS.md §6`).
+- Run from repo root: `pytest tests/...`. The repo-root `pytest.ini` is authoritative.
 - **Bug-fix flow is non-negotiable**: first write a test that **reproduces** the bug and watch it **fail**, then fix to green. Otherwise you don't know if you fixed it.
 - LLM **may** be mocked — use `MockLLM` from `tests/fixtures/mocks/llm.py` via dependency injection.
 - **Do not mock** supervisor / rule_sandbox / MCP tool signatures — they **are** the test subjects.
-- Do not copy patterns from `tests/_archive/` — that's old Flask-era code that simply cannot run on FastAPI/async.
+- Do not copy patterns from `tests/_archive/` or `tests/_legacy_snippets/` — those are old Flask-era code that simply cannot run on FastAPI/async.
+- Do not name **scripts** with `test_` prefix. Use `check_*.py` (sync probe) / `smoke_*.py` (end-to-end smoke) under `scripts/`. Only real pytest cases live under `/tests/`.
 
 ---
 
@@ -161,4 +163,4 @@ Full rules: ⭐ [`tests/AGENTS.md`](./tests/AGENTS.md) (30-second decision tree,
 
 ---
 
-_last human review: 2026-05-13_
+_last human review: 2026-05-18_ (test tree promoted to repo-root `/tests/`; stray `test_*.py` scripts renamed to `check_*.py` / `smoke_*.py`; `app/utils/document_parser_test.py` → `document_parser_probe.py`)
