@@ -131,6 +131,12 @@ export default {
   // 操作消息
   'actionTaskDetail.taskTerminated': '任务已终止',
   'actionTaskDetail.operationFailed': '操作失败',
+  // 任务窗口切换
+  'actionTaskDetail.back': '返回',
+  'actionTaskDetail.switch': '切换',
+  'actionTaskDetail.noOtherTasks': '暂无其他任务',
+  'actionTaskDetail.taskTitleFallback': '任务 {{id}}...',
+  'actionTaskDetail.unknownActionSpace': '未知行动空间',
   // 应用管理
   'appManagement.title': '应用管理',
   'appManagement.description': '点击启动应用，应用将在独立的标签页中打开',

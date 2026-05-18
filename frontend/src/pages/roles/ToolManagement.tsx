@@ -76,13 +76,13 @@ const ToolManagement = () => {
   const fetchMcpServers = async () => {
     try {
       setMcpServersLoading(true);
-      console.log('正在请求MCP服务器列表');
+      console.log('requesting MCP server list');
       const response = await api.get('/mcp/servers');
       setMcpServers(response.data);
-      console.log('获取到MCP服务器列表:', response.data);
+      console.log('MCP server list:', response.data);
     } catch (error) {
-      console.error('获取MCP服务器列表失败:', error);
-      message.error('获取MCP服务器列表失败');
+      console.error('fetch MCP server list failed:', error);
+      message.error(t('toolManagement.fetchMcpFailed'));
     } finally {
       setMcpServersLoading(false);
     }
@@ -92,15 +92,15 @@ const ToolManagement = () => {
   const fetchAllServerTools = async () => {
     try {
       setMcpServersLoading(true);
-      // 为所有服务器创建并行请求
+      // build parallel requests for every server
       const promises = mcpServers.map(async (server) => {
         if (serverTools[server.id]) {
-          return; // 如果已经加载过该服务器的工具，则跳过
+          return; // already cached
         }
 
         try {
           setLoadingServerTools(prev => ({ ...prev, [server.id]: true }));
-          console.log(`正在获取服务器 ${server.id} 的工具列表`);
+          console.log(`fetching tool list for server ${server.id}`);
           const response = await api.post(`/mcp/tools/${server.id}`);
 
           // 处理响应数据
@@ -118,17 +118,17 @@ const ToolManagement = () => {
             }
           }
         } catch (error) {
-          console.error(`获取服务器 ${server.id} 的工具列表失败:`, error);
+          console.error(`fetch tool list for server ${server.id} failed:`, error);
         } finally {
           setLoadingServerTools(prev => ({ ...prev, [server.id]: false }));
         }
       });
 
-      // 等待所有请求完成
+      // wait for all parallel requests
       await Promise.all(promises);
-      console.log('所有服务器工具加载完成');
+      console.log('all server tools loaded');
     } catch (error) {
-      console.error('获取所有服务器工具列表失败:', error);
+      console.error('fetch all server tools failed:', error);
     } finally {
       setMcpServersLoading(false);
     }
@@ -142,38 +142,36 @@ const ToolManagement = () => {
 
     setLoadingServerTools(prev => ({ ...prev, [serverId]: true }));
     try {
-      console.log(`正在获取服务器 ${serverId} 的工具列表`);
+      console.log(`fetching tool list for server ${serverId}`);
       const response = await api.post(`/mcp/tools/${serverId}`);
 
-      // 设置工具列表 - 处理MCP标准格式
+      // handle the MCP standard format
       if (response.data) {
-        // 如果响应是数组，则直接作为工具列表使用
         if (Array.isArray(response.data)) {
           setServerTools(prev => ({
             ...prev,
             [serverId]: response.data
           }));
-          console.log(`获取到服务器 ${serverId} 的工具列表:`, response.data);
+          console.log(`server ${serverId} tool list:`, response.data);
         }
-        // 如果响应含有tools属性，使用旧格式处理
         else if (response.data.tools) {
           setServerTools(prev => ({
             ...prev,
             [serverId]: response.data.tools
           }));
-          console.log(`获取到服务器 ${serverId} 的工具列表:`, response.data.tools);
+          console.log(`server ${serverId} tool list:`, response.data.tools);
         }
         else {
-          console.warn(`获取到的服务器 ${serverId} 的工具列表格式不支持:`, response.data);
-          message.warning(`服务器 ${serverId} 的工具列表格式不支持`);
+          console.warn(`unsupported tool-list format for server ${serverId}:`, response.data);
+          message.warning(t('toolManagement.serverToolsUnsupported', { id: serverId }));
         }
       } else {
-        console.warn(`获取到的服务器 ${serverId} 的工具列表为空`);
-        message.warning(`服务器 ${serverId} 的工具列表为空`);
+        console.warn(`empty tool list for server ${serverId}`);
+        message.warning(t('toolManagement.serverToolsEmpty', { id: serverId }));
       }
     } catch (error) {
-      console.error(`获取服务器 ${serverId} 的工具列表失败:`, error);
-      message.error(`获取服务器 ${serverId} 的工具列表失败: ${error.message}`);
+      console.error(`fetch tool list for server ${serverId} failed:`, error);
+      message.error(t('toolManagement.fetchServerToolsFailed', { id: serverId, error: error.message }));
     } finally {
       setLoadingServerTools(prev => ({ ...prev, [serverId]: false }));
     }
@@ -186,11 +184,11 @@ const ToolManagement = () => {
     try {
       const response = await api.get('/capabilities/categories');
       setCategories(response.data || []);
-      console.log('获取到分类列表:', response.data);
+      console.log('categories:', response.data);
       return response.data;
     } catch (error) {
-      console.error('获取分类列表失败:', error);
-      message.error('获取分类列表失败');
+      console.error('fetch categories failed:', error);
+      message.error(t('toolManagement.fetchCategoriesFailed'));
       return [];
     }
   };
@@ -202,9 +200,8 @@ const ToolManagement = () => {
       const response = await capabilityAPI.getAll();
 
       // 输出完整的API响应以便调试
-      console.log('能力API响应:', response);
+      console.log('capability API response:', response);
 
-      // 确定正确的数据路径
       let capabilitiesData = [];
       if (Array.isArray(response.data)) {
         capabilitiesData = response.data;
@@ -214,16 +211,16 @@ const ToolManagement = () => {
         capabilitiesData = response;
       }
 
-      console.log('解析后的能力数据:', capabilitiesData);
+      console.log('parsed capability data:', capabilitiesData);
 
-      // 过滤无效数据和 function_calling（由模型特性决定）
+      // filter out invalid rows and function_calling (model-feature owned)
       const validCapabilities = capabilitiesData.filter(cap =>
         cap && cap.name && typeof cap.name === 'string' && cap.id && cap.name !== 'function_calling'
       );
 
-      console.log(`过滤后有效的能力数据: ${validCapabilities.length}个`);
+      console.log(`valid capabilities after filter: ${validCapabilities.length}`);
 
-      // 使用Map进行去重，以name为键
+      // dedupe by name
       const uniqueCapabilities = new Map();
       validCapabilities.forEach(cap => {
         if (!uniqueCapabilities.has(cap.name)) {
@@ -231,66 +228,62 @@ const ToolManagement = () => {
         }
       });
 
-      // 转换回数组
       const uniqueCapabilitiesArray = Array.from(uniqueCapabilities.values());
-      console.log(`获取到${capabilitiesData.length}个能力，有效${validCapabilities.length}个，去重后剩余${uniqueCapabilitiesArray.length}个`);
+      console.log(`capabilities: total=${capabilitiesData.length} valid=${validCapabilities.length} unique=${uniqueCapabilitiesArray.length}`);
 
       setCapabilities(uniqueCapabilitiesArray);
 
-      // 提取能力与工具/服务器的关联关系
+      // extract capability-to-tool/server associations
       const toolsMap = {};
       uniqueCapabilitiesArray.forEach(cap => {
         if (cap.tools) {
-          // 如果tools字段是字符串，尝试解析成JSON对象
           try {
             const toolsData = typeof cap.tools === 'string'
               ? JSON.parse(cap.tools)
               : cap.tools;
             toolsMap[cap.name] = toolsData;
           } catch (e) {
-            console.error(`解析能力 ${cap.name} 的工具关联失败:`, e);
+            console.error(`parse tools for capability ${cap.name} failed:`, e);
           }
         }
       });
 
       setCapabilityToolsMap(toolsMap);
     } catch (error) {
-      console.error('获取能力列表失败', error);
-      message.error('获取能力列表失败');
+      console.error('fetch capabilities failed', error);
+      message.error(t('toolManagement.fetchCapabilitiesFailed'));
     } finally {
       setLoadingCapabilities(false);
     }
   };
 
-  // 获取能力与工具的关联关系
+  // fetch capability ↔ tool associations
   const fetchCapabilityTools = async () => {
     try {
       const response = await capabilityAPI.getTools();
       setCapabilityToolsMap(response);
     } catch (error) {
-      console.error('获取能力与工具关联关系失败:', error);
-      // 不显示错误消息，避免干扰用户体验
+      console.error('fetch capability-tools failed:', error);
+      // intentionally not user-visible to avoid noise
     }
   };
 
-  // 获取角色列表和关联信息
+  // fetch role list + association map
   const fetchRoles = async () => {
     try {
       setLoadingRoles(true);
 
-      // 获取所有角色
       const rolesResponse = await roleAPI.getAll();
       const roles = rolesResponse || [];
       setRoles(roles);
 
-      // 一次性获取所有能力与角色的映射关系
       const capabilityRolesMap = await capabilityAPI.getAllWithRoles();
       setRoleCapabilityMap(capabilityRolesMap);
 
     } catch (error) {
-      console.error('获取角色列表失败', error);
+      console.error('fetch roles failed', error);
       setTimeout(() => {
-        message.error('获取角色列表失败');
+        message.error(t('toolManagement.fetchRolesFailed'));
       }, 0);
     } finally {
       setLoadingRoles(false);
@@ -326,9 +319,9 @@ const ToolManagement = () => {
             name: type
           }));
 
-          // 添加到分类列表
+          // append to category list
           setTempCategories(prev => [...prev, ...newTempCategories]);
-          console.log('从现有能力中添加的临时类型:', newTempCategories);
+          console.log('added temporary categories from existing capabilities:', newTempCategories);
         }
       }
     }
@@ -356,11 +349,11 @@ const ToolManagement = () => {
       if (editingCapabilityId) {
         await capabilityAPI.update(editingCapabilityId, capabilityValues);
         capabilityId = editingCapabilityId;
-        message.success('能力更新成功');
+        message.success(t('toolManagement.capabilityUpdated'));
       } else {
         const response = await capabilityAPI.create(capabilityValues);
         capabilityId = response.data?.id;
-        message.success('能力创建成功');
+        message.success(t('toolManagement.capabilityCreated'));
       }
 
       // 如果能力ID有效，处理工具关联（包括清空的情况）
@@ -399,24 +392,24 @@ const ToolManagement = () => {
       await fetchCapabilities();
       await fetchCapabilityTools(); // 重新获取能力与工具关联数据
     } catch (error) {
-      console.error(editingCapabilityId ? '更新能力失败' : '创建能力失败', error);
-      message.error(editingCapabilityId ? '更新能力失败' : '创建能力失败');
+      console.error(editingCapabilityId ? 'update capability failed' : 'create capability failed', error);
+      message.error(editingCapabilityId ? t('toolManagement.updateCapabilityFailed') : t('toolManagement.createFailed'));
     }
   };
 
-  // 处理删除能力
+  // delete capability
   const handleDeleteCapability = (record) => {
     modal.confirm({
-      title: '确认删除',
+      title: t('toolManagement.confirmDelete'),
       icon: <ExclamationCircleOutlined />,
-      content: `确定要删除能力 "${record.name}" 吗？`,
+      content: t('toolManagement.confirmDeleteContent', { name: record.name }),
       onOk: async () => {
         try {
           await capabilityAPI.delete(record.id);
-          message.success('能力删除成功');
+          message.success(t('toolManagement.deleteSuccess'));
           fetchCapabilities();
         } catch (error) {
-          message.error('删除能力失败');
+          message.error(t('toolManagement.deleteFailed'));
         }
       },
     });
@@ -441,11 +434,11 @@ const ToolManagement = () => {
       }));
 
       return {
-        title: `${server.id} 服务器`,
-        value: `server:${server.id}`, // 特殊前缀，用于标识这是服务器节点
+        title: t('toolManagement.serverNode', { id: server.id }),
+        value: `server:${server.id}`,
         key: `server:${server.id}`,
         children: children,
-        selectable: true, // 允许选择服务器节点
+        selectable: true,
       };
     });
 
@@ -463,8 +456,8 @@ const ToolManagement = () => {
       } else if (assignToolsModalVisible) {
         form = assignToolsForm;
       } else {
-        console.error('无法确定要使用的表单实例');
-        return; // 如果无法确定表单实例，直接返回
+        console.error('cannot determine which form instance to use');
+        return;
       }
     }
 
@@ -496,7 +489,7 @@ const ToolManagement = () => {
     try {
       form.setFieldsValue({ tools: filteredValues });
     } catch (error) {
-      console.error('更新表单值失败:', error);
+      console.error('update form value failed:', error);
     }
   };
 
@@ -505,7 +498,7 @@ const ToolManagement = () => {
     treeData: convertToTreeData(),
     treeCheckable: true,
     showCheckedStrategy: TreeSelect.SHOW_CHILD,
-    placeholder: "请选择要关联的工具",
+    placeholder: t('toolManagement.toolSelectPlaceholder'),
     style: { width: '100%' },
     onChange: onChange || handleTreeSelectChange,
     treeDefaultExpandAll: true,
@@ -603,23 +596,23 @@ const ToolManagement = () => {
           // 强制TreeSelect重新渲染以同步显示
           setTreeSelectKey(prev => prev + 1);
         } catch (error) {
-          console.error('处理服务器标签关闭失败:', error);
-          message.error('移除服务器工具失败，请重试');
+          console.error('server tag close failed:', error);
+          message.error(t('toolManagement.removeServerFailed'));
         }
       } else {
-        console.error('无法获取有效的表单实例');
-        message.error('移除服务器工具失败，请重试');
+        console.error('no valid form instance');
+        message.error(t('toolManagement.removeServerFailed'));
       }
     };
 
-    // 返回格式化的标签
+    // formatted tag
     return (
       <Tag
         closable={closable}
         onClose={handleServerTagClose}
         color="blue"
       >
-        {server}[{toolCount}个工具已选]
+        {t('toolManagement.toolsSelectedSummary', { server, count: toolCount })}
       </Tag>
     );
   };
@@ -715,13 +708,13 @@ const ToolManagement = () => {
 
       await Promise.all([...addPromises, ...removePromises]);
 
-      message.success('角色关联更新成功');
+      message.success(t('toolManagement.roleAssignSuccess'));
       setAssignModalVisible(false);
-      // 重新获取角色关联数据
+      // refresh role associations
       await fetchRoles();
     } catch (error) {
-      console.error('更新角色关联失败:', error);
-      message.error('更新角色关联失败');
+      console.error('update role assignment failed:', error);
+      message.error(t('toolManagement.roleAssignFailed'));
     }
   };
 
@@ -743,33 +736,30 @@ const ToolManagement = () => {
     };
 
     const typeLabels = {
-      'core': '基础能力',
-      'advanced': '高级能力',
-      'supervision': '监督能力',
-      'execution': '执行能力',
-      'specialized': '专业能力'
+      'core': t('toolManagement.type.core'),
+      'advanced': t('toolManagement.type.advanced'),
+      'supervision': t('toolManagement.type.supervision'),
+      'execution': t('toolManagement.type.execution'),
+      'specialized': t('toolManagement.type.specialized')
     };
 
-    return <Tag color={typeColors[type] || 'default'}>{typeLabels[type] || '未知'}</Tag>;
+    return <Tag color={typeColors[type] || 'default'}>{typeLabels[type] || t('toolManagement.type.unknown')}</Tag>;
   };
 
   // 打开关联工具模态框
   const showAssignToolsModal = async (record) => {
     setSelectedCapability(record);
 
-    // 显示加载中的消息
     message.loading({
-      content: '正在加载所有服务器工具，请稍候...',
+      content: t('toolManagement.toolsLoading'),
       key: 'loadingTools',
       duration: 0
     });
 
-    // 首先获取所有服务器的工具列表
     await fetchAllServerTools();
 
-    // 关闭加载消息
     message.success({
-      content: '所有服务器工具加载完成',
+      content: t('toolManagement.toolsLoaded'),
       key: 'loadingTools',
       duration: 2
     });
@@ -821,14 +811,13 @@ const ToolManagement = () => {
         [selectedCapability.name]: toolsMap
       }));
 
-      message.success('工具关联更新成功');
+      message.success(t('toolManagement.updateSuccess'));
       setAssignToolsModalVisible(false);
 
-      // 重新获取能力与工具关联数据
       await fetchCapabilityTools();
     } catch (error) {
-      console.error('更新工具关联失败:', error);
-      message.error('更新工具关联失败');
+      console.error('update tool assignment failed:', error);
+      message.error(t('toolManagement.updateFailed'));
     }
   };
 
@@ -846,39 +835,36 @@ capabilityForm.setFieldsValue({ type: value });
       // 如果是新分类，添加到临时分类列表
       const newTempCategory = { id: `temp-${Date.now()}`, name: value.trim() };
       setTempCategories(prev => [...prev, newTempCategory]);
-      message.success(`已添加临时分类："${value}"，提交表单后生效`);
+      message.success(t('toolManagement.tempCategoryAdded', { name: value }));
 
-      // 更新表单值 - 由于只有能力管理，直接设置能力表单
       capabilityForm.setFieldsValue({ type: value });
     }
   };
 
-  // 添加自定义分类到后端
+  // persist a custom category to the backend
   const addCustomCategory = async (name) => {
     if (!name || !name.trim()) return;
 
     try {
       await api.post('/capabilities/categories', { name: name.trim() });
-      message.success(`已成功保存分类："${name}"`);
+      message.success(t('toolManagement.categoryAdded', { name }));
 
-      // 获取更新后的分类列表
       const updatedCategories = await fetchCategories();
 
-      // 从临时分类中移除
       setTempCategories(prev => prev.filter(cat => cat.name !== name.trim()));
 
       return updatedCategories;
     } catch (error) {
-      console.error('添加分类失败:', error);
-      message.error('添加分类失败');
+      console.error('add category failed:', error);
+      message.error(t('toolManagement.categoryAddFailed'));
       return null;
     }
   };
 
-  // 能力列表列定义
+  // capability table columns
   const capabilityColumns = [
     {
-      title: '名称',
+      title: t('toolManagement.col.name'),
       dataIndex: 'name',
       key: 'name',
       width: 180,
@@ -908,7 +894,7 @@ capabilityForm.setFieldsValue({ type: value });
       ),
     },
     {
-      title: '描述提示词',
+      title: t('toolManagement.col.description'),
       dataIndex: 'description',
       key: 'description',
       width: 300,
@@ -940,7 +926,7 @@ capabilityForm.setFieldsValue({ type: value });
       ),
     },
     {
-      title: '类型',
+      title: t('toolManagement.col.type'),
       dataIndex: 'type',
       key: 'type',
       render: (type) => {
@@ -953,93 +939,90 @@ capabilityForm.setFieldsValue({ type: value });
         };
 
         const typeLabels = {
-          'core': '基础能力',
-          'advanced': '高级能力',
-          'supervision': '监督能力',
-          'execution': '执行能力',
-          'specialized': '专业能力'
+          'core': t('toolManagement.type.core'),
+          'advanced': t('toolManagement.type.advanced'),
+          'supervision': t('toolManagement.type.supervision'),
+          'execution': t('toolManagement.type.execution'),
+          'specialized': t('toolManagement.type.specialized')
         };
 
-        // 如果是预定义类型，使用预定义的颜色和标签
         if (typeColors[type]) {
           return <Tag color={typeColors[type]}>{typeLabels[type] || type}</Tag>;
         }
-
-        // 对于自定义类型，使用默认样式
         return <Tag color="default">{type}</Tag>;
       },
     },
     {
-      title: '来源',
+      title: t('toolManagement.col.source'),
       dataIndex: 'created_by',
       key: 'resource_source',
       width: 100,
       render: (created_by, record) => {
-        // 系统资源：created_by 为 null
         if (!created_by) {
           return (
-            <Tooltip title="系统资源，所有用户可见可用">
+            <Tooltip title={t('toolManagement.source.systemTip')}>
               <Tag icon={<GlobalOutlined />} color="blue">
-                系统
+                {t('toolManagement.source.system')}
               </Tag>
             </Tooltip>
           );
         }
 
-        // 用户共享资源：created_by 有值且 is_shared 为 true
         if (record.is_shared) {
           return (
-            <Tooltip title="用户共享资源，所有用户可见可用">
+            <Tooltip title={t('toolManagement.source.sharedTip')}>
               <Tag icon={<TeamOutlined />} color="green">
-                共享
+                {t('toolManagement.source.shared')}
               </Tag>
             </Tooltip>
           );
         }
 
-        // 私有资源：created_by 有值且 is_shared 为 false
         return (
-          <Tooltip title="私有资源，仅创建者可见">
+          <Tooltip title={t('toolManagement.source.privateTip')}>
             <Tag icon={<LockOutlined />} color="orange">
-              私有
+              {t('toolManagement.source.private')}
             </Tag>
           </Tooltip>
         );
       },
     },
     {
-      title: '关联服务器/工具',
+      title: t('toolManagement.col.associatedTools'),
       key: 'associated_tools',
       render: (_, record) => {
         const tools = capabilityToolsMap[record.name] || {};
         const serverList = Object.keys(tools);
 
-        // 检查是否有关联工具
         if (!serverList || serverList.length === 0) {
-          return <Tag color="default">无关联工具</Tag>;
+          return <Tag color="default">{t('toolManagement.noTools')}</Tag>;
         }
 
-        // 使用树形结构展示服务器与工具
+        const totalToolCount = serverList.reduce((sum, server) => {
+          const list = Array.isArray(tools[server]) ? tools[server] : [];
+          return sum + list.length;
+        }, 0);
+
         return (
           <Popover
             content={
               <div style={{ maxWidth: 300, maxHeight: 300, overflow: 'auto' }}>
                 {serverList.map(server => {
-                  const serverTools = Array.isArray(tools[server]) ? tools[server] : [];
+                  const serverToolList = Array.isArray(tools[server]) ? tools[server] : [];
                   return (
                     <div key={server} style={{ marginBottom: '8px' }}>
                       <div style={{ fontWeight: 'bold', color: '#1677ff' }}>
                         {server}:
                       </div>
                       <div style={{ marginLeft: '16px' }}>
-                        {serverTools.length > 0 ? (
-                          serverTools.map(tool => (
+                        {serverToolList.length > 0 ? (
+                          serverToolList.map(tool => (
                             <div key={`${server}-${tool}`} style={{ marginBottom: '4px' }}>
                               • {tool}
                             </div>
                           ))
                         ) : (
-                          <div style={{ color: 'var(--custom-text-secondary)', fontStyle: 'italic' }}>无工具</div>
+                          <div style={{ color: 'var(--custom-text-secondary)', fontStyle: 'italic' }}>{t('toolManagement.noToolsInline')}</div>
                         )}
                       </div>
                     </div>
@@ -1047,34 +1030,29 @@ capabilityForm.setFieldsValue({ type: value });
                 })}
               </div>
             }
-            title="关联工具/服务器"
+            title={t('toolManagement.popoverTitle.tools')}
             placement="right"
             mouseEnterDelay={0.5}
             trigger="hover"
           >
             <Tag color="cyan" style={{ cursor: 'pointer' }}>
-              {serverList.length} 个服务器
-              {serverList.reduce((sum, server) => {
-                const serverTools = Array.isArray(tools[server]) ? tools[server] : [];
-                return sum + serverTools.length;
-              }, 0) > 0 ? ' (点击查看详情)' : ' (无工具)'}
+              {t('toolManagement.serverCount', { count: serverList.length })}
+              {totalToolCount > 0 ? t('toolManagement.serverDetailsSuffix') : t('toolManagement.serverNoToolsSuffix')}
             </Tag>
           </Popover>
         );
       },
     },
     {
-      title: '关联角色',
+      title: t('toolManagement.col.associatedRoles'),
       key: 'associated_roles',
       render: (_, record) => {
         const relatedRoles = roleCapabilityMap[record.name] || [];
 
-        // 检查是否有关联角色
         if (!relatedRoles || relatedRoles.length === 0) {
-          return <Tag color="default">无关联角色</Tag>;
+          return <Tag color="default">{t('toolManagement.noRoles')}</Tag>;
         }
 
-        // 展示关联角色
         return (
           <Space>
             {relatedRoles.length <= 2 ? (
@@ -1098,12 +1076,12 @@ capabilityForm.setFieldsValue({ type: value });
                       ))}
                     </div>
                   }
-                  title="关联角色"
+                  title={t('toolManagement.popoverTitle.roles')}
                   placement="right"
                   mouseEnterDelay={0.5}
                 >
                   <Tag color="geekblue" style={{ cursor: 'pointer' }}>
-                    +{relatedRoles.length - 1} 个角色
+                    {t('toolManagement.moreRoles', { count: relatedRoles.length - 1 })}
                   </Tag>
                 </Popover>
               </>
@@ -1113,33 +1091,37 @@ capabilityForm.setFieldsValue({ type: value });
       },
     },
     {
-      title: '安全级别',
+      title: t('toolManagement.col.securityLevel'),
       dataIndex: 'security_level',
       key: 'security_level',
       render: (level) => {
         const colors = { 1: 'green', 2: 'orange', 3: 'red' };
-        const texts = { 1: '低风险', 2: '中风险', 3: '高风险' };
-        return <Tag color={colors[level] || 'default'}>{texts[level] || '未知'}</Tag>;
+        const texts = {
+          1: t('toolManagement.security.low'),
+          2: t('toolManagement.security.medium'),
+          3: t('toolManagement.security.high')
+        };
+        return <Tag color={colors[level] || 'default'}>{texts[level] || t('toolManagement.type.unknown')}</Tag>;
       }
     },
     {
-      title: '默认启用',
+      title: t('toolManagement.col.defaultEnabled'),
       dataIndex: 'default_enabled',
       key: 'default_enabled',
       render: (enabled) => (
         <Tag color={enabled ? 'success' : 'default'}>
-          {enabled ? '是' : '否'}
+          {enabled ? t('toolManagement.yes') : t('toolManagement.no')}
         </Tag>
       ),
     },
     {
-      title: '操作',
+      title: t('toolManagement.col.actions'),
       key: 'action',
       width: 150,
       fixed: 'right' as const,
       render: (_, record) => (
         <Space>
-          <Tooltip title="编辑能力">
+          <Tooltip title={t('toolManagement.action.edit')}>
             <Button
               type="text"
               icon={<EditOutlined />}
@@ -1147,7 +1129,7 @@ capabilityForm.setFieldsValue({ type: value });
               style={{ color: '#1677ff' }}
             />
           </Tooltip>
-          <Tooltip title="关联角色">
+          <Tooltip title={t('toolManagement.action.linkRoles')}>
             <Button
               type="text"
               icon={<TeamOutlined />}
@@ -1155,7 +1137,7 @@ capabilityForm.setFieldsValue({ type: value });
               style={{ color: '#722ed1' }}
             />
           </Tooltip>
-          <Tooltip title="删除能力">
+          <Tooltip title={t('toolManagement.action.delete')}>
             <Button
               type="text"
               danger
@@ -1183,7 +1165,7 @@ capabilityForm.setFieldsValue({ type: value });
             icon={<PlusOutlined />}
             onClick={showCreateCapabilityModal}
           >
-            新建能力
+            {t('toolManagement.action.newCapability')}
           </Button>
         </div>
       </div>
@@ -1196,14 +1178,14 @@ capabilityForm.setFieldsValue({ type: value });
       >
         <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between' }}>
           <Space size="middle">
-            <Tag color="blue">基础能力: {coreCapabilities.length}</Tag>
-            <Tag color="purple">高级能力: {advancedCapabilities.length}</Tag>
-            <Tag color="orange">监督能力: {supervisionCapabilities.length}</Tag>
-            <Tag color="red">执行能力: {executionCapabilities.length}</Tag>
-            <Tag color="cyan">专业能力: {specializedCapabilities.length}</Tag>
+            <Tag color="blue">{t('toolManagement.summary.core', { count: coreCapabilities.length })}</Tag>
+            <Tag color="purple">{t('toolManagement.summary.advanced', { count: advancedCapabilities.length })}</Tag>
+            <Tag color="orange">{t('toolManagement.summary.supervision', { count: supervisionCapabilities.length })}</Tag>
+            <Tag color="red">{t('toolManagement.summary.execution', { count: executionCapabilities.length })}</Tag>
+            <Tag color="cyan">{t('toolManagement.summary.specialized', { count: specializedCapabilities.length })}</Tag>
           </Space>
           <Space>
-            <Tag color="default">总计: {capabilities.length}</Tag>
+            <Tag color="default">{t('toolManagement.summary.total', { count: capabilities.length })}</Tag>
           </Space>
         </div>
 
@@ -1220,7 +1202,7 @@ capabilityForm.setFieldsValue({ type: value });
             columns={capabilityColumns}
             dataSource={capabilities.map(cap => ({
               ...cap,
-              key: cap.id // 确保每行有唯一的key
+              key: cap.id
             }))}
             rowKey="id"
             scroll={{ x: 'max-content' }}
@@ -1231,7 +1213,7 @@ capabilityForm.setFieldsValue({ type: value });
               pageSizeOptions: [10, 50, 100],
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: (total) => `共 ${total} 条`,
+              showTotal: (total) => t('toolManagement.pagination.total', { total }),
               position: ['bottomRight'],
               simple: false,
               onChange: (page, pageSize) => {
@@ -1242,13 +1224,12 @@ capabilityForm.setFieldsValue({ type: value });
               },
               onShowSizeChange: (current, size) => {
                 setCapabilityPagination({
-                  current: 1, // 切换每页条数时重置为第一页
+                  current: 1,
                   pageSize: size,
                 });
               }
             }}
             rowClassName={(record) => {
-              // 为不同类型的能力添加不同的行样式
               const typeClasses = {
                 'core': 'core-capability-row',
                 'advanced': 'advanced-capability-row',
@@ -1262,15 +1243,15 @@ capabilityForm.setFieldsValue({ type: value });
         )}
       </Card>
 
-      {/* 能力编辑模态框 */}
+      {/* capability edit modal */}
       <Modal
-        title={editingCapabilityId ? '编辑能力' : '新建能力'}
+        title={editingCapabilityId ? t('toolManagement.modal.editTitle') : t('toolManagement.modal.newTitle')}
         open={capabilityModalVisible}
         onOk={capabilityForm.submit}
         onCancel={() => {
           setCapabilityModalVisible(false);
           capabilityForm.resetFields();
-          setTempCategories([]); // 清空临时分类
+          setTempCategories([]);
         }}
         width={600}
       >
@@ -1281,25 +1262,25 @@ capabilityForm.setFieldsValue({ type: value });
         >
           <Form.Item
             name="name"
-            label="名称"
-            rules={[{ required: true, message: '请输入能力名称' }]}
+            label={t('toolManagement.form.name')}
+            rules={[{ required: true, message: t('toolManagement.form.nameRequired') }]}
           >
-            <Input placeholder="请输入能力名称，例如: environment_sensing" />
+            <Input placeholder={t('toolManagement.form.namePlaceholder')} />
           </Form.Item>
           <Form.Item
             name="description"
-            label="描述提示词"
-            rules={[{ required: true, message: '请输入能力描述提示词' }]}
+            label={t('toolManagement.form.descLabel')}
+            rules={[{ required: true, message: t('toolManagement.form.descRequired') }]}
           >
-            <Input.TextArea rows={3} placeholder="请输入能力描述提示词，例如: 你具备记忆能力，在记忆的时候要使用记忆工具，比如read_graph来获取图谱信息、search_node来搜索知识节点" />
+            <Input.TextArea rows={3} placeholder={t('toolManagement.form.descPlaceholder')} />
           </Form.Item>
           <Form.Item
             name="type"
-            label="类型"
-            rules={[{ required: true, message: '请选择能力类型' }]}
+            label={t('toolManagement.form.typeLabel')}
+            rules={[{ required: true, message: t('toolManagement.form.typeRequired') }]}
           >
             <Select
-              placeholder="请选择能力类型"
+              placeholder={t('toolManagement.form.typePlaceholder')}
               showSearch
               allowClear
               onSearch={handleCustomCategoryInput}
@@ -1312,19 +1293,18 @@ capabilityForm.setFieldsValue({ type: value });
                       style={{ padding: '8px', cursor: 'pointer', borderTop: '1px solid var(--custom-border)' }}
                       onClick={() => handleCustomCategorySelect(customCategoryName)}
                     >
-                      <PlusOutlined /> 添加 "{customCategoryName}"
+                      <PlusOutlined /> {t('toolManagement.form.addCustom', { name: customCategoryName })}
                     </div>
                   )}
                 </>
               )}
             >
-              <Select.Option value="core">基础能力</Select.Option>
-              <Select.Option value="advanced">高级能力</Select.Option>
-              <Select.Option value="supervision">监督能力</Select.Option>
-              <Select.Option value="execution">执行能力</Select.Option>
-              <Select.Option value="specialized">专业能力</Select.Option>
+              <Select.Option value="core">{t('toolManagement.type.core')}</Select.Option>
+              <Select.Option value="advanced">{t('toolManagement.type.advanced')}</Select.Option>
+              <Select.Option value="supervision">{t('toolManagement.type.supervision')}</Select.Option>
+              <Select.Option value="execution">{t('toolManagement.type.execution')}</Select.Option>
+              <Select.Option value="specialized">{t('toolManagement.type.specialized')}</Select.Option>
               {[...categories, ...tempCategories].map(category => {
-                // 跳过已经有的固定选项
                 if (['core', 'advanced', 'supervision', 'execution', 'specialized'].includes(category.name)) {
                   return null;
                 }
@@ -1335,7 +1315,7 @@ capabilityForm.setFieldsValue({ type: value });
                     style={tempCategories.some(c => c.id === category.id) ? {color: '#1677ff', fontStyle: 'italic'} : {}}
                   >
                     {category.name}
-                    {tempCategories.some(c => c.id === category.id) && <Tag color="processing" style={{marginLeft: 4}}>未保存</Tag>}
+                    {tempCategories.some(c => c.id === category.id) && <Tag color="processing" style={{marginLeft: 4}}>{t('toolManagement.form.unsaved')}</Tag>}
                   </Select.Option>
                 );
               })}
@@ -1343,54 +1323,54 @@ capabilityForm.setFieldsValue({ type: value });
           </Form.Item>
           <Form.Item
             name="icon"
-            label="图标"
+            label={t('toolManagement.form.iconLabel')}
           >
-            <Input placeholder="请输入图标名称，例如: function" />
+            <Input placeholder={t('toolManagement.form.iconPlaceholder')} />
           </Form.Item>
           <Form.Item
             name="security_level"
-            label="安全级别"
-            rules={[{ required: true, message: '请选择安全级别' }]}
+            label={t('toolManagement.form.securityLabel')}
+            rules={[{ required: true, message: t('toolManagement.form.securityRequired') }]}
           >
-            <Select placeholder="请选择安全级别">
-              <Select.Option value={1}>低风险 (1级)</Select.Option>
-              <Select.Option value={2}>中风险 (2级)</Select.Option>
-              <Select.Option value={3}>高风险 (3级)</Select.Option>
+            <Select placeholder={t('toolManagement.form.securityPlaceholder')}>
+              <Select.Option value={1}>{t('toolManagement.security.lowOpt')}</Select.Option>
+              <Select.Option value={2}>{t('toolManagement.security.mediumOpt')}</Select.Option>
+              <Select.Option value={3}>{t('toolManagement.security.highOpt')}</Select.Option>
             </Select>
           </Form.Item>
           <Form.Item
             name="default_enabled"
             valuePropName="checked"
           >
-            <Checkbox>默认启用</Checkbox>
+            <Checkbox>{t('toolManagement.form.defaultEnabled')}</Checkbox>
           </Form.Item>
 
           <Form.Item
             name="is_shared"
             valuePropName="checked"
-            tooltip="勾选后，该能力将对所有用户可见可用（但只有创建者可编辑）"
+            tooltip={t('toolManagement.form.sharedTooltip')}
           >
             <Checkbox>
               <Space>
                 <TeamOutlined />
-                共享给所有用户
+                {t('toolManagement.form.shared')}
               </Space>
             </Checkbox>
           </Form.Item>
 
           <Form.Item
             name="tools"
-            label="关联工具"
+            label={t('toolManagement.form.linkToolsLabel')}
           >
             <TreeSelect
               key={treeSelectKey}
               treeData={convertToTreeData()}
               treeCheckable={true}
               showCheckedStrategy={TreeSelect.SHOW_CHILD}
-              placeholder="请选择要关联的工具"
+              placeholder={t('toolManagement.toolSelectPlaceholder')}
               style={{ width: '100%' }}
               onChange={(value) => {
-                console.log('能力编辑模态框选择变化:', value);
+                console.log('capability modal tree select change:', value);
                 handleTreeSelectChange(value, capabilityForm);
               }}
               treeDefaultExpandAll
@@ -1399,7 +1379,6 @@ capabilityForm.setFieldsValue({ type: value });
               tagRender={renderTreeSelectTags}
               filterTreeNode={(input: any, node: any) => {
                 if (node.title && typeof node.title !== 'string') {
-                  // 处理React节点
                   const nodeTitle = node.title.props?.children?.[0];
                   return nodeTitle && String(nodeTitle).toLowerCase().includes(input.toLowerCase());
                 }
@@ -1407,18 +1386,18 @@ capabilityForm.setFieldsValue({ type: value });
               }}
               treeNodeFilterProp="title"
               popupMatchSelectWidth={false}
-              styles={{ 
-                popup: { 
-                  maxHeight: 400, 
-                  overflow: 'auto' 
+              styles={{
+                popup: {
+                  maxHeight: 400,
+                  overflow: 'auto'
                 } as any
               }}
             />
           </Form.Item>
 
           <Alert
-            message="提示"
-            description="请选择该能力可以使用的工具。拥有此能力的角色将可以使用这些工具。系统会自动加载所有可用的工具，包括所有MCP服务器工具和自定义工具。"
+            message={t('toolManagement.alert.title')}
+            description={t('toolManagement.alert.description')}
             type="info"
             showIcon
             style={{ marginBottom: '16px' }}
@@ -1426,9 +1405,9 @@ capabilityForm.setFieldsValue({ type: value });
         </Form>
       </Modal>
 
-      {/* 关联角色模态框 */}
+      {/* role-link modal */}
       <Modal
-        title={`关联角色 - ${selectedCapability?.name || ''}`}
+        title={t('toolManagement.modal.linkRolesTitle', { name: selectedCapability?.name || '' })}
         open={assignModalVisible}
         onOk={assignForm.submit}
         onCancel={() => {
@@ -1444,12 +1423,12 @@ capabilityForm.setFieldsValue({ type: value });
         >
           <Form.Item
             name="roles"
-            label="选择角色"
-            rules={[{ required: false, message: '请选择要关联的角色' }]}
+            label={t('toolManagement.form.selectRolesLabel')}
+            rules={[{ required: false, message: t('toolManagement.form.selectRolesRequired') }]}
           >
             <Select
               mode="multiple"
-              placeholder="请选择要关联的角色"
+              placeholder={t('toolManagement.form.selectRolesPlaceholder')}
               style={{ width: '100%' }}
               options={roles.map(role => ({
                 label: role.name,
@@ -1460,9 +1439,9 @@ capabilityForm.setFieldsValue({ type: value });
         </Form>
       </Modal>
 
-      {/* 关联工具模态框 */}
+      {/* tool-link modal */}
       <Modal
-        title={`关联工具 - ${selectedCapability?.name || ''}`}
+        title={t('toolManagement.modal.linkToolsTitle', { name: selectedCapability?.name || '' })}
         open={assignToolsModalVisible}
         onOk={assignToolsForm.submit}
         onCancel={() => {
@@ -1478,18 +1457,18 @@ capabilityForm.setFieldsValue({ type: value });
         >
           <Form.Item
             name="tools"
-            label="选择工具"
-            rules={[{ required: false, message: '请选择要关联的工具' }]}
+            label={t('toolManagement.form.selectToolsLabel')}
+            rules={[{ required: false, message: t('toolManagement.form.selectToolsRequired') }]}
           >
             <TreeSelect
               key={treeSelectKey}
               treeData={convertToTreeData()}
               treeCheckable={true}
               showCheckedStrategy={TreeSelect.SHOW_CHILD}
-              placeholder="请选择要关联的工具"
+              placeholder={t('toolManagement.toolSelectPlaceholder')}
               style={{ width: '100%' }}
               onChange={(value) => {
-                console.log('关联工具模态框选择变化:', value);
+                console.log('link-tools modal tree select change:', value);
                 handleTreeSelectChange(value, assignToolsForm);
               }}
               treeDefaultExpandAll
@@ -1498,7 +1477,6 @@ capabilityForm.setFieldsValue({ type: value });
               tagRender={renderTreeSelectTags}
               filterTreeNode={(input: any, node: any) => {
                 if (node.title && typeof node.title !== 'string') {
-                  // 处理React节点
                   const nodeTitle = node.title.props?.children?.[0];
                   return nodeTitle && String(nodeTitle).toLowerCase().includes(input.toLowerCase());
                 }
@@ -1506,17 +1484,17 @@ capabilityForm.setFieldsValue({ type: value });
               }}
               treeNodeFilterProp="title"
               popupMatchSelectWidth={false}
-              styles={{ 
-                popup: { 
-                  maxHeight: 400, 
-                  overflow: 'auto' 
+              styles={{
+                popup: {
+                  maxHeight: 400,
+                  overflow: 'auto'
                 } as any
               }}
             />
           </Form.Item>
           <Alert
-            message="提示"
-            description="请选择该能力可以使用的工具。拥有此能力的角色将可以使用这些工具。系统会自动加载所有可用的工具，包括所有MCP服务器工具和自定义工具。"
+            message={t('toolManagement.alert.title')}
+            description={t('toolManagement.alert.description')}
             type="info"
             showIcon
             style={{ marginBottom: '16px' }}

@@ -34,6 +34,7 @@ import {
   SortAscendingOutlined,
   SettingOutlined
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import GraphEnhancementTestQuery from './GraphEnhancementTestQuery';
 import { useGraphEnhancement } from './useGraphEnhancement';
 
@@ -41,9 +42,10 @@ const { Text } = Typography;
 const { Panel } = Collapse;
 
 const GraphitiTab = () => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const [graphitiForm] = Form.useForm();
-  
+
   const {
     config,
     loading,
@@ -66,7 +68,7 @@ const GraphitiTab = () => {
     buildCommunities,
     testQuery,
   } = useGraphEnhancement();
-  
+
   const [graphitiEnabled, setGraphitiEnabled] = useState(false);
   const [graphitiQueryModalVisible, setGraphitiQueryModalVisible] = useState(false);
   const [graphitiRerankType, setGraphitiRerankType] = useState('reranker');
@@ -85,7 +87,7 @@ const GraphitiTab = () => {
         setPartitionStrategies(data.data);
       }
     } catch (error) {
-      console.error('加载分区策略失败:', error);
+      console.error('load partition strategies failed:', error);
     }
   };
 
@@ -93,7 +95,7 @@ const GraphitiTab = () => {
     const loadGraphitiConfig = async () => {
       await loadModelConfigs();
       await loadPartitionStrategies();
-      
+
       const configData = await loadConfig();
       if (configData && configData.framework === 'graphiti') {
         setGraphitiEnabled(configData.enabled || false);
@@ -126,7 +128,6 @@ const GraphitiTab = () => {
   }, []);
 
   const handleSaveConfig = async (values: any) => {
-    // 确保 framework 字段设置为 graphiti
     const configData = {
       ...values,
       framework: 'graphiti',
@@ -134,21 +135,21 @@ const GraphitiTab = () => {
     };
     const success = await saveConfig(configData);
     if (success) {
-      message.success('配置保存成功');
+      message.success(t('graphitiTab.saveSuccess'));
     }
   };
 
   const handleClearData = () => {
     Modal.confirm({
-      title: '确认清空数据',
-      content: '此操作将清空所有图谱数据，且不可恢复。是否继续？',
-      okText: '确认',
-      cancelText: '取消',
+      title: t('graphitiTab.clearConfirmTitle'),
+      content: t('graphitiTab.clearConfirmContent'),
+      okText: t('graphitiTab.confirm'),
+      cancelText: t('graphitiTab.cancel'),
       okButtonProps: { danger: true },
       onOk: async () => {
         const success = await clearGraph();
         if (success) {
-          message.success('数据清空成功');
+          message.success(t('graphitiTab.clearSuccess'));
           await loadStatus();
         }
       }
@@ -158,25 +159,25 @@ const GraphitiTab = () => {
   const handleBuildCommunities = async () => {
     const success = await buildCommunities();
     if (success) {
-      message.success('社区构建任务已提交，请稍后查看结果');
+      message.success(t('graphitiTab.buildSubmitted'));
     }
   };
 
   return (
     <>
-      {/* 启用开关 */}
-      <Card title="启用Graphiti长期记忆系统" style={{ marginBottom: 24 }}>
+      {/* enable switch */}
+      <Card title={t('graphitiTab.enableTitle')} style={{ marginBottom: 24 }}>
         <Row align="middle" gutter={16}>
           <Col>
             <Switch
               checked={graphitiEnabled}
-              checkedChildren="开启"
-              unCheckedChildren="关闭"
+              checkedChildren={t('graphitiTab.on')}
+              unCheckedChildren={t('graphitiTab.off')}
               loading={loading}
               onChange={async (checked) => {
                 if (checked) {
                   setGraphitiEnabled(true);
-                  message.info('请先完成配置，然后点击保存按钮');
+                  message.info(t('graphitiTab.enableHint'));
                 } else {
                   const success = await saveConfig({
                     ...config,
@@ -185,7 +186,7 @@ const GraphitiTab = () => {
                   });
                   if (success) {
                     setGraphitiEnabled(false);
-                    message.success('Graphiti已禁用');
+                    message.success(t('graphitiTab.disabled'));
                   } else {
                     setGraphitiEnabled(true);
                   }
@@ -194,7 +195,7 @@ const GraphitiTab = () => {
             />
           </Col>
           <Col flex={1}>
-            <Text type="secondary">时序感知知识图谱，用于智能体长期记忆管理</Text>
+            <Text type="secondary">{t('graphitiTab.enableDesc')}</Text>
           </Col>
         </Row>
       </Card>
@@ -229,44 +230,41 @@ const GraphitiTab = () => {
             }
           }}
         >
-          {/* 服务状态与配置 */}
           <Card
             title={
               <Space>
                 <BarChartOutlined />
-                服务状态与配置
-                {status?.connected ? <Tag color="success">运行中</Tag> : <Tag color="default">未启动</Tag>}
+                {t('graphitiTab.statusConfigTitle')}
+                {status?.connected ? <Tag color="success">{t('graphitiTab.running')}</Tag> : <Tag color="default">{t('graphitiTab.notStarted')}</Tag>}
               </Space>
             }
             extra={
               <Button icon={<ReloadOutlined />} onClick={loadStatus} loading={loading}>
-                刷新
+                {t('graphitiTab.refresh')}
               </Button>
             }
             style={{ marginBottom: 24 }}
           >
-            {/* 状态信息 */}
             {status && (
               <>
                 <Descriptions column={3} size="small">
-                  <Descriptions.Item label="服务状态">
-                    {status.connected ? <Tag color="success">已连接</Tag> : <Tag color="default">未连接</Tag>}
+                  <Descriptions.Item label={t('graphitiTab.svcStatus')}>
+                    {status.connected ? <Tag color="success">{t('graphitiTab.connected')}</Tag> : <Tag color="default">{t('graphitiTab.disconnected')}</Tag>}
                   </Descriptions.Item>
-                  <Descriptions.Item label="节点数量">{status.statistics?.node_count || 0}</Descriptions.Item>
-                  <Descriptions.Item label="关系数量">{status.statistics?.relation_count || 0}</Descriptions.Item>
+                  <Descriptions.Item label={t('graphitiTab.nodeCount')}>{status.statistics?.node_count || 0}</Descriptions.Item>
+                  <Descriptions.Item label={t('graphitiTab.relationCount')}>{status.statistics?.relation_count || 0}</Descriptions.Item>
                 </Descriptions>
                 <Divider style={{ margin: '16px 0' }} />
               </>
             )}
 
-            {/* 服务配置 */}
             <Row gutter={16}>
               <Col span={8}>
                 <Form.Item
                   name={['framework_config', 'service_url']}
-                  label="服务地址"
-                  rules={[{ required: true, message: '请输入服务地址' }]}
-                  tooltip="Graphiti FastAPI 服务的访问地址"
+                  label={t('graphitiTab.svcUrl')}
+                  rules={[{ required: true, message: t('graphitiTab.svcUrlRequired') }]}
+                  tooltip={t('graphitiTab.svcUrlTip')}
                 >
                   <Input placeholder="http://localhost:8002" />
                 </Form.Item>
@@ -274,8 +272,8 @@ const GraphitiTab = () => {
               <Col span={8}>
                 <Form.Item
                   name={['framework_config', 'mcp_service_url']}
-                  label="MCP服务地址"
-                  tooltip="Graphiti MCP SSE 服务的访问地址"
+                  label={t('graphitiTab.mcpUrl')}
+                  tooltip={t('graphitiTab.mcpUrlTip')}
                 >
                   <Input placeholder="http://localhost:8003" />
                 </Form.Item>
@@ -283,9 +281,9 @@ const GraphitiTab = () => {
               <Col span={8}>
                 <Form.Item
                   name={['framework_config', 'neo4j_browser_uri']}
-                  label="数据库访问地址"
-                  rules={[{ required: true, message: '请输入数据库访问地址' }]}
-                  tooltip="用于后端服务访问 Neo4j 数据库的地址"
+                  label={t('graphitiTab.dbUrl')}
+                  rules={[{ required: true, message: t('graphitiTab.dbUrlRequired') }]}
+                  tooltip={t('graphitiTab.dbUrlTip')}
                 >
                   <Input placeholder="bolt://127.0.0.1:7687" />
                 </Form.Item>
@@ -295,8 +293,8 @@ const GraphitiTab = () => {
               <Col span={8}>
                 <Form.Item
                   name={['framework_config', 'service_port']}
-                  label="服务端口映射"
-                  tooltip="宿主机端口:容器端口"
+                  label={t('graphitiTab.svcPort')}
+                  tooltip={t('graphitiTab.portTip')}
                 >
                   <Input placeholder="8002:8000" />
                 </Form.Item>
@@ -304,31 +302,30 @@ const GraphitiTab = () => {
               <Col span={8}>
                 <Form.Item
                   name={['framework_config', 'mcp_service_port']}
-                  label="MCP端口映射"
-                  tooltip="宿主机端口:容器端口"
+                  label={t('graphitiTab.mcpPort')}
+                  tooltip={t('graphitiTab.portTip')}
                 >
                   <Input placeholder="8003:8001" />
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item label="服务控制" style={{ marginBottom: 0 }}>
+                <Form.Item label={t('graphitiTab.svcControl')} style={{ marginBottom: 0 }}>
                   <Button
                     type={status?.connected ? "default" : "primary"}
                     icon={status?.connected ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
                     onClick={() => controlService(status?.connected ? 'stop' : 'start')}
                     loading={loading}
                   >
-                    {status?.connected ? '停止服务' : '启动服务'}
+                    {status?.connected ? t('graphitiTab.stopSvc') : t('graphitiTab.startSvc')}
                   </Button>
                 </Form.Item>
               </Col>
             </Row>
 
-            {/* 模型配置 */}
             <Divider orientationMargin={0} style={{ margin: '8px 0 16px' }}>
               <Space>
                 <CloudOutlined />
-                模型配置
+                {t('graphitiTab.modelConfig')}
               </Space>
             </Divider>
 
@@ -338,20 +335,20 @@ const GraphitiTab = () => {
                   name={['framework_config', 'text_model_id']}
                   label={
                     <Space>
-                      文本生成模型
-                      <Tooltip title="用于LLM推理和知识提取">
+                      {t('graphitiTab.textModel')}
+                      <Tooltip title={t('graphitiTab.textModelTip')}>
                         <InfoCircleOutlined style={{ color: '#1677ff' }} />
                       </Tooltip>
                     </Space>
                   }
-                  rules={[{ required: true, message: '请选择文本生成模型' }]}
+                  rules={[{ required: true, message: t('graphitiTab.textModelRequired') }]}
                 >
                   <Select
-                    placeholder="选择文本生成模型"
+                    placeholder={t('graphitiTab.selectTextModel')}
                     showSearch
                     filterOption={(input, option) => option?.label?.toLowerCase().includes(input.toLowerCase())}
                     options={[
-                      { value: 'default', label: `默认 ${defaultTextModelInfo ? `(${defaultTextModelInfo.name})` : ''}` },
+                      { value: 'default', label: `${t('graphitiTab.default')} ${defaultTextModelInfo ? `(${defaultTextModelInfo.name})` : ''}` },
                       ...(textModels || []).map(model => ({
                         value: model.id.toString(),
                         label: `${model.name} (${model.provider})`,
@@ -365,20 +362,20 @@ const GraphitiTab = () => {
                   name={['framework_config', 'embedding_model_id']}
                   label={
                     <Space>
-                      嵌入模型
-                      <Tooltip title="用于生成向量表示">
+                      {t('graphitiTab.embeddingModel')}
+                      <Tooltip title={t('graphitiTab.embeddingModelTip')}>
                         <InfoCircleOutlined style={{ color: '#1677ff' }} />
                       </Tooltip>
                     </Space>
                   }
-                  rules={[{ required: true, message: '请选择嵌入模型' }]}
+                  rules={[{ required: true, message: t('graphitiTab.embeddingModelRequired') }]}
                 >
                   <Select
-                    placeholder="选择嵌入模型"
+                    placeholder={t('graphitiTab.selectEmbeddingModel')}
                     showSearch
                     filterOption={(input, option) => option?.label?.toLowerCase().includes(input.toLowerCase())}
                     options={[
-                      { value: 'default', label: `默认 ${defaultEmbeddingModelInfo ? `(${defaultEmbeddingModelInfo.name})` : ''}` },
+                      { value: 'default', label: `${t('graphitiTab.default')} ${defaultEmbeddingModelInfo ? `(${defaultEmbeddingModelInfo.name})` : ''}` },
                       ...(embeddingModels || []).map(model => ({
                         value: model.id.toString(),
                         label: `${model.name} (${model.provider})`,
@@ -390,10 +387,10 @@ const GraphitiTab = () => {
               <Col span={8}>
                 <Form.Item
                   name={['framework_config', 'embedding_dimension']}
-                  label="向量维度"
-                  tooltip="留空则自动检测"
+                  label={t('graphitiTab.embeddingDim')}
+                  tooltip={t('graphitiTab.embeddingDimTip')}
                 >
-                  <InputNumber placeholder="自动检测" style={{ width: '100%' }} min={1} />
+                  <InputNumber placeholder={t('graphitiTab.autoDetect')} style={{ width: '100%' }} min={1} />
                 </Form.Item>
               </Col>
             </Row>
@@ -401,15 +398,15 @@ const GraphitiTab = () => {
               <Col span={8}>
                 <Form.Item
                   name={['framework_config', 'rerank_type']}
-                  label="重排序类型"
-                  rules={[{ required: true, message: '请选择重排序类型' }]}
+                  label={t('graphitiTab.rerankType')}
+                  rules={[{ required: true, message: t('graphitiTab.rerankTypeRequired') }]}
                 >
                   <Select
-                    placeholder="选择重排序类型"
+                    placeholder={t('graphitiTab.selectRerankType')}
                     onChange={(value) => setGraphitiRerankType(value)}
                     options={[
-                      { value: 'reranker', label: 'Reranker模型' },
-                      { value: 'llm', label: 'LLM重排序' }
+                      { value: 'reranker', label: t('graphitiTab.rerankerOpt') },
+                      { value: 'llm', label: t('graphitiTab.llmRerankOpt') }
                     ]}
                   />
                 </Form.Item>
@@ -419,29 +416,29 @@ const GraphitiTab = () => {
                   name={['framework_config', 'rerank_model_id']}
                   label={
                     <Space>
-                      重排序模型
-                      <Tooltip title="用于搜索结果重排序，提升检索准确性">
+                      {t('graphitiTab.rerankModel')}
+                      <Tooltip title={t('graphitiTab.rerankModelTip')}>
                         <InfoCircleOutlined style={{ color: '#1677ff' }} />
                       </Tooltip>
                     </Space>
                   }
-                  rules={[{ required: true, message: '请选择重排序模型' }]}
+                  rules={[{ required: true, message: t('graphitiTab.rerankModelRequired') }]}
                 >
                   <Select
-                    placeholder="选择重排序模型"
+                    placeholder={t('graphitiTab.selectRerankModel')}
                     showSearch
                     filterOption={(input, option) => option?.label?.toLowerCase().includes(input.toLowerCase())}
                     options={
                       graphitiRerankType === 'llm'
                         ? [
-                            { value: 'default', label: `默认 ${defaultTextModelInfo ? `(${defaultTextModelInfo.name})` : ''}` },
+                            { value: 'default', label: `${t('graphitiTab.default')} ${defaultTextModelInfo ? `(${defaultTextModelInfo.name})` : ''}` },
                             ...(textModels || []).map(model => ({
                               value: model.id.toString(),
                               label: `${model.name} (${model.provider})`,
                             }))
                           ]
                         : [
-                            { value: 'default', label: `默认 ${defaultRerankModelInfo ? `(${defaultRerankModelInfo.name})` : ''}` },
+                            { value: 'default', label: `${t('graphitiTab.default')} ${defaultRerankModelInfo ? `(${defaultRerankModelInfo.name})` : ''}` },
                             ...(rerankModels || []).map(model => ({
                               value: model.id.toString(),
                               label: `${model.name} (${model.provider})`,
@@ -454,20 +451,19 @@ const GraphitiTab = () => {
               <Col span={8}>
                 <Form.Item
                   name={['framework_config', 'openai_compatible']}
-                  label="宽松解析"
+                  label={t('graphitiTab.lenientParse')}
                   valuePropName="checked"
-                  tooltip="提高与非OpenAI标准LLM的兼容性"
+                  tooltip={t('graphitiTab.lenientParseTip')}
                 >
                   <Switch />
                 </Form.Item>
               </Col>
             </Row>
 
-            {/* 记忆配置 */}
             <Divider orientationMargin={0} style={{ margin: '8px 0 16px' }}>
               <Space>
                 <SettingOutlined />
-                记忆配置
+                {t('graphitiTab.memoryConfig')}
               </Space>
             </Divider>
 
@@ -475,17 +471,17 @@ const GraphitiTab = () => {
               <Col span={8}>
                 <Form.Item
                   name={['framework_config', 'partition_strategy']}
-                  label="分区策略"
-                  rules={[{ required: true, message: '请选择分区策略' }]}
-                  tooltip="选择记忆数据的分区方式，影响智能体间的记忆共享范围"
+                  label={t('graphitiTab.partitionStrategy')}
+                  rules={[{ required: true, message: t('graphitiTab.partitionStrategyRequired') }]}
+                  tooltip={t('graphitiTab.partitionStrategyTip')}
                 >
-                  <Select placeholder="选择记忆分区策略" optionLabelProp="label">
+                  <Select placeholder={t('graphitiTab.selectPartitionStrategy')} optionLabelProp="label">
                     {partitionStrategies.map(strategy => (
                       <Select.Option key={strategy.key} value={strategy.key} label={strategy.name}>
                         <div style={{ padding: '4px 0' }}>
                           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2px' }}>
                             <Text strong>{strategy.name}</Text>
-                            {strategy.default && <Tag color="blue" style={{ marginLeft: 8 }}>推荐</Tag>}
+                            {strategy.default && <Tag color="blue" style={{ marginLeft: 8 }}>{t('graphitiTab.recommended')}</Tag>}
                           </div>
                           <Text type="secondary" style={{ fontSize: '12px' }}>{strategy.description}</Text>
                         </div>
@@ -497,28 +493,28 @@ const GraphitiTab = () => {
               <Col span={8}>
                 <Form.Item
                   name={['framework_config', 'message_sync_strategy']}
-                  label="消息自动同步策略"
-                  rules={[{ required: true, message: '请选择消息同步策略' }]}
-                  tooltip="控制何时将对话消息自动同步到图谱记忆"
+                  label={t('graphitiTab.msgSyncStrategy')}
+                  rules={[{ required: true, message: t('graphitiTab.msgSyncStrategyRequired') }]}
+                  tooltip={t('graphitiTab.msgSyncStrategyTip')}
                 >
-                  <Select placeholder="选择消息同步策略" optionLabelProp="label">
-                    <Select.Option value="disabled" label="关闭">
+                  <Select placeholder={t('graphitiTab.selectMsgSyncStrategy')} optionLabelProp="label">
+                    <Select.Option value="disabled" label={t('graphitiTab.sync.disabled')}>
                       <div style={{ padding: '4px 0' }}>
-                        <Text strong>关闭</Text>
-                        <Tag color="orange" style={{ marginLeft: 8 }}>默认</Tag>
-                        <div><Text type="secondary" style={{ fontSize: '12px' }}>不自动同步消息到图谱记忆</Text></div>
+                        <Text strong>{t('graphitiTab.sync.disabled')}</Text>
+                        <Tag color="orange" style={{ marginLeft: 8 }}>{t('graphitiTab.default')}</Tag>
+                        <div><Text type="secondary" style={{ fontSize: '12px' }}>{t('graphitiTab.sync.disabledDesc')}</Text></div>
                       </div>
                     </Select.Option>
-                    <Select.Option value="message_complete" label="消息完成">
+                    <Select.Option value="message_complete" label={t('graphitiTab.sync.msgComplete')}>
                       <div style={{ padding: '4px 0' }}>
-                        <Text strong>消息完成</Text>
-                        <div><Text type="secondary" style={{ fontSize: '12px' }}>每条智能体消息完成后立即同步</Text></div>
+                        <Text strong>{t('graphitiTab.sync.msgComplete')}</Text>
+                        <div><Text type="secondary" style={{ fontSize: '12px' }}>{t('graphitiTab.sync.msgCompleteDesc')}</Text></div>
                       </div>
                     </Select.Option>
-                    <Select.Option value="round_complete" label="轮次完成">
+                    <Select.Option value="round_complete" label={t('graphitiTab.sync.roundComplete')}>
                       <div style={{ padding: '4px 0' }}>
-                        <Text strong>轮次完成</Text>
-                        <div><Text type="secondary" style={{ fontSize: '12px' }}>完整对话轮次完成后同步</Text></div>
+                        <Text strong>{t('graphitiTab.sync.roundComplete')}</Text>
+                        <div><Text type="secondary" style={{ fontSize: '12px' }}>{t('graphitiTab.sync.roundCompleteDesc')}</Text></div>
                       </div>
                     </Select.Option>
                   </Select>
@@ -527,20 +523,19 @@ const GraphitiTab = () => {
               <Col span={8}>
                 <Form.Item
                   name={['framework_config', 'semaphore_limit']}
-                  label="并发限制"
-                  tooltip="控制同时处理的任务数量"
+                  label={t('graphitiTab.concurrentLimit')}
+                  tooltip={t('graphitiTab.concurrentLimitTip')}
                 >
                   <InputNumber placeholder="10" min={1} max={50} style={{ width: '100%' }} />
                 </Form.Item>
               </Col>
             </Row>
 
-            {/* 社区管理 */}
             <Divider orientationMargin={0} style={{ margin: '8px 0 16px' }}>
               <Space>
                 <SortAscendingOutlined />
-                社区管理
-                <Tooltip title="社区构建使用Leiden算法将相关的实体节点聚集成群，有助于提供更高层次的语义信息和更好的检索效果">
+                {t('graphitiTab.communityMgmt')}
+                <Tooltip title={t('graphitiTab.communityMgmtTip')}>
                   <InfoCircleOutlined style={{ color: '#1677ff' }} />
                 </Tooltip>
               </Space>
@@ -555,11 +550,11 @@ const GraphitiTab = () => {
                 >
                   <Space>
                     <Switch
-                      checkedChildren="开启"
-                      unCheckedChildren="关闭"
+                      checkedChildren={t('graphitiTab.on')}
+                      unCheckedChildren={t('graphitiTab.off')}
                       onChange={(checked) => setGraphitiCommunityConfig({ ...graphitiCommunityConfig, auto_build_enabled: checked })}
                     />
-                    <Text>自动构建社区</Text>
+                    <Text>{t('graphitiTab.autoBuild')}</Text>
                   </Space>
                 </Form.Item>
               </Col>
@@ -571,11 +566,11 @@ const GraphitiTab = () => {
                 >
                   <Space>
                     <Switch
-                      checkedChildren="开启"
-                      unCheckedChildren="关闭"
+                      checkedChildren={t('graphitiTab.on')}
+                      unCheckedChildren={t('graphitiTab.off')}
                       onChange={(checked) => setGraphitiCommunityConfig({ ...graphitiCommunityConfig, return_community_summaries: checked })}
                     />
-                    <Text>返回社区摘要</Text>
+                    <Text>{t('graphitiTab.returnCommunitySummaries')}</Text>
                   </Space>
                 </Form.Item>
               </Col>
@@ -587,12 +582,11 @@ const GraphitiTab = () => {
                   loading={buildingCommunities}
                   disabled={!graphitiEnabled}
                 >
-                  {buildingCommunities ? '发送中...' : '立即构建社区'}
+                  {buildingCommunities ? t('graphitiTab.sending') : t('graphitiTab.buildNow')}
                 </Button>
               </Col>
             </Row>
 
-            {/* 高级选项 - Neo4j配置 */}
             <Collapse
               ghost
               style={{ marginTop: 16 }}
@@ -601,8 +595,8 @@ const GraphitiTab = () => {
                 label: (
                   <Space>
                     <DatabaseOutlined />
-                    <Text strong>高级选项 - Neo4j 数据库配置（容器内部）</Text>
-                    <Tooltip title="这些是容器内部的 Neo4j 配置，通常使用默认值即可。只有在使用外部 Neo4j 服务或自定义部署时才需要修改。">
+                    <Text strong>{t('graphitiTab.advancedTitle')}</Text>
+                    <Tooltip title={t('graphitiTab.advancedTip')}>
                       <InfoCircleOutlined style={{ color: '#faad14' }} />
                     </Tooltip>
                   </Space>
@@ -613,11 +607,11 @@ const GraphitiTab = () => {
                       <Col span={8}>
                         <Form.Item
                           name={['framework_config', 'database_type']}
-                          label="数据库类型"
-                          rules={[{ required: true, message: '请选择数据库类型' }]}
+                          label={t('graphitiTab.dbType')}
+                          rules={[{ required: true, message: t('graphitiTab.dbTypeRequired') }]}
                         >
                           <Select
-                            placeholder="选择图数据库类型"
+                            placeholder={t('graphitiTab.selectDbType')}
                             onChange={(value) => setGraphitiDatabaseType(value)}
                             options={[{ value: 'neo4j', label: 'Neo4j' }]}
                           />
@@ -626,9 +620,9 @@ const GraphitiTab = () => {
                       <Col span={8}>
                         <Form.Item
                           name={['framework_config', 'neo4j_uri']}
-                          label="连接URI"
-                          rules={[{ required: true, message: '请输入连接URI' }]}
-                          tooltip="容器部署: bolt://neo4j:7687"
+                          label={t('graphitiTab.connectUri')}
+                          rules={[{ required: true, message: t('graphitiTab.connectUriRequired') }]}
+                          tooltip={t('graphitiTab.connectUriTip')}
                         >
                           <Input placeholder="bolt://neo4j:7687" />
                         </Form.Item>
@@ -636,8 +630,8 @@ const GraphitiTab = () => {
                       <Col span={8}>
                         <Form.Item
                           name={['framework_config', 'database_name']}
-                          label="数据库名"
-                          tooltip="Neo4j数据库名称"
+                          label={t('graphitiTab.dbName')}
+                          tooltip={t('graphitiTab.dbNameTip')}
                         >
                           <Input placeholder="neo4j" />
                         </Form.Item>
@@ -648,8 +642,8 @@ const GraphitiTab = () => {
                         <Col span={12}>
                           <Form.Item
                             name={['framework_config', 'neo4j_user']}
-                            label="用户名"
-                            rules={[{ required: true, message: '请输入用户名' }]}
+                            label={t('graphitiTab.username')}
+                            rules={[{ required: true, message: t('graphitiTab.usernameRequired') }]}
                           >
                             <Input placeholder="neo4j" />
                           </Form.Item>
@@ -657,8 +651,8 @@ const GraphitiTab = () => {
                         <Col span={12}>
                           <Form.Item
                             name={['framework_config', 'neo4j_password']}
-                            label="密码"
-                            rules={[{ required: true, message: '请输入密码' }]}
+                            label={t('graphitiTab.password')}
+                            rules={[{ required: true, message: t('graphitiTab.passwordRequired') }]}
                           >
                             <Input.Password placeholder="password" />
                           </Form.Item>
@@ -670,11 +664,10 @@ const GraphitiTab = () => {
               }]}
             />
 
-            {/* 底部操作按钮 */}
             <Divider style={{ margin: '16px 0' }} />
             <Space wrap style={{ width: '100%', justifyContent: 'center' }}>
               <Button type="primary" icon={<SaveOutlined />} htmlType="submit" loading={loading}>
-                保存配置
+                {t('graphitiTab.saveConfig')}
               </Button>
               <Button
                 type={status?.connected ? "default" : "primary"}
@@ -682,13 +675,13 @@ const GraphitiTab = () => {
                 onClick={() => controlService(status?.connected ? 'stop' : 'start')}
                 loading={loading}
               >
-                {status?.connected ? '停止服务' : '启动服务'}
+                {status?.connected ? t('graphitiTab.stopSvc') : t('graphitiTab.startSvc')}
               </Button>
               <Button icon={<SearchOutlined />} onClick={() => setGraphitiQueryModalVisible(true)}>
-                测试查询
+                {t('graphitiTab.testQuery')}
               </Button>
               <Button danger icon={<ClearOutlined />} onClick={handleClearData} loading={clearLoading}>
-                清空数据
+                {t('graphitiTab.clearData')}
               </Button>
             </Space>
           </Card>

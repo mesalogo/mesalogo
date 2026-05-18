@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Table, Button, Space, Modal, Tag, Descriptions, Statistic, Row, Col, Timeline, message, Typography, Tabs, Empty, Spin, Avatar } from 'antd';
 import { MonitorOutlined, EyeOutlined, SyncOutlined, ReloadOutlined, DatabaseOutlined, MessageOutlined, RobotOutlined, UserOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { agentAPI } from '../../services/api/agent';
 import AgentVariables from '../../components/agent/AgentVariables';
 import ConversationExtraction from '../actiontask/components/ConversationExtraction';
@@ -11,6 +12,7 @@ const { Text } = Typography;
 const { TabPane } = Tabs;
 
 const AgentMonitoring = () => {
+  const { t } = useTranslation();
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
@@ -34,23 +36,23 @@ const AgentMonitoring = () => {
         setMessagesPagination({ current: res.data.page, pageSize: res.data.per_page, total: res.data.total });
       }
     } catch (error) {
-      console.error('获取智能体消息失败:', error);
+      console.error('fetch agent messages failed:', error);
       setAgentMessages([]);
     } finally {
       setMessagesLoading(false);
     }
   }, []);
 
-  // 获取智能体列表
+  // fetch agent list
   const fetchAgents = async () => {
     try {
       setLoading(true);
       const response = await agentAPI.getAllActive();
       const agentData = Array.isArray(response) ? response : response.data || [];
-      // 过滤掉属于并行实验克隆任务的智能体
+      // filter out agents belonging to parallel-experiment clone tasks
       setAgents(agentData.filter(a => !a.action_task?.is_experiment_clone));
     } catch (error) {
-      message.error('获取智能体列表失败');
+      message.error(t('agentMon.msg.fetchListFailed'));
     } finally {
       setLoading(false);
     }
@@ -78,7 +80,7 @@ const AgentMonitoring = () => {
         ...agentData
       }));
     } catch (error) {
-      message.error('获取智能体记忆失败');
+      message.error(t('agentMon.msg.fetchMemoriesFailed'));
       setMemories([]);
     }
   };
@@ -109,9 +111,15 @@ const AgentMonitoring = () => {
     setMemoryModalVisible(true);
   };
 
+  const statusLabel = (status) =>
+    status === 'active' ? t('agentMon.status.active') :
+    status === 'idle' ? t('agentMon.status.idle') :
+    status === 'busy' ? t('agentMon.status.busy') :
+    t('agentMon.status.offline');
+
   const columns = [
     {
-      title: '名称',
+      title: t('agentMon.col.name'),
       dataIndex: 'name',
       key: 'name',
       render: (text, record) => (
@@ -123,43 +131,39 @@ const AgentMonitoring = () => {
       width: 180,
     },
     {
-      title: '角色',
+      title: t('agentMon.col.role'),
       key: 'role',
       render: (_, record) => {
-        // 根据role_id获取角色名称，或直接使用返回的角色名
         if (record.role && record.role.name) {
           return record.role.name;
         }
-        // 兼容API返回，可能会返回role_name字段
-        return record.role_name || '未知角色';
+        return record.role_name || t('agentMon.unknownRole');
       },
       width: 150,
     },
     {
-      title: '类型',
+      title: t('agentMon.col.type'),
       key: 'source',
       render: (_, record) => (
         <Tag color={record.source === 'internal' ? 'blue' : 'orange'}>
-          {record.source === 'internal' ? '内部' : '外部'}
+          {record.source === 'internal' ? t('agentMon.internal') : t('agentMon.external')}
         </Tag>
       ),
       width: 80,
     },
     {
-      title: '行动任务',
+      title: t('agentMon.col.actionTask'),
       key: 'action_task',
       render: (_, record) => {
-        // 获取行动任务名称
         let taskName = '';
         if (record.action_task && record.action_task.name) {
           taskName = record.action_task.name;
-        } else if (record.action_task_name && record.action_task_name !== '未分配') {
+        } else if (record.action_task_name && record.action_task_name !== t('agentMon.unassigned')) {
           taskName = record.action_task_name;
         } else if (record.action_task_id) {
-          taskName = `任务#${record.action_task_id}`;
+          taskName = t('agentMon.taskNumber', { id: record.action_task_id });
         }
 
-        // 获取行动空间名称
         let spaceName = '';
         if (record.action_space && record.action_space.name) {
           spaceName = record.action_space.name;
@@ -167,21 +171,18 @@ const AgentMonitoring = () => {
           spaceName = record.action_space_name;
         }
 
-        // 如果有行动任务和行动空间，显示格式为 "任务[空间]"
         if (taskName && spaceName) {
           return <Tag color="green">{`${taskName}[${spaceName}]`}</Tag>;
         } else if (taskName) {
-          // 只有任务没有空间
           return <Tag color="green">{taskName}</Tag>;
         } else {
-          // 都没有
-          return <Text type="secondary">未分配</Text>;
+          return <Text type="secondary">{t('agentMon.unassigned')}</Text>;
         }
       },
       width: 220,
     },
     {
-      title: '状态',
+      title: t('agentMon.col.status'),
       dataIndex: 'status',
       key: 'status',
       render: (status) => (
@@ -191,31 +192,26 @@ const AgentMonitoring = () => {
           status === 'busy' ? 'processing' :
           'error'
         }>
-          {
-            status === 'active' ? '活跃' :
-            status === 'idle' ? '空闲' :
-            status === 'busy' ? '忙碌' :
-            '离线'
-          }
+          {statusLabel(status)}
         </Tag>
       ),
       width: 80,
     },
     {
-      title: '会话数',
+      title: t('agentMon.col.conversationCount'),
       dataIndex: 'conversation_count',
       key: 'conversation_count',
       width: 90,
     },
     {
-      title: '最后活动时间',
+      title: t('agentMon.col.lastActive'),
       dataIndex: 'last_active',
       key: 'last_active',
-      render: (date) => date ? new Date(date).toLocaleString() : '未知',
+      render: (date) => date ? new Date(date).toLocaleString() : t('agentMon.unknown'),
       width: 180,
     },
     {
-      title: '操作',
+      title: t('agentMon.col.action'),
       key: 'action',
       render: (_, record) => (
         <Space>
@@ -224,14 +220,14 @@ const AgentMonitoring = () => {
             icon={<EyeOutlined />}
             onClick={() => showDetail(record)}
           >
-            详情
+            {t('agentMon.detail')}
           </Button>
           <Button
             type="text"
             icon={<SyncOutlined />}
             onClick={() => showMemories(record)}
           >
-            记忆
+            {t('agentMon.memory')}
           </Button>
         </Space>
       ),
@@ -248,7 +244,7 @@ const AgentMonitoring = () => {
             icon={<ReloadOutlined />}
             onClick={fetchAgents}
           >
-            刷新状态
+            {t('agentMon.refresh')}
           </Button>
         </div>
       </div>
@@ -268,20 +264,20 @@ const AgentMonitoring = () => {
             pageSize: 10,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total) => `共 ${total} 个智能体`,
+            showTotal: (total) => t('agentMon.paginationTotal', { total }),
             position: ['bottomRight']
           }}
           style={{ overflowX: 'auto' }}
           scroll={{ x: 1500 }}
           locale={{
-            emptyText: <Empty description="暂无智能体数据" />
+            emptyText: <Empty description={t('agentMon.empty')} />
           }}
         />
       </Card>
 
-      {/* 智能体详情模态框 */}
+      {/* agent detail modal */}
       <Modal
-        title={`智能体详情 - ${selectedAgent?.name}`}
+        title={t('agentMon.detailTitle', { name: selectedAgent?.name || '' })}
         open={detailModalVisible}
         onCancel={() => setDetailModalVisible(false)}
         footer={null}
@@ -289,72 +285,67 @@ const AgentMonitoring = () => {
       >
         {selectedAgent && (
           <Tabs activeKey={activeDetailTab} onChange={handleDetailTabChange}>
-            <TabPane tab={<span>基本信息</span>} key="info">
+            <TabPane tab={<span>{t('agentMon.tab.info')}</span>} key="info">
               <Descriptions bordered column={2}>
                 <Descriptions.Item label="ID">{selectedAgent.id}</Descriptions.Item>
-                <Descriptions.Item label="名称">{selectedAgent.name}</Descriptions.Item>
-                <Descriptions.Item label="角色">{selectedAgent.role?.name}</Descriptions.Item>
-                <Descriptions.Item label="状态">
+                <Descriptions.Item label={t('agentMon.label.name')}>{selectedAgent.name}</Descriptions.Item>
+                <Descriptions.Item label={t('agentMon.label.role')}>{selectedAgent.role?.name}</Descriptions.Item>
+                <Descriptions.Item label={t('agentMon.label.status')}>
                   <Tag color={
                     selectedAgent.status === 'active' ? 'success' :
                     selectedAgent.status === 'idle' ? 'default' :
                     selectedAgent.status === 'busy' ? 'processing' :
                     'error'
                   }>
-                    {
-                      selectedAgent.status === 'active' ? '活跃' :
-                      selectedAgent.status === 'idle' ? '空闲' :
-                      selectedAgent.status === 'busy' ? '忙碌' :
-                      '离线'
-                    }
+                    {statusLabel(selectedAgent.status)}
                   </Tag>
                 </Descriptions.Item>
-                <Descriptions.Item label="类型" span={1}>
+                <Descriptions.Item label={t('agentMon.label.type')} span={1}>
                   <Tag color={selectedAgent?.source === 'internal' ? 'blue' : 'orange'}>
-                    {selectedAgent?.source === 'internal' ? '内部智能体' : '外部智能体'}
+                    {selectedAgent?.source === 'internal' ? t('agentMon.internalAgent') : t('agentMon.externalAgent')}
                   </Tag>
                 </Descriptions.Item>
-                <Descriptions.Item label="行动空间" span={1}>
+                <Descriptions.Item label={t('agentMon.label.actionSpace')} span={1}>
                   {selectedAgent?.action_space ? (
                     <Tag color="purple">{selectedAgent.action_space.name}</Tag>
                   ) : (
-                    <Text type="secondary">未分配</Text>
+                    <Text type="secondary">{t('agentMon.unassigned')}</Text>
                   )}
                 </Descriptions.Item>
-                <Descriptions.Item label="行动任务" span={2}>
+                <Descriptions.Item label={t('agentMon.label.actionTask')} span={2}>
                   {selectedAgent?.action_task ? (
                     <Tag color="green">{selectedAgent.action_task.name}</Tag>
                   ) : (
-                    <Text type="secondary">未分配</Text>
+                    <Text type="secondary">{t('agentMon.unassigned')}</Text>
                   )}
                 </Descriptions.Item>
               </Descriptions>
 
               <Row gutter={16} style={{ marginTop: '24px' }}>
                 <Col span={8}>
-                  <Statistic title="总会话数" value={selectedAgent.conversation_count} />
+                  <Statistic title={t('agentMon.stat.totalConversations')} value={selectedAgent.conversation_count} />
                 </Col>
                 <Col span={8}>
-                  <Statistic title="总消息数" value={selectedAgent.message_count} />
+                  <Statistic title={t('agentMon.stat.totalMessages')} value={selectedAgent.message_count} />
                 </Col>
                 <Col span={8}>
-                  <Statistic title="平均响应时间" value={selectedAgent.avg_response_time} suffix="ms" />
+                  <Statistic title={t('agentMon.stat.avgResponseTime')} value={selectedAgent.avg_response_time} suffix="ms" />
                 </Col>
               </Row>
             </TabPane>
             <TabPane
-              tab={<span><DatabaseOutlined />代理变量</span>}
+              tab={<span><DatabaseOutlined />{t('agentMon.tab.variables')}</span>}
               key="variables"
             >
               <AgentVariables agentId={selectedAgent.id} />
             </TabPane>
             <TabPane
-              tab={<span><MessageOutlined />消息记录</span>}
+              tab={<span><MessageOutlined />{t('agentMon.tab.messages')}</span>}
               key="messages"
             >
               {messagesLoading ? (
                 <div style={{ textAlign: 'center', padding: '40px' }}>
-                  <Spin tip="加载消息中..." />
+                  <Spin tip={t('agentMon.loadingMessages')} />
                 </div>
               ) : agentMessages.length > 0 ? (
                 <>
@@ -369,7 +360,7 @@ const AgentMonitoring = () => {
                     {agentMessages.map((msg: any, index: number) => {
                       const isHuman = msg.role === 'human';
                       const agentId = msg.agent?.id || msg.agent_id;
-                      const agentName = msg.agent?.name || msg.agent_name || '智能体';
+                      const agentName = msg.agent?.name || msg.agent_name || t('agentMon.agent');
                       return (
                         <div
                           key={msg.id || index}
@@ -394,7 +385,7 @@ const AgentMonitoring = () => {
                                 <Avatar icon={<RobotOutlined style={{ color: '#fff' }} />} style={{ ...getAgentAvatarStyle(agentId || agentName), marginRight: '8px' }} size="small" />
                               )}
                               <Text strong style={{ color: isHuman ? '#1677ff' : '#52c41a' }}>
-                                {isHuman ? '用户' : agentName}
+                                {isHuman ? t('agentMon.user') : agentName}
                               </Text>
                             </div>
                             <Text type="secondary" style={{ fontSize: '12px' }}>
@@ -410,64 +401,64 @@ const AgentMonitoring = () => {
                   </div>
                   <div style={{ marginTop: 12, textAlign: 'right' }}>
                     <Space>
-                      <Text type="secondary">共 {messagesPagination.total} 条</Text>
+                      <Text type="secondary">{t('agentMon.totalCount', { total: messagesPagination.total })}</Text>
                       <Button size="small" disabled={messagesPagination.current <= 1}
                         onClick={() => selectedAgent && fetchAgentMessages(selectedAgent.id, messagesPagination.current - 1, messagesPagination.pageSize)}>
-                        上一页
+                        {t('agentMon.prevPage')}
                       </Button>
                       <Text>{messagesPagination.current} / {Math.ceil(messagesPagination.total / messagesPagination.pageSize) || 1}</Text>
                       <Button size="small" disabled={messagesPagination.current >= Math.ceil(messagesPagination.total / messagesPagination.pageSize)}
                         onClick={() => selectedAgent && fetchAgentMessages(selectedAgent.id, messagesPagination.current + 1, messagesPagination.pageSize)}>
-                        下一页
+                        {t('agentMon.nextPage')}
                       </Button>
                     </Space>
                   </div>
                 </>
               ) : (
-                <Empty description="暂无消息记录" />
+                <Empty description={t('agentMon.emptyMessages')} />
               )}
             </TabPane>
           </Tabs>
         )}
       </Modal>
 
-      {/* 智能体记忆模态框 */}
+      {/* agent memory modal */}
       <Modal
-        title={`智能体记忆 - ${selectedAgent?.name}`}
+        title={t('agentMon.memoryTitle', { name: selectedAgent?.name || '' })}
         open={memoryModalVisible}
         onCancel={() => setMemoryModalVisible(false)}
         footer={null}
         width={800}
       >
-        {/* 智能体所属信息 */}
+        {/* agent ownership info */}
         <div style={{ marginBottom: '20px', padding: '12px', backgroundColor: 'var(--custom-hover-bg)', borderRadius: '8px' }}>
           <Descriptions column={2} bordered>
-            <Descriptions.Item label="角色" span={1}>
-              {selectedAgent?.role?.name || '未知角色'}
+            <Descriptions.Item label={t('agentMon.label.role')} span={1}>
+              {selectedAgent?.role?.name || t('agentMon.unknownRole')}
             </Descriptions.Item>
-            <Descriptions.Item label="类型" span={1}>
+            <Descriptions.Item label={t('agentMon.label.type')} span={1}>
               <Tag color={selectedAgent?.source === 'internal' ? 'blue' : 'orange'}>
-                {selectedAgent?.source === 'internal' ? '内部智能体' : '外部智能体'}
+                {selectedAgent?.source === 'internal' ? t('agentMon.internalAgent') : t('agentMon.externalAgent')}
               </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="行动空间" span={2}>
+            <Descriptions.Item label={t('agentMon.label.actionSpace')} span={2}>
               {selectedAgent?.action_space ? (
                 <Tag color="purple">{selectedAgent.action_space.name}</Tag>
               ) : (
-                <Text type="secondary">未分配</Text>
+                <Text type="secondary">{t('agentMon.unassigned')}</Text>
               )}
             </Descriptions.Item>
-            <Descriptions.Item label="行动任务" span={2}>
+            <Descriptions.Item label={t('agentMon.label.actionTask')} span={2}>
               {selectedAgent?.action_task ? (
                 <Tag color="green">{selectedAgent.action_task.name}</Tag>
               ) : (
-                <Text type="secondary">未分配</Text>
+                <Text type="secondary">{t('agentMon.unassigned')}</Text>
               )}
             </Descriptions.Item>
           </Descriptions>
         </div>
 
-        {/* 记忆时间线 */}
+        {/* memory timeline */}
         <Timeline
           items={memories.map(memory => ({
             color: memory.type === 'conversation' ? 'blue' : 'green',
@@ -475,7 +466,7 @@ const AgentMonitoring = () => {
               <>
                 <p style={{ margin: 0 }}>
                   <Tag color={memory.type === 'conversation' ? 'blue' : 'green'}>
-                    {memory.type === 'conversation' ? '对话' : '知识'}
+                    {memory.type === 'conversation' ? t('agentMon.memType.conversation') : t('agentMon.memType.knowledge')}
                   </Tag>
                   <span style={{ marginLeft: '8px' }}>{new Date(memory.created_at).toLocaleString()}</span>
                 </p>

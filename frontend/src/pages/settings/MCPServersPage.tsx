@@ -898,120 +898,118 @@ const MCPServersPage = () => {
         >
           <Form.Item
             name="id"
-            label="服务器ID"
-            rules={[{ required: true, message: '请输入服务器ID' }]}
-            extra="唯一标识符，如 playwright, searxng"
+            label={t('mcpServers.form.id')}
+            rules={[{ required: true, message: t('mcpServers.form.idReq') }]}
+            extra={t('mcpServers.form.idExtra')}
           >
-            <Input placeholder="例如: playwright" disabled={!!editingServer} />
+            <Input placeholder={t('mcpServers.form.idPh')} disabled={!!editingServer} />
           </Form.Item>
 
           <Form.Item
             name="comm_type"
-            label="通信方式"
-            extra="选择与MCP服务器的通信方式"
+            label={t('mcpServers.form.commType')}
+            extra={t('mcpServers.form.commTypeExtra')}
           >
             <Radio.Group onChange={handleCommTypeChange}>
-              <Radio value="stdio">标准输入输出 (stdio)</Radio>
+              <Radio value="stdio">{t('mcpServers.form.commStdio')}</Radio>
               <Radio value="streamable_http">StreamableHTTP</Radio>
               <Radio value="sse">Server-Sent Events (SSE)</Radio>
               <Radio value="http">HTTP</Radio>
             </Radio.Group>
           </Form.Item>
 
-          {/* 当通信方式为stdio时显示的字段 */}
+          {/* fields when comm type is stdio */}
           <div className="stdio-fields" style={{ display: currentCommType === 'stdio' ? 'block' : 'none' }}>
             <Form.Item
               name="command"
-              label="命令"
+              label={t('mcpServers.form.command')}
               rules={[{
                 required: currentCommType === 'stdio',
-                message: '请输入命令',
+                message: t('mcpServers.form.commandReq'),
                 validator: (_, value) => {
-                  // 只在stdio模式下验证
                   if (currentCommType !== 'stdio') {
                     return Promise.resolve();
                   }
                   if (!value && currentCommType === 'stdio') {
-                    return Promise.reject('请输入命令');
+                    return Promise.reject(t('mcpServers.form.commandReq'));
                   }
                   return Promise.resolve();
                 }
               }]}
-              extra="执行MCP服务器的命令，如 npx, curl"
+              extra={t('mcpServers.form.commandExtra')}
             >
-              <Input placeholder="例如: npx" />
+              <Input placeholder={t('mcpServers.form.commandPh')} />
             </Form.Item>
 
             <Form.Item
               name="args"
-              label="参数"
-              extra="命令参数，用空格分隔（可选）"
+              label={t('mcpServers.form.args')}
+              extra={t('mcpServers.form.argsExtra')}
             >
-              <Input placeholder="例如: @playwright/mcp@latest --vision" />
+              <Input placeholder={t('mcpServers.form.argsPh')} />
             </Form.Item>
           </div>
 
-          {/* 当通信方式为http/sse/streamable_http时显示的字段 */}
+          {/* fields for http/sse/streamable_http */}
           <Form.Item
             name="url"
             label={currentCommType === 'sse' ? 'SSE URL' : currentCommType === 'streamable_http' ? 'StreamableHTTP URL' : 'HTTP URL'}
             rules={[{
               required: isUrlBasedCommType(currentCommType),
-              message: '请输入URL',
+              message: t('mcpServers.form.urlReq'),
               validator: (_, value) => {
-                // 只在http/sse/streamable_http模式下验证
                 if (!isUrlBasedCommType(currentCommType)) {
                   return Promise.resolve();
                 }
                 if (!value && isUrlBasedCommType(currentCommType)) {
-                  return Promise.reject('请输入URL');
+                  return Promise.reject(t('mcpServers.form.urlReq'));
                 }
                 return Promise.resolve();
               }
             }]}
             extra={currentCommType === 'sse'
-              ? "SSE端点URL (如 http://localhost:8000/sse)"
+              ? t('mcpServers.form.urlExtraSse')
               : currentCommType === 'streamable_http'
-              ? "StreamableHTTP端点URL (如 http://localhost:8000/mcp)"
-              : "HTTP服务器URL"
+              ? t('mcpServers.form.urlExtraStreamable')
+              : t('mcpServers.form.urlExtraHttp')
             }
             className="http-fields"
             style={{ display: isUrlBasedCommType(currentCommType) ? 'block' : 'none' }}
           >
             <Input placeholder={currentCommType === 'sse'
-              ? "例如: http://localhost:8000/sse"
+              ? t('mcpServers.form.urlPhSse')
               : currentCommType === 'streamable_http'
-              ? "例如: http://localhost:8000/mcp"
-              : "例如: http://localhost:3000/tools"
+              ? t('mcpServers.form.urlPhStreamable')
+              : t('mcpServers.form.urlPhHttp')
             } />
           </Form.Item>
 
-          {/* 仅对HTTP通信方式显示API规范类型选择 */}
+          {/* API spec type only for HTTP */}
           <Form.Item
             name="api_spec_type"
-            label="API规范类型"
-            extra="指定HTTP服务器返回的API格式"
+            label={t('mcpServers.form.apiSpecType')}
+            extra={t('mcpServers.form.apiSpecTypeExtra')}
             className="http-fields"
             style={{ display: currentCommType === 'http' ? 'block' : 'none' }}
           >
             <Radio.Group>
-              <Radio value="mcp">MCP标准格式（默认）</Radio>
-              <Radio value="openapi">OpenAPI 3.0规范</Radio>
+              <Radio value="mcp">{t('mcpServers.form.apiSpecMcp')}</Radio>
+              <Radio value="openapi">{t('mcpServers.form.apiSpecOpenapi')}</Radio>
             </Radio.Group>
           </Form.Item>
 
           <Form.Item
             name="description"
-            label="描述"
-            extra="服务器功能描述"
+            label={t('mcpServers.form.description')}
+            extra={t('mcpServers.form.descriptionExtra')}
           >
-            <Input placeholder="例如: Playwright浏览器自动化服务器" />
+            <Input placeholder={t('mcpServers.form.descriptionPh')} />
           </Form.Item>
 
           <Form.Item
             name="env"
-            label="环境变量"
-            extra="JSON格式的环境变量，例如：{'KEY1': 'value1', 'KEY2': 'value2'}"
+            label={t('mcpServers.form.env')}
+            extra={t('mcpServers.form.envExtra')}
           >
             <TextArea
               rows={4}
@@ -1022,9 +1020,9 @@ const MCPServersPage = () => {
 
           <Form.Item
             name="internal"
-            label="内部服务器"
+            label={t('mcpServers.form.internal')}
             valuePropName="checked"
-            extra="内部服务器由应用内部提供，不需要单独启动"
+            extra={t('mcpServers.form.internalExtra')}
           >
             <Switch disabled={true} />
           </Form.Item>
@@ -1077,23 +1075,23 @@ const MCPServersPage = () => {
           items={[
             {
               key: '1',
-              label: '配置文件使用说明',
+              label: t('mcpServers.help.title'),
               children: (
                 <>
                   <Paragraph>
-                    <Text strong>配置格式说明:</Text>
+                    <Text strong>{t('mcpServers.help.formatTitle')}</Text>
                   </Paragraph>
                   <Paragraph>
                     <ul>
-                      <li>配置必须是有效的JSON格式</li>
-                      <li>根对象必须包含 <Text code>mcpServers</Text> 属性</li>
-                      <li>每个服务器必须指定 <Text code>command</Text> 和 <Text code>args</Text> 属性（使用stdio通信方式时）</li>
-                      <li>内部服务器(如variables-server)请保留 <Text code>internal</Text> 属性为 <Text code>true</Text></li>
-                      <li>通信方式 <Text code>comm_type</Text> 可以是 <Text code>stdio</Text>(默认)、<Text code>streamable_http</Text>(推荐)、<Text code>sse</Text> 或 <Text code>http</Text></li>
-                      <li>使用 <Text code>http</Text>、<Text code>sse</Text> 或 <Text code>streamable_http</Text> 通信时需要提供 <Text code>url</Text> 属性</li>
-                      <li><Text code>streamable_http</Text> 是官方推荐的HTTP传输方式，支持双向流式通信（如<Text code>http://localhost:8000/mcp</Text>）</li>
-                      <li><Text code>sse</Text> 类型用于Server-Sent Events连接（如<Text code>http://localhost:8000/sse</Text>）</li>
-                      <li><Text code>http</Text> 类型支持OpenAPI规范URL（如<Text code>http://example.com/openapi.json</Text>），将自动转换为MCP工具</li>
+                      <li>{t('mcpServers.help.li1')}</li>
+                      <li>{t('mcpServers.help.li2', { code: 'mcpServers' })}</li>
+                      <li>{t('mcpServers.help.li3', { c1: 'command', c2: 'args' })}</li>
+                      <li>{t('mcpServers.help.li4', { c1: 'internal', c2: 'true' })}</li>
+                      <li>{t('mcpServers.help.li5', { c1: 'comm_type' })}</li>
+                      <li>{t('mcpServers.help.li6')}</li>
+                      <li>{t('mcpServers.help.li7')}</li>
+                      <li>{t('mcpServers.help.li8')}</li>
+                      <li>{t('mcpServers.help.li9')}</li>
                     </ul>
                   </Paragraph>
                 </>

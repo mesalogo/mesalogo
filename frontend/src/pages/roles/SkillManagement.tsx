@@ -40,11 +40,11 @@ const SkillManagement = () => {
       const res = await skillAPI.getAll();
       setSkills(res.data || []);
     } catch (e) {
-      message.error('获取技能列表失败');
+      message.error(t('skillMgmt.msg.fetchFailed'));
     } finally {
       setLoading(false);
     }
-  }, [message]);
+  }, [message, t]);
 
   useEffect(() => { fetchSkills(); }, [fetchSkills]);
 
@@ -53,13 +53,13 @@ const SkillManagement = () => {
       const values = await createForm.validateFields();
       setSaving(true);
       await skillAPI.create(values);
-      message.success('技能创建成功');
+      message.success(t('skillMgmt.msg.createSuccess'));
       setCreateModalVisible(false);
       createForm.resetFields();
       fetchSkills();
     } catch (e) {
       if (e.errorFields) return;
-      message.error(e.response?.data?.message || '创建失败');
+      message.error(e.response?.data?.message || t('skillMgmt.msg.createFailed'));
     } finally {
       setSaving(false);
     }
@@ -79,7 +79,7 @@ const SkillManagement = () => {
       });
       setEditModalVisible(true);
     } catch (e) {
-      message.error('获取技能详情失败');
+      message.error(t('skillMgmt.msg.detailFailed'));
     }
   };
 
@@ -89,11 +89,11 @@ const SkillManagement = () => {
       const values = await editForm.validateFields();
       setSaving(true);
       await skillAPI.update(selectedSkill.name, values);
-      message.success('基本信息已保存');
+      message.success(t('skillMgmt.msg.basicSaved'));
       fetchSkills();
     } catch (e) {
       if (e.errorFields) return;
-      message.error('保存失败');
+      message.error(t('skillMgmt.msg.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -104,9 +104,9 @@ const SkillManagement = () => {
     setSaving(true);
     try {
       await skillAPI.updateContent(selectedSkill.name, skillContent);
-      message.success('SKILL.md 保存成功');
+      message.success(t('skillMgmt.msg.contentSaved'));
     } catch (e) {
-      message.error('保存失败');
+      message.error(t('skillMgmt.msg.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -115,10 +115,10 @@ const SkillManagement = () => {
   const handleDelete = async (name) => {
     try {
       await skillAPI.delete(name);
-      message.success('删除成功');
+      message.success(t('skillMgmt.msg.deleteSuccess'));
       fetchSkills();
     } catch (e) {
-      message.error('删除失败');
+      message.error(t('skillMgmt.msg.deleteFailed'));
     }
   };
 
@@ -127,7 +127,7 @@ const SkillManagement = () => {
       await skillAPI.update(skill.name, { enabled: !skill.enabled });
       fetchSkills();
     } catch (e) {
-      message.error('更新失败');
+      message.error(t('skillMgmt.msg.updateFailed'));
     }
   };
 
@@ -141,7 +141,7 @@ const SkillManagement = () => {
       a.click();
       window.URL.revokeObjectURL(url);
     } catch (e) {
-      message.error('导出失败');
+      message.error(t('skillMgmt.msg.exportFailed'));
     }
   };
 
@@ -152,7 +152,7 @@ const SkillManagement = () => {
       setImportPreview(res.data);
       setImportModalVisible(true);
     } catch (e) {
-      message.error('预览失败');
+      message.error(t('skillMgmt.msg.previewFailed'));
     }
     return false;
   };
@@ -162,13 +162,13 @@ const SkillManagement = () => {
     setImporting(true);
     try {
       await skillAPI.importConfirm(importFile, importPreview);
-      message.success('导入成功');
+      message.success(t('skillMgmt.msg.importSuccess'));
       setImportModalVisible(false);
       setImportPreview(null);
       setImportFile(null);
       fetchSkills();
     } catch (e) {
-      message.error('导入失败');
+      message.error(t('skillMgmt.msg.importFailed'));
     } finally {
       setImporting(false);
     }
@@ -178,10 +178,10 @@ const SkillManagement = () => {
     setSyncing(true);
     try {
       const res = await skillAPI.syncFilesystem();
-      message.success(`同步完成: 新增 ${res.data?.created || 0} 个，更新 ${res.data?.updated || 0} 个`);
+      message.success(t('skillMgmt.msg.syncDone', { created: res.data?.created || 0, updated: res.data?.updated || 0 }));
       fetchSkills();
     } catch (e) {
-      message.error('同步失败');
+      message.error(t('skillMgmt.msg.syncFailed'));
     } finally {
       setSyncing(false);
     }
@@ -216,8 +216,8 @@ const SkillManagement = () => {
         <Switch
           checked={enabled}
           onChange={() => handleToggleEnabled(record)}
-          checkedChildren="启用"
-          unCheckedChildren="禁用"
+          checkedChildren={t('skillMgmt.switch.on')}
+          unCheckedChildren={t('skillMgmt.switch.off')}
           size="small"
         />
       )
@@ -229,7 +229,7 @@ const SkillManagement = () => {
       width: 100,
       render: (level) => {
         const colors = { 1: 'green', 2: 'orange', 3: 'red' };
-        const labels = { 1: '低', 2: '中', 3: '高' };
+        const labels = { 1: t('skillMgmt.secLevel.low'), 2: t('skillMgmt.secLevel.mid'), 3: t('skillMgmt.secLevel.high') };
         return <Tag color={colors[level] || 'default'}>{labels[level] || level}</Tag>;
       }
     },
@@ -239,13 +239,13 @@ const SkillManagement = () => {
       width: 200,
       render: (_, record) => (
         <Space size="small">
-          <Tooltip title="编辑">
+          <Tooltip title={t('skillMgmt.action.edit')}>
             <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           </Tooltip>
-          <Tooltip title="导出">
+          <Tooltip title={t('skillMgmt.action.export')}>
             <Button type="link" size="small" icon={<DownloadOutlined />} onClick={() => handleExport(record.name)} />
           </Tooltip>
-          <Popconfirm title="确定删除该技能？" onConfirm={() => handleDelete(record.name)}>
+          <Popconfirm title={t('skillMgmt.confirmDelete')} onConfirm={() => handleDelete(record.name)}>
             <Button type="link" size="small" danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </Space>
@@ -262,7 +262,7 @@ const SkillManagement = () => {
               <ThunderboltOutlined style={{ marginRight: 8 }} />
               {t('skills.title', '技能管理')}
             </Title>
-            <Text type="secondary">管理和配置智能体可用的技能，技能绑定到角色后会在对话中自动激活</Text>
+            <Text type="secondary">{t('skillMgmt.subtitle')}</Text>
           </div>
           <Space>
             <Button icon={<SyncOutlined spin={syncing} />} onClick={handleSync} loading={syncing}>
@@ -289,7 +289,7 @@ const SkillManagement = () => {
         />
       </Card>
 
-      {/* 新建技能 Modal */}
+      {/* create modal */}
       <Modal
         title={t('skills.createTitle', '新建技能')}
         open={createModalVisible}
@@ -299,33 +299,33 @@ const SkillManagement = () => {
         width={600}
       >
         <Form form={createForm} layout="vertical">
-          <Form.Item name="name" label="技能名称 (kebab-case)" rules={[
-            { required: true, message: '请输入技能名称' },
-            { pattern: /^[a-z0-9][a-z0-9-]*$/, message: '只允许小写字母、数字和连字符' }
+          <Form.Item name="name" label={t('skillMgmt.field.nameKebab')} rules={[
+            { required: true, message: t('skillMgmt.req.name') },
+            { pattern: /^[a-z0-9][a-z0-9-]*$/, message: t('skillMgmt.req.namePattern') }
           ]}>
             <Input placeholder="e.g. financial-report" />
           </Form.Item>
-          <Form.Item name="display_name" label="显示名称">
-            <Input placeholder="e.g. 财务报告生成" />
+          <Form.Item name="display_name" label={t('skillMgmt.field.displayName')}>
+            <Input placeholder={t('skillMgmt.ph.displayName')} />
           </Form.Item>
-          <Form.Item name="description" label="触发描述" rules={[{ required: true, message: '请输入描述' }]}
-            extra="当用户请求匹配此描述时，Agent 会自动激活该技能"
+          <Form.Item name="description" label={t('skillMgmt.field.triggerDesc')} rules={[{ required: true, message: t('skillMgmt.req.description') }]}
+            extra={t('skillMgmt.extra.triggerDesc')}
           >
-            <TextArea rows={3} placeholder="描述何时应该触发此技能..." />
+            <TextArea rows={3} placeholder={t('skillMgmt.ph.triggerDesc')} />
           </Form.Item>
-          <Form.Item name="security_level" label="安全等级" initialValue={1}>
+          <Form.Item name="security_level" label={t('skillMgmt.field.securityLevel')} initialValue={1}>
             <Select options={[
-              { value: 1, label: '低 - 只读操作' },
-              { value: 2, label: '中 - 可修改文件' },
-              { value: 3, label: '高 - 可执行脚本' },
+              { value: 1, label: t('skillMgmt.secLevel.lowDesc') },
+              { value: 2, label: t('skillMgmt.secLevel.midDesc') },
+              { value: 3, label: t('skillMgmt.secLevel.highDesc') },
             ]} />
           </Form.Item>
         </Form>
       </Modal>
 
-      {/* 编辑技能 Modal */}
+      {/* edit modal */}
       <Modal
-        title={`编辑技能: ${selectedSkill?.display_name || selectedSkill?.name || ''}`}
+        title={t('skillMgmt.editTitle', { name: selectedSkill?.display_name || selectedSkill?.name || '' })}
         open={editModalVisible}
         onCancel={() => { setEditModalVisible(false); setSelectedSkill(null); editForm.resetFields(); }}
         footer={null}
@@ -335,30 +335,30 @@ const SkillManagement = () => {
         <Tabs items={[
           {
             key: 'basic',
-            label: <span><SettingOutlined /> 基本信息</span>,
+            label: <span><SettingOutlined /> {t('skillMgmt.tab.basic')}</span>,
             children: (
               <div>
                 <Form form={editForm} layout="vertical">
-                  <Form.Item name="display_name" label="显示名称">
-                    <Input placeholder="中文显示名称" />
+                  <Form.Item name="display_name" label={t('skillMgmt.field.displayName')}>
+                    <Input placeholder={t('skillMgmt.ph.displayNameEdit')} />
                   </Form.Item>
-                  <Form.Item name="description" label="触发描述" rules={[{ required: true, message: '请输入描述' }]}
-                    extra="模型根据此描述判断是否激活技能，需详细包含所有触发场景"
+                  <Form.Item name="description" label={t('skillMgmt.field.triggerDesc')} rules={[{ required: true, message: t('skillMgmt.req.description') }]}
+                    extra={t('skillMgmt.extra.triggerDescEdit')}
                   >
                     <TextArea rows={3} />
                   </Form.Item>
-                  <Form.Item name="security_level" label="安全等级"
-                    extra="等级 ≥ 3 时将禁止执行脚本"
+                  <Form.Item name="security_level" label={t('skillMgmt.field.securityLevel')}
+                    extra={t('skillMgmt.extra.levelExtra')}
                   >
                     <Select options={[
-                      { value: 1, label: '低 - 只读操作' },
-                      { value: 2, label: '中 - 可修改文件' },
-                      { value: 3, label: '高 - 可执行脚本(受限)' },
+                      { value: 1, label: t('skillMgmt.secLevel.lowDesc') },
+                      { value: 2, label: t('skillMgmt.secLevel.midDesc') },
+                      { value: 3, label: t('skillMgmt.secLevel.highDescRestricted') },
                     ]} />
                   </Form.Item>
                 </Form>
                 <div style={{ textAlign: 'right' }}>
-                  <Button type="primary" onClick={handleSaveBasicInfo} loading={saving}>保存</Button>
+                  <Button type="primary" onClick={handleSaveBasicInfo} loading={saving}>{t('skillMgmt.save')}</Button>
                 </div>
               </div>
             )
@@ -369,7 +369,7 @@ const SkillManagement = () => {
             children: (
               <div>
                 <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'flex-end' }}>
-                  <Button type="primary" onClick={handleSaveContent} loading={saving}>保存</Button>
+                  <Button type="primary" onClick={handleSaveContent} loading={saving}>{t('skillMgmt.save')}</Button>
                 </div>
                 <Editor
                   height="500px"
@@ -383,7 +383,7 @@ const SkillManagement = () => {
           },
           {
             key: 'scripts',
-            label: <span><CodeOutlined /> 脚本</span>,
+            label: <span><CodeOutlined /> {t('skillMgmt.tab.scripts')}</span>,
             children: (
               <div>
                 {skillDetail?.scripts?.length > 0 ? (
@@ -392,21 +392,21 @@ const SkillManagement = () => {
                     rowKey="path"
                     size="small"
                     columns={[
-                      { title: '文件名', dataIndex: 'name', key: 'name' },
-                      { title: '路径', dataIndex: 'path', key: 'path' },
-                      { title: '大小', dataIndex: 'size', key: 'size', render: (s) => `${(s / 1024).toFixed(1)} KB` },
+                      { title: t('skillMgmt.col.fileName'), dataIndex: 'name', key: 'name' },
+                      { title: t('skillMgmt.col.path'), dataIndex: 'path', key: 'path' },
+                      { title: t('skillMgmt.col.size'), dataIndex: 'size', key: 'size', render: (s) => `${(s / 1024).toFixed(1)} KB` },
                     ]}
                     pagination={false}
                   />
                 ) : (
-                  <Empty description="暂无脚本文件" />
+                  <Empty description={t('skillMgmt.empty.scripts')} />
                 )}
               </div>
             )
           },
           {
             key: 'references',
-            label: <span><FolderOutlined /> 参考资料</span>,
+            label: <span><FolderOutlined /> {t('skillMgmt.tab.references')}</span>,
             children: (
               <div>
                 {skillDetail?.references?.length > 0 ? (
@@ -415,21 +415,21 @@ const SkillManagement = () => {
                     rowKey="path"
                     size="small"
                     columns={[
-                      { title: '文件名', dataIndex: 'name', key: 'name' },
-                      { title: '路径', dataIndex: 'path', key: 'path' },
-                      { title: '大小', dataIndex: 'size', key: 'size', render: (s) => `${(s / 1024).toFixed(1)} KB` },
+                      { title: t('skillMgmt.col.fileName'), dataIndex: 'name', key: 'name' },
+                      { title: t('skillMgmt.col.path'), dataIndex: 'path', key: 'path' },
+                      { title: t('skillMgmt.col.size'), dataIndex: 'size', key: 'size', render: (s) => `${(s / 1024).toFixed(1)} KB` },
                     ]}
                     pagination={false}
                   />
                 ) : (
-                  <Empty description="暂无参考资料" />
+                  <Empty description={t('skillMgmt.empty.references')} />
                 )}
               </div>
             )
           },
           {
             key: 'assets',
-            label: <span><FolderOutlined /> 资源文件</span>,
+            label: <span><FolderOutlined /> {t('skillMgmt.tab.assets')}</span>,
             children: (
               <div>
                 {skillDetail?.assets?.length > 0 ? (
@@ -438,14 +438,14 @@ const SkillManagement = () => {
                     rowKey="path"
                     size="small"
                     columns={[
-                      { title: '文件名', dataIndex: 'name', key: 'name' },
-                      { title: '路径', dataIndex: 'path', key: 'path' },
-                      { title: '大小', dataIndex: 'size', key: 'size', render: (s) => `${(s / 1024).toFixed(1)} KB` },
+                      { title: t('skillMgmt.col.fileName'), dataIndex: 'name', key: 'name' },
+                      { title: t('skillMgmt.col.path'), dataIndex: 'path', key: 'path' },
+                      { title: t('skillMgmt.col.size'), dataIndex: 'size', key: 'size', render: (s) => `${(s / 1024).toFixed(1)} KB` },
                     ]}
                     pagination={false}
                   />
                 ) : (
-                  <Empty description="暂无资源文件" />
+                  <Empty description={t('skillMgmt.empty.assets')} />
                 )}
               </div>
             )
@@ -453,24 +453,24 @@ const SkillManagement = () => {
         ]} />
       </Modal>
 
-      {/* 导入预览 Modal */}
+      {/* import preview modal */}
       <Modal
-        title="导入技能预览"
+        title={t('skillMgmt.importPreviewTitle')}
         open={importModalVisible}
         onOk={handleImportConfirm}
         onCancel={() => { setImportModalVisible(false); setImportPreview(null); setImportFile(null); }}
         confirmLoading={importing}
-        okText="确认导入"
+        okText={t('skillMgmt.confirmImport')}
       >
         {importPreview && (
           <div>
-            <p><strong>技能名称:</strong> {importPreview.name}</p>
-            <p><strong>描述:</strong> {importPreview.description || '无'}</p>
-            <p><strong>脚本数:</strong> {importPreview.scripts_count}</p>
-            <p><strong>参考资料数:</strong> {importPreview.references_count}</p>
-            <p><strong>资源文件数:</strong> {importPreview.assets_count}</p>
+            <p><strong>{t('skillMgmt.preview.name')}</strong> {importPreview.name}</p>
+            <p><strong>{t('skillMgmt.preview.description')}</strong> {importPreview.description || t('skillMgmt.preview.none')}</p>
+            <p><strong>{t('skillMgmt.preview.scriptsCount')}</strong> {importPreview.scripts_count}</p>
+            <p><strong>{t('skillMgmt.preview.referencesCount')}</strong> {importPreview.references_count}</p>
+            <p><strong>{t('skillMgmt.preview.assetsCount')}</strong> {importPreview.assets_count}</p>
             {importPreview.exists && (
-              <Tag color="warning">同名技能已存在，导入将覆盖</Tag>
+              <Tag color="warning">{t('skillMgmt.preview.existsWarn')}</Tag>
             )}
           </div>
         )}

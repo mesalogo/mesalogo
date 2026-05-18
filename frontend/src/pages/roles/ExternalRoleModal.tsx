@@ -109,22 +109,22 @@ const ExternalRoleModal = ({
           setTestConnectionResult(response);
 
           if (response.success) {
-            message.success(response.message || '连接测试成功');
+            message.success(response.message || t('externalRole.testSuccess'));
           } else {
-            message.error(response.error || '连接测试失败');
+            message.error(response.error || t('externalRole.testFailed'));
           }
         }
       } catch (error) {
         setTestConnectionLoading(false);
         setTestConnectionResult({
           success: false,
-          error: error.message || '网络错误',
+          error: error.message || t('externalRole.networkError'),
           platform: platform
         });
-        message.error('连接测试失败: ' + (error.message || '网络错误'));
+        message.error(t('externalRole.testFailed') + ': ' + (error.message || t('externalRole.networkError')));
       }
     } catch (error) {
-      message.error('请填写必要的连接信息');
+      message.error(t('externalRole.fillRequired'));
     }
   };
 
@@ -132,7 +132,7 @@ const ExternalRoleModal = ({
     try {
       setTestConnectionResult({
         success: false,
-        message: '正在连接...',
+        message: t('externalRole.connecting'),
         test_output: '',
         streaming: true
       });
@@ -175,7 +175,7 @@ const ExternalRoleModal = ({
                   test_output: collectedContent,
                   platform: testData.platform
                 });
-                message.error('连接测试失败: ' + data.error);
+                message.error(t('externalRole.testFailed') + ': ' + data.error);
                 return;
               } else if (data.status === 'connected') {
                 setTestConnectionResult({
@@ -197,17 +197,17 @@ const ExternalRoleModal = ({
                 setTestConnectionLoading(false);
                 setTestConnectionResult({
                   success: true,
-                  message: data.message || '流式连接测试成功',
+                  message: data.message || t('externalRole.streamingTestSuccess'),
                   test_output: data.full_content || collectedContent,
                   streaming: false,
                   platform: testData.platform,
-                  test_input: '你好！请简单介绍一下你自己，这是一个连接测试。'
+                  test_input: t('externalRole.testInputDefault')
                 });
-                message.success('流式连接测试成功');
+                message.success(t('externalRole.streamingTestSuccess'));
                 return;
               }
             } catch (e) {
-              console.error('解析流式数据失败:', e);
+              console.error('parse streaming data failed:', e);
             }
           }
         }
@@ -217,28 +217,28 @@ const ExternalRoleModal = ({
       if (collectedContent) {
         setTestConnectionResult({
           success: true,
-          message: '流式连接测试完成',
+          message: t('externalRole.streamingTestDone'),
           test_output: collectedContent,
           streaming: false
         });
-        message.success('流式连接测试完成');
+        message.success(t('externalRole.streamingTestDone'));
       } else {
         setTestConnectionResult({
           success: false,
-          error: '未收到响应内容',
+          error: t('externalRole.noResponse'),
           test_output: ''
         });
-        message.error('未收到响应内容');
+        message.error(t('externalRole.noResponse'));
       }
     } catch (error) {
-      console.error('流式连接测试失败:', error);
+      console.error('streaming test failed:', error);
       setTestConnectionLoading(false);
       setTestConnectionResult({
         success: false,
-        error: error.message || '流式连接测试失败',
+        error: error.message || t('externalRole.streamingTestFailed'),
         test_output: ''
       });
-      message.error('流式连接测试失败: ' + (error.message || '网络错误'));
+      message.error(t('externalRole.streamingTestFailed') + ': ' + (error.message || t('externalRole.networkError')));
     }
   };
 
@@ -272,19 +272,19 @@ const ExternalRoleModal = ({
           try {
             (apiValues.external_config as any).headers = JSON.parse(values.headers);
           } catch(err) {
-            message.warning('自定义请求头解析失败，将被忽略');
+            message.warning(t('externalRole.headersParseFailed'));
           }
         }
       }
 
       await onOk(apiValues, selectedRole);
-      
+
       form.resetFields();
       setImportPlatform(null);
       setTestConnectionLoading(false);
       setTestConnectionResult(null);
     } catch (error) {
-      console.error('表单验证或提交失败:', error);
+      console.error('form validate/submit failed:', error);
 
       if (error.errorFields && error.errorFields.length > 0) {
         const firstError = error.errorFields[0];
@@ -292,7 +292,7 @@ const ExternalRoleModal = ({
         const errorMessage = firstError.errors[0];
         message.error(`${fieldName}: ${errorMessage}`);
       } else {
-        message.error('导入失败: ' + (error.message || '未知错误'));
+        message.error(t('externalRole.importFailed') + ': ' + (error.message || t('externalRole.unknownError')));
       }
     } finally {
       setImporting(false);
@@ -304,21 +304,21 @@ const ExternalRoleModal = ({
       case 'openai':
         return (
           <>
-            <Form.Item name="apiKey" label="API密钥" rules={[{ required: true, message: '请输入OpenAI API密钥' }]}>
+            <Form.Item name="apiKey" label={t('externalRole.field.apiKey')} rules={[{ required: true, message: t('externalRole.req.openaiApiKey') }]}>
               <Input.Password placeholder="sk-..." />
             </Form.Item>
-            <Form.Item name="assistantId" label="Assistant ID" rules={[{ required: true, message: '请输入OpenAI Assistant ID' }]}>
+            <Form.Item name="assistantId" label="Assistant ID" rules={[{ required: true, message: t('externalRole.req.openaiAssistantId') }]}>
               <Input placeholder="asst_..." />
             </Form.Item>
-            <Form.Item name="model" label="模型" rules={[{ required: true, message: '请选择使用的模型' }]}>
-              <Select placeholder="请选择模型">
+            <Form.Item name="model" label={t('externalRole.field.model')} rules={[{ required: true, message: t('externalRole.req.model') }]}>
+              <Select placeholder={t('externalRole.placeholder.model')}>
                 <Option value="gpt-4">GPT-4</Option>
                 <Option value="gpt-4-turbo">GPT-4 Turbo</Option>
                 <Option value="gpt-3.5-turbo">GPT-3.5 Turbo</Option>
               </Select>
             </Form.Item>
-            <Form.Item name="instructions" label="指令集">
-              <TextArea rows={4} placeholder="可选，Assistant的系统指令" />
+            <Form.Item name="instructions" label={t('externalRole.field.instructions')}>
+              <TextArea rows={4} placeholder={t('externalRole.placeholder.openaiInstructions')} />
             </Form.Item>
           </>
         );
@@ -326,22 +326,22 @@ const ExternalRoleModal = ({
       case 'dify':
         return (
           <>
-            <Form.Item name="apiServer" label="API服务器地址" rules={[
-              { required: true, message: '请输入Dify API服务器地址' },
-              { pattern: /^https?:\/\//, message: '请输入完整的URL地址，必须以http://或https://开头' }
-            ]} extra="请输入完整的API地址，必须以http://或https://开头">
+            <Form.Item name="apiServer" label={t('externalRole.field.apiServer')} rules={[
+              { required: true, message: t('externalRole.req.difyServer') },
+              { pattern: /^https?:\/\//, message: t('externalRole.req.urlPattern') }
+            ]} extra={t('externalRole.extra.urlPattern')}>
               <Input placeholder="https://cloud.dify.ai/v1"/>
             </Form.Item>
-            <Form.Item name="apiKey" label="API密钥" rules={[{ required: true, message: '请输入Dify应用的API密钥' }]}>
+            <Form.Item name="apiKey" label={t('externalRole.field.apiKey')} rules={[{ required: true, message: t('externalRole.req.difyKey') }]}>
               <Input.Password placeholder="app-..." />
             </Form.Item>
-            <Form.Item name="applicationType" label="应用类型" rules={[{ required: true, message: '请选择Dify应用类型' }]}>
-              <Select placeholder="请选择应用类型">
-                <Option value="chatbot">Chatbot - 对话助手</Option>
-                <Option value="text_generator">Text Generator - 文本生成</Option>
-                <Option value="agent">Agent - 智能助手</Option>
-                <Option value="chatflow">Chatflow - 对话流</Option>
-                <Option value="workflow">Workflow - 工作流</Option>
+            <Form.Item name="applicationType" label={t('externalRole.field.applicationType')} rules={[{ required: true, message: t('externalRole.req.difyAppType') }]}>
+              <Select placeholder={t('externalRole.placeholder.difyAppType')}>
+                <Option value="chatbot">{t('externalRole.dify.chatbot')}</Option>
+                <Option value="text_generator">{t('externalRole.dify.textGenerator')}</Option>
+                <Option value="agent">{t('externalRole.dify.agent')}</Option>
+                <Option value="chatflow">{t('externalRole.dify.chatflow')}</Option>
+                <Option value="workflow">{t('externalRole.dify.workflow')}</Option>
               </Select>
             </Form.Item>
           </>
@@ -350,19 +350,19 @@ const ExternalRoleModal = ({
       case 'fastgpt':
         return (
           <>
-            <Form.Item name="apiServer" label="API服务器地址" rules={[
-              { required: true, message: '请输入FastGPT API服务器地址' },
-              { pattern: /^https?:\/\//, message: '请输入完整的URL地址，必须以http://或https://开头' }
-            ]} extra="请输入完整的API地址，必须以http://或https://开头">
+            <Form.Item name="apiServer" label={t('externalRole.field.apiServer')} rules={[
+              { required: true, message: t('externalRole.req.fastgptServer') },
+              { pattern: /^https?:\/\//, message: t('externalRole.req.urlPattern') }
+            ]} extra={t('externalRole.extra.urlPattern')}>
               <Input placeholder="https://cloud.fastgpt.cn" />
             </Form.Item>
-            <Form.Item name="apiKey" label="API密钥" rules={[
-              { required: true, message: '请输入FastGPT应用的API密钥' },
-              { pattern: /^(fastgpt-|app-)/, message: 'API密钥格式不正确，应以"fastgpt-"或"app-"开头' }
+            <Form.Item name="apiKey" label={t('externalRole.field.apiKey')} rules={[
+              { required: true, message: t('externalRole.req.fastgptKey') },
+              { pattern: /^(fastgpt-|app-)/, message: t('externalRole.req.fastgptKeyPattern') }
             ]}>
-              <Input.Password placeholder="app-xxxxxx (应用特定密钥)" />
+              <Input.Password placeholder={t('externalRole.placeholder.fastgptKey')} />
             </Form.Item>
-            <Form.Item name="assistantId" label="应用ID" rules={[{ required: true, message: '请输入FastGPT应用ID' }]} extra="FastGPT应用的唯一标识符">
+            <Form.Item name="assistantId" label={t('externalRole.field.fastgptAppId')} rules={[{ required: true, message: t('externalRole.req.fastgptAppId') }]} extra={t('externalRole.extra.fastgptAppId')}>
               <Input placeholder="6752884ba42075b220241c0c" />
             </Form.Item>
           </>
@@ -371,19 +371,19 @@ const ExternalRoleModal = ({
       case 'coze':
         return (
           <>
-            <Form.Item name="apiServer" label="API服务器地址" rules={[
-              { required: true, message: '请输入Coze API服务器地址' },
-              { pattern: /^https?:\/\//, message: '请输入完整的URL地址，必须以http://或https://开头' }
-            ]} extra="Coze API服务器地址" initialValue="https://api.coze.cn">
+            <Form.Item name="apiServer" label={t('externalRole.field.apiServer')} rules={[
+              { required: true, message: t('externalRole.req.cozeServer') },
+              { pattern: /^https?:\/\//, message: t('externalRole.req.urlPattern') }
+            ]} extra={t('externalRole.extra.cozeServer')} initialValue="https://api.coze.cn">
               <Input placeholder="https://api.coze.cn" />
             </Form.Item>
-            <Form.Item name="apiKey" label="API密钥" rules={[{ required: true, message: '请输入Coze平台的API密钥' }]} extra="从Coze开发者平台获取的Personal Access Token">
+            <Form.Item name="apiKey" label={t('externalRole.field.apiKey')} rules={[{ required: true, message: t('externalRole.req.cozeKey') }]} extra={t('externalRole.extra.cozePat')}>
               <Input.Password placeholder="pat_..." />
             </Form.Item>
-            <Form.Item name="botId" label="Bot ID" rules={[{ required: true, message: '请输入Coze平台的Bot ID' }]} extra="Coze智能体的唯一标识符">
+            <Form.Item name="botId" label="Bot ID" rules={[{ required: true, message: t('externalRole.req.cozeBotId') }]} extra={t('externalRole.extra.cozeBotId')}>
               <Input placeholder="7447441851466366987" />
             </Form.Item>
-            <Form.Item name="userIdentifier" label="用户ID" rules={[{ required: true, message: '请输入用户ID' }]} extra="用于标识API调用用户，可以是任意字符串">
+            <Form.Item name="userIdentifier" label={t('externalRole.field.userId')} rules={[{ required: true, message: t('externalRole.req.userId') }]} extra={t('externalRole.extra.userId')}>
               <Input placeholder="1234567" />
             </Form.Item>
           </>
@@ -392,26 +392,26 @@ const ExternalRoleModal = ({
       case 'custom':
         return (
           <>
-            <Form.Item name="platformName" label="平台名称" rules={[{ required: true, message: '请输入平台名称' }]}>
-              <Input placeholder="例如：Claude, Gemini, Xinference等" />
+            <Form.Item name="platformName" label={t('externalRole.field.platformName')} rules={[{ required: true, message: t('externalRole.req.platformName') }]}>
+              <Input placeholder={t('externalRole.placeholder.platformName')} />
             </Form.Item>
-            <Form.Item name="apiServer" label="API服务器地址" rules={[{ required: true, message: '请输入API服务器地址' }]}>
-              <Input placeholder="例如：https://api.example.com/v1" />
+            <Form.Item name="apiServer" label={t('externalRole.field.apiServer')} rules={[{ required: true, message: t('externalRole.req.customServer') }]}>
+              <Input placeholder={t('externalRole.placeholder.customServer')} />
             </Form.Item>
-            <Form.Item name="apiKey" label="API密钥" rules={[{ required: true, message: '请输入API密钥' }]}>
-              <Input.Password placeholder="请输入API密钥" />
+            <Form.Item name="apiKey" label={t('externalRole.field.apiKey')} rules={[{ required: true, message: t('externalRole.req.customKey') }]}>
+              <Input.Password placeholder={t('externalRole.placeholder.customKey')} />
             </Form.Item>
-            <Form.Item name="assistantId" label="智能体ID">
-              <Input placeholder="如平台支持，请输入智能体ID" />
+            <Form.Item name="assistantId" label={t('externalRole.field.agentId')}>
+              <Input placeholder={t('externalRole.placeholder.customAgentId')} />
             </Form.Item>
-            <Form.Item name="model" label="模型标识符">
-              <Input placeholder="如平台支持，请输入模型标识符" />
+            <Form.Item name="model" label={t('externalRole.field.modelId')}>
+              <Input placeholder={t('externalRole.placeholder.customModelId')} />
             </Form.Item>
-            <Form.Item name="instructions" label="系统指令">
-              <TextArea rows={4} placeholder="可选，智能体的系统指令" />
+            <Form.Item name="instructions" label={t('externalRole.field.sysInstructions')}>
+              <TextArea rows={4} placeholder={t('externalRole.placeholder.sysInstructions')} />
             </Form.Item>
-            <Form.Item name="headers" label="自定义请求头">
-              <TextArea rows={3} placeholder='可选，JSON格式，例如：{"x-api-key": "value", "Authorization": "Bearer xxx"}' />
+            <Form.Item name="headers" label={t('externalRole.field.customHeaders')}>
+              <TextArea rows={3} placeholder={t('externalRole.placeholder.customHeaders')} />
             </Form.Item>
           </>
         );
@@ -425,17 +425,17 @@ const ExternalRoleModal = ({
     <Modal
       title={
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span>{selectedRole && selectedRole.source === 'external' ? '编辑外部智能体' : '导入外部智能体'}</span>
+          <span>{selectedRole && selectedRole.source === 'external' ? t('externalRole.editTitle') : t('externalRole.importTitle')}</span>
           <Tooltip
             title={
               <div>
-                <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>外部智能体说明：</div>
+                <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>{t('externalRole.note.title')}</div>
                 <ul style={{ margin: 0, paddingLeft: '16px' }}>
-                  <li><strong>独立运行</strong>：外部智能体在第三方平台上运行，本系统仅作为接口调用</li>
-                  <li><strong>无法调用本地工具</strong>：无法使用系统内置的工具和能力</li>
-                  <li><strong>依赖外部平台</strong>：功能完全依赖于所选外部平台的能力和限制</li>
-                  <li><strong>网络延迟</strong>：响应速度受网络状况和外部平台性能影响</li>
-                  <li><strong>数据隐私</strong>：对话数据会发送到外部平台，请注意数据安全</li>
+                  <li><strong>{t('externalRole.note.standaloneTitle')}</strong>{t('externalRole.note.standalone')}</li>
+                  <li><strong>{t('externalRole.note.noLocalToolsTitle')}</strong>{t('externalRole.note.noLocalTools')}</li>
+                  <li><strong>{t('externalRole.note.dependsTitle')}</strong>{t('externalRole.note.depends')}</li>
+                  <li><strong>{t('externalRole.note.latencyTitle')}</strong>{t('externalRole.note.latency')}</li>
+                  <li><strong>{t('externalRole.note.privacyTitle')}</strong>{t('externalRole.note.privacy')}</li>
                 </ul>
               </div>
             }
@@ -452,32 +452,32 @@ const ExternalRoleModal = ({
       width={800}
       style={{ top: 20 }}
       footer={[
-        <Button key="cancel" onClick={onCancel} disabled={importing}>取消</Button>,
+        <Button key="cancel" onClick={onCancel} disabled={importing}>{t('externalRole.cancel')}</Button>,
         <Button key="submit" type="primary" onClick={handleOk} loading={importing}>
-          {selectedRole && selectedRole.source === 'external' ? '更新' : '导入'}
+          {selectedRole && selectedRole.source === 'external' ? t('externalRole.update') : t('externalRole.import')}
         </Button>,
       ]}
     >
       <Form form={form} layout="vertical">
-        <Form.Item name="name" label="角色名称" rules={[{ required: true, message: '请输入角色名称' }]}>
-          <Input placeholder="请输入角色名称" />
+        <Form.Item name="name" label={t('externalRole.field.roleName')} rules={[{ required: true, message: t('externalRole.req.roleName') }]}>
+          <Input placeholder={t('externalRole.placeholder.roleName')} />
         </Form.Item>
 
-        <Form.Item name="description" label="描述" rules={[{ required: true, message: '请输入描述' }]}>
-          <TextArea rows={2} placeholder="请简要描述该角色的功能和特点" />
+        <Form.Item name="description" label={t('externalRole.field.description')} rules={[{ required: true, message: t('externalRole.req.description') }]}>
+          <TextArea rows={2} placeholder={t('externalRole.placeholder.description')} />
         </Form.Item>
 
-        <Form.Item name="source" label="角色类型" initialValue="external">
-          <div><Tag color="green">外部</Tag></div>
+        <Form.Item name="source" label={t('externalRole.field.roleType')} initialValue="external">
+          <div><Tag color="green">{t('externalRole.external')}</Tag></div>
         </Form.Item>
 
-        <Form.Item name="platform" label="平台类型" rules={[{ required: true, message: '请选择平台类型' }]}>
-          <Select placeholder="请选择平台类型" onChange={(value) => setImportPlatform(value)}>
+        <Form.Item name="platform" label={t('externalRole.field.platform')} rules={[{ required: true, message: t('externalRole.req.platform') }]}>
+          <Select placeholder={t('externalRole.placeholder.platform')} onChange={(value) => setImportPlatform(value)}>
             <Option value="openai">OpenAI</Option>
             <Option value="dify">Dify</Option>
             <Option value="fastgpt">FastGPT</Option>
             <Option value="coze">Coze</Option>
-            <Option value="custom">自定义</Option>
+            <Option value="custom">{t('externalRole.custom')}</Option>
           </Select>
         </Form.Item>
 
@@ -488,19 +488,19 @@ const ExternalRoleModal = ({
             <Collapse ghost style={{ marginTop: '16px' }} items={[
               {
                 key: 'advanced',
-                label: '高级配置',
+                label: t('externalRole.advancedConfig'),
                 children: (
                   <div>
-                    <Form.Item name="timeout" label="超时时间" rules={[{ required: true, message: '请输入超时时间' }]} initialValue={60} extra="API请求超时时间（秒）">
+                    <Form.Item name="timeout" label={t('externalRole.field.timeout')} rules={[{ required: true, message: t('externalRole.req.timeout') }]} initialValue={60} extra={t('externalRole.extra.timeout')}>
                       <InputNumber min={1} max={300} placeholder="60" />
                     </Form.Item>
-                    <Form.Item name="responseMode" label="响应模式" initialValue={globalSettings.streamingEnabled ? 'streaming' : 'blocking'} extra="选择API响应模式，默认跟随全局流式响应设置">
-                      <Select placeholder="选择响应模式">
-                        <Option value="blocking">阻塞模式</Option>
-                        <Option value="streaming">流式模式</Option>
+                    <Form.Item name="responseMode" label={t('externalRole.field.responseMode')} initialValue={globalSettings.streamingEnabled ? 'streaming' : 'blocking'} extra={t('externalRole.extra.responseMode')}>
+                      <Select placeholder={t('externalRole.placeholder.responseMode')}>
+                        <Option value="blocking">{t('externalRole.responseMode.blocking')}</Option>
+                        <Option value="streaming">{t('externalRole.responseMode.streaming')}</Option>
                       </Select>
                     </Form.Item>
-                    <Form.Item name="userIdentifier" label="用户标识" extra="用于标识API调用用户（可选）">
+                    <Form.Item name="userIdentifier" label={t('externalRole.field.userIdentifier')} extra={t('externalRole.extra.userIdentifier')}>
                       <Input placeholder="user-123" />
                     </Form.Item>
                   </div>
@@ -510,30 +510,30 @@ const ExternalRoleModal = ({
 
             <div style={{ marginTop: '24px', padding: '16px', background: 'var(--custom-header-bg)', borderRadius: '6px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px solid var(--custom-border)', paddingBottom: '8px' }}>
-                <span style={{ fontWeight: 'bold' }}>连接测试</span>
+                <span style={{ fontWeight: 'bold' }}>{t('externalRole.connectionTest')}</span>
                 <Button type="primary" onClick={handleTestConnection} loading={testConnectionLoading}>
-                  测试连接
+                  {t('externalRole.testButton')}
                 </Button>
               </div>
 
               <div style={{ marginBottom: '12px' }}>
-                <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>测试输入:</div>
+                <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>{t('externalRole.testInputLabel')}</div>
                 <div style={{ color: 'var(--custom-text-secondary)', fontSize: '12px' }}>
-                  {testConnectionResult?.test_input || '你好！请简单介绍一下你自己，这是一个连接测试。'}
+                  {testConnectionResult?.test_input || t('externalRole.testInputDefault')}
                 </div>
               </div>
 
               <div>
-                <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px' }}>响应内容:</div>
+                <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px' }}>{t('externalRole.responseLabel')}</div>
                 <div style={{ background: 'var(--custom-card-bg)', padding: '12px', borderRadius: '4px', border: '1px solid var(--custom-border)', minHeight: '120px', maxHeight: '200px', overflowY: 'auto', fontFamily: 'monospace', fontSize: '12px', whiteSpace: 'pre-wrap' }}>
                   {testConnectionLoading && !testConnectionResult ? (
                     <div style={{ padding: '10px 0', color: 'var(--custom-text-secondary)', fontSize: '13px' }}>
                       <div style={{ marginBottom: '8px' }}>
-                        <Tag color="blue">正在测试</Tag>
-                        <span style={{ marginLeft: '8px' }}>正在测试连接，请稍候...</span>
+                        <Tag color="blue">{t('externalRole.status.testing')}</Tag>
+                        <span style={{ marginLeft: '8px' }}>{t('externalRole.status.testingMsg')}</span>
                       </div>
                       <div style={{ background: 'var(--tree-hover-bg)', padding: '8px', borderRadius: '4px', border: '1px dashed #1677ff', minHeight: '60px', color: 'var(--custom-text-secondary)' }}>
-                        等待响应中...
+                        {t('externalRole.status.awaitingResponse')}
                       </div>
                     </div>
                   ) : testConnectionResult ? (
@@ -542,33 +542,33 @@ const ExternalRoleModal = ({
                         <div>
                           <div style={{ marginBottom: '8px' }}>
                             {testConnectionResult.streaming ? (
-                              <Tag color="blue">正在接收</Tag>
+                              <Tag color="blue">{t('externalRole.status.receiving')}</Tag>
                             ) : (
-                              <Tag color="green">连接成功</Tag>
+                              <Tag color="green">{t('externalRole.status.connected')}</Tag>
                             )}
                             <span style={{ marginLeft: '8px', color: testConnectionResult.streaming ? '#1677ff' : '#52c41a' }}>
                               {testConnectionResult.message}
                             </span>
                             {testConnectionResult.streaming && testConnectionLoading && (
-                              <span style={{ marginLeft: '8px', color: 'var(--custom-text-secondary)', fontSize: '12px' }}>(流式响应中...)</span>
+                              <span style={{ marginLeft: '8px', color: 'var(--custom-text-secondary)', fontSize: '12px' }}>{t('externalRole.status.streaming')}</span>
                             )}
                           </div>
                           <div style={{ color: 'var(--custom-text)' }}>
-                            {testConnectionResult.test_output || (testConnectionResult.streaming ? '等待响应内容...' : '')}
+                            {testConnectionResult.test_output || (testConnectionResult.streaming ? t('externalRole.status.awaitingContent') : '')}
                           </div>
                         </div>
                       ) : (
                         <div>
-                          <Tag color="red">连接失败</Tag>
+                          <Tag color="red">{t('externalRole.status.failed')}</Tag>
                           <span style={{ marginLeft: '8px', color: '#ff4d4f' }}>
-                            {testConnectionResult.error || '连接测试失败'}
+                            {testConnectionResult.error || t('externalRole.testFailed')}
                           </span>
                         </div>
                       )}
                     </div>
                   ) : (
                     <div style={{ color: 'var(--custom-text-secondary)', textAlign: 'center', padding: '20px 0' }}>
-                      点击"测试连接"按钮开始测试
+                      {t('externalRole.status.clickToTest')}
                     </div>
                   )}
                 </div>

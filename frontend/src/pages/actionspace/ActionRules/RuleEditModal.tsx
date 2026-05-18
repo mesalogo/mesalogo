@@ -7,6 +7,7 @@ import {
   InfoCircleOutlined, QuestionCircleOutlined, BugOutlined, TeamOutlined
 } from '@ant-design/icons';
 import Editor from '@monaco-editor/react';
+import { useTranslation } from 'react-i18next';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
 import { extractTemplateVariables, getTemplateVariableInfo, formatEnvironmentVariables } from '../../../utils/templateUtils';
 
@@ -14,7 +15,7 @@ const { TextArea } = Input;
 const { Text, Title } = Typography;
 const { Option } = Select;
 
-// 防抖函数
+// debounce
 const debounce = (func, wait) => {
   let timeout;
   return (...args) => {
@@ -24,9 +25,10 @@ const debounce = (func, wait) => {
 };
 
 /**
- * 规则编辑 Modal - 支持自然语言规则和逻辑规则
+ * Rule edit Modal — supports natural-language rules and logic rules.
  */
 const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, onSuccess }: any) => {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [ruleType, setRuleType] = useState('llm');
@@ -201,17 +203,17 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
 
       if (rule) {
         await actionSpaceAPI.updateRule(rule.id, ruleData);
-        message.success('规则更新成功');
+        message.success(t('ruleEdit.msg.updateSuccess'));
       } else {
         await actionSpaceAPI.createRule(ruleData);
-        message.success('规则创建成功');
+        message.success(t('ruleEdit.msg.createSuccess'));
       }
 
       form.resetFields();
       onSuccess();
     } catch (error) {
-      console.error('保存规则失败:', error);
-      message.error(rule ? '更新规则失败' : '创建规则失败');
+      console.error('save rule failed:', error);
+      message.error(rule ? t('ruleEdit.msg.updateFailed') : t('ruleEdit.msg.createFailed'));
     } finally {
       setLoading(false);
     }
@@ -229,12 +231,12 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
 
   const handleTestRule = async () => {
     if (ruleType === 'llm' && !testContext.trim()) {
-      message.warning('请输入测试场景描述');
+      message.warning(t('ruleEdit.msg.enterScenario'));
       return;
     }
 
     if (ruleType === 'llm' && !selectedRoleId) {
-      message.warning('测试自然语言规则时请选择一个角色');
+      message.warning(t('ruleEdit.msg.pickRoleForLLM'));
       return;
     }
 
@@ -242,13 +244,13 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
     try {
       const currentRuleData = {
         id: rule?.id || 'temp-id',
-        name: form.getFieldValue('name') || '临时规则',
+        name: form.getFieldValue('name') || t('ruleEdit.tempRule'),
         type: ruleType,
         content: form.getFieldValue('content') || '',
         interpreter: form.getFieldValue('interpreter') || 'javascript'
       };
 
-      const testData = ruleType === 'logic' ? { scenario: '默认测试场景' } : testContext;
+      const testData = ruleType === 'logic' ? { scenario: t('ruleEdit.defaultScenario') } : testContext;
       const variables = formatEnvironmentVariables(
         environmentVariables.internal,
         environmentVariables.external
@@ -256,10 +258,10 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
 
       const results = await actionSpaceAPI.testRules([currentRuleData], testData, selectedRoleId, variables);
       setTestResults(results);
-      message.success('规则测试完成');
+      message.success(t('ruleEdit.msg.testDone'));
     } catch (error) {
-      console.error('规则测试失败:', error);
-      message.error('规则测试失败');
+      console.error('test rule failed:', error);
+      message.error(t('ruleEdit.msg.testFailed'));
     } finally {
       setIsTestLoading(false);
     }
@@ -267,40 +269,43 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
 
   return (
     <Modal
-      title={`${rule ? '编辑' : '添加'}${ruleType === 'llm' ? '自然语言' : '逻辑'}规则`}
+      title={t('ruleEdit.modalTitle', {
+        mode: rule ? t('ruleEdit.modeEdit') : t('ruleEdit.modeAdd'),
+        kind: ruleType === 'llm' ? t('ruleEdit.kindLLM') : t('ruleEdit.kindLogic'),
+      })}
       open={visible}
       onCancel={handleCancel}
       width={900}
       style={{ top: 20 }}
       styles={{ body: { maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' } }}
       footer={[
-        <Button key="cancel" onClick={handleCancel}>取消</Button>,
+        <Button key="cancel" onClick={handleCancel}>{t('ruleEdit.cancel')}</Button>,
         <Button key="submit" type="primary" loading={loading} onClick={handleSubmit}>
-          {rule ? '保存' : '创建'}
+          {rule ? t('ruleEdit.save') : t('ruleEdit.create')}
         </Button>
       ]}
     >
       <Form form={form} layout="vertical">
         <Form.Item
           name="name"
-          label="规则名称"
-          rules={[{ required: true, message: '请输入规则名称' }]}
+          label={t('ruleEdit.field.name')}
+          rules={[{ required: true, message: t('ruleEdit.req.name') }]}
         >
-          <Input placeholder="输入规则名称" />
+          <Input placeholder={t('ruleEdit.ph.name')} />
         </Form.Item>
 
-        <Form.Item name="ruleType" label="规则类型" initialValue={ruleType}>
+        <Form.Item name="ruleType" label={t('ruleEdit.field.ruleType')} initialValue={ruleType}>
           <Radio.Group onChange={e => setRuleType(e.target.value)} value={ruleType}>
-            <Radio value="llm">自然语言规则</Radio>
-            <Radio value="logic">逻辑规则</Radio>
+            <Radio value="llm">{t('ruleEdit.kindLLMFull')}</Radio>
+            <Radio value="logic">{t('ruleEdit.kindLogicFull')}</Radio>
           </Radio.Group>
         </Form.Item>
 
-        <Form.Item name="is_shared" valuePropName="checked" tooltip="勾选后，该规则将对所有用户可见可用（但只有创建者可编辑）">
+        <Form.Item name="is_shared" valuePropName="checked" tooltip={t('ruleEdit.tip.shareAll')}>
           <Checkbox>
             <Space>
               <TeamOutlined />
-              共享给所有用户
+              {t('ruleEdit.shareAll')}
             </Space>
           </Checkbox>
         </Form.Item>
@@ -311,18 +316,18 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
               name="content"
               label={
                 <span>
-                  规则内容
-                  <Tooltip title="可以使用 {{变量名}} 格式引用环境变量">
+                  {t('ruleEdit.field.content')}
+                  <Tooltip title={t('ruleEdit.tip.varRef')}>
                     <InfoCircleOutlined style={{ marginLeft: 4, color: 'var(--custom-text-secondary)' }} />
                   </Tooltip>
                 </span>
               }
-              rules={[{ required: true, message: '请输入规则内容' }]}
+              rules={[{ required: true, message: t('ruleEdit.req.content') }]}
             >
               <TextArea
                 ref={textAreaRef}
                 rows={8}
-                placeholder="使用自然语言描述规则，例如：如果玩家进入危险区域，则生命值每秒减少10点。可以使用 {{变量名}} 引用环境变量。"
+                placeholder={t('ruleEdit.ph.contentLLM')}
                 onChange={(e) => debouncedAnalyzeVariables(e.target.value)}
               />
             </Form.Item>
@@ -332,7 +337,7 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
                 <div style={{ marginBottom: 8 }}>
                   <Text strong style={{ fontSize: '13px' }}>
                     <InfoCircleOutlined style={{ marginRight: 4, color: '#52c41a' }} />
-                    检测到的模板变量:
+                    {t('ruleEdit.detectedVars')}
                   </Text>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -341,10 +346,10 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
                       key={index}
                       title={
                         <div>
-                          <div><strong>变量名:</strong> {variable.name}</div>
-                          <div><strong>标签:</strong> {variable.label}</div>
-                          <div><strong>来源:</strong> {variable.source}</div>
-                          <div><strong>当前值:</strong> {variable.value || '未设置'}</div>
+                          <div><strong>{t('ruleEdit.varName')}</strong> {variable.name}</div>
+                          <div><strong>{t('ruleEdit.varLabel')}</strong> {variable.label}</div>
+                          <div><strong>{t('ruleEdit.varSource')}</strong> {variable.source}</div>
+                          <div><strong>{t('ruleEdit.varValue')}</strong> {variable.value || t('ruleEdit.unset')}</div>
                         </div>
                       }
                     >
@@ -370,14 +375,14 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
                     label: (
                       <span>
                         <InfoCircleOutlined style={{ marginRight: 4, color: '#1677ff' }} />
-                        可用环境变量 (点击插入)
+                        {t('ruleEdit.availVarsClickInsert')}
                       </span>
                     ),
                     children: (
                       <div>
                         {(() => {
                           const groupedInternalVars = environmentVariables.internal.reduce((groups, variable) => {
-                            const spaceName = variable.action_space_name || '未分类';
+                            const spaceName = variable.action_space_name || t('ruleEdit.uncategorized');
                             if (!groups[spaceName]) groups[spaceName] = [];
                             groups[spaceName].push(variable);
                             return groups;
@@ -387,7 +392,7 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
                             <div key={spaceName} style={{ marginBottom: 12 }}>
                               <div style={{ marginBottom: 6 }}>
                                 <Text strong style={{ fontSize: '12px', color: '#1677ff' }}>
-                                  📁 {spaceName} (内部变量)
+                                  📁 {spaceName} {t('ruleEdit.internalVarSuffix')}
                                 </Text>
                               </div>
                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginLeft: 12 }}>
@@ -410,7 +415,7 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
                           <div>
                             <div style={{ marginBottom: 6 }}>
                               <Text strong style={{ fontSize: '12px', color: '#52c41a' }}>
-                                🌐 外部环境变量
+                                🌐 {t('ruleEdit.externalVars')}
                               </Text>
                             </div>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginLeft: 12 }}>
@@ -440,17 +445,17 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
               name="interpreter"
               label={
                 <span>
-                  规则解释器
-                  <Tooltip title="选择用于执行规则代码的解释器">
+                  {t('ruleEdit.field.interpreter')}
+                  <Tooltip title={t('ruleEdit.tip.interpreter')}>
                     <QuestionCircleOutlined style={{ marginLeft: 4, color: 'var(--custom-text-secondary)' }} />
                   </Tooltip>
                 </span>
               }
               initialValue="javascript"
-              rules={[{ required: true, message: '请选择规则解释器' }]}
+              rules={[{ required: true, message: t('ruleEdit.req.interpreter') }]}
             >
               <Select
-                placeholder="选择规则解释器"
+                placeholder={t('ruleEdit.ph.interpreter')}
                 onChange={(value) => setEditorLanguage(value === 'python' ? 'python' : 'javascript')}
               >
                 <Option value="javascript">JavaScript</Option>
@@ -462,14 +467,14 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
               name="content"
               label={
                 <span>
-                  规则代码
+                  {t('ruleEdit.field.code')}
                   <Tooltip
                     title={
                       <div>
-                        <div>JavaScript示例: return context.age {'>'}= 18;</div>
-                        <div>Python示例: return context['age'] {'>'}= 18</div>
-                        <div>规则代码需要返回布尔值</div>
-                        <div>可以使用 {'{'}{'{'} 变量名 {'}'}{'}'}  格式引用环境变量</div>
+                        <div>{t('ruleEdit.tip.jsExample')}: return context.age {'>'}= 18;</div>
+                        <div>{t('ruleEdit.tip.pyExample')}: return context['age'] {'>'}= 18</div>
+                        <div>{t('ruleEdit.tip.returnBool')}</div>
+                        <div>{t('ruleEdit.tip.varRefFmt', { fmt: '{{varName}}' })}</div>
                       </div>
                     }
                   >
@@ -477,7 +482,7 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
                   </Tooltip>
                 </span>
               }
-              rules={[{ required: true, message: '请输入规则代码' }]}
+              rules={[{ required: true, message: t('ruleEdit.req.code') }]}
             >
               <div style={{ border: '1px solid var(--custom-border)', borderRadius: '6px', overflow: 'hidden' }}>
                 <Editor
@@ -504,13 +509,13 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
               </div>
             </Form.Item>
 
-            {/* 显示检测到的模板变量 - 逻辑规则 */}
+            {/* detected template variables — logic rule */}
             {currentRuleVariables.length > 0 && (
               <div style={{ marginBottom: 16, padding: '12px', backgroundColor: '#f6ffed', borderRadius: '6px', border: '1px solid #b7eb8f' }}>
                 <div style={{ marginBottom: 8 }}>
                   <Text strong style={{ fontSize: '13px' }}>
                     <InfoCircleOutlined style={{ marginRight: 4, color: '#52c41a' }} />
-                    检测到的模板变量:
+                    {t('ruleEdit.detectedVars')}
                   </Text>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -519,10 +524,10 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
                       key={index}
                       title={
                         <div>
-                          <div><strong>变量名:</strong> {variable.name}</div>
-                          <div><strong>标签:</strong> {variable.label}</div>
-                          <div><strong>来源:</strong> {variable.source}</div>
-                          <div><strong>当前值:</strong> {variable.value || '未设置'}</div>
+                          <div><strong>{t('ruleEdit.varName')}</strong> {variable.name}</div>
+                          <div><strong>{t('ruleEdit.varLabel')}</strong> {variable.label}</div>
+                          <div><strong>{t('ruleEdit.varSource')}</strong> {variable.source}</div>
+                          <div><strong>{t('ruleEdit.varValue')}</strong> {variable.value || t('ruleEdit.unset')}</div>
                         </div>
                       }
                     >
@@ -538,10 +543,10 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
               </div>
             )}
 
-            {/* 可用环境变量列表 - 逻辑规则 */}
+            {/* available env vars — logic rule */}
             {(environmentVariables.internal.length > 0 || environmentVariables.external.length > 0) && (
               <Collapse
-               
+
                 style={{ marginBottom: 16 }}
                 items={[
                   {
@@ -549,14 +554,14 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
                     label: (
                       <span>
                         <InfoCircleOutlined style={{ marginRight: 4, color: '#1677ff' }} />
-                        可用环境变量 (点击插入到代码中)
+                        {t('ruleEdit.availVarsClickInsertCode')}
                       </span>
                     ),
                     children: (
                       <div>
                         {(() => {
                           const groupedInternalVars = environmentVariables.internal.reduce((groups, variable) => {
-                            const spaceName = variable.action_space_name || '未分类';
+                            const spaceName = variable.action_space_name || t('ruleEdit.uncategorized');
                             if (!groups[spaceName]) groups[spaceName] = [];
                             groups[spaceName].push(variable);
                             return groups;
@@ -566,7 +571,7 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
                             <div key={spaceName} style={{ marginBottom: 12 }}>
                               <div style={{ marginBottom: 6 }}>
                                 <Text strong style={{ fontSize: '12px', color: '#1677ff' }}>
-                                  📁 {spaceName} (内部变量)
+                                  📁 {spaceName} {t('ruleEdit.internalVarSuffix')}
                                 </Text>
                               </div>
                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginLeft: 12 }}>
@@ -575,11 +580,11 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
                                     key={index}
                                     title={
                                       <div>
-                                        <div><strong>变量名:</strong> {variable.name}</div>
-                                        <div><strong>标签:</strong> {variable.label}</div>
-                                        <div><strong>行动空间:</strong> {variable.action_space_name}</div>
-                                        <div><strong>默认值:</strong> {variable.value || '未设置'}</div>
-                                        <div style={{ marginTop: 4, fontSize: '12px', color: 'var(--custom-text-secondary)' }}>点击插入到代码中</div>
+                                        <div><strong>{t('ruleEdit.varName')}</strong> {variable.name}</div>
+                                        <div><strong>{t('ruleEdit.varLabel')}</strong> {variable.label}</div>
+                                        <div><strong>{t('ruleEdit.varActionSpace')}</strong> {variable.action_space_name}</div>
+                                        <div><strong>{t('ruleEdit.varDefault')}</strong> {variable.value || t('ruleEdit.unset')}</div>
+                                        <div style={{ marginTop: 4, fontSize: '12px', color: 'var(--custom-text-secondary)' }}>{t('ruleEdit.clickInsertCode')}</div>
                                       </div>
                                     }
                                   >
@@ -601,7 +606,7 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
                           <div>
                             <div style={{ marginBottom: 6 }}>
                               <Text strong style={{ fontSize: '12px', color: '#52c41a' }}>
-                                🌐 外部环境变量
+                                🌐 {t('ruleEdit.externalVars')}
                               </Text>
                             </div>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginLeft: 12 }}>
@@ -610,10 +615,10 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
                                   key={index}
                                   title={
                                     <div>
-                                      <div><strong>变量名:</strong> {variable.name}</div>
-                                      <div><strong>标签:</strong> {variable.label}</div>
-                                      <div><strong>当前值:</strong> {variable.value || '未设置'}</div>
-                                      <div style={{ marginTop: 4, fontSize: '12px', color: 'var(--custom-text-secondary)' }}>点击插入到代码中</div>
+                                      <div><strong>{t('ruleEdit.varName')}</strong> {variable.name}</div>
+                                      <div><strong>{t('ruleEdit.varLabel')}</strong> {variable.label}</div>
+                                      <div><strong>{t('ruleEdit.varValue')}</strong> {variable.value || t('ruleEdit.unset')}</div>
+                                      <div style={{ marginTop: 4, fontSize: '12px', color: 'var(--custom-text-secondary)' }}>{t('ruleEdit.clickInsertCode')}</div>
                                     </div>
                                   }
                                 >
@@ -639,9 +644,9 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
         )}
       </Form>
 
-      {/* 测试区域 */}
+      {/* test area */}
       <Collapse
-       
+
         activeKey={testSectionCollapsed ? [] : ['test']}
         onChange={() => setTestSectionCollapsed(!testSectionCollapsed)}
         items={[
@@ -650,7 +655,7 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
             label: (
               <span>
                 <BugOutlined style={{ marginRight: 4 }} />
-                规则测试 (可选)
+                {t('ruleEdit.testOptional')}
               </span>
             ),
             children: (
@@ -659,9 +664,9 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
                   <div>
                     {ruleType === 'llm' && (
                       <div style={{ marginBottom: 16 }}>
-                        <Title level={5}>选择测试角色</Title>
+                        <Title level={5}>{t('ruleEdit.pickTestRole')}</Title>
                         <Select
-                          placeholder="选择一个角色"
+                          placeholder={t('ruleEdit.ph.pickRole')}
                           style={{ width: '100%' }}
                           value={selectedRoleId}
                           onChange={setSelectedRoleId}
@@ -676,12 +681,12 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
 
                     {ruleType === 'llm' && (
                       <div>
-                        <Title level={5}>输入测试场景</Title>
+                        <Title level={5}>{t('ruleEdit.enterScenario')}</Title>
                         <TextArea
                           rows={6}
                           value={testContext}
                           onChange={e => setTestContext(e.target.value)}
-                          placeholder="描述一个测试场景"
+                          placeholder={t('ruleEdit.ph.scenario')}
                         />
                       </div>
                     )}
@@ -689,10 +694,10 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
                     <div style={{ marginTop: 16 }}>
                       <Space>
                         <Button type="primary" onClick={handleTestRule} loading={isTestLoading}>
-                          执行测试
+                          {t('ruleEdit.runTest')}
                         </Button>
                         <Button onClick={() => { setTestContext(''); setTestResults(null); setSelectedRoleId(null); }}>
-                          重置
+                          {t('ruleEdit.reset')}
                         </Button>
                       </Space>
                     </div>
@@ -701,17 +706,17 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
 
                 <Col xs={24} md={12}>
                   <div>
-                    <Title level={5}>测试结果</Title>
+                    <Title level={5}>{t('ruleEdit.testResults')}</Title>
                     {isTestLoading ? (
                       <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                        <Spin><div style={{ padding: '20px' }}>测试执行中...</div></Spin>
+                        <Spin><div style={{ padding: '20px' }}>{t('ruleEdit.testing')}</div></Spin>
                       </div>
                     ) : testResults ? (
                       <div>
                         {testResults.results.map((result, index) => (
                           <Card
                             key={index}
-                           
+
                             style={{
                               marginBottom: 8,
                               borderLeft: `4px solid ${result.passed ? '#52c41a' : '#f5222d'}`
@@ -721,7 +726,7 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
                               <Space>
                                 <Text strong>{result.rule_name}</Text>
                                 <Tag color={result.passed ? 'success' : 'error'}>
-                                  {result.passed ? '通过' : '失败'}
+                                  {result.passed ? t('ruleEdit.pass') : t('ruleEdit.fail')}
                                 </Tag>
                               </Space>
                             </div>
@@ -732,7 +737,7 @@ const RuleEditModal = ({ visible, rule, roles, environmentVariables, onCancel, o
                         ))}
                       </div>
                     ) : (
-                      <Empty description="尚未执行测试" />
+                      <Empty description={t('ruleEdit.noTestYet')} />
                     )}
                   </div>
                 </Col>

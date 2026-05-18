@@ -2,6 +2,7 @@
 // 此文件包含行动空间监督者管理组件
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Card, Button, Table, Empty,
   Space, Modal, Form, Input, message,
@@ -24,6 +25,7 @@ const { Option } = Select;
 const { TextArea } = Input;
 
 const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
+  const { t } = useTranslation();
   const [observers, setObservers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -46,8 +48,8 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
       const response = await actionSpaceAPI.getObservers(actionSpaceId);
       setObservers(response.observers || []);
     } catch (error) {
-      console.error('获取监督者失败:', error);
-      message.error('获取监督者失败');
+      console.error('fetch observers failed:', error);
+      message.error(t('observer.fetchFailed'));
     } finally {
       setLoading(false);
     }
@@ -61,8 +63,8 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
       const filteredRoles = roles.filter(role => role.is_observer_role || true);
       setAvailableRoles(filteredRoles);
     } catch (error) {
-      console.error('获取可用角色失败:', error);
-      message.error('获取可用角色失败');
+      console.error('fetch available roles failed:', error);
+      message.error(t('observer.fetchRolesFailed'));
     }
   };
 
@@ -91,7 +93,7 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
           });
         });
       } catch (error) {
-        console.warn('获取行动空间环境变量失败:', error);
+        console.warn('fetch action-space env variables failed:', error);
       }
 
       // 2. 获取行动空间中角色的变量
@@ -121,12 +123,12 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
           }
         });
       } catch (error) {
-        console.warn('获取角色变量失败:', error);
+        console.warn('fetch role variables failed:', error);
       }
 
       setAvailableVariables(variableData);
     } catch (error) {
-      console.error('获取可用变量失败:', error);
+      console.error('fetch available variables failed:', error);
       setAvailableVariables({ environmentVariables: [], agentRoles: [] });
     }
   };
@@ -170,12 +172,12 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
   const handleDeleteObserver = async (observerId) => {
     try {
       await actionSpaceAPI.deleteObserver(actionSpaceId, observerId);
-      message.success('监督者已删除');
+      message.success(t('observer.deleted'));
       fetchObservers();
       if (onDataChange) onDataChange();
     } catch (error) {
-      console.error('删除监督者失败:', error);
-      message.error('删除监督者失败');
+      console.error('delete observer failed:', error);
+      message.error(t('observer.deleteFailed'));
     }
   };
 
@@ -193,7 +195,7 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
             additional_prompt: values.additional_prompt
           }
         );
-        message.success('监督者已更新');
+        message.success(t('observer.updated'));
       } else {
         // 添加监督者
         await actionSpaceAPI.addObserver(
@@ -203,15 +205,15 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
             additional_prompt: values.additional_prompt
           }
         );
-        message.success('监督者已添加');
+        message.success(t('observer.added'));
       }
 
       setModalVisible(false);
       fetchObservers();
       if (onDataChange) onDataChange();
     } catch (error) {
-      console.error('提交监督者失败:', error);
-      message.error('提交监督者失败');
+      console.error('submit observer failed:', error);
+      message.error(t('observer.submitFailed'));
     }
   };
 
@@ -422,43 +424,43 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
         }
       );
 
-      message.success('监督者设置已更新');
+      message.success(t('observer.settingsUpdated'));
       setSettingsModalVisible(false);
       setCurrentFormValues(null);
       fetchObservers();
       if (onDataChange) onDataChange();
     } catch (error) {
-      console.error('更新监督者设置失败:', error);
-      message.error('更新监督者设置失败');
+      console.error('update observer settings failed:', error);
+      message.error(t('observer.settingsUpdateFailed'));
     }
   };
 
-  // 辅助函数：获取监督方式名称
+  // helper: supervision-mode display name
   const getModeName = (mode) => {
     const modeMap = {
-      'immediate': '即时监督',
-      'round_based': '轮次监督',
-      'variable_based': '条件监督'
+      'immediate': t('observer.mode.immediate'),
+      'round_based': t('observer.mode.roundBased'),
+      'variable_based': t('observer.mode.conditional')
     };
     return modeMap[mode] || mode;
   };
 
-  // 辅助函数：获取触发时机描述
+  // helper: trigger-timing description
   const getTriggerDescription = (mode) => {
     const descMap = {
-      'immediate': '每个智能体回复后立即检查',
-      'round_based': '每轮对话结束后统一检查',
-      'variable_based': '当指定变量达到条件时检查'
+      'immediate': t('observer.trigger.immediate'),
+      'round_based': t('observer.trigger.roundBased'),
+      'variable_based': t('observer.trigger.variableBased')
     };
     return descMap[mode] || '';
   };
 
-  // 辅助函数：获取干预模式名称
+  // helper: intervention-mode display name
   const getInterventionName = (mode) => {
     const nameMap = {
-      'passive': '被动响应',
-      'alert': '主动记录',
-      'intervene': '任务干预'
+      'passive': t('observer.intervention.passive'),
+      'alert': t('observer.intervention.alert'),
+      'intervene': t('observer.intervention.intervene')
     };
     return nameMap[mode] || mode;
   };
@@ -473,37 +475,37 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
     return colorMap[mode] || 'default';
   };
 
-  // 辅助函数：获取干预模式的详细描述
+  // helper: intervention-mode detailed description
   const getInterventionActionDesc = (mode) => {
     const descMap = {
-      'passive': '仅在监督会话中被动响应用户消息',
-      'alert': '规则违规时在监督会话中主动记录',
-      'intervene': '规则违规且达到阈值时直接在任务会话中干预'
+      'passive': t('observer.intervention.desc.passive'),
+      'alert': t('observer.intervention.desc.alert'),
+      'intervene': t('observer.intervention.desc.intervene')
     };
     return descMap[mode] || '';
   };
 
-  // 辅助函数：获取阈值描述
+  // helper: threshold description
   const getThresholdDescription = (value) => {
-    if (value <= 0.5) return '监督者会频繁介入，即使是轻微的问题也会触发';
-    if (value <= 0.7) return '监督者会在发现明显问题时介入，适合一般场景';
-    return '监督者只在发现严重问题时才会介入，适合探索性任务';
+    if (value <= 0.5) return t('observer.threshold.desc.aggressive');
+    if (value <= 0.7) return t('observer.threshold.desc.balanced');
+    return t('observer.threshold.desc.cautious');
   };
 
-  // 辅助函数：获取阈值档位名称
+  // helper: threshold level name
   const getThresholdLevel = (value) => {
-    if (value <= 0.5) return '积极';
-    if (value <= 0.7) return '平衡';
-    return '谨慎';
+    if (value <= 0.5) return t('observer.threshold.aggressive');
+    if (value <= 0.7) return t('observer.threshold.balanced');
+    return t('observer.threshold.cautious');
   };
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div>
-          <Title level={5} style={{ margin: 0 }}>行动空间监督者</Title>
+          <Title level={5} style={{ margin: 0 }}>{t('observer.title')}</Title>
           <Paragraph style={{ margin: 0, marginTop: 8 }}>
-            监督者是特殊的智能体角色，用于监控和评估其他智能体的行为。监督者可以根据规则集对智能体的行为进行评估，并在必要时进行干预。
+            {t('observer.intro')}
           </Paragraph>
         </div>
         <Button
@@ -511,7 +513,7 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
           icon={<PlusOutlined />}
           onClick={handleAddObserver}
         >
-          添加监督者
+          {t('observer.add')}
         </Button>
       </div>
 
@@ -524,48 +526,48 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
             dataSource={observers}
             rowKey="id"
             columns={[
-              { title: '监督者名称', dataIndex: 'name', key: 'name', width: '20%' },
+              { title: t('observer.col.name'), dataIndex: 'name', key: 'name', width: '20%' },
               {
-                title: '额外提示词',
+                title: t('observer.col.extraPrompt'),
                 dataIndex: 'additional_prompt',
                 key: 'additional_prompt',
                 ellipsis: true,
                 width: '50%',
-                render: (text) => text || '无'
+                render: (text) => text || t('observer.col.none')
               },
               {
-                title: '监督模式',
+                title: t('observer.col.supervisionMode'),
                 key: 'supervision_mode',
                 width: '15%',
                 render: (_, record) => {
                   const mode = record.settings?.supervision?.supervision_mode || 'round_based';
                   const modeMap = {
-                    'immediate': '即时监督',
-                    'round_based': '轮次监督',
-                    'variable_based': '变量监督'
+                    'immediate': t('observer.mode.immediate'),
+                    'round_based': t('observer.mode.roundBased'),
+                    'variable_based': t('observer.mode.variableBased')
                   };
-                  return <Tag color="blue">{modeMap[mode] || '轮次监督'}</Tag>;
+                  return <Tag color="blue">{modeMap[mode] || t('observer.mode.roundBased')}</Tag>;
                 }
               },
               {
-                title: '操作',
+                title: t('observer.col.actions'),
                 key: 'action',
                 width: '25%',
                 render: (_, record) => (
                   <Space>
                     <Button
                       type="link"
-                     
+
                       icon={<SettingOutlined />}
                       onClick={() => handleConfigureObserver(record)}
                     >
-                      配置
+                      {t('observer.action.configure')}
                     </Button>
                     <Button type="link" onClick={() => handleEditObserver(record)}>
-                      编辑
+                      {t('observer.action.edit')}
                     </Button>
                     <Button type="link" danger onClick={() => handleDeleteObserver(record.id)}>
-                      删除
+                      {t('observer.action.delete')}
                     </Button>
                   </Space>
                 )
@@ -573,12 +575,12 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
             ]}
           />
         ) : (
-          <Empty description="暂无监督者" />
+          <Empty description={t('observer.empty')} />
         )}
 
-      {/* 监督者表单对话框 */}
+      {/* observer form modal */}
       <Modal
-        title={`${editingObserver ? '编辑' : '添加'}监督者`}
+        title={editingObserver ? t('observer.form.title.edit') : t('observer.form.title.add')}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         onOk={handleSubmit}
@@ -589,14 +591,13 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
           layout="vertical"
         >
           {editingObserver ? (
-            // 编辑模式 - 不允许更改角色
             <Form.Item
               name="role_id"
-              label="选择角色"
-              rules={[{ required: true, message: '请选择角色' }]}
+              label={t('observer.form.role')}
+              rules={[{ required: true, message: t('observer.form.roleRequired') }]}
             >
               <Select
-                placeholder="选择角色"
+                placeholder={t('observer.form.rolePlaceholder')}
                 optionFilterProp="children"
                 showSearch
                 disabled={true}
@@ -607,9 +608,8 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                       <span>{role.name}</span>
                       <Tag
                         color={role.source === 'external' ? 'orange' : 'blue'}
-                       
                       >
-                        {role.source === 'external' ? '外部' : '内部'}
+                        {role.source === 'external' ? t('observer.form.sourceExternal') : t('observer.form.sourceInternal')}
                       </Tag>
                     </div>
                   </Option>
@@ -617,26 +617,24 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
               </Select>
             </Form.Item>
           ) : (
-            // 添加模式 - 可以选择角色
             <Form.Item
               name="role_id"
-              label="选择角色"
-              rules={[{ required: true, message: '请选择角色' }]}
+              label={t('observer.form.role')}
+              rules={[{ required: true, message: t('observer.form.roleRequired') }]}
             >
               <Select
-                placeholder="选择角色"
+                placeholder={t('observer.form.rolePlaceholder')}
                 optionFilterProp="children"
                 showSearch
               >
                 {availableRoles.map(role => (
                   <Option key={role.id} value={role.id.toString()}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span>{role.name} {role.is_observer_role ? '(监督者)' : ''}</span>
+                      <span>{role.name} {role.is_observer_role ? t('observer.form.observerSuffix') : ''}</span>
                       <Tag
                         color={role.source === 'external' ? 'orange' : 'blue'}
-                       
                       >
-                        {role.source === 'external' ? '外部' : '内部'}
+                        {role.source === 'external' ? t('observer.form.sourceExternal') : t('observer.form.sourceInternal')}
                       </Tag>
                     </div>
                   </Option>
@@ -645,24 +643,22 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
             </Form.Item>
           )}
 
-          {/* 移除规则集选择 */}
-
           <Form.Item
             name="additional_prompt"
-            label="额外提示词"
-            extra="为监督者提供额外的指导，帮助其更好地执行监督任务"
+            label={t('observer.form.extraPrompt')}
+            extra={t('observer.form.extraPromptExtra')}
           >
             <TextArea
               rows={6}
-              placeholder="请输入额外提示词，用于指导监督者行为"
+              placeholder={t('observer.form.extraPromptPlaceholder')}
             />
           </Form.Item>
         </Form>
       </Modal>
 
-      {/* 监督者配置模态框 */}
+      {/* observer config modal */}
       <Modal
-        title={`配置监督者: ${configuringObserver?.name || ''}`}
+        title={t('observer.config.title', { name: configuringObserver?.name || '' })}
         open={settingsModalVisible}
         onCancel={() => {
           setSettingsModalVisible(false);
@@ -718,29 +714,29 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
                     <InfoCircleOutlined style={{ color: '#52c41a', marginRight: 8, fontSize: '16px' }} />
-                    <Text strong style={{ fontSize: '14px' }}>监督流程预览</Text>
+                    <Text strong style={{ fontSize: '14px' }}>{t('observer.config.flow.title')}</Text>
                   </div>
                   <Steps
-                   
+
                     current={-1}
                     items={[
                       {
-                        title: '触发检查',
+                        title: t('observer.config.flow.trigger'),
                         description: getTriggerDescription(mode),
                         icon: <ClockCircleOutlined style={{ color: '#1677ff' }} />
                       },
                       {
-                        title: '规则评估',
-                        description: '检查是否违反行动空间规则',
+                        title: t('observer.config.flow.ruleEval'),
+                        description: t('observer.config.flow.ruleEvalDesc'),
                         icon: <FileSearchOutlined style={{ color: '#722ed1' }} />
                       },
                       {
-                        title: '判断介入',
-                        description: `违规严重度 ≥ ${threshold} 时触发`,
+                        title: t('observer.config.flow.decide'),
+                        description: t('observer.config.flow.decideDesc', { threshold }),
                         icon: <CheckCircleOutlined style={{ color: '#fa8c16' }} />
                       },
                       {
-                        title: '执行动作',
+                        title: t('observer.config.flow.execute'),
                         description: getInterventionActionDesc(interventionMode),
                         icon: <ThunderboltOutlined style={{ color: '#52c41a' }} />
                       }
@@ -757,7 +753,7 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                 title={
                   <Space>
                     <SettingOutlined style={{ color: '#1677ff' }} />
-                    <span>基本设置</span>
+                    <span>{t('observer.basic.title')}</span>
                   </Space>
                 }
                 style={{
@@ -771,24 +767,24 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                   name="supervision_mode"
                   label={
                     <Space>
-                      <span>监督方式</span>
+                      <span>{t('observer.basic.supervisionMode')}</span>
                       <Tooltip
                         title={
                           <div>
-                            <div><strong>监督方式</strong>决定何时触发规则检查（自然语言规则与逻辑规则），进而决定是否执行干预动作</div>
+                            <div><strong>{t('observer.basic.modeTip.title')}</strong>{t('observer.basic.modeTip.intro')}</div>
                             <br />
-                            <div><strong>即时监督：</strong></div>
-                            <div>• 每个智能体回复后立即触发规则检查</div>
-                            <div>• 高频率检查，适合需要严格实时监控的场景</div>
+                            <div><strong>{t('observer.basic.modeTip.immediateTitle')}</strong></div>
+                            <div>• {t('observer.basic.modeTip.immediate1')}</div>
+                            <div>• {t('observer.basic.modeTip.immediate2')}</div>
                             <br />
-                            <div><strong>轮次监督：</strong></div>
-                            <div>• 每轮对话结束后触发规则检查</div>
-                            <div>• 中等频率检查，适合一般业务场景</div>
+                            <div><strong>{t('observer.basic.modeTip.roundTitle')}</strong></div>
+                            <div>• {t('observer.basic.modeTip.round1')}</div>
+                            <div>• {t('observer.basic.modeTip.round2')}</div>
                             <br />
-                            <div><strong>变量监督：</strong></div>
-                            <div>• 基于任务变量条件触发规则检查</div>
-                            <div>• 通过检测任务空间中的变量与目标值对比来触发</div>
-                            <div>• 适合基于特定条件的精确监督场景</div>
+                            <div><strong>{t('observer.basic.modeTip.variableTitle')}</strong></div>
+                            <div>• {t('observer.basic.modeTip.variable1')}</div>
+                            <div>• {t('observer.basic.modeTip.variable2')}</div>
+                            <div>• {t('observer.basic.modeTip.variable3')}</div>
                           </div>
                         }
                       >
@@ -796,46 +792,46 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                       </Tooltip>
                     </Space>
                   }
-                  rules={[{ required: true, message: '请选择监督方式' }]}
+                  rules={[{ required: true, message: t('observer.basic.modeRequired') }]}
                 >
                   <Select
-                    placeholder="选择监督方式"
+                    placeholder={t('observer.basic.modePlaceholder')}
                     onChange={handleSupervisionModeChange}
                     optionLabelProp="label"
                   >
-                    <Option value="immediate" label="即时监督">
+                    <Option value="immediate" label={t('observer.basic.option.immediate.title')}>
                       <div>
-                        <div style={{ fontWeight: 'bold' }}>即时监督</div>
+                        <div style={{ fontWeight: 'bold' }}>{t('observer.basic.option.immediate.title')}</div>
                         <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)' }}>
-                          每个智能体回复后立即检查规则
+                          {t('observer.basic.option.immediate.desc')}
                         </div>
                       </div>
                     </Option>
-                    <Option 
-                      value="round_based" 
-                      label={<span>轮次监督 <Tag color="green">推荐</Tag></span>}
+                    <Option
+                      value="round_based"
+                      label={<span>{t('observer.basic.option.round.title')} <Tag color="green">{t('observer.mode.recommended')}</Tag></span>}
                     >
                       <div>
-                        <div style={{ fontWeight: 'bold' }}>轮次监督 <Tag color="green">推荐</Tag></div>
+                        <div style={{ fontWeight: 'bold' }}>{t('observer.basic.option.round.title')} <Tag color="green">{t('observer.mode.recommended')}</Tag></div>
                         <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)' }}>
-                          每轮对话结束后统一检查规则
+                          {t('observer.basic.option.round.desc')}
                         </div>
                       </div>
                     </Option>
                     <Option
                       value="variable_based"
-                      label="条件监督"
+                      label={t('observer.basic.option.conditional.title')}
                       disabled={
                         !availableVariables.environmentVariables?.length &&
                         !availableVariables.agentRoles?.length
                       }
                     >
                       <div>
-                        <div style={{ fontWeight: 'bold' }}>条件监督</div>
+                        <div style={{ fontWeight: 'bold' }}>{t('observer.basic.option.conditional.title')}</div>
                         <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)' }}>
                           {(!availableVariables.environmentVariables?.length && !availableVariables.agentRoles?.length)
-                            ? '当前行动空间未检测出变量'
-                            : '当指定变量达到条件时检查规则'}
+                            ? t('observer.basic.option.conditional.descEmpty')
+                            : t('observer.basic.option.conditional.descNormal')}
                         </div>
                       </div>
                     </Option>
@@ -845,9 +841,9 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                 {/* 只在变量监督模式下显示变量条件配置 */}
                 {currentSupervisionMode === 'variable_based' && (
                   <>
-                    <Divider>变量触发条件</Divider>
+                    <Divider>{t('observer.var.divider')}</Divider>
 
-                    <Form.Item label="变量监督条件">
+                    <Form.Item label={t('observer.var.label')}>
                       <Form.List name="variable_conditions">
                         {(fields, { add, remove }) => (
                           <>
@@ -858,7 +854,7 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                                   style={{ width: '25%', marginBottom: 0 }}
                                 >
                                   <Select
-                                    placeholder="变量类型"
+                                    placeholder={t('observer.var.typePlaceholder')}
                                     onChange={() => {
                                       // 当变量类型改变时，清空变量选择
                                       settingsForm.setFieldsValue({
@@ -872,8 +868,8 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                                       });
                                     }}
                                   >
-                                    <Select.Option value="environment">环境变量</Select.Option>
-                                    <Select.Option value="agent">智能体变量</Select.Option>
+                                    <Select.Option value="environment">{t('observer.var.typeEnv')}</Select.Option>
+                                    <Select.Option value="agent">{t('observer.var.typeAgent')}</Select.Option>
                                   </Select>
                                 </Form.Item>
 
@@ -893,7 +889,7 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                                         style={{ width: '30%', marginBottom: 0 }}
                                       >
                                         <Select
-                                          placeholder="变量名"
+                                          placeholder={t('observer.var.namePlaceholder')}
                                           showSearch
                                           disabled={!varType}
                                         >
@@ -921,7 +917,7 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                                   name={[field.name, 'operator']}
                                   style={{ width: '15%', marginBottom: 0 }}
                                 >
-                                  <Select placeholder="运算符">
+                                  <Select placeholder={t('observer.var.opPlaceholder')}>
                                     <Select.Option value=">">&gt;</Select.Option>
                                     <Select.Option value=">=">&gt;=</Select.Option>
                                     <Select.Option value="=">=</Select.Option>
@@ -935,7 +931,7 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                                   name={[field.name, 'value']}
                                   style={{ width: '20%', marginBottom: 0 }}
                                 >
-                                  <Input placeholder="目标值" />
+                                  <Input placeholder={t('observer.var.targetPlaceholder')} />
                                 </Form.Item>
 
                                 <Button
@@ -955,7 +951,7 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                                 block
                                 icon={<PlusOutlined />}
                               >
-                                添加变量条件
+                                {t('observer.var.addCondition')}
                               </Button>
                             </Form.Item>
 
@@ -982,8 +978,8 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                             style={{ marginTop: 16 }}
                           >
                             <Radio.Group>
-                              <Radio value="and">满足所有条件（AND）</Radio>
-                              <Radio value="or">满足任一条件（OR）</Radio>
+                              <Radio value="and">{t('observer.var.logicAnd')}</Radio>
+                              <Radio value="or">{t('observer.var.logicOr')}</Radio>
                             </Radio.Group>
                           </Form.Item>
                         ) : null;
@@ -994,23 +990,23 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                       name="check_interval"
                       label={
                         <Space>
-                          <span>检查间隔（秒）</span>
-                          <Tooltip title="监督者检查变量条件的时间间隔">
+                          <span>{t('observer.var.checkInterval')}</span>
+                          <Tooltip title={t('observer.var.checkIntervalTip')}>
                             <QuestionCircleOutlined />
                           </Tooltip>
                         </Space>
                       }
                       initialValue={60}
                       rules={[
-                        { required: true, message: '请输入检查间隔' },
-                        { type: 'number', min: 10, max: 3600, message: '检查间隔必须在10-3600秒之间' }
+                        { required: true, message: t('observer.var.checkIntervalRequired') },
+                        { type: 'number', min: 10, max: 3600, message: t('observer.var.checkIntervalRange') }
                       ]}
                     >
                       <InputNumber
                         min={10}
                         max={3600}
                         style={{ width: '100%' }}
-                        addonAfter="秒"
+                        addonAfter={t('observer.var.seconds')}
                       />
                     </Form.Item>
                   </>
@@ -1024,7 +1020,7 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                 title={
                   <Space>
                     <EditOutlined style={{ color: '#fa8c16' }} />
-                    <span>干预动作</span>
+                    <span>{t('observer.intervene.title')}</span>
                   </Space>
                 }
                 style={{
@@ -1038,26 +1034,26 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                   name="intervention_mode"
                   label={
                     <Space>
-                      <span>干预方式</span>
+                      <span>{t('observer.intervene.modeLabel')}</span>
                       <Tooltip
                         title={
                           <div>
-                            <div><strong>干预方式</strong>决定当规则检查发现违规时如何响应</div>
+                            <div><strong>{t('observer.intervene.modeLabel')}</strong> — {t('observer.intervene.tip.intro')}</div>
                             <br />
-                            <div><strong>被动响应：</strong></div>
-                            <div>• 完全被动，不主动发送消息</div>
-                            <div>• 仅在监督会话中响应用户提问</div>
-                            <div>• 适合需要人工判断的场景</div>
+                            <div><strong>{t('observer.intervene.tip.passiveTitle')}</strong></div>
+                            <div>• {t('observer.intervene.tip.passive1')}</div>
+                            <div>• {t('observer.intervene.tip.passive2')}</div>
+                            <div>• {t('observer.intervene.tip.passive3')}</div>
                             <br />
-                            <div><strong>主动记录：</strong></div>
-                            <div>• 发现违规时在监督会话中主动记录</div>
-                            <div>• 不干预任务会话，保持自然性</div>
-                            <div>• 适合一般监督场景（推荐）</div>
+                            <div><strong>{t('observer.intervene.tip.alertTitle')}</strong></div>
+                            <div>• {t('observer.intervene.tip.alert1')}</div>
+                            <div>• {t('observer.intervene.tip.alert2')}</div>
+                            <div>• {t('observer.intervene.tip.alert3')}</div>
                             <br />
-                            <div><strong>任务干预：</strong></div>
-                            <div>• 违规且达到阈值时直接在任务会话中干预</div>
-                            <div>• 会直接影响任务会话流程</div>
-                            <div>• 适合严格管控场景（需谨慎使用）</div>
+                            <div><strong>{t('observer.intervene.tip.interveneTitle')}</strong></div>
+                            <div>• {t('observer.intervene.tip.intervene1')}</div>
+                            <div>• {t('observer.intervene.tip.intervene2')}</div>
+                            <div>• {t('observer.intervene.tip.intervene3')}</div>
                           </div>
                         }
                       >
@@ -1065,45 +1061,45 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                       </Tooltip>
                     </Space>
                   }
-                  rules={[{ required: true, message: '请选择干预方式' }]}
+                  rules={[{ required: true, message: t('observer.intervene.modeRequired') }]}
                 >
                   <Select
-                    placeholder="选择干预方式"
+                    placeholder={t('observer.intervene.modePlaceholder')}
                     optionLabelProp="label"
                   >
-                    <Option value="passive" label="被动响应">
+                    <Option value="passive" label={t('observer.intervene.option.passive.title')}>
                       <div>
                         <div style={{ fontWeight: 'bold' }}>
-                          <Badge status="default" /> 被动响应
+                          <Badge status="default" /> {t('observer.intervene.option.passive.title')}
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)', marginTop: 4 }}>
-                          仅在监督会话中被动回答用户问题
+                          {t('observer.intervene.option.passive.desc')}
                         </div>
                       </div>
                     </Option>
-                    <Option 
-                      value="alert" 
-                      label={<span><Badge status="warning" /> 主动记录 <Tag color="green">推荐</Tag></span>}
+                    <Option
+                      value="alert"
+                      label={<span><Badge status="warning" /> {t('observer.intervene.option.alert.title')} <Tag color="green">{t('observer.mode.recommended')}</Tag></span>}
                     >
                       <div>
                         <div style={{ fontWeight: 'bold' }}>
-                          <Badge status="warning" /> 主动记录 <Tag color="green">推荐</Tag>
+                          <Badge status="warning" /> {t('observer.intervene.option.alert.title')} <Tag color="green">{t('observer.mode.recommended')}</Tag>
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)', marginTop: 4 }}>
-                          规则违规时在监督会话中主动记录建议
+                          {t('observer.intervene.option.alert.desc')}
                         </div>
                       </div>
                     </Option>
-                    <Option 
-                      value="intervene" 
-                      label={<span><Badge status="error" /> 任务干预 <Tag color="orange" icon={<ExclamationCircleOutlined />}>谨慎</Tag></span>}
+                    <Option
+                      value="intervene"
+                      label={<span><Badge status="error" /> {t('observer.intervene.option.intervene.title')} <Tag color="orange" icon={<ExclamationCircleOutlined />}>{t('observer.intervention.cautious')}</Tag></span>}
                     >
                       <div>
                         <div style={{ fontWeight: 'bold' }}>
-                          <Badge status="error" /> 任务干预 <Tag color="orange" icon={<ExclamationCircleOutlined />}>谨慎</Tag>
+                          <Badge status="error" /> {t('observer.intervene.option.intervene.title')} <Tag color="orange" icon={<ExclamationCircleOutlined />}>{t('observer.intervention.cautious')}</Tag>
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)', marginTop: 4 }}>
-                          达到阈值时直接在任务会话中发消息干预
+                          {t('observer.intervene.option.intervene.desc')}
                         </div>
                       </div>
                     </Option>
@@ -1128,27 +1124,27 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                         name="threshold"
                         label={
                           <Space>
-                            <span>干预阈值</span>
+                            <span>{t('observer.thresholdLabel')}</span>
                             <Tooltip
                               title={
                                 <div>
-                                  <div><strong>干预阈值</strong>决定监督者何时主动响应</div>
+                                  <div><strong>{t('observer.thresholdLabel')}</strong> — {t('observer.threshold.tip.intro')}</div>
                                   <br />
-                                  <div><strong>当前值：</strong>{thresholdValue} - {getThresholdLevel(thresholdValue)}</div>
+                                  <div><strong>{t('observer.threshold.tip.current', { value: thresholdValue, level: getThresholdLevel(thresholdValue) })}</strong></div>
                                   <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)', marginTop: 4 }}>
                                     {getThresholdDescription(thresholdValue)}
                                   </div>
                                   <br />
-                                  <div><strong>工作原理：</strong></div>
-                                  <div>• 规则检查评估违规严重程度（0-1）</div>
-                                  <div>• 当严重度 ≥ 阈值时，触发主动响应</div>
-                                  <div>• 主动记录：在监督会话中记录</div>
-                                  <div>• 任务干预：在任务会话中干预</div>
+                                  <div><strong>{t('observer.threshold.tip.howTitle')}</strong></div>
+                                  <div>• {t('observer.threshold.tip.how1')}</div>
+                                  <div>• {t('observer.threshold.tip.how2')}</div>
+                                  <div>• {t('observer.threshold.tip.how3')}</div>
+                                  <div>• {t('observer.threshold.tip.how4')}</div>
                                   <br />
-                                  <div><strong>档位说明：</strong></div>
-                                  <div>• 0.5（积极）：较低标准，响应频繁</div>
-                                  <div>• 0.7（平衡）：适中标准，推荐设置</div>
-                                  <div>• 0.9（谨慎）：高标准，只在严重违规时响应</div>
+                                  <div><strong>{t('observer.threshold.tip.levelTitle')}</strong></div>
+                                  <div>• {t('observer.threshold.tip.level1')}</div>
+                                  <div>• {t('observer.threshold.tip.level2')}</div>
+                                  <div>• {t('observer.threshold.tip.level3')}</div>
                                 </div>
                               }
                             >
@@ -1156,7 +1152,7 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                             </Tooltip>
                           </Space>
                         }
-                        rules={[{ required: true, message: '请设置干预阈值' }]}
+                        rules={[{ required: true, message: t('observer.thresholdRequired') }]}
                         style={{ marginTop: 16 }}
                       >
                         <Slider
@@ -1164,9 +1160,9 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                           max={0.9}
                           step={null}
                           marks={{
-                            0.5: '积极',
-                            0.7: '平衡',
-                            0.9: '谨慎'
+                            0.5: t('observer.threshold.aggressive'),
+                            0.7: t('observer.threshold.balanced'),
+                            0.9: t('observer.threshold.cautious')
                           }}
                           tooltip={{
                             formatter: (value) => `${value} - ${getThresholdLevel(value)}`
@@ -1181,13 +1177,13 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                   name="max_interventions_per_round"
                   label={
                     <Space>
-                      <span>每轮最大干预次数</span>
-                      <Tooltip title="限制监督者在每轮会话中的最大干预次数">
+                      <span>{t('observer.maxPerRound')}</span>
+                      <Tooltip title={t('observer.maxPerRoundTip')}>
                         <QuestionCircleOutlined />
                       </Tooltip>
                     </Space>
                   }
-                  rules={[{ required: true, message: '请设置最大干预次数' }]}
+                  rules={[{ required: true, message: t('observer.maxPerRoundRequired') }]}
                 >
                   <InputNumber
                     min={1}
@@ -1205,7 +1201,7 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                 title={
                   <Space>
                     <EyeOutlined style={{ color: '#722ed1' }} />
-                    <span>监控范围</span>
+                    <span>{t('observer.scope.title')}</span>
                   </Space>
                 }
                 style={{
@@ -1223,9 +1219,9 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                       style={{ marginBottom: 16 }}
                       label={
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span>规则遵守情况</span>
-                          <Tag color="blue">必选</Tag>
-                          <Tooltip title="监控智能体是否遵守预设的规则（此选项为监督者核心功能，始终启用）">
+                          <span>{t('observer.scope.ruleCompliance')}</span>
+                          <Tag color="blue">{t('observer.scope.required')}</Tag>
+                          <Tooltip title={t('observer.scope.ruleComplianceTip')}>
                             <QuestionCircleOutlined />
                           </Tooltip>
                         </div>
@@ -1242,9 +1238,9 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                       style={{ marginBottom: 16 }}
                       label={
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span>对话质量</span>
-                          <Tag color="orange" style={{ marginLeft: 4 }}>待实现</Tag>
-                          <Tooltip title="监控对话的质量和有效性（功能开发中）">
+                          <span>{t('observer.scope.conversationQuality')}</span>
+                          <Tag color="orange" style={{ marginLeft: 4 }}>{t('observer.scope.todo')}</Tag>
+                          <Tooltip title={t('observer.scope.conversationQualityTip')}>
                             <QuestionCircleOutlined />
                           </Tooltip>
                         </div>
@@ -1261,9 +1257,9 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                       style={{ marginBottom: 16 }}
                       label={
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span>任务进度</span>
-                          <Tag color="orange" style={{ marginLeft: 4 }}>待实现</Tag>
-                          <Tooltip title="监控任务的执行进度和完成情况（功能开发中）">
+                          <span>{t('observer.scope.taskProgress')}</span>
+                          <Tag color="orange" style={{ marginLeft: 4 }}>{t('observer.scope.todo')}</Tag>
+                          <Tooltip title={t('observer.scope.taskProgressTip')}>
                             <QuestionCircleOutlined />
                           </Tooltip>
                         </div>
@@ -1280,9 +1276,9 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                       style={{ marginBottom: 16 }}
                       label={
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span>智能体行为</span>
-                          <Tag color="orange" style={{ marginLeft: 4 }}>待实现</Tag>
-                          <Tooltip title="监控智能体的行为模式和表现（功能开发中）">
+                          <span>{t('observer.scope.agentBehavior')}</span>
+                          <Tag color="orange" style={{ marginLeft: 4 }}>{t('observer.scope.todo')}</Tag>
+                          <Tooltip title={t('observer.scope.agentBehaviorTip')}>
                             <QuestionCircleOutlined />
                           </Tooltip>
                         </div>
@@ -1301,7 +1297,7 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                 title={
                   <Space>
                     <InfoCircleOutlined style={{ color: '#eb2f96' }} />
-                    <span>报告设置</span>
+                    <span>{t('observer.report.title')}</span>
                   </Space>
                 }
                 style={{
@@ -1319,8 +1315,8 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                       style={{ marginBottom: 16 }}
                       label={
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span>生成监督总结</span>
-                          <Tooltip title="自动生成监督过程的总结报告">
+                          <span>{t('observer.report.generateSummary')}</span>
+                          <Tooltip title={t('observer.report.generateSummaryTip')}>
                             <QuestionCircleOutlined />
                           </Tooltip>
                         </div>
@@ -1337,8 +1333,8 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                       style={{ marginBottom: 16 }}
                       label={
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span>记录干预日志</span>
-                          <Tooltip title="详细记录所有监督干预的日志">
+                          <span>{t('observer.report.logInterventions')}</span>
+                          <Tooltip title={t('observer.report.logInterventionsTip')}>
                             <QuestionCircleOutlined />
                           </Tooltip>
                         </div>
@@ -1355,8 +1351,8 @@ const ObserverManagement = ({ actionSpaceId, onDataChange }: any) => {
                       style={{ marginBottom: 16 }}
                       label={
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span>问题警报</span>
-                          <Tooltip title="发现重要问题时发出警报通知">
+                          <span>{t('observer.report.alertOnIssues')}</span>
+                          <Tooltip title={t('observer.report.alertOnIssuesTip')}>
                             <QuestionCircleOutlined />
                           </Tooltip>
                         </div>

@@ -27,14 +27,16 @@ import {
   InfoCircleOutlined,
   SyncOutlined
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
 /**
- * Next RPA - MCP 桌面自动化应用配置组件
+ * Next RPA — MCP desktop-automation app config component.
  */
 const NextRPAApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
   const [config, setConfig] = useState(appConfig);
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
@@ -82,14 +84,14 @@ const NextRPAApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
       
       if (values.connectionMode === 'local' && values.sseUrl) {
         setConnectionStatus('connected');
-        message.success('连接测试成功！');
+        message.success(t('nextRPA.msg.testSuccess'));
       } else {
         setConnectionStatus('error');
-        message.error('连接测试失败，请检查配置');
+        message.error(t('nextRPA.msg.testFailedConfig'));
       }
     } catch (error: any) {
       setConnectionStatus('error');
-      message.error('连接测试失败: ' + error.message);
+      message.error(t('nextRPA.msg.testFailed') + ': ' + error.message);
     } finally {
       setTestingConnection(false);
     }
@@ -147,22 +149,22 @@ const NextRPAApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
         await onConfigChange(newConfig);
       }
       
-      message.success('配置保存成功！');
+      message.success(t('nextRPA.msg.saveSuccess'));
     } catch (error: any) {
-      message.error('保存配置失败: ' + error.message);
+      message.error(t('nextRPA.msg.saveFailed') + ': ' + error.message);
     }
   };
 
   const getConnectionStatusBadge = () => {
     switch (connectionStatus) {
       case 'connected':
-        return <Badge status="success" text="已连接" />;
+        return <Badge status="success" text={t('nextRPA.status.connected')} />;
       case 'disconnected':
-        return <Badge status="default" text="未连接" />;
+        return <Badge status="default" text={t('nextRPA.status.disconnected')} />;
       case 'error':
-        return <Badge status="error" text="连接失败" />;
+        return <Badge status="error" text={t('nextRPA.status.failed')} />;
       default:
-        return <Badge status="default" text="未知" />;
+        return <Badge status="default" text={t('nextRPA.status.unknown')} />;
     }
   };
 
@@ -171,36 +173,36 @@ const NextRPAApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
       key: 'connection',
       label: (
         <span>
-          <LinkOutlined /> 连接设置
+          <LinkOutlined /> {t('nextRPA.tab.connection')}
         </span>
       ),
       children: (
         <>
-          <Title level={5}>连接模式</Title>
+          <Title level={5}>{t('nextRPA.section.connectionMode')}</Title>
           <Form.Item
             name="vncWebProxyUrl"
-            label="Web VNC 代理地址"
-            tooltip="VNC 画面通过后端 WebSocket 代理（端口 6080）转发。当用户通过外网域名访问前端时，需要通过 Nginx 反向代理暴露该端口。配置示例：location /websockify { proxy_pass http://127.0.0.1:6080; proxy_http_version 1.1; proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection 'upgrade'; }。留空则直接连接后端 6080 端口（适用于内网环境）。"
+            label={t('nextRPA.field.vncWebProxyUrl')}
+            tooltip={t('nextRPA.tip.vncWebProxyUrl')}
           >
             <Input placeholder="https://your-domain.com/websockify" />
           </Form.Item>
 
           <Form.Item
             name="connectionMode"
-            label="选择连接模式"
-            rules={[{ required: true, message: '请选择连接模式' }]}
+            label={t('nextRPA.field.connectionMode')}
+            rules={[{ required: true, message: t('nextRPA.req.connectionMode') }]}
           >
             <Select onChange={handleConnectionModeChange}>
               <Option value="local">
                 <Space>
                   <DesktopOutlined />
-                  主机模式 - 连接到远程主机
+                  {t('nextRPA.mode.local')}
                 </Space>
               </Option>
               <Option value="cloud">
                 <Space>
                   <CloudServerOutlined />
-                  Cloud - 云端服务
+                  {t('nextRPA.mode.cloud')}
                 </Space>
               </Option>
             </Select>
@@ -209,38 +211,38 @@ const NextRPAApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
           <Form.Item noStyle shouldUpdate={(prev, curr) => prev.connectionMode !== curr.connectionMode}>
             {({ getFieldValue }) => {
               const mode = getFieldValue('connectionMode');
-              
+
               if (mode === 'local') {
                 return (
                   <>
                     <Divider />
-                    <Title level={5}>主机配置</Title>
+                    <Title level={5}>{t('nextRPA.section.hostConfig')}</Title>
                     <Form.Item
                       name="sseUrl"
-                      label="MCP 协议地址 (SSE URL)"
+                      label={t('nextRPA.field.sseUrl')}
                       rules={[
-                        { required: true, message: '请输入 MCP 协议地址' },
-                        { type: 'url', message: '请输入有效的 URL' }
+                        { required: true, message: t('nextRPA.req.sseUrl') },
+                        { type: 'url', message: t('nextRPA.req.urlValid') }
                       ]}
-                      tooltip="MCPControl 服务器的 SSE 地址，例如: http://192.168.1.100:3232/mcp"
+                      tooltip={t('nextRPA.tip.sseUrl')}
                     >
                       <Input placeholder="http://192.168.1.100:3232/mcp" />
                     </Form.Item>
 
                     <Form.Item
                       name="vncUrl"
-                      label="VNC 地址"
-                      tooltip="远程桌面 VNC WebSocket 地址，用于查看和调试自动化操作，例如: ws://192.168.1.100:5900"
+                      label={t('nextRPA.field.vncUrl')}
+                      tooltip={t('nextRPA.tip.vncUrl')}
                     >
                       <Input placeholder="ws://192.168.1.100:5900" />
                     </Form.Item>
 
                     <Form.Item
                       name="vncPassword"
-                      label="VNC 密码"
-                      tooltip="VNC 连接密码，用于身份验证"
+                      label={t('nextRPA.field.vncPassword')}
+                      tooltip={t('nextRPA.tip.vncPassword')}
                     >
-                      <Input.Password placeholder="输入 VNC 密码" />
+                      <Input.Password placeholder={t('nextRPA.ph.vncPassword')} />
                     </Form.Item>
 
                     <Form.Item>
@@ -250,7 +252,7 @@ const NextRPAApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
                         loading={testingConnection}
                         icon={testingConnection ? <SyncOutlined spin /> : <LinkOutlined />}
                       >
-                        测试连接
+                        {t('nextRPA.testConnection')}
                       </Button>
                     </Form.Item>
                   </>
@@ -259,35 +261,35 @@ const NextRPAApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
                 return (
                   <>
                     <Divider />
-                    <Title level={5}>云端配置</Title>
+                    <Title level={5}>{t('nextRPA.section.cloudConfig')}</Title>
                     <Form.Item
                       name="cloudVendor"
-                      label="云服务供应商"
-                      rules={[{ required: true, message: '请选择云服务供应商' }]}
-                      tooltip="选择您的云服务提供商"
+                      label={t('nextRPA.field.cloudVendor')}
+                      rules={[{ required: true, message: t('nextRPA.req.cloudVendor') }]}
+                      tooltip={t('nextRPA.tip.cloudVendor')}
                     >
-                      <Select placeholder="选择云服务供应商">
+                      <Select placeholder={t('nextRPA.ph.cloudVendor')}>
                         <Option value="aws">AWS (Amazon Web Services)</Option>
                         <Option value="azure">Microsoft Azure</Option>
                         <Option value="gcp">Google Cloud Platform</Option>
-                        <Option value="vmware-vsphere">VMware vSphere (私有化部署)</Option>
-                        <Option value="zstack">ZStack (私有化部署)</Option>
-                        <Option value="other">其他</Option>
+                        <Option value="vmware-vsphere">{t('nextRPA.cloud.vmware')}</Option>
+                        <Option value="zstack">{t('nextRPA.cloud.zstack')}</Option>
+                        <Option value="other">{t('nextRPA.cloud.other')}</Option>
                       </Select>
                     </Form.Item>
 
                     <Form.Item
                       name="cloudApiKey"
                       label="API Key"
-                      rules={[{ required: true, message: '请输入 API Key' }]}
+                      rules={[{ required: true, message: t('nextRPA.req.cloudApiKey') }]}
                     >
-                      <Input.Password placeholder="输入云端服务 API Key" />
+                      <Input.Password placeholder={t('nextRPA.ph.cloudApiKey')} />
                     </Form.Item>
 
                     <Form.Item
                       name="cloudEndpoint"
-                      label="服务端点"
-                      rules={[{ type: 'url', message: '请输入有效的 URL' }]}
+                      label={t('nextRPA.field.cloudEndpoint')}
+                      rules={[{ type: 'url', message: t('nextRPA.req.urlValid') }]}
                     >
                       <Input placeholder="https://api.example.com" />
                     </Form.Item>
@@ -299,11 +301,11 @@ const NextRPAApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
           </Form.Item>
 
           <Divider />
-          <Title level={5}>传输协议</Title>
-          <Form.Item name="transportType" label="协议类型">
+          <Title level={5}>{t('nextRPA.section.transport')}</Title>
+          <Form.Item name="transportType" label={t('nextRPA.field.transportType')}>
             <Select>
               <Option value="sse">SSE (Server-Sent Events)</Option>
-              <Option value="stdio">STDIO (标准输入输出)</Option>
+              <Option value="stdio">{t('nextRPA.transport.stdio')}</Option>
             </Select>
           </Form.Item>
         </>
@@ -313,21 +315,21 @@ const NextRPAApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
       key: 'security',
       label: (
         <span>
-          <SafetyOutlined /> 安全设置
+          <SafetyOutlined /> {t('nextRPA.tab.security')}
         </span>
       ),
       children: (
         <>
-          <Title level={5}>HTTPS 配置</Title>
+          <Title level={5}>{t('nextRPA.section.httpsConfig')}</Title>
           <Alert
-            message="远程部署要求"
-            description="根据 MCP 规范，远程部署必须使用 HTTPS 连接以确保安全性"
+            message={t('nextRPA.alert.remoteDeployTitle')}
+            description={t('nextRPA.alert.remoteDeployDesc')}
             type="warning"
             showIcon
             style={{ marginBottom: 16 }}
           />
 
-          <Form.Item name="enableHttps" label="启用 HTTPS" valuePropName="checked">
+          <Form.Item name="enableHttps" label={t('nextRPA.field.enableHttps')} valuePropName="checked">
             <Switch />
           </Form.Item>
 
@@ -335,10 +337,10 @@ const NextRPAApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
             {({ getFieldValue }) =>
               getFieldValue('enableHttps') ? (
                 <>
-                  <Form.Item name="certPath" label="证书路径" tooltip="TLS 证书文件路径">
+                  <Form.Item name="certPath" label={t('nextRPA.field.certPath')} tooltip={t('nextRPA.tip.certPath')}>
                     <Input placeholder="/path/to/cert.pem" />
                   </Form.Item>
-                  <Form.Item name="keyPath" label="密钥路径" tooltip="TLS 密钥文件路径">
+                  <Form.Item name="keyPath" label={t('nextRPA.field.keyPath')} tooltip={t('nextRPA.tip.keyPath')}>
                     <Input placeholder="/path/to/key.pem" />
              </Form.Item>
                 </>
@@ -352,19 +354,19 @@ const NextRPAApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
       key: 'provider',
       label: (
         <span>
-          <SettingOutlined /> Provider 设置
+          <SettingOutlined /> {t('nextRPA.tab.provider')}
         </span>
       ),
       children: (
         <>
-          <Title level={5}>自动化后端</Title>
+          <Title level={5}>{t('nextRPA.section.automationBackend')}</Title>
           <Alert
-            message="Provider 说明"
+            message={t('nextRPA.alert.providerTitle')}
             description={
               <ul style={{ margin: 0, paddingLeft: 20 }}>
-                <li><strong>keysender</strong>: 原生 Windows 自动化，高可靠性（默认）</li>
-                <li><strong>powershell</strong>: PowerShell 脚本，适合简单操作</li>
-                <li><strong>autohotkey</strong>: AutoHotkey v2，适合高级自动化</li>
+                <li><strong>keysender</strong>: {t('nextRPA.providerDesc.keysender')}</li>
+                <li><strong>powershell</strong>: {t('nextRPA.providerDesc.powershell')}</li>
+                <li><strong>autohotkey</strong>: {t('nextRPA.providerDesc.autohotkey')}</li>
               </ul>
             }
             type="info"
@@ -372,20 +374,20 @@ const NextRPAApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
             style={{ marginBottom: 16 }}
           />
 
-          <Form.Item name="globalProvider" label="全局 Provider" tooltip="默认使用的自动化后端">
+          <Form.Item name="globalProvider" label={t('nextRPA.field.globalProvider')} tooltip={t('nextRPA.tip.globalProvider')}>
             <Select>
-              <Option value="keysender">keysender (推荐)</Option>
+              <Option value="keysender">{t('nextRPA.opt.keysenderRecommended')}</Option>
               <Option value="powershell">powershell</Option>
               <Option value="autohotkey">autohotkey</Option>
             </Select>
           </Form.Item>
 
-          <Divider>模块化配置（可选）</Divider>
+          <Divider>{t('nextRPA.section.modularConfig')}</Divider>
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="keyboardProvider" label="键盘操作" tooltip="留空则使用全局 Provider">
-                <Select allowClear placeholder="使用全局配置">
+              <Form.Item name="keyboardProvider" label={t('nextRPA.field.keyboard')} tooltip={t('nextRPA.tip.moduleProvider')}>
+                <Select allowClear placeholder={t('nextRPA.ph.useGlobal')}>
                   <Option value="keysender">keysender</Option>
                   <Option value="powershell">powershell</Option>
                   <Option value="autohotkey">autohotkey</Option>
@@ -393,8 +395,8 @@ const NextRPAApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="mouseProvider" label="鼠标操作" tooltip="留空则使用全局 Provider">
-                <Select allowClear placeholder="使用全局配置">
+              <Form.Item name="mouseProvider" label={t('nextRPA.field.mouse')} tooltip={t('nextRPA.tip.moduleProvider')}>
+                <Select allowClear placeholder={t('nextRPA.ph.useGlobal')}>
                   <Option value="keysender">keysender</Option>
                   <Option value="powershell">powershell</Option>
                   <Option value="autohotkey">autohotkey</Option>
@@ -405,8 +407,8 @@ const NextRPAApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="screenProvider" label="屏幕操作" tooltip="留空则使用全局 Provider">
-                <Select allowClear placeholder="使用全局配置">
+              <Form.Item name="screenProvider" label={t('nextRPA.field.screen')} tooltip={t('nextRPA.tip.moduleProvider')}>
+                <Select allowClear placeholder={t('nextRPA.ph.useGlobal')}>
                   <Option value="keysender">keysender</Option>
                   <Option value="powershell">powershell</Option>
                   <Option value="autohotkey">autohotkey</Option>
@@ -414,8 +416,8 @@ const NextRPAApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="clipboardProvider" label="剪贴板操作" tooltip="留空则使用全局 Provider">
-                <Select allowClear placeholder="使用全局配置">
+              <Form.Item name="clipboardProvider" label={t('nextRPA.field.clipboard')} tooltip={t('nextRPA.tip.moduleProvider')}>
+                <Select allowClear placeholder={t('nextRPA.ph.useGlobal')}>
                   <Option value="keysender">keysender</Option>
                   <Option value="powershell">powershell</Option>
                   <Option value="autohotkey">autohotkey</Option>
@@ -424,7 +426,7 @@ const NextRPAApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
             </Col>
           </Row>
 
-          <Form.Item name="autohotkeyPath" label="AutoHotkey 路径" tooltip="仅在使用 autohotkey provider 时需要配置">
+          <Form.Item name="autohotkeyPath" label={t('nextRPA.field.autohotkeyPath')} tooltip={t('nextRPA.tip.autohotkeyPath')}>
             <Input placeholder="C:\Program Files\AutoHotkey\v2\AutoHotkey.exe" />
           </Form.Item>
         </>
@@ -434,30 +436,30 @@ const NextRPAApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
       key: 'runtime',
       label: (
         <span>
-          <SettingOutlined /> 运行时配置
+          <SettingOutlined /> {t('nextRPA.tab.runtime')}
         </span>
       ),
       children: (
         <>
-          <Title level={5}>运行参数</Title>
-          <Form.Item name="screenshotQuality" label="截图质量" tooltip="1-100, 数值越大质量越高，文件越大">
+          <Title level={5}>{t('nextRPA.section.runtimeParams')}</Title>
+          <Form.Item name="screenshotQuality" label={t('nextRPA.field.screenshotQuality')} tooltip={t('nextRPA.tip.screenshotQuality')}>
             <InputNumber min={1} max={100} style={{ width: '100%' }} />
           </Form.Item>
 
-          <Form.Item name="operationTimeout" label="操作超时时间（秒）" tooltip="自动化操作的超时限制">
+          <Form.Item name="operationTimeout" label={t('nextRPA.field.operationTimeout')} tooltip={t('nextRPA.tip.operationTimeout')}>
             <InputNumber min={1} max={300} style={{ width: '100%' }} />
           </Form.Item>
 
-          <Form.Item name="enableClipboard" label="启用剪贴板操作" valuePropName="checked">
+          <Form.Item name="enableClipboard" label={t('nextRPA.field.enableClipboard')} valuePropName="checked">
             <Switch />
           </Form.Item>
 
-          <Form.Item name="logLevel" label="日志级别">
+          <Form.Item name="logLevel" label={t('nextRPA.field.logLevel')}>
             <Select>
-              <Option value="debug">DEBUG - 详细调试信息</Option>
-              <Option value="info">INFO - 一般信息</Option>
-              <Option value="warning">WARNING - 警告信息</Option>
-              <Option value="error">ERROR - 错误信息</Option>
+              <Option value="debug">{t('nextRPA.log.debug')}</Option>
+              <Option value="info">{t('nextRPA.log.info')}</Option>
+              <Option value="warning">{t('nextRPA.log.warning')}</Option>
+              <Option value="error">{t('nextRPA.log.error')}</Option>
             </Select>
           </Form.Item>
         </>
@@ -467,39 +469,39 @@ const NextRPAApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
       key: 'environment',
       label: (
         <span>
-          <InfoCircleOutlined /> 环境建议
+          <InfoCircleOutlined /> {t('nextRPA.tab.environment')}
         </span>
       ),
       children: (
         <>
-          <Title level={5}>最佳实践</Title>
+          <Title level={5}>{t('nextRPA.section.bestPractices')}</Title>
           <Descriptions column={1} bordered size="small">
-            <Descriptions.Item label="推荐分辨率">
+            <Descriptions.Item label={t('nextRPA.env.resolutionLabel')}>
               <Tag color="blue">1280x720</Tag>
-              <Text type="secondary" style={{ marginLeft: 8 }}>MCPControl 在此分辨率下点击精度最佳</Text>
+              <Text type="secondary" style={{ marginLeft: 8 }}>{t('nextRPA.env.resolutionDesc')}</Text>
             </Descriptions.Item>
-            <Descriptions.Item label="虚拟机运行">
-              <Tag color="green">推荐</Tag>
-              <Text type="secondary" style={{ marginLeft: 8 }}>建议在虚拟机中运行以提高安全性和隔离性</Text>
+            <Descriptions.Item label={t('nextRPA.env.vmLabel')}>
+              <Tag color="green">{t('nextRPA.env.recommended')}</Tag>
+              <Text type="secondary" style={{ marginLeft: 8 }}>{t('nextRPA.env.vmDesc')}</Text>
             </Descriptions.Item>
-            <Descriptions.Item label="屏幕数量">
-              <Tag color="orange">单屏</Tag>
-              <Text type="secondary" style={{ marginLeft: 8 }}>多屏幕支持有限，建议使用单屏配置</Text>
+            <Descriptions.Item label={t('nextRPA.env.screensLabel')}>
+              <Tag color="orange">{t('nextRPA.env.singleScreen')}</Tag>
+              <Text type="secondary" style={{ marginLeft: 8 }}>{t('nextRPA.env.screensDesc')}</Text>
             </Descriptions.Item>
-            <Descriptions.Item label="操作系统">
+            <Descriptions.Item label={t('nextRPA.env.osLabel')}>
               <Tag color="red">Windows Only</Tag>
-              <Text type="secondary" style={{ marginLeft: 8 }}>目前仅支持 Windows 操作系统</Text>
+              <Text type="secondary" style={{ marginLeft: 8 }}>{t('nextRPA.env.osDesc')}</Text>
             </Descriptions.Item>
           </Descriptions>
 
           <Divider />
-          <Title level={5}>系统要求</Title>
+          <Title level={5}>{t('nextRPA.section.systemRequirements')}</Title>
           <Alert
-            message="MCPControl 依赖"
+            message={t('nextRPA.alert.depsTitle')}
             description={
               <ul style={{ margin: 8, paddingLeft: 20 }}>
                 <li>Windows OS</li>
-                <li>Node.js (LTS 版本)</li>
+                <li>{t('nextRPA.dep.nodejs')}</li>
                 <li>Python 3.12+</li>
                 <li>Visual Studio Build Tools</li>
               </ul>
@@ -515,7 +517,7 @@ const NextRPAApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
   return (
     <div style={{ height: '100%' }}>
       <Alert
-        message="基于 MCP 协议的桌面自动化应用，支持鼠标、键盘、窗口、屏幕和剪贴板的程序化控制"
+        message={t('nextRPA.headerAlert')}
         type="info"
         showIcon
         style={{ marginBottom: 16 }}
@@ -530,8 +532,8 @@ const NextRPAApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
 
         <Divider />
         <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
-          {onClose && <Button onClick={onClose}>关闭</Button>}
-          <Button type="primary" htmlType="submit">保存配置</Button>
+          {onClose && <Button onClick={onClose}>{t('nextRPA.close')}</Button>}
+          <Button type="primary" htmlType="submit">{t('nextRPA.saveConfig')}</Button>
         </Space>
       </Form>
     </div>

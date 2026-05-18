@@ -161,4 +161,464 @@ export default {
   'button.cancel': '取消',
   'button.ok': '确定',
   'button.resetToDefault': '重置为默认',
+
+  // ----- GraphitiTab 长期记忆配置 -----
+  'graphitiTab.enableTitle': '启用Graphiti长期记忆系统',
+  'graphitiTab.enableDesc': '时序感知知识图谱，用于智能体长期记忆管理',
+  'graphitiTab.enableHint': '请先完成配置，然后点击保存按钮',
+  'graphitiTab.disabled': 'Graphiti已禁用',
+  'graphitiTab.saveSuccess': '配置保存成功',
+  'graphitiTab.on': '开启',
+  'graphitiTab.off': '关闭',
+  'graphitiTab.confirm': '确认',
+  'graphitiTab.cancel': '取消',
+  'graphitiTab.clearConfirmTitle': '确认清空数据',
+  'graphitiTab.clearConfirmContent': '此操作将清空所有图谱数据，且不可恢复。是否继续？',
+  'graphitiTab.clearSuccess': '数据清空成功',
+  'graphitiTab.buildSubmitted': '社区构建任务已提交，请稍后查看结果',
+
+  // status & config
+  'graphitiTab.statusConfigTitle': '服务状态与配置',
+  'graphitiTab.running': '运行中',
+  'graphitiTab.notStarted': '未启动',
+  'graphitiTab.refresh': '刷新',
+  'graphitiTab.svcStatus': '服务状态',
+  'graphitiTab.connected': '已连接',
+  'graphitiTab.disconnected': '未连接',
+  'graphitiTab.nodeCount': '节点数量',
+  'graphitiTab.relationCount': '关系数量',
+
+  // service fields
+  'graphitiTab.svcUrl': '服务地址',
+  'graphitiTab.svcUrlRequired': '请输入服务地址',
+  'graphitiTab.svcUrlTip': 'Graphiti FastAPI 服务的访问地址',
+  'graphitiTab.mcpUrl': 'MCP服务地址',
+  'graphitiTab.mcpUrlTip': 'Graphiti MCP SSE 服务的访问地址',
+  'graphitiTab.dbUrl': '数据库访问地址',
+  'graphitiTab.dbUrlRequired': '请输入数据库访问地址',
+  'graphitiTab.dbUrlTip': '用于后端服务访问 Neo4j 数据库的地址',
+  'graphitiTab.svcPort': '服务端口映射',
+  'graphitiTab.mcpPort': 'MCP端口映射',
+  'graphitiTab.portTip': '宿主机端口:容器端口',
+  'graphitiTab.svcControl': '服务控制',
+  'graphitiTab.stopSvc': '停止服务',
+  'graphitiTab.startSvc': '启动服务',
+
+  // model config
+  'graphitiTab.modelConfig': '模型配置',
+  'graphitiTab.textModel': '文本生成模型',
+  'graphitiTab.textModelTip': '用于LLM推理和知识提取',
+  'graphitiTab.textModelRequired': '请选择文本生成模型',
+  'graphitiTab.selectTextModel': '选择文本生成模型',
+  'graphitiTab.embeddingModel': '嵌入模型',
+  'graphitiTab.embeddingModelTip': '用于生成向量表示',
+  'graphitiTab.embeddingModelRequired': '请选择嵌入模型',
+  'graphitiTab.selectEmbeddingModel': '选择嵌入模型',
+  'graphitiTab.embeddingDim': '向量维度',
+  'graphitiTab.embeddingDimTip': '留空则自动检测',
+  'graphitiTab.autoDetect': '自动检测',
+  'graphitiTab.default': '默认',
+  'graphitiTab.rerankType': '重排序类型',
+  'graphitiTab.rerankTypeRequired': '请选择重排序类型',
+  'graphitiTab.selectRerankType': '选择重排序类型',
+  'graphitiTab.rerankerOpt': 'Reranker模型',
+  'graphitiTab.llmRerankOpt': 'LLM重排序',
+  'graphitiTab.rerankModel': '重排序模型',
+  'graphitiTab.rerankModelTip': '用于搜索结果重排序，提升检索准确性',
+  'graphitiTab.rerankModelRequired': '请选择重排序模型',
+  'graphitiTab.selectRerankModel': '选择重排序模型',
+  'graphitiTab.lenientParse': '宽松解析',
+  'graphitiTab.lenientParseTip': '提高与非OpenAI标准LLM的兼容性',
+
+  // memory config
+  'graphitiTab.memoryConfig': '记忆配置',
+  'graphitiTab.partitionStrategy': '分区策略',
+  'graphitiTab.partitionStrategyRequired': '请选择分区策略',
+  'graphitiTab.partitionStrategyTip': '选择记忆数据的分区方式，影响智能体间的记忆共享范围',
+  'graphitiTab.selectPartitionStrategy': '选择记忆分区策略',
+  'graphitiTab.recommended': '推荐',
+  'graphitiTab.msgSyncStrategy': '消息自动同步策略',
+  'graphitiTab.msgSyncStrategyRequired': '请选择消息同步策略',
+  'graphitiTab.msgSyncStrategyTip': '控制何时将对话消息自动同步到图谱记忆',
+  'graphitiTab.selectMsgSyncStrategy': '选择消息同步策略',
+  'graphitiTab.sync.disabled': '关闭',
+  'graphitiTab.sync.disabledDesc': '不自动同步消息到图谱记忆',
+  'graphitiTab.sync.msgComplete': '消息完成',
+  'graphitiTab.sync.msgCompleteDesc': '每条智能体消息完成后立即同步',
+  'graphitiTab.sync.roundComplete': '轮次完成',
+  'graphitiTab.sync.roundCompleteDesc': '完整对话轮次完成后同步',
+  'graphitiTab.concurrentLimit': '并发限制',
+  'graphitiTab.concurrentLimitTip': '控制同时处理的任务数量',
+
+  // community
+  'graphitiTab.communityMgmt': '社区管理',
+  'graphitiTab.communityMgmtTip': '社区构建使用Leiden算法将相关的实体节点聚集成群，有助于提供更高层次的语义信息和更好的检索效果',
+  'graphitiTab.autoBuild': '自动构建社区',
+  'graphitiTab.returnCommunitySummaries': '返回社区摘要',
+  'graphitiTab.sending': '发送中...',
+  'graphitiTab.buildNow': '立即构建社区',
+
+  // advanced
+  'graphitiTab.advancedTitle': '高级选项 - Neo4j 数据库配置（容器内部）',
+  'graphitiTab.advancedTip': '这些是容器内部的 Neo4j 配置，通常使用默认值即可。只有在使用外部 Neo4j 服务或自定义部署时才需要修改。',
+  'graphitiTab.dbType': '数据库类型',
+  'graphitiTab.dbTypeRequired': '请选择数据库类型',
+  'graphitiTab.selectDbType': '选择图数据库类型',
+  'graphitiTab.connectUri': '连接URI',
+  'graphitiTab.connectUriRequired': '请输入连接URI',
+  'graphitiTab.connectUriTip': '容器部署: bolt://neo4j:7687',
+  'graphitiTab.dbName': '数据库名',
+  'graphitiTab.dbNameTip': 'Neo4j数据库名称',
+  'graphitiTab.username': '用户名',
+  'graphitiTab.usernameRequired': '请输入用户名',
+  'graphitiTab.password': '密码',
+  'graphitiTab.passwordRequired': '请输入密码',
+
+  // bottom buttons
+  'graphitiTab.saveConfig': '保存配置',
+  'graphitiTab.testQuery': '测试查询',
+  'graphitiTab.clearData': '清空数据',
+
+  // ----- VectorDBConfigModal 向量数据库配置 -----
+  // (saveSuccess / saveFailed 已在上方定义)
+
+  // fields
+  'vectorDB.field.provider': '向量数据库提供商',
+  'vectorDB.field.serviceEndpoint': '服务端点',
+  'vectorDB.field.authKey': '认证密钥',
+  'vectorDB.field.username': '用户名',
+  'vectorDB.field.password': '密码',
+
+  // providers
+  'vectorDB.provider.aliyun': '阿里云 DashVector',
+  'vectorDB.provider.custom': '自定义',
+
+  // popover help
+  'vectorDB.help.title': '配置说明',
+  'vectorDB.help.aliyun': '需要API Key和Cluster Endpoint，可在阿里云控制台获取',
+  'vectorDB.help.tidb': '只需要Connection String，可在TiDB Cloud控制台的Connect页面直接复制',
+  'vectorDB.help.awsOpensearch': '需要Access Key、Secret Key、Region和OpenSearch域名端点',
+  'vectorDB.help.awsBedrock': '需要Access Key、Secret Key、Region和Knowledge Base ID',
+  'vectorDB.help.azureSearch': '需要Search Service端点、Admin API Key和索引名称',
+  'vectorDB.help.azureCosmos': '需要Cosmos DB端点、Primary Key、数据库名和容器名',
+  'vectorDB.help.vertexAi': '需要Project ID、Location、Index Endpoint和Service Account Key',
+  'vectorDB.help.firestore': '需要Project ID、Collection Name和Service Account Key',
+  'vectorDB.help.pinecone': '需要API Key、Environment和Index Name',
+  'vectorDB.help.othersTitle': '其他提供商',
+  'vectorDB.help.others': '请根据相应文档配置连接参数',
+
+  // required messages
+  'vectorDB.req.provider': '请选择向量数据库提供商',
+  'vectorDB.req.apiKey': '请输入API Key',
+  'vectorDB.req.clusterEndpoint': '请输入Cluster Endpoint',
+  'vectorDB.req.connectionString': '请输入Connection String',
+  'vectorDB.req.accessKeyId': '请输入Access Key ID',
+  'vectorDB.req.secretAccessKey': '请输入Secret Access Key',
+  'vectorDB.req.awsRegion': '请输入AWS Region',
+  'vectorDB.req.opensearchEndpoint': '请输入OpenSearch Endpoint',
+  'vectorDB.req.kbId': '请输入Knowledge Base ID',
+  'vectorDB.req.searchEndpoint': '请输入Search Service Endpoint',
+  'vectorDB.req.adminApiKey': '请输入Admin API Key',
+  'vectorDB.req.indexName': '请输入Index Name',
+  'vectorDB.req.cosmosEndpoint': '请输入Cosmos DB Endpoint',
+  'vectorDB.req.primaryKey': '请输入Primary Key',
+  'vectorDB.req.databaseName': '请输入Database Name',
+  'vectorDB.req.containerName': '请输入Container Name',
+  'vectorDB.req.projectId': '请输入Project ID',
+  'vectorDB.req.location': '请输入Location',
+  'vectorDB.req.indexEndpoint': '请输入Index Endpoint',
+  'vectorDB.req.serviceAccountKey': '请输入Service Account Key',
+  'vectorDB.req.collectionName': '请输入Collection Name',
+  'vectorDB.req.environment': '请输入Environment',
+  'vectorDB.req.milvusEndpoint': '请输入Milvus Endpoint',
+  'vectorDB.req.esEndpoint': '请输入Elasticsearch Endpoint',
+  'vectorDB.req.serviceEndpoint': '请输入服务端点',
+
+  // placeholders
+  'vectorDB.ph.provider': '选择向量数据库提供商',
+  'vectorDB.ph.aliyunKey': '请输入阿里云DashVector的API Key',
+  'vectorDB.ph.aliyunEndpoint': '例如: https://your-cluster.dashvector.cn-hangzhou.aliyuncs.com',
+  'vectorDB.ph.tidbConnString': '例如: ************************************************************************************************/test',
+  'vectorDB.ph.awsAccessKey': '请输入AWS Access Key ID',
+  'vectorDB.ph.awsSecretKey': '请输入AWS Secret Access Key',
+  'vectorDB.ph.bedrockKbId': '请输入Bedrock Knowledge Base ID',
+  'vectorDB.ph.azureSearchKey': '请输入Azure Cognitive Search的Admin API Key',
+  'vectorDB.ph.indexName': '请输入搜索索引名称',
+  'vectorDB.ph.cosmosKey': '请输入Azure Cosmos DB的Primary Key',
+  'vectorDB.ph.databaseName': '请输入数据库名称',
+  'vectorDB.ph.containerName': '请输入容器名称',
+  'vectorDB.ph.gcpProjectId': '请输入Google Cloud Project ID',
+  'vectorDB.ph.vertexIndexEndpoint': '请输入Vertex AI Vector Search Index Endpoint',
+  'vectorDB.ph.serviceAccountKey': '请粘贴Service Account Key的JSON内容',
+  'vectorDB.ph.firestoreDbId': '请输入Firestore Database ID（默认为(default)）',
+  'vectorDB.ph.firestoreCollection': '请输入Firestore集合名称',
+  'vectorDB.ph.pineconeKey': '请输入Pinecone的API Key',
+  'vectorDB.ph.pineconeIndex': '请输入Pinecone索引名称',
+  'vectorDB.ph.milvusCollection': '请输入Milvus集合名称',
+  'vectorDB.ph.esIndex': '请输入Elasticsearch索引名称',
+  'vectorDB.ph.usernameOptional': '请输入用户名（如果需要认证）',
+  'vectorDB.ph.passwordOptional': '请输入密码（如果需要认证）',
+  'vectorDB.ph.customEndpoint': '请输入自定义向量数据库的服务端点',
+  'vectorDB.ph.authKeyOptional': '请输入认证密钥（如果需要）',
+  'vectorDB.ph.usernameIfNeeded': '请输入用户名（如果需要）',
+  'vectorDB.ph.passwordIfNeeded': '请输入密码（如果需要）',
+  'vectorDB.ph.genericEndpoint': '请输入向量数据库的服务端点',
+  'vectorDB.ph.apiKeyOptional': '请输入API Key（如果需要）',
+
+  // ----- GraphEnhancementTestQuery 图谱查询测试 -----
+  'graphTest.title': '图谱查询测试',
+  'graphTest.close': '关闭',
+  'graphTest.execute': '执行查询',
+  'graphTest.queryResult': '查询结果',
+  'graphTest.configHintPrefix': '配置说明：',
+  'graphTest.pickModeHint': '请选择上方的搜索模式以查看说明',
+  'graphTest.enableFilters': '启用搜索过滤器',
+  'graphTest.expand': '展开',
+
+  // mode toggle
+  'graphTest.mode.simple': '简单',
+  'graphTest.mode.advanced': '高级',
+
+  // search modes
+  'graphTest.mode.crossEncoderDesc': '交叉编码器重排序 - 最高精度，适合复杂查询',
+  'graphTest.mode.rrfDesc': '倒数排名融合 - 平衡性能和质量',
+  'graphTest.mode.mmrDesc': '最大边际相关性 - 多样性结果',
+  'graphTest.mode.factualLabel': '事实查询',
+  'graphTest.mode.factualDesc': '专门用于"什么是"、"谁是"类问题',
+  'graphTest.mode.temporalLabel': '时间查询',
+  'graphTest.mode.temporalDesc': '专门用于"最近发生"、"历史变化"类问题',
+  'graphTest.mode.cat.strategy': '搜索策略',
+  'graphTest.mode.cat.queryType': '查询类型',
+
+  // tabs
+  'graphTest.tab.search': '搜索配置',
+  'graphTest.tab.params': '参数配置',
+  'graphTest.tab.filters': '过滤器',
+
+  // fields
+  'graphTest.field.query': '查询内容',
+  'graphTest.field.searchMode': '搜索模式',
+  'graphTest.field.maxResults': '最大结果数',
+  'graphTest.field.rerankerThreshold': '重排序阈值',
+  'graphTest.field.simThreshold': '相似度阈值',
+  'graphTest.field.groupIds': '组ID (可选)',
+  'graphTest.field.nodeLabels': '节点标签',
+  'graphTest.field.edgeTypes': '关系类型',
+  'graphTest.field.queryMode': '查询模式',
+  'graphTest.field.responseType': '响应类型',
+
+  // placeholders
+  'graphTest.ph.query': '请输入要查询的内容...',
+  'graphTest.ph.default15': '默认15',
+  'graphTest.ph.default06': '默认0.6',
+  'graphTest.ph.default05': '默认0.5',
+  'graphTest.ph.default10': '默认10',
+  'graphTest.ph.groupIds': '输入组ID，支持多个',
+  'graphTest.ph.nodeLabels': '选择或输入节点标签',
+  'graphTest.ph.edgeTypes': '选择或输入关系类型',
+
+  // node labels (display only)
+  'graphTest.nodeLabel.user': '用户',
+  'graphTest.nodeLabel.product': '产品',
+  'graphTest.nodeLabel.event': '事件',
+  'graphTest.nodeLabel.organization': '组织',
+
+  // edge types (display only)
+  'graphTest.edge.knows': '认识',
+  'graphTest.edge.likes': '喜欢',
+  'graphTest.edge.purchased': '购买',
+  'graphTest.edge.worksFor': '工作于',
+
+  // response types
+  'graphTest.respType.multi': '多段落',
+  'graphTest.respType.single': '单段落',
+
+  // messages
+  'graphTest.msg.enterQuery': '请输入查询内容',
+  'graphTest.msg.checkInput': '请检查输入内容',
+
+  // result alert
+  'graphTest.result.responseTime': '响应时间:',
+  'graphTest.result.searchMode': '搜索模式:',
+  'graphTest.result.queryMode': '查询模式:',
+  'graphTest.result.count': '结果数量:',
+  'graphTest.result.framework': '框架:',
+
+  // facts
+  'graphTest.fact.title': '事实 {{n}}',
+  'graphTest.fact.relevance': '相关度: {{pct}}%',
+  'graphTest.fact.noContent': '无内容',
+  'graphTest.fact.createdAt': '创建时间:',
+  'graphTest.fact.expiredAt': '过期时间:',
+  'graphTest.fact.invalidAt': '失效时间:',
+  'graphTest.fact.tagType': '类型: {{v}}',
+  'graphTest.fact.tagEntity': '实体: {{v}}',
+  'graphTest.fact.tagRelation': '关系: {{v}}',
+  'graphTest.fact.expired': '已过期',
+  'graphTest.fact.invalid': '已失效',
+  'graphTest.fact.empty': '未找到相关事实',
+
+  // ----- LightragTab -----
+  'lightrag.enableTitle': '启用LightRAG知识库系统',
+  'lightrag.enableDesc': '轻量级RAG框架，用于文档知识检索和知识图谱构建',
+  'lightrag.switchOn': '开启',
+  'lightrag.switchOff': '关闭',
+  'lightrag.refresh': '刷新',
+  'lightrag.saveConfig': '保存配置',
+  'lightrag.startService': '启动服务',
+  'lightrag.stopService': '停止服务',
+  'lightrag.enabled': '启用',
+  'lightrag.disabled': '禁用',
+  'lightrag.defaultLabel': '默认 {{name}}',
+
+  // sections
+  'lightrag.section.statusAndConfig': '服务状态与配置',
+  'lightrag.section.modelConfig': '模型配置',
+  'lightrag.section.docConfig': '文档处理配置',
+
+  // status
+  'lightrag.status.healthy': '运行中',
+  'lightrag.status.unhealthy': '异常',
+  'lightrag.status.unreachable': '未连接',
+  'lightrag.status.notStarted': '未启动',
+
+  // labels (status descriptions)
+  'lightrag.label.serviceStatus': '服务状态',
+  'lightrag.label.serviceUrl': '服务地址',
+  'lightrag.label.workspaceCount': '知识库数量',
+  'lightrag.label.documentCount': '文档数量',
+
+  // fields
+  'lightrag.field.serviceUrl': '服务地址',
+  'lightrag.field.serviceControl': '服务控制',
+  'lightrag.field.textModel': '文本生成模型',
+  'lightrag.field.embeddingModel': '嵌入模型',
+  'lightrag.field.embeddingDim': '嵌入维度',
+  'lightrag.field.enableRerank': '启用重排序',
+  'lightrag.field.rerankModel': '重排序模型',
+  'lightrag.field.chunkSize': '文档块大小',
+  'lightrag.field.chunkOverlap': '文档块重叠',
+  'lightrag.field.summaryLanguage': '摘要语言',
+
+  // placeholders
+  'lightrag.ph.pickTextModel': '选择文本生成模型',
+  'lightrag.ph.pickEmbeddingModel': '选择嵌入模型',
+  'lightrag.ph.pickRerankModel': '选择重排序模型',
+  'lightrag.ph.embeddingDim': '如：1536',
+
+  // requireds
+  'lightrag.req.serviceUrl': '请输入服务地址',
+  'lightrag.req.textModel': '请选择文本生成模型',
+  'lightrag.req.embeddingModel': '请选择嵌入模型',
+
+  // tooltips
+  'lightrag.tip.serviceUrl': 'LightRAG容器化服务的访问地址',
+  'lightrag.tip.textModel': '用于LLM推理和知识提取',
+  'lightrag.tip.embeddingModel': '用于生成向量表示',
+  'lightrag.tip.embeddingDim': '嵌入向量的维度大小',
+  'lightrag.tip.enableRerank': '启用后将使用重排序模型对检索结果进行二次排序',
+  'lightrag.tip.rerankModel': '用于搜索结果重排序',
+  'lightrag.tip.chunkSize': '文档分块的大小，推荐500-1500',
+  'lightrag.tip.chunkOverlap': '相邻文档块的重叠大小',
+  'lightrag.tip.summaryLanguage': '文档摘要的输出语言',
+  'lightrag.tip.topK': '检索时返回的最大结果数',
+
+  // language options
+  'lightrag.lang.zh': '中文',
+  'lightrag.lang.en': '英文',
+
+  // messages
+  'lightrag.msg.modelProcessFailed': '处理模型配置失败: {{msg}}',
+  'lightrag.msg.saveFailed': '配置保存失败',
+  'lightrag.msg.savedAndSynced': '配置已保存并同步到 LightRAG',
+  'lightrag.msg.savedSyncFailed': '配置已保存，但同步失败: {{msg}}',
+  'lightrag.msg.saved': '配置已保存',
+  'lightrag.msg.saveFailedWith': '配置保存失败: {{msg}}',
+  'lightrag.msg.completeConfigThenSave': '请先完成配置，然后点击保存按钮',
+  'lightrag.msg.disabled': 'LightRAG已禁用',
+
+  // ----- UserForm 用户表单 -----
+  'userForm.editTitle': '编辑用户',
+  'userForm.createTitle': '创建用户',
+  'userForm.cancel': '取消',
+  'userForm.update': '更新',
+  'userForm.create': '创建',
+  'userForm.enabled': '启用',
+  'userForm.disabled': '禁用',
+  'userForm.pricePerMonth': '¥{{price}}/月',
+  'userForm.currentSubInfo': '当前订阅信息',
+
+  // sections
+  'userForm.section.basic': '基本信息',
+  'userForm.section.extended': '扩展信息',
+  'userForm.section.permissions': '权限设置',
+  'userForm.section.subscription': '订阅管理',
+
+  // fields
+  'userForm.field.username': '用户名',
+  'userForm.field.email': '邮箱',
+  'userForm.field.password': '密码',
+  'userForm.field.confirmPassword': '确认密码',
+  'userForm.field.displayName': '显示名称',
+  'userForm.field.phone': '手机号码',
+  'userForm.field.notes': '备注',
+  'userForm.field.accountStatus': '账户状态',
+  'userForm.field.userRole': '用户角色',
+  'userForm.field.subscriptionPlan': '订阅计划',
+  'userForm.field.expiresAt': '到期时间',
+
+  // placeholders
+  'userForm.ph.username': '请输入用户名',
+  'userForm.ph.email': '请输入邮箱',
+  'userForm.ph.password': '请输入密码',
+  'userForm.ph.confirmPassword': '请再次输入密码',
+  'userForm.ph.displayName': '请输入显示名称',
+  'userForm.ph.phone': '请输入手机号码',
+  'userForm.ph.notes': '请输入备注信息',
+  'userForm.ph.userRole': '请选择用户角色',
+  'userForm.ph.subscriptionPlan': '请选择订阅计划',
+  'userForm.ph.neverExpire': '永不过期',
+
+  // required messages
+  'userForm.req.username': '请输入用户名',
+  'userForm.req.usernameMin': '用户名至少3个字符',
+  'userForm.req.usernameMax': '用户名不能超过50个字符',
+  'userForm.req.usernamePattern': '用户名只能包含字母、数字和下划线',
+  'userForm.req.emailValid': '请输入有效的邮箱地址',
+  'userForm.req.password': '请输入密码',
+  'userForm.req.passwordMin': '密码至少6个字符',
+  'userForm.req.passwordMax': '密码不能超过100个字符',
+  'userForm.req.confirmPassword': '请确认密码',
+  'userForm.req.passwordMismatch': '两次输入的密码不一致',
+  'userForm.req.userRole': '请选择用户角色',
+
+  // messages
+  'userForm.msg.updateSuccess': '用户更新成功',
+  'userForm.msg.createSuccess': '用户创建成功',
+  'userForm.msg.updateFailed': '更新用户失败',
+  'userForm.msg.createFailed': '创建用户失败',
+
+  // notes
+  'userForm.note.adminManualSet': '管理员手动设置',
+  'userForm.note.adminCreateSet': '管理员创建时设置',
+
+  // subscription panel
+  'userForm.sub.planLabel': '计划：',
+  'userForm.sub.statusLabel': '状态：',
+  'userForm.sub.expiresAtLabel': '到期时间：',
+  'userForm.sub.unknown': '未知',
+  'userForm.sub.statusActive': '生效中',
+  'userForm.sub.statusExpired': '已过期',
+  'userForm.sub.statusCancelled': '已取消',
+
+  // permission alert
+  'userForm.permAlertTitle': '角色权限说明',
+  'userForm.role.superAdmin': '超级管理员：',
+  'userForm.role.superAdminDesc': '拥有租户内所有权限，可以管理用户、系统设置和所有内容。',
+  'userForm.role.regular': '普通用户：',
+  'userForm.role.regularDesc': '可以创建和管理自己的任务、行动空间，查看租户内的智能体。',
+  'userForm.role.readonly': '只读用户：',
+  'userForm.role.readonlyDesc': '只能查看自己创建的内容，不能进行任何修改操作。',
+  'userForm.warn.rootUser': 'admin为系统根用户，其启用状态和角色不可修改。',
+  'userForm.warn.selfEditRole': '超级管理员不能修改自己的角色，防止误操作。',
 };

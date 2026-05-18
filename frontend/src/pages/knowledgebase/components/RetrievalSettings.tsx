@@ -35,7 +35,7 @@ const RetrievalSettings = ({ knowledgeId, onSettingsSaved }) => {
       );
       setRerankModels(rerankList);
     } catch (error) {
-      console.error('加载Reranker模型失败:', error);
+      console.error('load reranker models failed:', error);
     }
   };
 
@@ -68,8 +68,8 @@ const RetrievalSettings = ({ knowledgeId, onSettingsSaved }) => {
         });
       }
     } catch (error) {
-      console.error('获取检索配置失败:', error);
-      message.error('获取检索配置失败');
+      console.error('fetch retrieval settings failed:', error);
+      message.error(t('retrievalSettings.msg.fetchFailed'));
     } finally {
       setLoading(false);
     }
@@ -80,9 +80,8 @@ const RetrievalSettings = ({ knowledgeId, onSettingsSaved }) => {
       setSaving(true);
       const values = await form.validateFields();
       
-      // 额外校验：如果启用Reranker但未选择模型，提示错误
       if (values.enable_reranker && !values.reranker_model_id) {
-        message.error('请选择Reranker模型，或关闭Reranker功能');
+        message.error(t('retrievalSettings.msg.pickRerankerOrDisable'));
         setSaving(false);
         return;
       }
@@ -114,17 +113,16 @@ const RetrievalSettings = ({ knowledgeId, onSettingsSaved }) => {
       const response = await knowledgeAPI.update(knowledgeId, { settings, search_config });
       
       if (response.success) {
-        message.success('检索配置保存成功');
-        // 通知父组件刷新数据
+        message.success(t('retrievalSettings.msg.saveSuccess'));
         if (onSettingsSaved) {
           onSettingsSaved();
         }
       } else {
-        message.error(response.message || '保存失败');
+        message.error(response.message || t('retrievalSettings.msg.saveFailed'));
       }
     } catch (error) {
-      console.error('保存检索配置失败:', error);
-      message.error('保存检索配置失败');
+      console.error('save retrieval settings failed:', error);
+      message.error(t('retrievalSettings.msg.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -136,7 +134,7 @@ const RetrievalSettings = ({ knowledgeId, onSettingsSaved }) => {
         title={
           <Space>
             <SearchOutlined />
-            <span>检索配置</span>
+            <span>{t('retrievalSettings.title')}</span>
           </Space>
         }
         extra={
@@ -145,7 +143,7 @@ const RetrievalSettings = ({ knowledgeId, onSettingsSaved }) => {
             onClick={handleSave}
             loading={saving}
           >
-            保存配置
+            {t('retrievalSettings.save')}
           </Button>
         }
         loading={loading}
@@ -205,15 +203,15 @@ const RetrievalSettings = ({ knowledgeId, onSettingsSaved }) => {
             </Radio.Group>
           </Form.Item>
 
-          {/* BM25参数固定为学术界推荐值（k1=1.5, b=0.75），不在UI暴露 */}
+          {/* BM25 params fixed to academic recommended values; not exposed */}
 
-          {/* 混合检索权重配置 */}
+          {/* hybrid search weight */}
           {searchMode === 'hybrid' && (
             <>
               <Divider>
                 <Space>
                   <MergeCellsOutlined />
-                  <Text strong>混合检索权重</Text>
+                  <Text strong>{t('retrievalSettings.hybridWeight')}</Text>
                 </Space>
               </Divider>
 
@@ -221,13 +219,13 @@ const RetrievalSettings = ({ knowledgeId, onSettingsSaved }) => {
                 name="vector_weight"
                 label={
                   <Space>
-                    <Text strong>检索权重配比</Text>
+                    <Text strong>{t('retrievalSettings.weightRatio')}</Text>
                     <Text type="secondary">
-                      (向量 {vectorWeight}% : 关键字 {100 - vectorWeight}%)
+                      {t('retrievalSettings.weightSuffix', { v: vectorWeight, k: 100 - vectorWeight })}
                     </Text>
                   </Space>
                 }
-                tooltip="调整向量检索和关键字检索的权重比例。70%向量+30%关键字是推荐值，平衡语义理解和精确匹配"
+                tooltip={t('retrievalSettings.weightTooltip')}
               >
                 <div style={{ width: '80%', margin: '0 auto' }}>
                   <Slider
@@ -236,17 +234,17 @@ const RetrievalSettings = ({ knowledgeId, onSettingsSaved }) => {
                     step={5}
                     value={vectorWeight}
                     marks={{
-                      0: '纯关键字',
-                      50: '均衡',
-                      70: '推荐',
-                      100: '纯向量'
+                      0: t('retrievalSettings.mark.keywordOnly'),
+                      50: t('retrievalSettings.mark.balanced'),
+                      70: t('retrievalSettings.mark.recommended'),
+                      100: t('retrievalSettings.mark.vectorOnly')
                     }}
                     onChange={(value) => {
                       setVectorWeight(value);
                       form.setFieldValue('vector_weight', value);
                     }}
                     tooltip={{
-                      formatter: (value) => `向量${value}% : 关键字${100-value}%`
+                      formatter: (value) => t('retrievalSettings.weightSliderTip', { v: value, k: 100 - value })
                     }}
                   />
                 </div>
@@ -256,13 +254,13 @@ const RetrievalSettings = ({ knowledgeId, onSettingsSaved }) => {
 
           <Divider />
 
-          {/* 通用检索参数 - 对所有模式生效 */}
+          {/* common retrieval params - applies to all modes */}
           <Title level={5}>
             <Space>
               <NumberOutlined />
-              通用检索参数
+              {t('retrievalSettings.commonParams')}
               <Text type="secondary" style={{ fontSize: '12px', fontWeight: 'normal' }}>
-                (适用于所有检索模式)
+                {t('retrievalSettings.commonParamsHint')}
               </Text>
             </Space>
           </Title>
@@ -272,16 +270,16 @@ const RetrievalSettings = ({ knowledgeId, onSettingsSaved }) => {
             label={
               <Space>
                 <Text strong>TopK</Text>
-                <Text type="secondary">(返回最相关的结果数量)</Text>
+                <Text type="secondary">{t('retrievalSettings.topKHint')}</Text>
               </Space>
             }
-            tooltip="控制检索时返回的最相关文档片段数量。适用于向量检索、BM25检索和混合检索"
+            tooltip={t('retrievalSettings.topKTooltip')}
           >
             <InputNumber
               min={1}
               max={100}
               style={{ width: '200px' }}
-              placeholder="请输入TopK值"
+              placeholder={t('retrievalSettings.topKPh')}
             />
           </Form.Item>
 
@@ -290,63 +288,62 @@ const RetrievalSettings = ({ knowledgeId, onSettingsSaved }) => {
             label={
               <Space>
                 <FilterOutlined />
-                <Text strong>相似度过滤阈值</Text>
-                <Text type="secondary">(0-1之间)</Text>
+                <Text strong>{t('retrievalSettings.scoreThreshold')}</Text>
+                <Text type="secondary">{t('retrievalSettings.scoreThresholdHint')}</Text>
               </Space>
             }
-            tooltip="只返回相似度分数高于此阈值的结果。适用于所有检索模式，0为不过滤，1为最严格"
+            tooltip={t('retrievalSettings.scoreThresholdTooltip')}
           >
             <InputNumber
               min={0}
               max={1}
               step={0.05}
               style={{ width: '200px' }}
-              placeholder="请输入阈值"
+              placeholder={t('retrievalSettings.scoreThresholdPh')}
             />
           </Form.Item>
 
           <Divider />
 
-          {/* 高级功能 */}
+          {/* advanced */}
           <Title level={5}>
             <Space>
               <ShareAltOutlined />
-              高级功能
+              {t('retrievalSettings.advanced')}
             </Space>
           </Title>
 
           <Form.Item
             name="enable_reranker"
             valuePropName="checked"
-            tooltip="使用Reranker模型对检索结果进行二次排序，提升准确度（会增加0.5-2秒延迟）。支持API服务（有base_url）和本地模型（无base_url）两种模式"
+            tooltip={t('retrievalSettings.rerankerTooltip')}
           >
             <Checkbox onChange={(e) => {
               const checked = e.target.checked;
               setEnableReranker(checked);
-              // 如果启用但没有可用模型，提示用户
               if (checked && rerankModels.length === 0) {
-                message.warning('暂无可用的Reranker模型，请先在「模型配置」页面添加');
+                message.warning(t('retrievalSettings.msg.noRerankerModel'));
               }
             }}>
-              Reranker重排序
+              {t('retrievalSettings.rerankerLabel')}
             </Checkbox>
           </Form.Item>
 
-          {/* Reranker模型选择 */}
+          {/* reranker model picker */}
           {enableReranker && (
             <>
               <Form.Item
                 name="reranker_model_id"
                 label={
                   <Space>
-                    <Text strong>Reranker模型</Text>
+                    <Text strong>{t('retrievalSettings.rerankerModel')}</Text>
                   </Space>
                 }
-                tooltip="选择用于重排序的模型"
-                rules={[{ required: true, message: '请选择Reranker模型' }]}
+                tooltip={t('retrievalSettings.rerankerModelTooltip')}
+                rules={[{ required: true, message: t('retrievalSettings.msg.pickRerankerModel') }]}
               >
                 <Select
-                  placeholder="选择Reranker模型"
+                  placeholder={t('retrievalSettings.pickRerankerModel')}
                   style={{ width: '100%' }}
                   options={rerankModels.map(model => ({
                     label: `${model.name} (${model.provider})`,
@@ -354,10 +351,10 @@ const RetrievalSettings = ({ knowledgeId, onSettingsSaved }) => {
                   }))}
                   notFoundContent={
                     <div style={{ textAlign: 'center', padding: '20px' }}>
-                      <Text type="secondary">暂无可用的Reranker模型</Text>
+                      <Text type="secondary">{t('retrievalSettings.noRerankerModelTitle')}</Text>
                       <div style={{ marginTop: '8px' }}>
                         <Text type="secondary" style={{ fontSize: '12px' }}>
-                          请先在「模型配置」页面添加Reranker模型（modalities需包含rerank_output）
+                          {t('retrievalSettings.noRerankerModelDesc')}
                         </Text>
                       </div>
                     </div>
@@ -373,15 +370,15 @@ const RetrievalSettings = ({ knowledgeId, onSettingsSaved }) => {
             name="graph_enhancement_enabled"
             label={
               <Space>
-                <Text strong>图谱增强</Text>
+                <Text strong>{t('retrievalSettings.graphEnhance')}</Text>
               </Space>
             }
-            tooltip="启用图谱增强可以通过知识图谱技术提升检索准确性和上下文理解能力"
+            tooltip={t('retrievalSettings.graphEnhanceTooltip')}
             valuePropName="checked"
           >
             <Switch
-              checkedChildren="启用"
-              unCheckedChildren="禁用"
+              checkedChildren={t('retrievalSettings.enabled')}
+              unCheckedChildren={t('retrievalSettings.disabled')}
             />
           </Form.Item>
 
@@ -395,16 +392,16 @@ const RetrievalSettings = ({ knowledgeId, onSettingsSaved }) => {
           }}>
             <Text type="secondary" style={{ fontSize: '13px' }}>
               <div style={{ marginBottom: '8px' }}>
-                <Text strong>💡 配置说明</Text>
+                <Text strong>{t('retrievalSettings.help.title')}</Text>
               </div>
               <ul style={{ margin: 0, paddingLeft: '20px', lineHeight: '1.8' }}>
-                <li><Text strong>检索模式：</Text>向量检索（语义理解）、关键字检索（精确匹配）或混合检索（推荐）</li>
-                <li><Text strong>混合权重：</Text>推荐70%向量+30%关键字，平衡语义和精确</li>
-                <li><Text strong>TopK：</Text>建议3-10，控制返回结果数量（Reranker也使用此值）</li>
-                <li><Text strong>相似度阈值：</Text>建议0.0-0.3，过高可能过滤掉相关结果</li>
-                <li><Text strong>Reranker：</Text>对TopK*2个候选进行二次排序，返回TopK个结果，提升准确度10-15%</li>
-                <li><Text strong>图谱增强：</Text>利用知识图谱关系提升检索理解</li>
-                <li><Text type="secondary">BM25参数(k1=1.5, b=0.75)和融合算法(加权融合)已优化为业界推荐值</Text></li>
+                <li><Text strong>{t('retrievalSettings.help.modeLabel')}</Text>{t('retrievalSettings.help.modeBody')}</li>
+                <li><Text strong>{t('retrievalSettings.help.weightLabel')}</Text>{t('retrievalSettings.help.weightBody')}</li>
+                <li><Text strong>{t('retrievalSettings.help.topkLabel')}</Text>{t('retrievalSettings.help.topkBody')}</li>
+                <li><Text strong>{t('retrievalSettings.help.scoreLabel')}</Text>{t('retrievalSettings.help.scoreBody')}</li>
+                <li><Text strong>{t('retrievalSettings.help.rerankerLabel')}</Text>{t('retrievalSettings.help.rerankerBody')}</li>
+                <li><Text strong>{t('retrievalSettings.help.graphLabel')}</Text>{t('retrievalSettings.help.graphBody')}</li>
+                <li><Text type="secondary">{t('retrievalSettings.help.bm25Note')}</Text></li>
               </ul>
             </Text>
           </div>

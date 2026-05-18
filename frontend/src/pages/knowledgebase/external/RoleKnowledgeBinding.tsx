@@ -11,11 +11,13 @@ import { externalKnowledgeAPI } from '../../../services/api';
 import knowledgeAPI from '../../../services/api/knowledge';
 import { roleAPI } from '../../../services/api/role';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
 
 const RoleKnowledgeBinding = () => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const [roles, setRoles] = useState([]);
   const [actionSpaces, setActionSpaces] = useState([]);
@@ -83,8 +85,8 @@ const RoleKnowledgeBinding = () => {
         setSelectedRole(null);
       }
     } catch (error) {
-      message.error('获取角色列表失败');
-      console.error('获取角色列表失败:', error);
+      message.error(t('rkBind.msg.fetchRolesFailed'));
+      console.error('fetch roles failed:', error);
       setRoles([]);
       setSelectedRole(null);
     } finally {
@@ -193,7 +195,7 @@ const RoleKnowledgeBinding = () => {
         },
         provider: {
           id: 'internal',
-          name: '内部知识库',
+          name: t('rkBind.internalKB'),
           type: 'INTERNAL'
         },
         created_at: binding.binding_created_at || binding.created_at
@@ -236,35 +238,32 @@ const RoleKnowledgeBinding = () => {
       const bindings = processBindingsData(externalResponse, internalResponse);
       setRoleBindings(bindings);
     } catch (error) {
-      message.error('获取角色绑定失败');
-      console.error('获取角色绑定失败:', error);
+      message.error(t('rkBind.msg.fetchBindingsFailed'));
+      console.error('fetch role bindings failed:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // 显示添加绑定模态框
+  // show add-binding modal
   const showBindingModal = async () => {
     if (!selectedRole) {
-      message.warning('请先选择一个角色');
+      message.warning(t('rkBind.msg.pickRoleFirst'));
       return;
     }
 
-    // 检查是否正在加载绑定数据
     if (loading) {
-      message.warning('正在加载绑定数据，请稍候...');
+      message.warning(t('rkBind.msg.bindingDataLoading'));
       return;
     }
 
     try {
-      // 显示加载提示
-      const hide = message.loading('正在加载可用知识库...', 0);
+      const hide = message.loading(t('rkBind.msg.loadingAvailable'), 0);
 
       try {
-        // 检查是否有知识库数据
         if (externalKnowledges.length === 0 && internalKnowledges.length === 0) {
           hide();
-          message.warning('系统中还没有知识库，请先创建知识库后再进行绑定');
+          message.warning(t('rkBind.msg.noKBYet'));
           return;
         }
 
@@ -278,13 +277,13 @@ const RoleKnowledgeBinding = () => {
 
         console.log('已绑定的ID:', { boundExternalIds, boundInternalIds, roleBindings });
 
-        // 合并可用的内部和外部知识库
+        // merge available internal and external KBs
         const availableExternal = externalKnowledges
           .filter(kb => !boundExternalIds.includes(kb.id))
           .map(kb => ({
             ...kb,
             type: 'external',
-            display_name: `${kb.name} (外部 - ${kb.provider?.name || '未知提供商'})`
+            display_name: t('rkBind.displayExternal', { name: kb.name, provider: kb.provider?.name || t('rkBind.unknownProvider') })
           }));
 
         const availableInternal = internalKnowledges
@@ -292,7 +291,7 @@ const RoleKnowledgeBinding = () => {
           .map(kb => ({
             ...kb,
             type: 'internal',
-            display_name: `${kb.name} (内部)`
+            display_name: t('rkBind.displayInternal', { name: kb.name })
           }));
 
         console.log('可用的知识库:', { availableExternal, availableInternal });
@@ -303,7 +302,7 @@ const RoleKnowledgeBinding = () => {
         hide();
 
         if (available.length === 0) {
-          message.info(`该角色已绑定所有可用的知识库（共 ${externalKnowledges.length + internalKnowledges.length} 个）`);
+          message.info(t('rkBind.msg.allBound', { total: externalKnowledges.length + internalKnowledges.length }));
           return;
         }
 
@@ -314,8 +313,8 @@ const RoleKnowledgeBinding = () => {
         throw error;
       }
     } catch (error) {
-      message.error('获取可用知识库失败');
-      console.error('获取可用知识库失败:', error);
+      message.error(t('rkBind.msg.fetchAvailableFailed'));
+      console.error('fetch available knowledges failed:', error);
     }
   };
 
@@ -333,8 +332,8 @@ const RoleKnowledgeBinding = () => {
       );
 
       if (!selectedKnowledge) {
-        message.error('未找到选中的知识库');
-        console.error('解析失败:', { type, id, availableKnowledges });
+        message.error(t('rkBind.msg.kbNotFound'));
+        console.error('parse failed:', { type, id, availableKnowledges });
         return;
       }
 
@@ -355,15 +354,15 @@ const RoleKnowledgeBinding = () => {
       }
 
       if (response.success) {
-        message.success('知识库绑定成功');
-        updateRoleBindings(selectedRole.id); // 使用优化的更新方法
+        message.success(t('rkBind.msg.bindSuccess'));
+        updateRoleBindings(selectedRole.id);
         setModalVisible(false);
       } else {
-        message.error(response.message || '绑定失败');
+        message.error(response.message || t('rkBind.msg.bindFailed'));
       }
     } catch (error) {
-      message.error('绑定失败');
-      console.error('绑定失败:', error);
+      message.error(t('rkBind.msg.bindFailed'));
+      console.error('bind failed:', error);
     } finally {
       setBingingLoading(false);
     }
@@ -415,14 +414,14 @@ const RoleKnowledgeBinding = () => {
       }
 
       if (response.success) {
-        message.success('绑定解除成功');
-        updateRoleBindings(selectedRole.id); // 使用优化的更新方法
+        message.success(t('rkBind.msg.unbindSuccess'));
+        updateRoleBindings(selectedRole.id);
       } else {
-        message.error(response.message || '解除绑定失败');
+        message.error(response.message || t('rkBind.msg.unbindFailed'));
       }
     } catch (error) {
-      message.error('解除绑定失败');
-      console.error('解除绑定失败:', error);
+      message.error(t('rkBind.msg.unbindFailed'));
+      console.error('unbind failed:', error);
     }
   };
 
@@ -441,7 +440,7 @@ const RoleKnowledgeBinding = () => {
 
   const bindingColumns = [
     {
-      title: '知识库名称',
+      title: t('rkBind.col.kbName'),
       key: 'knowledge_name',
       render: (_, record) => (
         <Space>
@@ -451,48 +450,47 @@ const RoleKnowledgeBinding = () => {
       ),
     },
     {
-      title: '类型',
+      title: t('rkBind.col.type'),
       key: 'type',
       render: (_, record) => (
         <Tag color={record.type === 'external' ? 'blue' : 'green'}>
-          {record.type === 'external' ? '外部' : '内部'}
+          {record.type === 'external' ? t('rkBind.typeExternal') : t('rkBind.typeInternal')}
         </Tag>
       ),
     },
     {
-      title: '提供商',
+      title: t('rkBind.col.provider'),
       key: 'provider',
       render: (_, record) => (
         <Space>
           <ApiOutlined style={{ color: '#52c41a' }} />
-          <span>{record.provider?.name || '内部知识库'}</span>
+          <span>{record.provider?.name || t('rkBind.internalKB')}</span>
         </Space>
       ),
     },
     {
-      title: '绑定时间',
+      title: t('rkBind.col.boundAt'),
       dataIndex: 'created_at',
       key: 'created_at',
       render: (date) => date ? new Date(date).toLocaleString() : '-',
     },
     {
-      title: '操作',
+      title: t('rkBind.col.action'),
       key: 'action',
       render: (_, record) => (
         <Popconfirm
-          title="确定要解除这个知识库绑定吗？"
-          description="解除后该角色将无法访问此知识库。"
+          title={t('rkBind.confirm.unbindTitle')}
+          description={t('rkBind.confirm.unbindDesc')}
           onConfirm={() => handleUnbind(record)}
-          okText="确定"
-          cancelText="取消"
+          okText={t('rkBind.confirm.ok')}
+          cancelText={t('rkBind.confirm.cancel')}
         >
           <Button
             type="text"
             danger
             icon={<DeleteOutlined />}
-           
           >
-            解除
+            {t('rkBind.unbind')}
           </Button>
         </Popconfirm>
       ),
@@ -501,15 +499,15 @@ const RoleKnowledgeBinding = () => {
 
   return (
     <div style={{ display: 'flex', gap: '16px', height: 'calc(100vh - 240px)' }}>
-      {/* 左侧角色列表 */}
+      {/* left: role list */}
       <Card
-        title="角色列表"
+        title={t('rkBind.roleListTitle')}
         style={{ width: '300px', height: '100%' }}
         styles={{ body: { padding: '12px', height: 'calc(100% - 57px)', overflow: 'auto' } }}
       >
         <Space orientation="vertical" style={{ width: '100%', marginBottom: '12px' }}>
           <Select
-            placeholder="选择行动空间过滤"
+            placeholder={t('rkBind.pickActionSpace')}
             value={selectedActionSpace}
             onChange={setSelectedActionSpace}
             style={{ width: '100%' }}
@@ -523,7 +521,7 @@ const RoleKnowledgeBinding = () => {
             ))}
           </Select>
           <Input
-            placeholder="搜索角色"
+            placeholder={t('rkBind.searchRole')}
             value={roleSearchText}
             onChange={(e) => setRoleSearchText(e.target.value)}
             allowClear
@@ -545,7 +543,7 @@ const RoleKnowledgeBinding = () => {
               emptyText: (
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description="暂无角色数据"
+                  description={t('rkBind.emptyRoleData')}
                 />
               )
             }}
@@ -566,7 +564,7 @@ const RoleKnowledgeBinding = () => {
                   description={
                     <div>
                       <Text type="secondary" ellipsis style={{ fontSize: '12px' }}>
-                        {role.description || '暂无描述'}
+                        {role.description || t('rkBind.noDesc')}
                       </Text>
                       <div style={{ marginTop: '4px' }}>
                         <Badge
@@ -576,7 +574,7 @@ const RoleKnowledgeBinding = () => {
                          
                         />
                         <Text type="secondary" style={{ fontSize: '11px', marginLeft: '4px' }}>
-                          个绑定
+                          {t('rkBind.bindingsSuffix')}
                         </Text>
                       </div>
                     </div>
@@ -588,12 +586,12 @@ const RoleKnowledgeBinding = () => {
         )}
       </Card>
 
-      {/* 右侧绑定管理 */}
+      {/* right: binding mgmt */}
       <Card 
         title={
           <Space>
             <LinkOutlined />
-            <span>角色知识库绑定管理</span>
+            <span>{t('rkBind.bindingMgmtTitle')}</span>
             {selectedRole && (
               <Tag color="blue">{selectedRole.name}</Tag>
             )}
@@ -606,7 +604,7 @@ const RoleKnowledgeBinding = () => {
             onClick={showBindingModal}
             disabled={!selectedRole}
           >
-            添加绑定
+            {t('rkBind.addBinding')}
           </Button>
         }
         style={{ flex: 1, height: '100%' }}
@@ -616,10 +614,10 @@ const RoleKnowledgeBinding = () => {
           <div>
             <div style={{ marginBottom: '16px' }}>
               <Title level={5} style={{ margin: 0 }}>
-                {selectedRole.name} 的知识库绑定
+                {t('rkBind.roleBindingsTitle', { name: selectedRole.name })}
               </Title>
               <Text type="secondary">
-                {selectedRole.description || '暂无描述'}
+                {selectedRole.description || t('rkBind.noDesc')}
               </Text>
             </div>
 
@@ -639,13 +637,13 @@ const RoleKnowledgeBinding = () => {
                 pagination={{
                   pageSize: 10,
                   showSizeChanger: false,
-                  showTotal: (total) => `共 ${total} 个绑定`,
+                  showTotal: (total) => t('rkBind.paginationTotal', { total }),
                 }}
                 locale={{
                   emptyText: (
                     <Empty
                       image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      description="该角色还没有绑定任何知识库"
+                      description={t('rkBind.emptyBindings')}
                     />
                   )
                 }}
@@ -655,14 +653,14 @@ const RoleKnowledgeBinding = () => {
         ) : (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description="请从左侧选择一个角色来管理其知识库绑定"
+            description={t('rkBind.pickRoleFromLeft')}
           />
         )}
       </Card>
 
-      {/* 添加绑定模态框 */}
+      {/* add-binding modal */}
       <Modal
-        title={`为 "${selectedRole?.name}" 添加知识库绑定`}
+        title={t('rkBind.modalTitle', { name: selectedRole?.name })}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
@@ -675,10 +673,10 @@ const RoleKnowledgeBinding = () => {
         >
           <Form.Item
             name="knowledge_id"
-            label="选择知识库"
-            rules={[{ required: true, message: '请选择要绑定的知识库' }]}
+            label={t('rkBind.pickKBLabel')}
+            rules={[{ required: true, message: t('rkBind.pickKBReq') }]}
           >
-            <Select placeholder="请选择知识库" showSearch>
+            <Select placeholder={t('rkBind.pickKB')} showSearch>
               {availableKnowledges.map(kb => (
                 <Option key={`${kb.type}-${kb.id}`} value={`${kb.type}-${kb.id}`}>
                   <Space>
@@ -692,8 +690,8 @@ const RoleKnowledgeBinding = () => {
 
           <Form.Item
             name="config"
-            label="绑定配置 (可选)"
-            help="可以为该角色定制特殊的查询参数，留空则使用知识库默认配置"
+            label={t('rkBind.bindConfig')}
+            help={t('rkBind.bindConfigHelp')}
           >
             <Input.TextArea 
               rows={3} 
@@ -704,10 +702,10 @@ const RoleKnowledgeBinding = () => {
           <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
             <Space>
               <Button onClick={() => setModalVisible(false)}>
-                取消
+                {t('rkBind.confirm.cancel')}
               </Button>
               <Button type="primary" htmlType="submit" loading={bindingLoading}>
-                确定绑定
+                {t('rkBind.confirmBind')}
               </Button>
             </Space>
           </Form.Item>

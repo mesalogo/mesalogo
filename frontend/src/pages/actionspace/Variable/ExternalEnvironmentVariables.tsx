@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Typography, Card, Button, Table, Form, Input, Modal, Select, Space, Empty, Tag, App, Switch, InputNumber, Alert, Tooltip, Collapse } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SyncOutlined, ApiOutlined, SettingOutlined, PlayCircleOutlined, PauseCircleOutlined } from '@ant-design/icons';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
 const ExternalEnvironmentVariables = () => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const [variables, setVariables] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -15,7 +17,7 @@ const ExternalEnvironmentVariables = () => {
   const [editingVariable, setEditingVariable] = useState(null);
   const [form] = Form.useForm();
 
-  // 获取外部环境变量数据
+  // load external env variables
   useEffect(() => {
     fetchExternalVariables();
   }, []);
@@ -23,12 +25,11 @@ const ExternalEnvironmentVariables = () => {
   const fetchExternalVariables = async () => {
     setLoading(true);
     try {
-      // 获取真实的外部环境变量数据
       const variables = await actionSpaceAPI.getAllExternalVariables();
       setVariables(variables);
     } catch (error) {
-      console.error('获取外部环境变量失败:', error);
-      message.error('获取外部环境变量失败');
+      console.error('fetch external variables failed:', error);
+      message.error(t('extEnvVar.msg.fetchFailed'));
     } finally {
       setLoading(false);
     }
@@ -82,32 +83,30 @@ const ExternalEnvironmentVariables = () => {
       };
 
       if (editingVariable) {
-        // 更新现有变量
         await actionSpaceAPI.updateExternalVariable(editingVariable.id, variableData);
-        message.success('外部环境变量更新成功');
+        message.success(t('extEnvVar.msg.updateSuccess'));
       } else {
-        // 添加新变量
         await actionSpaceAPI.createExternalVariable(variableData);
-        message.success('外部环境变量创建成功');
+        message.success(t('extEnvVar.msg.createSuccess'));
       }
 
       setIsModalVisible(false);
       setEditingVariable(null);
-      fetchExternalVariables(); // 重新获取数据
+      fetchExternalVariables();
     } catch (error) {
-      console.error('操作外部环境变量失败:', error);
-      message.error('操作失败，请重试');
+      console.error('external variable op failed:', error);
+      message.error(t('extEnvVar.msg.opFailed'));
     }
   };
 
   const handleDeleteVariable = async (id) => {
     try {
       await actionSpaceAPI.deleteExternalVariable(id);
-      message.success('外部环境变量删除成功');
-      fetchExternalVariables(); // 重新获取数据
+      message.success(t('extEnvVar.msg.deleteSuccess'));
+      fetchExternalVariables();
     } catch (error) {
-      console.error('删除外部环境变量失败:', error);
-      message.error('删除失败，请重试');
+      console.error('delete external variable failed:', error);
+      message.error(t('extEnvVar.msg.deleteFailed'));
     }
   };
 
@@ -121,26 +120,26 @@ const ExternalEnvironmentVariables = () => {
         sync_enabled: enabled
       });
 
-      message.success(`同步已${enabled ? '启用' : '禁用'}`);
-      fetchExternalVariables(); // 重新获取数据
+      message.success(enabled ? t('extEnvVar.msg.syncEnabled') : t('extEnvVar.msg.syncDisabled'));
+      fetchExternalVariables();
     } catch (error) {
-      console.error('更新同步状态失败:', error);
-      message.error('操作失败，请重试');
+      console.error('toggle sync failed:', error);
+      message.error(t('extEnvVar.msg.opFailed'));
     }
   };
 
   const handleManualSync = async (id) => {
-    message.loading('正在同步数据...', 0);
+    message.loading(t('extEnvVar.msg.syncing'), 0);
 
     try {
       const result = await actionSpaceAPI.syncExternalVariable(id);
       message.destroy();
-      message.success('数据同步成功');
-      fetchExternalVariables(); // 重新获取数据
+      message.success(t('extEnvVar.msg.syncSuccess'));
+      fetchExternalVariables();
     } catch (error) {
       message.destroy();
-      console.error('同步外部环境变量失败:', error);
-      message.error('数据同步失败');
+      console.error('manual sync failed:', error);
+      message.error(t('extEnvVar.msg.syncFailed'));
     }
   };
 
@@ -155,35 +154,35 @@ const ExternalEnvironmentVariables = () => {
 
   const getStatusText = (status) => {
     switch (status) {
-      case 'active': return '正常';
-      case 'error': return '错误';
-      case 'inactive': return '未激活';
-      default: return '未知';
+      case 'active': return t('extEnvVar.status.active');
+      case 'error': return t('extEnvVar.status.error');
+      case 'inactive': return t('extEnvVar.status.inactive');
+      default: return t('extEnvVar.status.unknown');
     }
   };
 
   const formatInterval = (seconds) => {
-    if (seconds < 60) return `${seconds}秒`;
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}分钟`;
-    return `${Math.floor(seconds / 3600)}小时`;
+    if (seconds < 60) return t('extEnvVar.interval.seconds', { n: seconds });
+    if (seconds < 3600) return t('extEnvVar.interval.minutes', { n: Math.floor(seconds / 60) });
+    return t('extEnvVar.interval.hours', { n: Math.floor(seconds / 3600) });
   };
 
   const columns = [
     {
-      title: '变量名',
+      title: t('extEnvVar.col.name'),
       dataIndex: 'name',
       key: 'name',
       width: 120,
       render: (name) => <code>{name}</code>
     },
     {
-      title: '标签',
+      title: t('extEnvVar.col.label'),
       dataIndex: 'label',
       key: 'label',
       width: 100,
     },
     {
-      title: 'API地址',
+      title: t('extEnvVar.col.apiUrl'),
       dataIndex: 'api_url',
       key: 'api_url',
       width: 200,
@@ -195,21 +194,21 @@ const ExternalEnvironmentVariables = () => {
       )
     },
     {
-      title: '同步间隔',
+      title: t('extEnvVar.col.syncInterval'),
       dataIndex: 'sync_interval',
       key: 'sync_interval',
       width: 80,
       render: (interval) => formatInterval(interval)
     },
     {
-      title: '最后同步',
+      title: t('extEnvVar.col.lastSync'),
       dataIndex: 'last_sync',
       key: 'last_sync',
       width: 120,
       render: (time) => time ? <Text type="secondary">{new Date(time).toLocaleDateString()}</Text> : '-'
     },
     {
-      title: '当前值',
+      title: t('extEnvVar.col.value'),
       dataIndex: 'value',
       key: 'value',
       width: 120,
@@ -221,7 +220,7 @@ const ExternalEnvironmentVariables = () => {
       ) : '-'
     },
     {
-      title: '状态',
+      title: t('extEnvVar.col.status'),
       dataIndex: 'status',
       key: 'status',
       width: 80,
@@ -232,7 +231,7 @@ const ExternalEnvironmentVariables = () => {
       )
     },
     {
-      title: '同步',
+      title: t('extEnvVar.col.sync'),
       dataIndex: 'sync_enabled',
       key: 'sync_enabled',
       width: 60,
@@ -240,12 +239,12 @@ const ExternalEnvironmentVariables = () => {
         <Switch
           checked={enabled}
           onChange={(checked) => handleToggleSync(record.id, checked)}
-         
+
         />
       )
     },
     {
-      title: '操作',
+      title: t('extEnvVar.col.action'),
       key: 'action',
       width: 140,
       fixed: 'right' as const,
@@ -256,23 +255,23 @@ const ExternalEnvironmentVariables = () => {
             icon={<SyncOutlined />}
             onClick={() => handleManualSync(record.id)}
             disabled={!record.sync_enabled}
-           
-            title="手动同步"
+
+            title={t('extEnvVar.action.manualSync')}
           />
           <Button
             type="link"
             icon={<EditOutlined />}
             onClick={() => handleEditVariable(record)}
-           
-            title="编辑"
+
+            title={t('extEnvVar.action.edit')}
           />
           <Button
             type="link"
             danger
             icon={<DeleteOutlined />}
             onClick={() => handleDeleteVariable(record.id)}
-           
-            title="删除"
+
+            title={t('extEnvVar.action.delete')}
           />
         </Space>
       ),
@@ -283,20 +282,20 @@ const ExternalEnvironmentVariables = () => {
     <div>
       <div style={{ marginBottom: 16 }}>
         <Text type="secondary">
-          配置外部API接口，系统将根据设定的同步间隔自动获取最新数据
+          {t('extEnvVar.pageSubtitle')}
         </Text>
       </div>
 
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <Text strong>共 {variables.length} 个外部环境变量</Text>
+          <Text strong>{t('extEnvVar.totalCount', { count: variables.length })}</Text>
         </div>
         <Button
           type="primary"
           icon={<PlusOutlined />}
           onClick={handleCreateVariable}
         >
-          添加外部变量
+          {t('extEnvVar.addVariable')}
         </Button>
       </div>
 
@@ -310,13 +309,13 @@ const ExternalEnvironmentVariables = () => {
           pageSize: 10,
           showSizeChanger: true,
           showQuickJumper: true,
-          showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`
+          showTotal: (total, range) => t('extEnvVar.paginationTotal', { from: range[0], to: range[1], total })
         }}
       />
 
-      {/* 添加/编辑外部变量对话框 */}
+      {/* add/edit modal */}
       <Modal
-        title={`${editingVariable ? '编辑' : '添加'}外部环境变量`}
+        title={editingVariable ? t('extEnvVar.modal.editTitle') : t('extEnvVar.modal.addTitle')}
         open={isModalVisible}
         onCancel={handleModalCancel}
         onOk={handleModalSubmit}
@@ -329,37 +328,37 @@ const ExternalEnvironmentVariables = () => {
         >
           <Form.Item
             name="name"
-            label="变量名"
+            label={t('extEnvVar.field.name')}
             rules={[
-              { required: true, message: '请输入变量名' },
-              { pattern: /^[a-zA-Z][a-zA-Z0-9_]*$/, message: '变量名必须以字母开头，只能包含字母、数字和下划线' }
+              { required: true, message: t('extEnvVar.req.name') },
+              { pattern: /^[a-zA-Z][a-zA-Z0-9_]*$/, message: t('extEnvVar.req.namePattern') }
             ]}
           >
-            <Input placeholder="输入变量名，如: market_price" />
+            <Input placeholder={t('extEnvVar.ph.name')} />
           </Form.Item>
 
           <Form.Item
             name="label"
-            label="显示标签"
-            rules={[{ required: true, message: '请输入显示标签' }]}
+            label={t('extEnvVar.field.label')}
+            rules={[{ required: true, message: t('extEnvVar.req.label') }]}
           >
-            <Input placeholder="输入显示标签，如: 市场价格" />
+            <Input placeholder={t('extEnvVar.ph.label')} />
           </Form.Item>
 
           <Form.Item
             name="description"
-            label="描述"
-            extra="可选，描述该变量的用途和数据来源"
+            label={t('extEnvVar.field.description')}
+            extra={t('extEnvVar.extra.description')}
           >
-            <TextArea rows={2} placeholder="描述该变量的用途和数据来源（可选）" />
+            <TextArea rows={2} placeholder={t('extEnvVar.ph.description')} />
           </Form.Item>
 
           <Form.Item
             name="api_url"
-            label="API地址"
+            label={t('extEnvVar.field.apiUrl')}
             rules={[
-              { required: true, message: '请输入API地址' },
-              { type: 'url', message: '请输入有效的URL地址' }
+              { required: true, message: t('extEnvVar.req.apiUrl') },
+              { type: 'url', message: t('extEnvVar.req.urlValid') }
             ]}
           >
             <Input placeholder="https://api.example.com/data" />
@@ -367,8 +366,8 @@ const ExternalEnvironmentVariables = () => {
 
           <Form.Item
             name="api_method"
-            label="请求方法"
-            rules={[{ required: true, message: '请选择请求方法' }]}
+            label={t('extEnvVar.field.apiMethod')}
+            rules={[{ required: true, message: t('extEnvVar.req.apiMethod') }]}
             initialValue="GET"
           >
             <Select>
@@ -381,8 +380,8 @@ const ExternalEnvironmentVariables = () => {
 
           <Form.Item
             name="api_headers"
-            label="请求头"
-            extra="JSON格式的请求头，如认证信息等"
+            label={t('extEnvVar.field.headers')}
+            extra={t('extEnvVar.extra.headers')}
           >
             <TextArea
               rows={3}
@@ -392,10 +391,10 @@ const ExternalEnvironmentVariables = () => {
 
           <Form.Item
             name="data_path"
-            label="数据路径"
-            extra="可选，从API响应中提取数据的JSON路径。如不填写则返回完整响应内容"
+            label={t('extEnvVar.field.dataPath')}
+            extra={t('extEnvVar.extra.dataPath')}
           >
-            <Input placeholder="data.price（可选，留空则返回完整响应）" />
+            <Input placeholder={t('extEnvVar.ph.dataPath')} />
           </Form.Item>
 
           <Collapse
@@ -403,19 +402,19 @@ const ExternalEnvironmentVariables = () => {
             items={[
               {
                 key: 'help',
-                label: <Text type="secondary">数据路径配置说明</Text>,
+                label: <Text type="secondary">{t('extEnvVar.help.title')}</Text>,
                 style: { marginBottom: 16 },
                 children: (
                   <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)' }}>
-                    <p><strong>数据路径语法：</strong></p>
+                    <p><strong>{t('extEnvVar.help.syntaxTitle')}</strong></p>
                     <ul style={{ paddingLeft: 20, margin: 0 }}>
-                      <li><code>留空</code> - 返回完整的API响应内容</li>
-                      <li><code>data.price</code> - 获取 data 对象中的 price 字段</li>
-                      <li><code>rates.USD_CNY</code> - 获取 rates 对象中的 USD_CNY 字段</li>
-                      <li><code>items[0].value</code> - 获取 items 数组第一个元素的 value 字段</li>
-                      <li><code>response.data.list[0].temperature</code> - 多层嵌套路径</li>
+                      <li><code>{t('extEnvVar.help.emptyCode')}</code> - {t('extEnvVar.help.emptyDesc')}</li>
+                      <li><code>data.price</code> - {t('extEnvVar.help.dataPriceDesc')}</li>
+                      <li><code>rates.USD_CNY</code> - {t('extEnvVar.help.ratesDesc')}</li>
+                      <li><code>items[0].value</code> - {t('extEnvVar.help.itemsDesc')}</li>
+                      <li><code>response.data.list[0].temperature</code> - {t('extEnvVar.help.nestedDesc')}</li>
                     </ul>
-                    <p style={{ marginTop: 8 }}><strong>示例API响应：</strong></p>
+                    <p style={{ marginTop: 8 }}><strong>{t('extEnvVar.help.exampleTitle')}</strong></p>
                     <pre style={{ background: 'var(--custom-hover-bg)', padding: 8, fontSize: '11px', margin: 0 }}>
 {`{
   "data": {
@@ -438,28 +437,28 @@ const ExternalEnvironmentVariables = () => {
 
           <Form.Item
             name="data_type"
-            label="数据类型"
-            rules={[{ required: true, message: '请选择数据类型' }]}
+            label={t('extEnvVar.field.dataType')}
+            rules={[{ required: true, message: t('extEnvVar.req.dataType') }]}
             initialValue="string"
           >
             <Select>
-              <Option value="string">字符串</Option>
-              <Option value="number">数字</Option>
-              <Option value="boolean">布尔值</Option>
-              <Option value="object">对象</Option>
-              <Option value="array">数组</Option>
+              <Option value="string">{t('extEnvVar.type.string')}</Option>
+              <Option value="number">{t('extEnvVar.type.number')}</Option>
+              <Option value="boolean">{t('extEnvVar.type.boolean')}</Option>
+              <Option value="object">{t('extEnvVar.type.object')}</Option>
+              <Option value="array">{t('extEnvVar.type.array')}</Option>
             </Select>
           </Form.Item>
 
           <Form.Item
             name="timeout"
-            label="请求超时（秒）"
+            label={t('extEnvVar.field.timeout')}
             rules={[
-              { required: true, message: '请输入请求超时时间' },
-              { type: 'number', min: 1, max: 300, message: '超时时间应在1-300秒之间' }
+              { required: true, message: t('extEnvVar.req.timeout') },
+              { type: 'number', min: 1, max: 300, message: t('extEnvVar.req.timeoutRange') }
             ]}
             initialValue={10}
-            extra="API请求的超时时间，建议设置为10-30秒"
+            extra={t('extEnvVar.extra.timeout')}
           >
             <Space.Compact style={{ width: '100%' }}>
               <InputNumber
@@ -468,16 +467,16 @@ const ExternalEnvironmentVariables = () => {
                 style={{ width: '100%' }}
                 placeholder="10"
               />
-              <Input style={{ width: 'auto', pointerEvents: 'none' }} disabled value="秒" />
+              <Input style={{ width: 'auto', pointerEvents: 'none' }} disabled value={t('extEnvVar.unit.seconds')} />
             </Space.Compact>
           </Form.Item>
 
           <Form.Item
             name="sync_interval"
-            label="同步间隔（秒）"
+            label={t('extEnvVar.field.syncInterval')}
             rules={[
-              { required: true, message: '请输入同步间隔' },
-              { type: 'number', min: 30, message: '同步间隔不能少于30秒' }
+              { required: true, message: t('extEnvVar.req.syncInterval') },
+              { type: 'number', min: 30, message: t('extEnvVar.req.syncIntervalMin') }
             ]}
             initialValue={300}
           >
@@ -488,17 +487,17 @@ const ExternalEnvironmentVariables = () => {
                 style={{ width: '100%' }}
                 placeholder="300"
               />
-              <Input style={{ width: 'auto', pointerEvents: 'none' }} disabled value="秒" />
+              <Input style={{ width: 'auto', pointerEvents: 'none' }} disabled value={t('extEnvVar.unit.seconds')} />
             </Space.Compact>
           </Form.Item>
 
           <Form.Item
             name="sync_enabled"
-            label="启用同步"
+            label={t('extEnvVar.field.syncEnabled')}
             valuePropName="checked"
             initialValue={true}
           >
-            <Switch checkedChildren="开启" unCheckedChildren="关闭" />
+            <Switch checkedChildren={t('extEnvVar.switch.on')} unCheckedChildren={t('extEnvVar.switch.off')} />
           </Form.Item>
         </Form>
       </Modal>

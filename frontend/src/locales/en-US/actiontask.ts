@@ -131,6 +131,12 @@ export default {
   // Operation messages
   'actionTaskDetail.taskTerminated': 'Task has been terminated',
   'actionTaskDetail.operationFailed': 'Operation failed',
+  // task-window switcher
+  'actionTaskDetail.back': 'Back',
+  'actionTaskDetail.switch': 'Switch',
+  'actionTaskDetail.noOtherTasks': 'No other tasks',
+  'actionTaskDetail.taskTitleFallback': 'Task {{id}}...',
+  'actionTaskDetail.unknownActionSpace': 'Unknown action space',
   // App Management
   'appManagement.title': 'App Management',
   'appManagement.description': 'Click to launch apps, apps will open in separate tabs',

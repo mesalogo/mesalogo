@@ -29,6 +29,7 @@ import {
   FullscreenOutlined,
   FullscreenExitOutlined
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import GISApp from './GISApp';
 import NextRPAApp from './NextRPAApp';
 import OnlyOfficeApp from './OnlyOfficeApp';
@@ -41,7 +42,7 @@ const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
 const { Option } = Select;
 
-// 应用图标颜色映射
+// app icon color map (keyed by backend category strings, unchanged for compat)
 const iconColorMap = {
   '开发工具': '#007ACC',
   '建模工具': '#52C41A',
@@ -50,15 +51,19 @@ const iconColorMap = {
   '系统管理': '#FA8C16'
 };
 
+// sentinel value for "all categories" filter
+const ALL_CATEGORY = '__all__';
+
 const MarketPageContent = () => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const [apps, setApps] = useState([]);
   const [filteredApps, setFilteredApps] = useState([]);
-  const [categories, setCategories] = useState(['全部']);
+  const [categories, setCategories] = useState([ALL_CATEGORY]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('全部');
+  const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORY);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedApp, setSelectedApp] = useState(null);
   const [runningApp, setRunningApp] = useState(null);
@@ -102,30 +107,34 @@ const MarketPageContent = () => {
       });
       setApps(response.apps || []);
     } catch (error) {
-      console.error('加载应用列表失败:', error);
-      message.error('加载应用列表失败: ' + error.message);
+      console.error('load apps failed:', error);
+      message.error(t('marketPage.loadAppsFailed') + ': ' + error.message);
     } finally {
       setInitialLoading(false);
     }
   };
 
-  // 加载分类列表
+  // load category list (keep `__all__` sentinel + backend categories)
   const loadCategories = async () => {
     try {
       const response = await marketService.getCategories();
-      setCategories(response.categories || ['全部']);
+      // backend returns categories with optional Chinese '全部' as first item;
+      // we drop that label and rely on our local sentinel + i18n label.
+      const backendCats = (response.categories || []).filter(
+        c => c !== '全部' && c !== ALL_CATEGORY
+      );
+      setCategories([ALL_CATEGORY, ...backendCats]);
     } catch (error) {
-      console.error('加载分类列表失败:', error);
-      message.error('加载分类列表失败: ' + error.message);
+      console.error('load categories failed:', error);
+      message.error(t('marketPage.loadCategoriesFailed') + ': ' + error.message);
     }
   };
 
-  // 筛选应用
+  // filter apps
   const filterApps = () => {
     let filtered = apps;
 
-    // 按分类筛选
-    if (selectedCategory !== '全部') {
+    if (selectedCategory !== ALL_CATEGORY) {
       filtered = filtered.filter(app =>
         app.basic?.category === selectedCategory
       );
@@ -154,37 +163,35 @@ const MarketPageContent = () => {
     setSelectedCategory(value);
   };
 
-  // 处理应用启动
+  // launch an app
   const handleLaunchApp = async (app) => {
     if (!app.enabled) {
-      message.warning('应用已禁用，无法启动');
+      message.warning(t('marketPage.appDisabledCannotLaunch'));
       return;
     }
 
-    // NextRPA 主机模式下启动VNC桌面
+    // NextRPA local mode: start VNC desktop
     if (app.id === 'next-rpa') {
       const connectionMode = app.connection?.mode || 'local';
       const vncUrl = app.connection?.localConfig?.vncUrl;
-      
+
       if (connectionMode === 'local' && vncUrl) {
-        // 主机模式且配置了VNC地址，通过代理启动VNC桌面
         try {
-          // 从 vncUrl 提取 host:port (去掉 ws:// 或 wss:// 前缀)
           let vncTarget = vncUrl.replace(/^wss?:\/\//, '');
           const { token, ws_port } = await vncProxyService.start(vncTarget);
           setVncToken(token);
           setVncWsPort(ws_port);
           setRunningApp(app);
-          message.success(`已启动 ${app.name} - VNC 桌面`);
+          message.success(t('marketPage.vncStarted', { name: app.name }));
         } catch (error: any) {
-          message.error('启动 VNC 代理失败: ' + error.message);
+          message.error(t('marketPage.vncProxyFailed') + ': ' + error.message);
         }
         return;
       } else if (connectionMode === 'local' && !vncUrl) {
-        message.warning('请先在应用设置中配置 VNC 地址');
+        message.warning(t('marketPage.configureVncFirst'));
         return;
       } else {
-        message.info('云端模式功能正在开发中，敬请期待');
+        message.info(t('marketPage.cloudComingSoon'));
         return;
       }
     }
@@ -197,43 +204,38 @@ const MarketPageContent = () => {
         const launchConfig = response.launch_config;
 
         if (launchConfig.type === 'tab' && launchConfig.url) {
-          // 特殊处理 VSCode 应用 - 使用用户配置的URL
           if (app.id === 'vscode-server') {
             const configuredUrl = app.launch?.url || launchConfig.url || '/vscode';
             window.open(configuredUrl, '_blank');
-            message.success(`已在新标签页中启动 ${app.name}`);
+            message.success(t('marketPage.launchedNewTab', { name: app.name }));
           } else {
-            // 其他应用使用原有逻辑
             window.open(launchConfig.url, '_blank');
-            message.success(`已在新标签页中启动 ${app.name}`);
+            message.success(t('marketPage.launchedNewTab', { name: app.name }));
           }
         } else if (launchConfig.type === 'iframe' || launchConfig.type === 'component') {
-          // 对于iframe和组件类型，在当前页面中启动
           setRunningApp(app);
-          message.success(`已启动 ${app.name}`);
+          message.success(t('marketPage.launched', { name: app.name }));
         } else {
-          message.warning('应用配置错误，无法启动');
+          message.warning(t('marketPage.launchConfigError'));
         }
 
-        // 刷新应用列表以更新统计信息
         loadApps();
       }
     } catch (error) {
-      console.error('启动应用失败:', error);
-      message.error('启动应用失败: ' + error.message);
+      console.error('launch app failed:', error);
+      message.error(t('marketPage.launchFailed') + ': ' + error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // 返回应用市场
+  // back to market
   const handleBackToMarket = async () => {
-    // 如果有 VNC 会话，先停止
     if (vncToken) {
       try {
         await vncProxyService.stop(vncToken);
       } catch (error) {
-        console.error('停止 VNC 会话失败:', error);
+        console.error('stop VNC session failed:', error);
       }
       setVncToken(null);
       setVncWsPort(null);
@@ -241,21 +243,20 @@ const MarketPageContent = () => {
     setRunningApp(null);
   };
 
-  // 切换应用启用状态
+  // toggle app enabled
   const handleToggleAppEnabled = async (appId, enabled) => {
     try {
       const response = await marketService.toggleAppEnabled(appId, enabled);
 
       if (response.success) {
-        // 更新本地状态
         setApps(prev => prev.map(app =>
           app.id === appId ? { ...app, enabled } : app
         ));
         message.success(response.message);
       }
     } catch (error) {
-      console.error('切换应用状态失败:', error);
-      message.error('切换应用状态失败: ' + error.message);
+      console.error('toggle app status failed:', error);
+      message.error(t('marketPage.toggleStatusFailed') + ': ' + error.message);
     }
   };
 
@@ -271,16 +272,16 @@ const MarketPageContent = () => {
     setSettingsModalVisible(true);
   };
 
-  // 保存应用设置
+  // save app settings
   const handleSaveSettings = async (newConfig) => {
     if (!settingsApp) return;
     try {
       await marketService.updateAppConfig(settingsApp.id, newConfig);
-      message.success('配置已保存');
+      message.success(t('marketPage.configSaved'));
       setSettingsModalVisible(false);
       loadApps();
     } catch (error) {
-      message.error('保存配置失败: ' + error.message);
+      message.error(t('marketPage.saveConfigFailed') + ': ' + error.message);
     }
   };
 
@@ -291,21 +292,19 @@ const MarketPageContent = () => {
     setBindLoading(true);
 
     try {
-      // 加载所有行动空间
       const spacesResponse = await marketService.getActionSpaces();
       if (spacesResponse.success) {
         setActionSpaces(spacesResponse.action_spaces);
       }
 
-      // 加载当前应用已绑定的空间
       const boundResponse = await marketService.getAppBoundSpaces(app.id);
       if (boundResponse.success) {
         setBoundSpaces(boundResponse.bound_spaces);
         setSelectedSpaceIds(boundResponse.bound_spaces.map(space => space.id));
       }
     } catch (error) {
-      console.error('加载绑定数据失败:', error);
-      message.error('加载绑定数据失败: ' + error.message);
+      console.error('load bind data failed:', error);
+      message.error(t('marketPage.loadBindFailed') + ': ' + error.message);
     } finally {
       setBindLoading(false);
     }
@@ -322,12 +321,11 @@ const MarketPageContent = () => {
       if (response.success) {
         message.success(response.message);
         setBindModalVisible(false);
-        // 重新加载应用列表以更新绑定状态
         loadApps();
       }
     } catch (error) {
-      console.error('绑定行动空间失败:', error);
-      message.error('绑定行动空间失败: ' + error.message);
+      console.error('bind action space failed:', error);
+      message.error(t('marketPage.bindFailed') + ': ' + error.message);
     } finally {
       setBindLoading(false);
     }
@@ -338,10 +336,10 @@ const MarketPageContent = () => {
     setSelectedSpaceIds(checkedValues);
   };
 
-  // 渲染应用卡片
+  // render app card
   const renderAppCard = (app) => {
-    const category = app.basic?.category || '未分类';
-    const iconColor = iconColorMap[category] || '#1677ff';
+    const category = app.basic?.category || t('marketPage.uncategorized');
+    const iconColor = iconColorMap[app.basic?.category] || '#1677ff';
     const appIcon = getAppIcon(app.basic?.icon || 'appstore', iconColor);
 
     return (
@@ -375,12 +373,11 @@ const MarketPageContent = () => {
             </div>
           }
           actions={(() => {
-            // 判断是否有可配置项
             const hasSettings = ['next-rpa', 'online-office', 'vscode-server'].includes(app.id) || app.launch?.url;
             return [
-              <Tooltip title={app.scope === 'global' ? '全局应用无需绑定' : '绑定行动空间'}>
+              <Tooltip title={app.scope === 'global' ? t('marketPage.tooltip.globalNoBind') : t('marketPage.tooltip.bindSpace')}>
                 <LinkOutlined
-                  style={{ 
+                  style={{
                     color: app.scope === 'global' ? '#d9d9d9' : '#1677ff',
                     cursor: app.scope === 'global' ? 'not-allowed' : 'pointer'
                   }}
@@ -389,9 +386,9 @@ const MarketPageContent = () => {
                   }}
                 />
               </Tooltip>,
-              <Tooltip title={hasSettings ? '应用设置' : '暂无可配置项'}>
+              <Tooltip title={hasSettings ? t('marketPage.tooltip.appSettings') : t('marketPage.tooltip.noSettings')}>
                 <SettingOutlined
-                  style={{ 
+                  style={{
                     color: hasSettings ? '#722ed1' : '#d9d9d9',
                     cursor: hasSettings ? 'pointer' : 'not-allowed'
                   }}
@@ -400,15 +397,15 @@ const MarketPageContent = () => {
                   }}
                 />
               </Tooltip>,
-              <Tooltip title="查看详情">
+              <Tooltip title={t('marketPage.tooltip.viewDetail')}>
                 <InfoCircleOutlined
                   style={{ color: '#faad14' }}
                   onClick={() => handleShowDetail(app)}
                 />
               </Tooltip>,
-              <Tooltip title={app.launchable === false ? '此应用为功能开关，无需启动' : (app.enabled ? '启动应用' : '应用已禁用')}>
+              <Tooltip title={app.launchable === false ? t('marketPage.tooltip.featureToggle') : (app.enabled ? t('marketPage.tooltip.launchApp') : t('marketPage.tooltip.appDisabled'))}>
                 <PlayCircleOutlined
-                  style={{ 
+                  style={{
                     color: (!app.enabled || app.launchable === false) ? '#d9d9d9' : '#52c41a',
                     cursor: (!app.enabled || app.launchable === false) ? 'not-allowed' : 'pointer'
                   }}
@@ -425,7 +422,7 @@ const MarketPageContent = () => {
               <Space>
                 <Text strong style={{ fontSize: '16px' }}>{app.name}</Text>
                 <Tag color={app.scope === 'global' ? 'blue' : 'orange'}>
-                  {app.scope === 'global' ? '全局' : '空间'}
+                  {app.scope === 'global' ? t('marketPage.scope.global') : t('marketPage.scope.space')}
                 </Tag>
               </Space>
             </div>
@@ -435,7 +432,7 @@ const MarketPageContent = () => {
                 ellipsis={{ rows: 3 }}
                 style={{ marginBottom: 12, color: 'var(--custom-text-secondary)' }}
               >
-                {app.basic?.description || '暂无描述'}
+                {app.basic?.description || t('marketPage.noDescription')}
               </Paragraph>
             </div>
 
@@ -453,9 +450,8 @@ const MarketPageContent = () => {
                   {category} • v{app.basic?.version || '1.0.0'}
                 </Text>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Text type="secondary" style={{ fontSize: '11px' }}>启用</Text>
+                  <Text type="secondary" style={{ fontSize: '11px' }}>{t('marketPage.enabledLabel')}</Text>
                   <Switch
-                   
                     checked={app.enabled}
                     onChange={(checked) => handleToggleAppEnabled(app.id, checked)}
                   />
@@ -484,20 +480,18 @@ const MarketPageContent = () => {
               icon={<ArrowLeftOutlined />}
               onClick={handleBackToMarket}
             >
-              返回应用市场
+              {t('marketPage.backToMarket')}
             </Button>
             <Title level={4} style={{ margin: 0 }}>{runningApp.name}</Title>
           </Space>
         </div>
 
-        {/* 渲染对应的应用组件 */}
         {runningApp.id === 'gis-mapping' && <GISApp />}
         {runningApp.id === 'next-rpa' && runningApp.connection?.mode === 'local' && runningApp.connection?.localConfig?.vncUrl && vncToken && vncWsPort && (() => {
-          // 使用 websockify 代理 URL (单端口 + token 路由)
           const proxyUrl = vncProxyService.getProxyUrl(vncWsPort, vncToken);
           return (
-          <Card 
-            title="远程桌面 - VNC"
+          <Card
+            title={t('marketPage.remoteDesktopVnc')}
             extra={
               <Space>
                 <Text type="secondary">
@@ -522,16 +516,15 @@ const MarketPageContent = () => {
                 }
               }}
               onConnect={() => {
-                message.success('VNC 连接成功');
+                message.success(t('marketPage.vncConnected'));
               }}
               onDisconnect={(e) => {
-                // 检查是否是连接失败
                 if (e?.detail?.clean === false || e?.detail?.code === 1011) {
-                  message.error('VNC 连接失败: ' + (e?.detail?.reason || '无法连接到目标服务器'));
+                  message.error(t('marketPage.vncFailed') + ': ' + (e?.detail?.reason || t('marketPage.vncTargetUnreachable')));
                 }
               }}
               onSecurityFailure={(e) => {
-                message.error('VNC 安全验证失败: ' + (e?.detail?.reason || '未知错误'));
+                message.error(t('marketPage.vncSecurityFailed') + ': ' + (e?.detail?.reason || t('marketPage.unknownError')));
               }}
             />
           </Card>
@@ -541,14 +534,12 @@ const MarketPageContent = () => {
           <NextRPAApp
             appConfig={runningApp}
             onConfigChange={async (newConfig) => {
-              // 保存配置到后端
               try {
                 await marketService.updateAppConfig(runningApp.id, newConfig);
-                message.success('配置已保存');
-                // 重新加载应用列表
+                message.success(t('marketPage.configSaved'));
                 loadApps();
               } catch (error) {
-                message.error('保存配置失败: ' + error.message);
+                message.error(t('marketPage.saveConfigFailed') + ': ' + error.message);
               }
             }}
             onClose={handleBackToMarket}
@@ -564,7 +555,7 @@ const MarketPageContent = () => {
                 border: 'none',
                 borderRadius: '8px'
               }}
-              title="数据可视化工具"
+              title={t('marketPage.dataVizTitle')}
               sandbox="allow-scripts allow-same-origin allow-forms"
             />
           </div>
@@ -603,18 +594,17 @@ const MarketPageContent = () => {
         marginBottom: 24
       }}>
         <div>
-          <Title level={4} style={{ margin: 0, marginBottom: '8px' }}>实体应用市场</Title>
+          <Title level={4} style={{ margin: 0, marginBottom: '8px' }}>{t('marketPage.title')}</Title>
           <Text type="secondary">
-            发现和使用各种实体操作插件，提升工作效率
+            {t('marketPage.subtitle')}
           </Text>
         </div>
       </div>
 
-      {/* 搜索和筛选栏 */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
         <Space>
           <Search
-            placeholder="搜索应用名称、描述或标签"
+            placeholder={t('marketPage.searchPlaceholder')}
             allowClear
             onSearch={handleSearch}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -626,7 +616,9 @@ const MarketPageContent = () => {
             style={{ width: 120 }}
           >
             {categories.map(category => (
-              <Option key={category} value={category}>{category}</Option>
+              <Option key={category} value={category}>
+                {category === ALL_CATEGORY ? t('marketPage.allCategories') : category}
+              </Option>
             ))}
           </Select>
         </Space>
@@ -655,20 +647,19 @@ const MarketPageContent = () => {
           </Row>
         ) : (
           <Empty
-            description="没有找到匹配的应用"
+            description={t('marketPage.noMatchingApp')}
             style={{ margin: '64px 0' }}
           />
         )
       )}
 
-      {/* 应用详情Modal */}
       <Modal
         title={selectedApp?.name}
         open={detailModalVisible}
         onCancel={() => setDetailModalVisible(false)}
         footer={[
           <Button key="cancel" onClick={() => setDetailModalVisible(false)}>
-            关闭
+            {t('marketPage.close')}
           </Button>,
           <Button
             key="launch"
@@ -680,7 +671,7 @@ const MarketPageContent = () => {
             }}
             disabled={!selectedApp?.enabled}
           >
-            {selectedApp?.enabled ? '启动应用' : '应用已禁用'}
+            {selectedApp?.enabled ? t('marketPage.launchApp') : t('marketPage.appDisabled')}
           </Button>
         ]}
         width={800}
@@ -697,100 +688,93 @@ const MarketPageContent = () => {
 
             </div>
 
-            {/* 应用描述 */}
             <div style={{ marginBottom: 24 }}>
-              <Text strong style={{ fontSize: '16px' }}>应用描述</Text>
+              <Text strong style={{ fontSize: '16px' }}>{t('marketPage.detail.appDescription')}</Text>
               <Paragraph style={{ marginTop: 8 }}>
-                {selectedApp.basic?.description || '暂无描述'}
+                {selectedApp.basic?.description || t('marketPage.noDescription')}
               </Paragraph>
             </div>
 
-            {/* 基本信息 */}
             <div style={{ marginBottom: 24 }}>
-              <Text strong style={{ fontSize: '16px' }}>基本信息</Text>
+              <Text strong style={{ fontSize: '16px' }}>{t('marketPage.detail.basicInfo')}</Text>
               <Row gutter={16} style={{ marginTop: 12 }}>
                 <Col span={8}>
-                  <Text strong>分类：</Text>
+                  <Text strong>{t('marketPage.detail.category')}</Text>
                   <br />
-                  <Tag color="blue">{selectedApp.basic?.category || '未分类'}</Tag>
+                  <Tag color="blue">{selectedApp.basic?.category || t('marketPage.uncategorized')}</Tag>
                 </Col>
                 <Col span={8}>
-                  <Text strong>版本：</Text>
+                  <Text strong>{t('marketPage.detail.version')}</Text>
                   <br />
                   <Text>{selectedApp.basic?.version || '1.0.0'}</Text>
                 </Col>
                 <Col span={8}>
-                  <Text strong>作者：</Text>
+                  <Text strong>{t('marketPage.detail.author')}</Text>
                   <br />
-                  <Text>{selectedApp.basic?.author || '未知'}</Text>
+                  <Text>{selectedApp.basic?.author || t('marketPage.unknown')}</Text>
                 </Col>
               </Row>
               <Row gutter={16} style={{ marginTop: 16 }}>
                 <Col span={8}>
-                  <Text strong>启用状态：</Text>
+                  <Text strong>{t('marketPage.detail.enabledStatus')}</Text>
                   <br />
                   <Tag color={selectedApp.enabled ? 'green' : 'default'}>
-                    {selectedApp.enabled ? '已启用' : '已禁用'}
+                    {selectedApp.enabled ? t('marketPage.detail.enabled') : t('marketPage.detail.disabled')}
                   </Tag>
                 </Col>
                 <Col span={8}>
-                  <Text strong>排序权重：</Text>
+                  <Text strong>{t('marketPage.detail.sortOrder')}</Text>
                   <br />
                   <Text>{selectedApp.sort_order || 0}</Text>
                 </Col>
               </Row>
             </div>
 
-            {/* 标签 */}
             <div style={{ marginBottom: 24 }}>
-              <Text strong style={{ fontSize: '16px' }}>应用标签</Text>
+              <Text strong style={{ fontSize: '16px' }}>{t('marketPage.detail.appTags')}</Text>
               <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                 {(selectedApp.basic?.tags || []).map(tag => (
                   <Tag key={tag} style={{ marginRight: 0 }}>{tag}</Tag>
                 ))}
                 {(!selectedApp.basic?.tags || selectedApp.basic.tags.length === 0) && (
-                  <Text type="secondary">暂无标签</Text>
+                  <Text type="secondary">{t('marketPage.detail.noTags')}</Text>
                 )}
               </div>
             </div>
 
-            {/* 启动配置 */}
             {selectedApp.launch && (
               <div style={{ marginBottom: 24 }}>
-                <Text strong style={{ fontSize: '16px' }}>启动配置</Text>
+                <Text strong style={{ fontSize: '16px' }}>{t('marketPage.detail.launchConfig')}</Text>
                 <Row gutter={16} style={{ marginTop: 12 }}>
                   <Col span={8}>
-                    <Text strong>启动类型：</Text>
+                    <Text strong>{t('marketPage.detail.launchType')}</Text>
                     <br />
                     <Tag color="purple">
-                      {selectedApp.launch.type === 'tab' ? '新标签页' :
-                       selectedApp.launch.type === 'iframe' ? 'iframe嵌入' :
-                       selectedApp.launch.type === 'component' ? '组件模式' :
-                       selectedApp.launch.type === 'external' ? '外部链接' : selectedApp.launch.type}
+                      {selectedApp.launch.type === 'tab' ? t('marketPage.launchType.tab') :
+                       selectedApp.launch.type === 'iframe' ? t('marketPage.launchType.iframe') :
+                       selectedApp.launch.type === 'component' ? t('marketPage.launchType.component') :
+                       selectedApp.launch.type === 'external' ? t('marketPage.launchType.external') : selectedApp.launch.type}
                     </Tag>
                   </Col>
                   {selectedApp.launch.url && (
                     <Col span={16}>
-                      <Text strong>访问地址：</Text>
+                      <Text strong>{t('marketPage.detail.accessUrl')}</Text>
                       <br />
                       <Text code>{selectedApp.launch.url}</Text>
                     </Col>
                   )}
                   {selectedApp.launch.component && (
                     <Col span={16}>
-                      <Text strong>组件名称：</Text>
+                      <Text strong>{t('marketPage.detail.componentName')}</Text>
                       <br />
                       <Text code>{selectedApp.launch.component}</Text>
                     </Col>
                   )}
                 </Row>
 
-
-
-                {/* 启动设置 */}
                 {selectedApp.launch.settings && Object.keys(selectedApp.launch.settings).length > 0 && (
                   <div style={{ marginTop: 16 }}>
-                    <Text strong>启动设置：</Text>
+                    <Text strong>{t('marketPage.detail.launchSettings')}</Text>
                     <div style={{ marginTop: 8, background: 'var(--custom-hover-bg)', padding: 12, borderRadius: 4 }}>
                       {Object.entries(selectedApp.launch.settings).map(([key, value]) => (
                         <div key={key} style={{ marginBottom: 4 }}>
@@ -803,16 +787,13 @@ const MarketPageContent = () => {
               </div>
             )}
 
-
-
-            {/* 文档链接 */}
             {selectedApp.metadata?.documentation && (
               <div style={{ marginBottom: 24 }}>
-                <Text strong style={{ fontSize: '16px' }}>相关文档</Text>
+                <Text strong style={{ fontSize: '16px' }}>{t('marketPage.detail.relatedDocs')}</Text>
                 <div style={{ marginTop: 12 }}>
                   {selectedApp.metadata.documentation.userGuide && (
                     <div style={{ marginBottom: 8 }}>
-                      <Text strong>用户指南：</Text>
+                      <Text strong>{t('marketPage.detail.userGuide')}</Text>
                       <br />
                       <Text code>{selectedApp.metadata.documentation.userGuide}</Text>
                     </div>
@@ -821,20 +802,19 @@ const MarketPageContent = () => {
               </div>
             )}
 
-            {/* 使用统计 */}
             {selectedApp.stats && (
               <div style={{ marginBottom: 16 }}>
-                <Text strong style={{ fontSize: '16px' }}>使用统计</Text>
+                <Text strong style={{ fontSize: '16px' }}>{t('marketPage.detail.usageStats')}</Text>
                 <Row gutter={16} style={{ marginTop: 12 }}>
                   <Col span={12}>
-                    <Text strong>安装次数：</Text>
+                    <Text strong>{t('marketPage.detail.installCount')}</Text>
                     <br />
-                    <Text type="secondary">{selectedApp.stats.install_count || 0} 次</Text>
+                    <Text type="secondary">{t('marketPage.detail.countTimes', { count: selectedApp.stats.install_count || 0 })}</Text>
                   </Col>
                   <Col span={12}>
-                    <Text strong>启动次数：</Text>
+                    <Text strong>{t('marketPage.detail.launchCount')}</Text>
                     <br />
-                    <Text type="secondary">{selectedApp.stats.launch_count || 0} 次</Text>
+                    <Text type="secondary">{t('marketPage.detail.countTimes', { count: selectedApp.stats.launch_count || 0 })}</Text>
                   </Col>
                 </Row>
               </div>
@@ -843,9 +823,8 @@ const MarketPageContent = () => {
         )}
       </Modal>
 
-      {/* 绑定行动空间Modal */}
       <Modal
-        title={`绑定应用到行动空间 - ${bindingApp?.name}`}
+        title={t('marketPage.bindModal.title', { name: bindingApp?.name || '' })}
         open={bindModalVisible}
         onCancel={() => {
           setBindModalVisible(false);
@@ -858,7 +837,7 @@ const MarketPageContent = () => {
             setSpaceFilterQuery('');
             setCurrentPage(1);
           }}>
-            取消
+            {t('marketPage.cancel')}
           </Button>,
           <Button
             key="bind"
@@ -866,7 +845,7 @@ const MarketPageContent = () => {
             loading={bindLoading}
             onClick={handleBindSpaces}
           >
-            确认绑定
+            {t('marketPage.bindModal.confirm')}
           </Button>
         ]}
         width={900}
@@ -874,7 +853,7 @@ const MarketPageContent = () => {
         <div>
           <div style={{ marginBottom: 16 }}>
             <Typography.Text type="secondary">
-              选择要绑定的行动空间。应用将只在绑定的行动空间中显示和可用。
+              {t('marketPage.bindModal.hint')}
             </Typography.Text>
           </div>
 
@@ -891,11 +870,11 @@ const MarketPageContent = () => {
               {actionSpaces.length > 0 ? (
                 <div>
                   <div style={{ marginBottom: 16 }}>
-                    <Typography.Text strong>可用的行动空间：</Typography.Text>
+                    <Typography.Text strong>{t('marketPage.bindModal.availableSpaces')}</Typography.Text>
                   </div>
                   <div style={{ marginBottom: 16 }}>
                     <Search
-                      placeholder="搜索行动空间名称或描述"
+                      placeholder={t('marketPage.bindModal.searchSpacePlaceholder')}
                       allowClear
                       value={spaceFilterQuery}
                       onChange={(e) => {
@@ -967,7 +946,7 @@ const MarketPageContent = () => {
                             total={filteredSpaces.length}
                             onChange={(page) => setCurrentPage(page)}
                             showSizeChanger={false}
-                            showTotal={(total) => `共 ${total} 个行动空间`}
+                            showTotal={(total) => t('marketPage.bindModal.totalSpaces', { count: total })}
                           />
                         </div>
                       );
@@ -977,7 +956,7 @@ const MarketPageContent = () => {
 
                   {boundSpaces.length > 0 && (
                     <div style={{ marginTop: 24 }}>
-                      <Typography.Text strong>当前已绑定的空间：</Typography.Text>
+                      <Typography.Text strong>{t('marketPage.bindModal.currentlyBound')}</Typography.Text>
                       <div style={{ marginTop: 8 }}>
                         {boundSpaces.map(space => (
                           <Tag key={space.id} color="blue" style={{ marginBottom: 4 }}>
@@ -990,7 +969,7 @@ const MarketPageContent = () => {
                 </div>
               ) : (
                 <Empty
-                  description="暂无可用的行动空间"
+                  description={t('marketPage.bindModal.noSpaces')}
                   style={{ margin: '40px 0' }}
                 />
               )}
@@ -999,9 +978,8 @@ const MarketPageContent = () => {
         </div>
       </Modal>
 
-      {/* 应用设置Modal */}
       <Modal
-        title={`应用设置 - ${settingsApp?.name}`}
+        title={t('marketPage.settingsModal.title', { name: settingsApp?.name || '' })}
         open={settingsModalVisible}
         onCancel={() => setSettingsModalVisible(false)}
         footer={null}
@@ -1030,14 +1008,13 @@ const MarketPageContent = () => {
           ) : (
             <div>
               <div style={{ marginBottom: 16 }}>
-                <Text type="secondary">配置 {settingsApp.name} 的相关设置</Text>
+                <Text type="secondary">{t('marketPage.settingsModal.configFor', { name: settingsApp.name })}</Text>
               </div>
-              
-              {/* 通用设置：启动URL */}
+
               {settingsApp.launch?.url && (
                 <div style={{ marginBottom: 16 }}>
-                  <Text strong>启动地址：</Text>
-                  <Input 
+                  <Text strong>{t('marketPage.settingsModal.launchUrl')}</Text>
+                  <Input
                     defaultValue={settingsApp.launch.url}
                     style={{ marginTop: 8 }}
                     onChange={(e) => {
@@ -1047,16 +1024,15 @@ const MarketPageContent = () => {
                 </div>
               )}
 
-              {/* 没有可配置项的提示 */}
               {!settingsApp.launch?.url && (
-                <Empty description="该应用暂无可配置项" />
+                <Empty description={t('marketPage.settingsModal.noConfigItems')} />
               )}
 
               <div style={{ marginTop: 24, textAlign: 'right' }}>
                 <Space>
-                  <Button onClick={() => setSettingsModalVisible(false)}>取消</Button>
+                  <Button onClick={() => setSettingsModalVisible(false)}>{t('marketPage.cancel')}</Button>
                   <Button type="primary" onClick={() => handleSaveSettings(settingsApp)}>
-                    保存配置
+                    {t('marketPage.settingsModal.saveConfig')}
                   </Button>
                 </Space>
               </div>

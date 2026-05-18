@@ -34,16 +34,17 @@ import {
 } from '@ant-design/icons';
 import { actionTaskAPI } from '../../services/api/actionTask';
 import conversationAPI from '../../services/api/conversation';
+import { useTranslation } from 'react-i18next';
 
 const { Text, Title } = Typography;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 /**
- * 自主行动监控组件
- * 监控所有行动任务中的自主行动状态
+ * Autonomous task monitoring
  */
 const AutonomousTaskMonitoring = () => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [autonomousTasks, setAutonomousTasks] = useState([]);
@@ -89,12 +90,12 @@ const AutonomousTaskMonitoring = () => {
                     actionTaskId: task.id,
                     actionTaskName: task.name,
                     conversationId: conversation.id,
-                    conversationName: conversation.name || `会话 ${conversation.id}`
+                    conversationName: conversation.name || t('autoMon.fallbackConvName', { id: conversation.id })
                   });
                 });
               }
             } catch (error) {
-              console.error(`获取任务 ${task.id} 会话 ${conversation.id} 的自主行动失败:`, error);
+              console.error(`fetch autonomous tasks failed for task ${task.id} conversation ${conversation.id}:`, error);
             }
           }
         }
@@ -114,8 +115,8 @@ const AutonomousTaskMonitoring = () => {
       setStatistics(stats);
 
     } catch (error) {
-      console.error('获取自主行动数据失败:', error);
-      message.error('获取自主行动数据失败');
+      console.error('fetch autonomous data failed:', error);
+      message.error(t('autoMon.msg.fetchFailed'));
     } finally {
       setLoading(false);
     }
@@ -165,11 +166,11 @@ const AutonomousTaskMonitoring = () => {
   const handleStopTask = async (task) => {
     try {
       await conversationAPI.stopAutonomousTask(task.actionTaskId, task.conversationId, task.id);
-      message.success('自主行动已停止');
+      message.success(t('autoMon.msg.stopSuccess'));
       fetchAutonomousTasks();
     } catch (error) {
-      console.error('停止自主行动失败:', error);
-      message.error('停止自主行动失败');
+      console.error('stop autonomous task failed:', error);
+      message.error(t('autoMon.msg.stopFailed'));
     }
   };
 
@@ -179,12 +180,12 @@ const AutonomousTaskMonitoring = () => {
     setDetailModalVisible(true);
   };
 
-  // 获取状态标签
+  // status tag
   const getStatusTag = (status) => {
     const statusConfig = {
-      active: { color: 'green', icon: <PlayCircleOutlined />, text: '进行中' },
-      completed: { color: 'blue', icon: <CheckCircleOutlined />, text: '已完成' },
-      stopped: { color: 'red', icon: <StopOutlined />, text: '已停止' }
+      active: { color: 'green', icon: <PlayCircleOutlined />, text: t('autoMon.status.active') },
+      completed: { color: 'blue', icon: <CheckCircleOutlined />, text: t('autoMon.status.completed') },
+      stopped: { color: 'red', icon: <StopOutlined />, text: t('autoMon.status.stopped') }
     };
 
     const config = statusConfig[status] || { color: 'default', icon: <ClockCircleOutlined />, text: status };
@@ -196,13 +197,13 @@ const AutonomousTaskMonitoring = () => {
     );
   };
 
-  // 获取类型标签
+  // type tag
   const getTypeTag = (type) => {
     const typeConfig = {
-      discussion: { color: 'blue', text: '讨论模式' },
-      conditional_stop: { color: 'purple', text: '条件停止' },
-      variable_trigger: { color: 'cyan', text: '变量触发' },
-      time_trigger: { color: 'orange', text: '时间触发' }
+      discussion: { color: 'blue', text: t('autoMon.type.discussion') },
+      conditional_stop: { color: 'purple', text: t('autoMon.type.conditional_stop') },
+      variable_trigger: { color: 'cyan', text: t('autoMon.type.variable_trigger') },
+      time_trigger: { color: 'orange', text: t('autoMon.type.time_trigger') }
     };
 
     const config = typeConfig[type] || { color: 'default', text: type };
@@ -219,67 +220,65 @@ const AutonomousTaskMonitoring = () => {
       width: 80,
     },
     {
-      title: '行动任务',
+      title: t('autoMon.col.actionTask'),
       dataIndex: 'actionTaskName',
       key: 'actionTaskName',
       width: 150,
       ellipsis: true,
     },
     {
-      title: '会话',
+      title: t('autoMon.col.conversation'),
       dataIndex: 'conversationName',
       key: 'conversationName',
       width: 120,
       ellipsis: true,
     },
     {
-      title: '类型',
+      title: t('autoMon.col.type'),
       dataIndex: 'type',
       key: 'type',
       width: 100,
       render: (type) => getTypeTag(type),
     },
     {
-      title: '状态',
+      title: t('autoMon.col.status'),
       dataIndex: 'status',
       key: 'status',
       width: 100,
       render: (status) => getStatusTag(status),
     },
     {
-      title: '创建时间',
+      title: t('autoMon.col.createdAt'),
       dataIndex: 'created_at',
       key: 'created_at',
       width: 150,
       render: (time) => time ? new Date(time).toLocaleString() : '-',
     },
     {
-      title: '更新时间',
+      title: t('autoMon.col.updatedAt'),
       dataIndex: 'updated_at',
       key: 'updated_at',
       width: 150,
       render: (time) => time ? new Date(time).toLocaleString() : '-',
     },
     {
-      title: '操作',
+      title: t('autoMon.col.actions'),
       key: 'actions',
       width: 150,
       render: (_, record) => (
         <Space>
-          <Tooltip title="查看详情">
+          <Tooltip title={t('autoMon.action.view')}>
             <Button
               type="text"
               icon={<EyeOutlined />}
-             
               onClick={() => showDetail(record)}
             />
           </Tooltip>
           {record.status === 'active' && (
-            <Tooltip title="停止">
+            <Tooltip title={t('autoMon.action.stop')}>
               <Button
                 type="text"
                 icon={<StopOutlined />}
-               
                 danger
                 onClick={() => handleStopTask(record)}
               />
@@ -292,12 +291,12 @@ const AutonomousTaskMonitoring = () => {
 
   return (
     <div>
-      {/* 统计概览 */}
+      {/* statistics */}
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col span={6}>
           <Card>
             <Statistic
-              title="总自主行动"
+              title={t('autoMon.stat.total')}
               value={statistics.total}
               prefix={<RobotOutlined />}
               styles={{ content: { color: '#1677ff' } }}
@@ -307,7 +306,7 @@ const AutonomousTaskMonitoring = () => {
         <Col span={6}>
           <Card>
             <Statistic
-              title="进行中"
+              title={t('autoMon.status.active')}
               value={statistics.active}
               prefix={<PlayCircleOutlined />}
               styles={{ content: { color: '#52c41a' } }}
@@ -317,7 +316,7 @@ const AutonomousTaskMonitoring = () => {
         <Col span={6}>
           <Card>
             <Statistic
-              title="已完成"
+              title={t('autoMon.status.completed')}
               value={statistics.completed}
               prefix={<CheckCircleOutlined />}
               styles={{ content: { color: '#1677ff' } }}
@@ -327,7 +326,7 @@ const AutonomousTaskMonitoring = () => {
         <Col span={6}>
           <Card>
             <Statistic
-              title="已停止"
+              title={t('autoMon.status.stopped')}
               value={statistics.stopped}
               prefix={<StopOutlined />}
               styles={{ content: { color: '#ff4d4f' } }}
@@ -336,47 +335,47 @@ const AutonomousTaskMonitoring = () => {
         </Col>
       </Row>
 
-      {/* 过滤器 */}
+      {/* filters */}
       <Card style={{ marginBottom: 16 }}>
         <Form layout="inline">
-          <Form.Item label="状态">
+          <Form.Item label={t('autoMon.col.status')}>
             <Select
               value={filters.status}
               style={{ width: 120 }}
               onChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
             >
-              <Option value="all">全部</Option>
-              <Option value="active">进行中</Option>
-              <Option value="completed">已完成</Option>
-              <Option value="stopped">已停止</Option>
+              <Option value="all">{t('autoMon.filter.all')}</Option>
+              <Option value="active">{t('autoMon.status.active')}</Option>
+              <Option value="completed">{t('autoMon.status.completed')}</Option>
+              <Option value="stopped">{t('autoMon.status.stopped')}</Option>
             </Select>
           </Form.Item>
-          <Form.Item label="类型">
+          <Form.Item label={t('autoMon.col.type')}>
             <Select
               value={filters.type}
               style={{ width: 120 }}
               onChange={(value) => setFilters(prev => ({ ...prev, type: value }))}
             >
-              <Option value="all">全部</Option>
-              <Option value="discussion">讨论模式</Option>
-              <Option value="conditional_stop">条件停止</Option>
-              <Option value="variable_trigger">变量触发</Option>
-              <Option value="time_trigger">时间触发</Option>
+              <Option value="all">{t('autoMon.filter.all')}</Option>
+              <Option value="discussion">{t('autoMon.type.discussion')}</Option>
+              <Option value="conditional_stop">{t('autoMon.type.conditional_stop')}</Option>
+              <Option value="variable_trigger">{t('autoMon.type.variable_trigger')}</Option>
+              <Option value="time_trigger">{t('autoMon.type.time_trigger')}</Option>
             </Select>
           </Form.Item>
-          <Form.Item label="行动任务">
+          <Form.Item label={t('autoMon.col.actionTask')}>
             <Select
               value={filters.actionTaskId}
               style={{ width: 180 }}
               onChange={(value) => setFilters(prev => ({ ...prev, actionTaskId: value }))}
             >
-              <Option value="all">全部</Option>
+              <Option value="all">{t('autoMon.filter.all')}</Option>
               {actionTasks.map(task => (
                 <Option key={task.id} value={task.id.toString()}>{task.name}</Option>
               ))}
             </Select>
           </Form.Item>
-          <Form.Item label="时间范围">
+          <Form.Item label={t('autoMon.filter.dateRange')}>
             <RangePicker
               showTime
               value={filters.dateRange}
@@ -390,14 +389,14 @@ const AutonomousTaskMonitoring = () => {
               loading={loading}
               onClick={fetchAutonomousTasks}
             >
-              刷新
+              {t('autoMon.action.refresh')}
             </Button>
           </Form.Item>
         </Form>
       </Card>
 
-      {/* 自主行动列表 */}
-      <Card title={`自主行动列表 (${filteredTasks.length})`}>
+      {/* autonomous task list */}
+      <Card title={t('autoMon.listTitle', { count: filteredTasks.length })}>
         <Table
           columns={columns}
           dataSource={filteredTasks}
@@ -407,15 +406,15 @@ const AutonomousTaskMonitoring = () => {
             pageSize: 10,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+            showTotal: (total, range) => t('autoMon.paginationRange', { from: range[0], to: range[1], total }),
           }}
           scroll={{ x: 1200 }}
         />
       </Card>
 
-      {/* 详情模态框 */}
+      {/* detail modal */}
       <Modal
-        title="自主行动详情"
+        title={t('autoMon.detailTitle')}
         open={detailModalVisible}
         onCancel={() => setDetailModalVisible(false)}
         footer={null}
@@ -424,17 +423,17 @@ const AutonomousTaskMonitoring = () => {
         {selectedTask && (
           <Descriptions column={2} bordered>
             <Descriptions.Item label="ID">{selectedTask.id}</Descriptions.Item>
-            <Descriptions.Item label="状态">{getStatusTag(selectedTask.status)}</Descriptions.Item>
-            <Descriptions.Item label="类型">{getTypeTag(selectedTask.type)}</Descriptions.Item>
-            <Descriptions.Item label="行动任务">{selectedTask.actionTaskName}</Descriptions.Item>
-            <Descriptions.Item label="会话">{selectedTask.conversationName}</Descriptions.Item>
-            <Descriptions.Item label="创建时间">
+            <Descriptions.Item label={t('autoMon.col.status')}>{getStatusTag(selectedTask.status)}</Descriptions.Item>
+            <Descriptions.Item label={t('autoMon.col.type')}>{getTypeTag(selectedTask.type)}</Descriptions.Item>
+            <Descriptions.Item label={t('autoMon.col.actionTask')}>{selectedTask.actionTaskName}</Descriptions.Item>
+            <Descriptions.Item label={t('autoMon.col.conversation')}>{selectedTask.conversationName}</Descriptions.Item>
+            <Descriptions.Item label={t('autoMon.col.createdAt')}>
               {selectedTask.created_at ? new Date(selectedTask.created_at).toLocaleString() : '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="更新时间">
+            <Descriptions.Item label={t('autoMon.col.updatedAt')}>
               {selectedTask.updated_at ? new Date(selectedTask.updated_at).toLocaleString() : '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="配置" span={2}>
+            <Descriptions.Item label={t('autoMon.col.config')} span={2}>
               <pre style={{ background: 'var(--custom-hover-bg)', padding: '8px', borderRadius: '4px' }}>
                 {JSON.stringify(selectedTask.config, null, 2)}
               </pre>

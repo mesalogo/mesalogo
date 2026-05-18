@@ -9,12 +9,14 @@ import {
   CheckCircleOutlined, CloseCircleOutlined, SearchOutlined
 } from '@ant-design/icons';
 import { externalKnowledgeAPI } from '../../../services/api';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
 
 const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreateButton?: boolean }, ref) => {
+  const { t } = useTranslation();
   const [knowledges, setKnowledges] = useState([]);
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -24,7 +26,7 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
   const [selectedKnowledge, setSelectedKnowledge] = useState(null);
   const [testingKnowledge, setTestingKnowledge] = useState(null);
 
-  // 测试查询相关状态
+  // test-query state
   const [testQueryModalVisible, setTestQueryModalVisible] = useState(false);
   const [testQueryLoading, setTestQueryLoading] = useState(false);
   const [testQueryResults, setTestQueryResults] = useState(null);
@@ -34,7 +36,7 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
   const [form] = Form.useForm();
   const [testQueryForm] = Form.useForm();
 
-  // 显示创建/编辑模态框
+  // show create/edit modal
   const showModal = (knowledge = null) => {
     setEditingKnowledge(knowledge);
     if (knowledge) {
@@ -49,7 +51,6 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
       });
     } else {
       form.resetFields();
-      // 设置默认额外参数 - 只包含基本必需参数
       form.setFieldsValue({
         query_config: JSON.stringify({
           search_method: "semantic_search",
@@ -62,12 +63,10 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
     setModalVisible(true);
   };
 
-  // 暴露方法给父组件
   useImperativeHandle(ref, () => ({
     showModal
   }));
 
-  // 获取数据
   useEffect(() => {
     fetchKnowledges();
     fetchProviders();
@@ -80,11 +79,11 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
       if (response.success) {
         setKnowledges(response.data);
       } else {
-        message.error(response.message || '获取外部知识库列表失败');
+        message.error(response.message || t('extKB.msg.fetchListFailed'));
       }
     } catch (error) {
-      message.error('获取外部知识库列表失败');
-      console.error('获取外部知识库列表失败:', error);
+      message.error(t('extKB.msg.fetchListFailed'));
+      console.error('fetch ext KB list failed:', error);
     } finally {
       setLoading(false);
     }
@@ -97,49 +96,44 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
         setProviders(response.data);
       }
     } catch (error) {
-      console.error('获取提供商列表失败:', error);
+      console.error('fetch providers failed:', error);
     }
   };
 
-  // 处理表单提交
   const handleSubmit = async (values) => {
     try {
-      // 处理查询配置
       const submitData = {
         ...values,
-        query_config: typeof values.query_config === 'string' 
-          ? JSON.parse(values.query_config) 
+        query_config: typeof values.query_config === 'string'
+          ? JSON.parse(values.query_config)
           : values.query_config
       };
 
       if (editingKnowledge) {
-        // 更新外部知识库
         const response = await externalKnowledgeAPI.updateExternalKnowledge(editingKnowledge.id, submitData);
         if (response.success) {
-          message.success('外部知识库更新成功');
+          message.success(t('extKB.msg.updateSuccess'));
           fetchKnowledges();
           setModalVisible(false);
         } else {
-          message.error(response.message || '更新失败');
+          message.error(response.message || t('extKB.msg.updateFailed'));
         }
       } else {
-        // 创建外部知识库
         const response = await externalKnowledgeAPI.createExternalKnowledge(submitData);
         if (response.success) {
-          message.success('外部知识库创建成功');
+          message.success(t('extKB.msg.createSuccess'));
           fetchKnowledges();
           setModalVisible(false);
         } else {
-          message.error(response.message || '创建失败');
+          message.error(response.message || t('extKB.msg.createFailed'));
         }
       }
     } catch (error) {
-      message.error(editingKnowledge ? '更新失败' : '创建失败');
-      console.error('提交失败:', error);
+      message.error(editingKnowledge ? t('extKB.msg.updateFailed') : t('extKB.msg.createFailed'));
+      console.error('submit failed:', error);
     }
   };
 
-  // 显示测试查询模态框
   const showTestQueryModal = (knowledge) => {
     setCurrentTestKnowledge(knowledge);
     setTestQueryResults(null);
@@ -148,7 +142,6 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
     testQueryForm.resetFields();
   };
 
-  // 执行测试查询
   const handleTestQuery = async (values) => {
     if (!currentTestKnowledge) return;
 
@@ -164,51 +157,48 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
 
       if (response.success) {
         setTestQueryResults(response);
-        message.success('查询执行成功');
+        message.success(t('extKB.msg.querySuccess'));
       } else {
-        setTestQueryError(response.message || response.error_message || '查询失败');
-        message.error(response.message || response.error_message || '查询失败');
+        setTestQueryError(response.message || response.error_message || t('extKB.msg.queryFailed'));
+        message.error(response.message || response.error_message || t('extKB.msg.queryFailed'));
       }
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || '查询请求失败';
+      const errorMsg = error.response?.data?.message || error.message || t('extKB.msg.queryRequestFailed');
       setTestQueryError(errorMsg);
       message.error(errorMsg);
-      console.error('查询测试失败:', error);
+      console.error('test query failed:', error);
     } finally {
       setTestQueryLoading(false);
     }
   };
 
-  // 删除外部知识库
   const handleDelete = async (knowledgeId) => {
     try {
       const response = await externalKnowledgeAPI.deleteExternalKnowledge(knowledgeId);
       if (response.success) {
-        message.success('外部知识库删除成功');
+        message.success(t('extKB.msg.deleteSuccess'));
         fetchKnowledges();
       } else {
-        message.error(response.message || '删除失败');
+        message.error(response.message || t('extKB.msg.deleteFailed'));
       }
     } catch (error) {
-      message.error('删除失败');
-      console.error('删除失败:', error);
+      message.error(t('extKB.msg.deleteFailed'));
+      console.error('delete failed:', error);
     }
   };
 
-  // 显示详情抽屉
   const showDetailDrawer = (knowledge) => {
     setSelectedKnowledge(knowledge);
     setDetailDrawerVisible(true);
   };
 
-  // 获取提供商信息
   const getProviderInfo = (providerId) => {
     return providers.find(p => p.id === providerId) || {};
   };
 
   const columns = [
     {
-      title: '名称',
+      title: t('extKB.col.name'),
       dataIndex: 'name',
       key: 'name',
       width: 180,
@@ -221,7 +211,7 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
       ),
     },
     {
-      title: '提供商',
+      title: t('extKB.col.provider'),
       key: 'provider',
       width: 200,
       render: (_, record) => (
@@ -233,34 +223,34 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
       ),
     },
     {
-      title: '外部ID',
+      title: t('extKB.col.externalId'),
       dataIndex: 'external_kb_id',
       key: 'external_kb_id',
       width: 200,
       ellipsis: true,
     },
     {
-      title: '角色关联',
+      title: t('extKB.col.roleCount'),
       dataIndex: 'role_count',
       key: 'role_count',
       width: 100,
       render: (count) => <Badge count={count} showZero color="green" />,
     },
     {
-      title: '创建时间',
+      title: t('extKB.col.createdAt'),
       dataIndex: 'created_at',
       key: 'created_at',
       width: 180,
       render: (date) => date ? new Date(date).toLocaleString() : '-',
     },
     {
-      title: '操作',
+      title: t('extKB.col.action'),
       key: 'action',
       width: 220,
       fixed: 'right' as const,
       render: (_, record) => (
         <Space>
-          <Tooltip title="查看详情">
+          <Tooltip title={t('extKB.action.detail')}>
             <Button
               type="text"
               icon={<EyeOutlined />}
@@ -268,7 +258,7 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
               style={{ color: '#1677ff' }}
             />
           </Tooltip>
-          <Tooltip title="测试查询">
+          <Tooltip title={t('extKB.action.testQuery')}>
             <Button
               type="text"
               icon={<SearchOutlined />}
@@ -276,7 +266,7 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
               style={{ color: '#1677ff' }}
             />
           </Tooltip>
-          <Tooltip title="编辑">
+          <Tooltip title={t('extKB.action.edit')}>
             <Button
               type="text"
               icon={<EditOutlined />}
@@ -285,18 +275,18 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
             />
           </Tooltip>
           <Popconfirm
-            title="确定要删除这个外部知识库吗？"
-            description="删除后将无法恢复，且会影响相关的角色绑定。"
+            title={t('extKB.confirm.deleteTitle')}
+            description={t('extKB.confirm.deleteDesc')}
             onConfirm={() => handleDelete(record.id)}
-            okText="确定"
-            cancelText="取消"
+            okText={t('extKB.confirm.ok')}
+            cancelText={t('extKB.confirm.cancel')}
           >
-            <Tooltip title="删除">
+            <Tooltip title={t('extKB.action.delete')}>
               <Button
                 type="text"
                 danger
                 icon={<DeleteOutlined />}
-               
+
               />
             </Tooltip>
           </Popconfirm>
@@ -315,7 +305,7 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
             onClick={() => showModal()}
             disabled={providers.length === 0}
           >
-            添加知识库
+            {t('extKB.addKB')}
           </Button>
         </div>
       )}
@@ -323,7 +313,7 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
       {providers.length === 0 && (
         <Card style={{ marginBottom: 16, textAlign: 'center' }}>
           <Paragraph type="secondary">
-            还没有配置外部知识库提供商，请先到"提供商管理"页面添加提供商。
+            {t('extKB.noProvidersHint')}
           </Paragraph>
         </Card>
       )}
@@ -345,14 +335,14 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
-            showTotal: (total) => `共 ${total} 个外部知识库`,
+            showTotal: (total) => t('extKB.paginationTotal', { total }),
           }}
         />
       )}
 
-      {/* 创建/编辑模态框 */}
+      {/* create/edit modal */}
       <Modal
-        title={editingKnowledge ? '编辑外部知识库' : '添加外部知识库'}
+        title={editingKnowledge ? t('extKB.editTitle') : t('extKB.addTitle')}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
@@ -365,25 +355,25 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
         >
           <Form.Item
             name="name"
-            label="知识库名称"
-            rules={[{ required: true, message: '请输入知识库名称' }]}
+            label={t('extKB.field.kbName')}
+            rules={[{ required: true, message: t('extKB.req.kbName') }]}
           >
-            <Input placeholder="请输入知识库名称" />
+            <Input placeholder={t('extKB.req.kbName')} />
           </Form.Item>
 
           <Form.Item
             name="description"
-            label="描述"
+            label={t('extKB.field.description')}
           >
-            <TextArea rows={2} placeholder="请输入知识库描述" />
+            <TextArea rows={2} placeholder={t('extKB.ph.description')} />
           </Form.Item>
 
           <Form.Item
             name="provider_id"
-            label="选择提供商"
-            rules={[{ required: true, message: '请选择提供商' }]}
+            label={t('extKB.field.provider')}
+            rules={[{ required: true, message: t('extKB.req.provider') }]}
           >
-            <Select placeholder="请选择提供商">
+            <Select placeholder={t('extKB.req.provider')}>
               {providers.map(provider => (
                 <Option key={provider.id} value={provider.id}>
                   <Space>
@@ -398,17 +388,17 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
 
           <Form.Item
             name="external_kb_id"
-            label="外部知识库ID"
-            rules={[{ required: true, message: '请输入外部知识库ID' }]}
+            label={t('extKB.field.externalKbId')}
+            rules={[{ required: true, message: t('extKB.req.externalKbId') }]}
           >
-            <Input placeholder="请输入在提供商系统中的知识库ID" />
+            <Input placeholder={t('extKB.ph.externalKbId')} />
           </Form.Item>
 
           <Form.Item
             name="query_config"
-            label="额外参数 (JSON格式)"
+            label={t('extKB.field.queryConfig')}
             rules={[
-              { required: true, message: '请输入额外参数配置' },
+              { required: true, message: t('extKB.req.queryConfig') },
               {
                 validator: (_, value) => {
                   if (!value) return Promise.resolve();
@@ -418,12 +408,12 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
                     }
                     return Promise.resolve();
                   } catch {
-                    return Promise.reject(new Error('请输入有效的JSON格式'));
+                    return Promise.reject(new Error(t('extKB.req.jsonValid')));
                   }
                 }
               }
             ]}
-            extra="这些参数将在每次查询时作为额外参数发送给知识库API，可以动态调整查询行为"
+            extra={t('extKB.extra.queryConfig')}
           >
             <TextArea
               rows={4}
@@ -434,19 +424,19 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
           <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
             <Space>
               <Button onClick={() => setModalVisible(false)}>
-                取消
+                {t('extKB.confirm.cancel')}
               </Button>
               <Button type="primary" htmlType="submit">
-                {editingKnowledge ? '更新' : '创建'}
+                {editingKnowledge ? t('extKB.update') : t('extKB.create')}
               </Button>
             </Space>
           </Form.Item>
         </Form>
       </Modal>
 
-      {/* 详情抽屉 */}
+      {/* detail drawer */}
       <Drawer
-        title="外部知识库详情"
+        title={t('extKB.detail.title')}
         placement="right"
         onClose={() => setDetailDrawerVisible(false)}
         open={detailDrawerVisible}
@@ -456,9 +446,9 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
           <div>
             <Title level={5}>{selectedKnowledge.name}</Title>
             <Paragraph type="secondary">{selectedKnowledge.description}</Paragraph>
-            
+
             <div style={{ marginBottom: 16 }}>
-              <Text strong>提供商：</Text>
+              <Text strong>{t('extKB.detail.providerLabel')}</Text>
               <Space style={{ marginLeft: 8 }}>
                 <ApiOutlined />
                 <span>{selectedKnowledge.provider.name}</span>
@@ -467,20 +457,20 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <Text strong>外部ID：</Text>
+              <Text strong>{t('extKB.detail.externalIdLabel')}</Text>
               <Text code style={{ marginLeft: 8 }}>{selectedKnowledge.external_kb_id}</Text>
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <Text strong>角色关联数：</Text>
+              <Text strong>{t('extKB.detail.roleCountLabel')}</Text>
               <Badge count={selectedKnowledge.role_count} showZero color="green" style={{ marginLeft: 8 }} />
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <Text strong>额外参数：</Text>
+              <Text strong>{t('extKB.detail.queryConfigLabel')}</Text>
               <div style={{ marginTop: 4, marginBottom: 8 }}>
                 <Text type="secondary" style={{ fontSize: '12px' }}>
-                  查询时动态添加的参数配置
+                  {t('extKB.detail.queryConfigHint')}
                 </Text>
               </div>
               <pre style={{
@@ -495,14 +485,14 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <Text strong>创建时间：</Text>
+              <Text strong>{t('extKB.detail.createdAtLabel')}</Text>
               <Text style={{ marginLeft: 8 }}>
                 {selectedKnowledge.created_at ? new Date(selectedKnowledge.created_at).toLocaleString() : '-'}
               </Text>
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <Text strong>更新时间：</Text>
+              <Text strong>{t('extKB.detail.updatedAtLabel')}</Text>
               <Text style={{ marginLeft: 8 }}>
                 {selectedKnowledge.updated_at ? new Date(selectedKnowledge.updated_at).toLocaleString() : '-'}
               </Text>
@@ -511,12 +501,12 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
         )}
       </Drawer>
 
-      {/* 测试查询模态框 */}
+      {/* test-query modal */}
       <Modal
         title={
           <Space>
             <SearchOutlined />
-            <span>测试知识库查询</span>
+            <span>{t('extKB.testModal.title')}</span>
             {currentTestKnowledge && (
               <Tag color="blue">{currentTestKnowledge.name}</Tag>
             )}
@@ -530,12 +520,12 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
       >
         <div style={{ marginBottom: 16 }}>
           <Text type="secondary">
-            在这里测试知识库的查询功能，将使用知识库配置的额外参数
+            {t('extKB.testModal.hint')}
           </Text>
           {currentTestKnowledge?.query_config && (
             <div style={{ marginTop: 8, padding: 8, background: 'var(--custom-bg-layout)', borderRadius: 4 }}>
               <Text type="secondary" style={{ fontSize: '12px' }}>
-                当前额外参数: {JSON.stringify(currentTestKnowledge.query_config)}
+                {t('extKB.testModal.currentExtra')} {JSON.stringify(currentTestKnowledge.query_config)}
               </Text>
             </div>
           )}
@@ -548,13 +538,13 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
         >
           <Form.Item
             name="query"
-            label="查询内容"
-            rules={[{ required: true, message: '请输入查询内容' }]}
-            initialValue="什么是人工智能？"
+            label={t('extKB.testModal.queryLabel')}
+            rules={[{ required: true, message: t('extKB.req.queryContent') }]}
+            initialValue={t('extKB.testModal.defaultQuery')}
           >
             <Input.TextArea
               rows={3}
-              placeholder="请输入要查询的内容，例如：什么是人工智能？"
+              placeholder={t('extKB.testModal.queryPh')}
               disabled={testQueryLoading}
             />
           </Form.Item>
@@ -566,12 +556,11 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
               loading={testQueryLoading}
               icon={<SearchOutlined />}
             >
-              执行查询
+              {t('extKB.execute')}
             </Button>
           </Form.Item>
         </Form>
 
-        {/* 查询结果显示 */}
         {testQueryLoading && (
           <Space orientation="vertical" style={{ width: '100%' }} size="middle">
             {[1, 2, 3].map(item => (
@@ -584,7 +573,7 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
 
         {testQueryError && (
           <Alert
-            message="查询失败"
+            message={t('extKB.alert.queryFailed')}
             description={testQueryError}
             type="error"
             showIcon
@@ -595,12 +584,12 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
         {testQueryResults && (
           <div>
             <div style={{ marginBottom: 16 }}>
-              <Text strong>查询结果</Text>
+              <Text strong>{t('extKB.result.title')}</Text>
               <Tag color="green" style={{ marginLeft: 8 }}>
-                找到 {testQueryResults.total_count || 0} 个结果
+                {t('extKB.result.foundCount', { n: testQueryResults.total_count || 0 })}
               </Tag>
               <Tag color="blue" style={{ marginLeft: 4 }}>
-                耗时 {testQueryResults.query_time ? (testQueryResults.query_time * 1000).toFixed(0) : 0}ms
+                {t('extKB.result.timeMs', { ms: testQueryResults.query_time ? (testQueryResults.query_time * 1000).toFixed(0) : 0 })}
               </Tag>
             </div>
 
@@ -610,17 +599,17 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
                 renderItem={(item: any, index) => (
                   <List.Item>
                     <Card
-                     
+
                       title={
                         <Space>
                           <Badge count={index + 1} style={{ backgroundColor: '#1677ff' }} />
-                          <Text strong>相似度: {(item.score * 100).toFixed(1)}%</Text>
+                          <Text strong>{t('extKB.result.score', { pct: (item.score * 100).toFixed(1) })}</Text>
                         </Space>
                       }
                       style={{ width: '100%' }}
                     >
                       <Paragraph
-                        ellipsis={{ rows: 4, expandable: true, symbol: '展开' }}
+                        ellipsis={{ rows: 4, expandable: true, symbol: t('extKB.expand') }}
                         style={{ marginBottom: 8 }}
                       >
                         {item.content}
@@ -629,7 +618,7 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
                       {item.metadata && (
                         <div style={{ marginTop: 8, padding: 8, background: 'var(--custom-hover-bg)', borderRadius: 4 }}>
                           <Text type="secondary" style={{ fontSize: '12px' }}>
-                            元数据: {JSON.stringify(item.metadata, null, 2)}
+                            {t('extKB.result.metadata')} {JSON.stringify(item.metadata, null, 2)}
                           </Text>
                         </div>
                       )}
@@ -639,7 +628,7 @@ const ExternalKnowledges = forwardRef(({ hideCreateButton = false }: { hideCreat
               />
             ) : (
               <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                <Text type="secondary">没有找到相关结果</Text>
+                <Text type="secondary">{t('extKB.result.empty')}</Text>
               </div>
             )}
           </div>

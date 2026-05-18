@@ -161,4 +161,464 @@ export default {
   'button.cancel': 'Cancel',
   'button.ok': 'OK',
   'button.resetToDefault': 'Reset to Default',
+
+  // ----- GraphitiTab long-term-memory configuration -----
+  'graphitiTab.enableTitle': 'Enable Graphiti long-term memory',
+  'graphitiTab.enableDesc': 'Temporal-aware knowledge graph for agent long-term memory',
+  'graphitiTab.enableHint': 'Finish the configuration first, then click Save',
+  'graphitiTab.disabled': 'Graphiti disabled',
+  'graphitiTab.saveSuccess': 'Configuration saved',
+  'graphitiTab.on': 'On',
+  'graphitiTab.off': 'Off',
+  'graphitiTab.confirm': 'Confirm',
+  'graphitiTab.cancel': 'Cancel',
+  'graphitiTab.clearConfirmTitle': 'Confirm data clear',
+  'graphitiTab.clearConfirmContent': 'This will erase all graph data and cannot be undone. Continue?',
+  'graphitiTab.clearSuccess': 'Data cleared',
+  'graphitiTab.buildSubmitted': 'Community-build task submitted — check back shortly',
+
+  // status & config
+  'graphitiTab.statusConfigTitle': 'Service status & configuration',
+  'graphitiTab.running': 'Running',
+  'graphitiTab.notStarted': 'Not started',
+  'graphitiTab.refresh': 'Refresh',
+  'graphitiTab.svcStatus': 'Service status',
+  'graphitiTab.connected': 'Connected',
+  'graphitiTab.disconnected': 'Disconnected',
+  'graphitiTab.nodeCount': 'Node count',
+  'graphitiTab.relationCount': 'Relation count',
+
+  // service fields
+  'graphitiTab.svcUrl': 'Service URL',
+  'graphitiTab.svcUrlRequired': 'Please enter the service URL',
+  'graphitiTab.svcUrlTip': 'URL of the Graphiti FastAPI service',
+  'graphitiTab.mcpUrl': 'MCP service URL',
+  'graphitiTab.mcpUrlTip': 'URL of the Graphiti MCP SSE service',
+  'graphitiTab.dbUrl': 'Database URL',
+  'graphitiTab.dbUrlRequired': 'Please enter the database URL',
+  'graphitiTab.dbUrlTip': 'URL the backend uses to reach Neo4j',
+  'graphitiTab.svcPort': 'Service port mapping',
+  'graphitiTab.mcpPort': 'MCP port mapping',
+  'graphitiTab.portTip': 'host_port:container_port',
+  'graphitiTab.svcControl': 'Service control',
+  'graphitiTab.stopSvc': 'Stop service',
+  'graphitiTab.startSvc': 'Start service',
+
+  // model config
+  'graphitiTab.modelConfig': 'Model configuration',
+  'graphitiTab.textModel': 'Text generation model',
+  'graphitiTab.textModelTip': 'Used for LLM reasoning and knowledge extraction',
+  'graphitiTab.textModelRequired': 'Please select a text generation model',
+  'graphitiTab.selectTextModel': 'Select a text generation model',
+  'graphitiTab.embeddingModel': 'Embedding model',
+  'graphitiTab.embeddingModelTip': 'Used to produce vector embeddings',
+  'graphitiTab.embeddingModelRequired': 'Please select an embedding model',
+  'graphitiTab.selectEmbeddingModel': 'Select an embedding model',
+  'graphitiTab.embeddingDim': 'Vector dimension',
+  'graphitiTab.embeddingDimTip': 'Leave empty to auto-detect',
+  'graphitiTab.autoDetect': 'Auto-detect',
+  'graphitiTab.default': 'Default',
+  'graphitiTab.rerankType': 'Rerank type',
+  'graphitiTab.rerankTypeRequired': 'Please select a rerank type',
+  'graphitiTab.selectRerankType': 'Select a rerank type',
+  'graphitiTab.rerankerOpt': 'Reranker model',
+  'graphitiTab.llmRerankOpt': 'LLM rerank',
+  'graphitiTab.rerankModel': 'Rerank model',
+  'graphitiTab.rerankModelTip': 'Used to rerank search results and improve accuracy',
+  'graphitiTab.rerankModelRequired': 'Please select a rerank model',
+  'graphitiTab.selectRerankModel': 'Select a rerank model',
+  'graphitiTab.lenientParse': 'Lenient parsing',
+  'graphitiTab.lenientParseTip': 'Improve compatibility with non-OpenAI-standard LLMs',
+
+  // memory config
+  'graphitiTab.memoryConfig': 'Memory configuration',
+  'graphitiTab.partitionStrategy': 'Partition strategy',
+  'graphitiTab.partitionStrategyRequired': 'Please select a partition strategy',
+  'graphitiTab.partitionStrategyTip': 'Determines how memory is partitioned across agents',
+  'graphitiTab.selectPartitionStrategy': 'Select a memory partition strategy',
+  'graphitiTab.recommended': 'Recommended',
+  'graphitiTab.msgSyncStrategy': 'Message auto-sync strategy',
+  'graphitiTab.msgSyncStrategyRequired': 'Please select a message-sync strategy',
+  'graphitiTab.msgSyncStrategyTip': 'Controls when conversation messages are synced into graph memory',
+  'graphitiTab.selectMsgSyncStrategy': 'Select a message-sync strategy',
+  'graphitiTab.sync.disabled': 'Disabled',
+  'graphitiTab.sync.disabledDesc': 'Do not auto-sync messages into graph memory',
+  'graphitiTab.sync.msgComplete': 'On message complete',
+  'graphitiTab.sync.msgCompleteDesc': 'Sync immediately after each agent message completes',
+  'graphitiTab.sync.roundComplete': 'On round complete',
+  'graphitiTab.sync.roundCompleteDesc': 'Sync after each full conversation round completes',
+  'graphitiTab.concurrentLimit': 'Concurrent limit',
+  'graphitiTab.concurrentLimitTip': 'Maximum number of tasks processed concurrently',
+
+  // community
+  'graphitiTab.communityMgmt': 'Community management',
+  'graphitiTab.communityMgmtTip': 'Community building uses the Leiden algorithm to cluster related entity nodes, providing higher-level semantic information and better retrieval',
+  'graphitiTab.autoBuild': 'Auto-build communities',
+  'graphitiTab.returnCommunitySummaries': 'Return community summaries',
+  'graphitiTab.sending': 'Sending...',
+  'graphitiTab.buildNow': 'Build communities now',
+
+  // advanced
+  'graphitiTab.advancedTitle': 'Advanced – internal Neo4j configuration',
+  'graphitiTab.advancedTip': 'These are container-internal Neo4j settings; defaults usually suffice. Change them only for external Neo4j or custom deployments.',
+  'graphitiTab.dbType': 'Database type',
+  'graphitiTab.dbTypeRequired': 'Please select a database type',
+  'graphitiTab.selectDbType': 'Select a graph database type',
+  'graphitiTab.connectUri': 'Connection URI',
+  'graphitiTab.connectUriRequired': 'Please enter the connection URI',
+  'graphitiTab.connectUriTip': 'Container deployment: bolt://neo4j:7687',
+  'graphitiTab.dbName': 'Database name',
+  'graphitiTab.dbNameTip': 'Neo4j database name',
+  'graphitiTab.username': 'Username',
+  'graphitiTab.usernameRequired': 'Please enter the username',
+  'graphitiTab.password': 'Password',
+  'graphitiTab.passwordRequired': 'Please enter the password',
+
+  // bottom buttons
+  'graphitiTab.saveConfig': 'Save configuration',
+  'graphitiTab.testQuery': 'Test query',
+  'graphitiTab.clearData': 'Clear data',
+
+  // ----- VectorDBConfigModal vector DB configuration -----
+  // (saveSuccess / saveFailed already defined above)
+
+  // fields
+  'vectorDB.field.provider': 'Vector DB provider',
+  'vectorDB.field.serviceEndpoint': 'Service endpoint',
+  'vectorDB.field.authKey': 'Auth key',
+  'vectorDB.field.username': 'Username',
+  'vectorDB.field.password': 'Password',
+
+  // providers
+  'vectorDB.provider.aliyun': 'Aliyun DashVector',
+  'vectorDB.provider.custom': 'Custom',
+
+  // popover help
+  'vectorDB.help.title': 'Configuration notes',
+  'vectorDB.help.aliyun': 'Requires API Key and Cluster Endpoint; available in the Aliyun console.',
+  'vectorDB.help.tidb': 'Only the connection string is needed — copy it from the Connect page in the TiDB Cloud console.',
+  'vectorDB.help.awsOpensearch': 'Requires Access Key, Secret Key, Region and OpenSearch domain endpoint.',
+  'vectorDB.help.awsBedrock': 'Requires Access Key, Secret Key, Region and Knowledge Base ID.',
+  'vectorDB.help.azureSearch': 'Requires Search Service endpoint, Admin API Key and index name.',
+  'vectorDB.help.azureCosmos': 'Requires Cosmos DB endpoint, Primary Key, database name and container name.',
+  'vectorDB.help.vertexAi': 'Requires Project ID, Location, Index Endpoint and Service Account Key.',
+  'vectorDB.help.firestore': 'Requires Project ID, Collection Name and Service Account Key.',
+  'vectorDB.help.pinecone': 'Requires API Key, Environment and Index Name.',
+  'vectorDB.help.othersTitle': 'Other providers',
+  'vectorDB.help.others': 'Configure connection parameters per the respective documentation.',
+
+  // required messages
+  'vectorDB.req.provider': 'Please select a vector DB provider',
+  'vectorDB.req.apiKey': 'Please enter the API Key',
+  'vectorDB.req.clusterEndpoint': 'Please enter the Cluster Endpoint',
+  'vectorDB.req.connectionString': 'Please enter the Connection String',
+  'vectorDB.req.accessKeyId': 'Please enter the Access Key ID',
+  'vectorDB.req.secretAccessKey': 'Please enter the Secret Access Key',
+  'vectorDB.req.awsRegion': 'Please enter the AWS Region',
+  'vectorDB.req.opensearchEndpoint': 'Please enter the OpenSearch Endpoint',
+  'vectorDB.req.kbId': 'Please enter the Knowledge Base ID',
+  'vectorDB.req.searchEndpoint': 'Please enter the Search Service Endpoint',
+  'vectorDB.req.adminApiKey': 'Please enter the Admin API Key',
+  'vectorDB.req.indexName': 'Please enter the Index Name',
+  'vectorDB.req.cosmosEndpoint': 'Please enter the Cosmos DB Endpoint',
+  'vectorDB.req.primaryKey': 'Please enter the Primary Key',
+  'vectorDB.req.databaseName': 'Please enter the Database Name',
+  'vectorDB.req.containerName': 'Please enter the Container Name',
+  'vectorDB.req.projectId': 'Please enter the Project ID',
+  'vectorDB.req.location': 'Please enter the Location',
+  'vectorDB.req.indexEndpoint': 'Please enter the Index Endpoint',
+  'vectorDB.req.serviceAccountKey': 'Please enter the Service Account Key',
+  'vectorDB.req.collectionName': 'Please enter the Collection Name',
+  'vectorDB.req.environment': 'Please enter the Environment',
+  'vectorDB.req.milvusEndpoint': 'Please enter the Milvus Endpoint',
+  'vectorDB.req.esEndpoint': 'Please enter the Elasticsearch Endpoint',
+  'vectorDB.req.serviceEndpoint': 'Please enter the service endpoint',
+
+  // placeholders
+  'vectorDB.ph.provider': 'Select a vector DB provider',
+  'vectorDB.ph.aliyunKey': 'Enter the Aliyun DashVector API Key',
+  'vectorDB.ph.aliyunEndpoint': 'e.g. https://your-cluster.dashvector.cn-hangzhou.aliyuncs.com',
+  'vectorDB.ph.tidbConnString': 'e.g. ************************************************************************************************/test',
+  'vectorDB.ph.awsAccessKey': 'Enter the AWS Access Key ID',
+  'vectorDB.ph.awsSecretKey': 'Enter the AWS Secret Access Key',
+  'vectorDB.ph.bedrockKbId': 'Enter the Bedrock Knowledge Base ID',
+  'vectorDB.ph.azureSearchKey': 'Enter the Azure Cognitive Search Admin API Key',
+  'vectorDB.ph.indexName': 'Enter the search index name',
+  'vectorDB.ph.cosmosKey': 'Enter the Azure Cosmos DB Primary Key',
+  'vectorDB.ph.databaseName': 'Enter the database name',
+  'vectorDB.ph.containerName': 'Enter the container name',
+  'vectorDB.ph.gcpProjectId': 'Enter the Google Cloud Project ID',
+  'vectorDB.ph.vertexIndexEndpoint': 'Enter the Vertex AI Vector Search Index Endpoint',
+  'vectorDB.ph.serviceAccountKey': 'Paste the JSON content of the Service Account Key',
+  'vectorDB.ph.firestoreDbId': 'Enter the Firestore Database ID (defaults to "(default)")',
+  'vectorDB.ph.firestoreCollection': 'Enter the Firestore collection name',
+  'vectorDB.ph.pineconeKey': 'Enter the Pinecone API Key',
+  'vectorDB.ph.pineconeIndex': 'Enter the Pinecone index name',
+  'vectorDB.ph.milvusCollection': 'Enter the Milvus collection name',
+  'vectorDB.ph.esIndex': 'Enter the Elasticsearch index name',
+  'vectorDB.ph.usernameOptional': 'Username (if auth is required)',
+  'vectorDB.ph.passwordOptional': 'Password (if auth is required)',
+  'vectorDB.ph.customEndpoint': 'Enter the custom vector DB service endpoint',
+  'vectorDB.ph.authKeyOptional': 'Auth key (if required)',
+  'vectorDB.ph.usernameIfNeeded': 'Username (if required)',
+  'vectorDB.ph.passwordIfNeeded': 'Password (if required)',
+  'vectorDB.ph.genericEndpoint': 'Enter the vector DB service endpoint',
+  'vectorDB.ph.apiKeyOptional': 'API Key (if required)',
+
+  // ----- GraphEnhancementTestQuery graph query test -----
+  'graphTest.title': 'Graph query test',
+  'graphTest.close': 'Close',
+  'graphTest.execute': 'Run query',
+  'graphTest.queryResult': 'Query result',
+  'graphTest.configHintPrefix': 'About: ',
+  'graphTest.pickModeHint': 'Pick a search mode above to see its description.',
+  'graphTest.enableFilters': 'Enable search filters',
+  'graphTest.expand': 'Expand',
+
+  // mode toggle
+  'graphTest.mode.simple': 'Simple',
+  'graphTest.mode.advanced': 'Advanced',
+
+  // search modes
+  'graphTest.mode.crossEncoderDesc': 'Cross-encoder rerank — highest accuracy, suited for complex queries',
+  'graphTest.mode.rrfDesc': 'Reciprocal rank fusion — balanced performance and quality',
+  'graphTest.mode.mmrDesc': 'Maximal Marginal Relevance — diverse results',
+  'graphTest.mode.factualLabel': 'Factual',
+  'graphTest.mode.factualDesc': 'For "what is" / "who is" style questions',
+  'graphTest.mode.temporalLabel': 'Temporal',
+  'graphTest.mode.temporalDesc': 'For "recently happened" / "historical change" style questions',
+  'graphTest.mode.cat.strategy': 'Search strategy',
+  'graphTest.mode.cat.queryType': 'Query type',
+
+  // tabs
+  'graphTest.tab.search': 'Search',
+  'graphTest.tab.params': 'Parameters',
+  'graphTest.tab.filters': 'Filters',
+
+  // fields
+  'graphTest.field.query': 'Query',
+  'graphTest.field.searchMode': 'Search mode',
+  'graphTest.field.maxResults': 'Max results',
+  'graphTest.field.rerankerThreshold': 'Reranker threshold',
+  'graphTest.field.simThreshold': 'Similarity threshold',
+  'graphTest.field.groupIds': 'Group IDs (optional)',
+  'graphTest.field.nodeLabels': 'Node labels',
+  'graphTest.field.edgeTypes': 'Edge types',
+  'graphTest.field.queryMode': 'Query mode',
+  'graphTest.field.responseType': 'Response type',
+
+  // placeholders
+  'graphTest.ph.query': 'Enter the query content...',
+  'graphTest.ph.default15': 'Default 15',
+  'graphTest.ph.default06': 'Default 0.6',
+  'graphTest.ph.default05': 'Default 0.5',
+  'graphTest.ph.default10': 'Default 10',
+  'graphTest.ph.groupIds': 'Enter group IDs (multiple allowed)',
+  'graphTest.ph.nodeLabels': 'Choose or enter node labels',
+  'graphTest.ph.edgeTypes': 'Choose or enter edge types',
+
+  // node labels (display only)
+  'graphTest.nodeLabel.user': 'User',
+  'graphTest.nodeLabel.product': 'Product',
+  'graphTest.nodeLabel.event': 'Event',
+  'graphTest.nodeLabel.organization': 'Organization',
+
+  // edge types (display only)
+  'graphTest.edge.knows': 'Knows',
+  'graphTest.edge.likes': 'Likes',
+  'graphTest.edge.purchased': 'Purchased',
+  'graphTest.edge.worksFor': 'Works for',
+
+  // response types
+  'graphTest.respType.multi': 'Multiple paragraphs',
+  'graphTest.respType.single': 'Single paragraph',
+
+  // messages
+  'graphTest.msg.enterQuery': 'Please enter the query',
+  'graphTest.msg.checkInput': 'Please check the input',
+
+  // result alert
+  'graphTest.result.responseTime': 'Response time:',
+  'graphTest.result.searchMode': 'Search mode:',
+  'graphTest.result.queryMode': 'Query mode:',
+  'graphTest.result.count': 'Results:',
+  'graphTest.result.framework': 'Framework:',
+
+  // facts
+  'graphTest.fact.title': 'Fact {{n}}',
+  'graphTest.fact.relevance': 'Relevance: {{pct}}%',
+  'graphTest.fact.noContent': 'No content',
+  'graphTest.fact.createdAt': 'Created:',
+  'graphTest.fact.expiredAt': 'Expired:',
+  'graphTest.fact.invalidAt': 'Invalidated:',
+  'graphTest.fact.tagType': 'Type: {{v}}',
+  'graphTest.fact.tagEntity': 'Entity: {{v}}',
+  'graphTest.fact.tagRelation': 'Relation: {{v}}',
+  'graphTest.fact.expired': 'Expired',
+  'graphTest.fact.invalid': 'Invalid',
+  'graphTest.fact.empty': 'No related facts found',
+
+  // ----- LightragTab -----
+  'lightrag.enableTitle': 'Enable LightRAG knowledge-base system',
+  'lightrag.enableDesc': 'Lightweight RAG framework for document retrieval and knowledge-graph construction',
+  'lightrag.switchOn': 'On',
+  'lightrag.switchOff': 'Off',
+  'lightrag.refresh': 'Refresh',
+  'lightrag.saveConfig': 'Save',
+  'lightrag.startService': 'Start service',
+  'lightrag.stopService': 'Stop service',
+  'lightrag.enabled': 'Enabled',
+  'lightrag.disabled': 'Disabled',
+  'lightrag.defaultLabel': 'Default {{name}}',
+
+  // sections
+  'lightrag.section.statusAndConfig': 'Service status & config',
+  'lightrag.section.modelConfig': 'Model config',
+  'lightrag.section.docConfig': 'Document processing',
+
+  // status
+  'lightrag.status.healthy': 'Running',
+  'lightrag.status.unhealthy': 'Unhealthy',
+  'lightrag.status.unreachable': 'Unreachable',
+  'lightrag.status.notStarted': 'Not started',
+
+  // labels
+  'lightrag.label.serviceStatus': 'Service status',
+  'lightrag.label.serviceUrl': 'Service URL',
+  'lightrag.label.workspaceCount': 'Workspaces',
+  'lightrag.label.documentCount': 'Documents',
+
+  // fields
+  'lightrag.field.serviceUrl': 'Service URL',
+  'lightrag.field.serviceControl': 'Service control',
+  'lightrag.field.textModel': 'Text-generation model',
+  'lightrag.field.embeddingModel': 'Embedding model',
+  'lightrag.field.embeddingDim': 'Embedding dimension',
+  'lightrag.field.enableRerank': 'Enable rerank',
+  'lightrag.field.rerankModel': 'Rerank model',
+  'lightrag.field.chunkSize': 'Chunk size',
+  'lightrag.field.chunkOverlap': 'Chunk overlap',
+  'lightrag.field.summaryLanguage': 'Summary language',
+
+  // placeholders
+  'lightrag.ph.pickTextModel': 'Pick a text-generation model',
+  'lightrag.ph.pickEmbeddingModel': 'Pick an embedding model',
+  'lightrag.ph.pickRerankModel': 'Pick a rerank model',
+  'lightrag.ph.embeddingDim': 'e.g. 1536',
+
+  // requireds
+  'lightrag.req.serviceUrl': 'Please enter the service URL',
+  'lightrag.req.textModel': 'Please pick a text-generation model',
+  'lightrag.req.embeddingModel': 'Please pick an embedding model',
+
+  // tooltips
+  'lightrag.tip.serviceUrl': 'URL of the LightRAG containerised service',
+  'lightrag.tip.textModel': 'Used for LLM inference and knowledge extraction',
+  'lightrag.tip.embeddingModel': 'Used to generate vector representations',
+  'lightrag.tip.embeddingDim': 'Embedding-vector dimensionality',
+  'lightrag.tip.enableRerank': 'When enabled, rerank model re-orders retrieval results',
+  'lightrag.tip.rerankModel': 'Used to rerank search results',
+  'lightrag.tip.chunkSize': 'Chunk size, recommended 500–1500',
+  'lightrag.tip.chunkOverlap': 'Overlap size between adjacent chunks',
+  'lightrag.tip.summaryLanguage': 'Output language for document summaries',
+  'lightrag.tip.topK': 'Maximum number of results returned',
+
+  // language options
+  'lightrag.lang.zh': 'Chinese',
+  'lightrag.lang.en': 'English',
+
+  // messages
+  'lightrag.msg.modelProcessFailed': 'Failed to process model config: {{msg}}',
+  'lightrag.msg.saveFailed': 'Failed to save config',
+  'lightrag.msg.savedAndSynced': 'Config saved and synced to LightRAG',
+  'lightrag.msg.savedSyncFailed': 'Config saved, but sync failed: {{msg}}',
+  'lightrag.msg.saved': 'Config saved',
+  'lightrag.msg.saveFailedWith': 'Failed to save config: {{msg}}',
+  'lightrag.msg.completeConfigThenSave': 'Please complete the config first, then click save.',
+  'lightrag.msg.disabled': 'LightRAG disabled',
+
+  // ----- UserForm -----
+  'userForm.editTitle': 'Edit user',
+  'userForm.createTitle': 'Create user',
+  'userForm.cancel': 'Cancel',
+  'userForm.update': 'Update',
+  'userForm.create': 'Create',
+  'userForm.enabled': 'Enabled',
+  'userForm.disabled': 'Disabled',
+  'userForm.pricePerMonth': '¥{{price}}/mo',
+  'userForm.currentSubInfo': 'Current subscription',
+
+  // sections
+  'userForm.section.basic': 'Basic info',
+  'userForm.section.extended': 'Extended info',
+  'userForm.section.permissions': 'Permissions',
+  'userForm.section.subscription': 'Subscription',
+
+  // fields
+  'userForm.field.username': 'Username',
+  'userForm.field.email': 'Email',
+  'userForm.field.password': 'Password',
+  'userForm.field.confirmPassword': 'Confirm password',
+  'userForm.field.displayName': 'Display name',
+  'userForm.field.phone': 'Phone',
+  'userForm.field.notes': 'Notes',
+  'userForm.field.accountStatus': 'Account status',
+  'userForm.field.userRole': 'User role',
+  'userForm.field.subscriptionPlan': 'Plan',
+  'userForm.field.expiresAt': 'Expires at',
+
+  // placeholders
+  'userForm.ph.username': 'Please enter a username',
+  'userForm.ph.email': 'Please enter an email',
+  'userForm.ph.password': 'Please enter a password',
+  'userForm.ph.confirmPassword': 'Please re-enter the password',
+  'userForm.ph.displayName': 'Please enter a display name',
+  'userForm.ph.phone': 'Please enter a phone number',
+  'userForm.ph.notes': 'Please enter notes',
+  'userForm.ph.userRole': 'Please pick a role',
+  'userForm.ph.subscriptionPlan': 'Please pick a plan',
+  'userForm.ph.neverExpire': 'Never expires',
+
+  // required messages
+  'userForm.req.username': 'Please enter a username',
+  'userForm.req.usernameMin': 'Username must be at least 3 characters',
+  'userForm.req.usernameMax': 'Username cannot exceed 50 characters',
+  'userForm.req.usernamePattern': 'Username may contain only letters, digits and underscores',
+  'userForm.req.emailValid': 'Please enter a valid email address',
+  'userForm.req.password': 'Please enter a password',
+  'userForm.req.passwordMin': 'Password must be at least 6 characters',
+  'userForm.req.passwordMax': 'Password cannot exceed 100 characters',
+  'userForm.req.confirmPassword': 'Please confirm the password',
+  'userForm.req.passwordMismatch': 'Passwords do not match',
+  'userForm.req.userRole': 'Please pick a role',
+
+  // messages
+  'userForm.msg.updateSuccess': 'User updated',
+  'userForm.msg.createSuccess': 'User created',
+  'userForm.msg.updateFailed': 'Failed to update user',
+  'userForm.msg.createFailed': 'Failed to create user',
+
+  // notes
+  'userForm.note.adminManualSet': 'Set manually by admin',
+  'userForm.note.adminCreateSet': 'Set at admin-create time',
+
+  // subscription panel
+  'userForm.sub.planLabel': 'Plan: ',
+  'userForm.sub.statusLabel': 'Status: ',
+  'userForm.sub.expiresAtLabel': 'Expires at: ',
+  'userForm.sub.unknown': 'Unknown',
+  'userForm.sub.statusActive': 'Active',
+  'userForm.sub.statusExpired': 'Expired',
+  'userForm.sub.statusCancelled': 'Cancelled',
+
+  // permission alert
+  'userForm.permAlertTitle': 'About roles',
+  'userForm.role.superAdmin': 'Super admin: ',
+  'userForm.role.superAdminDesc': 'All permissions inside the tenant — manages users, system settings and all content.',
+  'userForm.role.regular': 'Regular user: ',
+  'userForm.role.regularDesc': 'Creates and manages own tasks and action spaces; can view agents in the tenant.',
+  'userForm.role.readonly': 'Read-only: ',
+  'userForm.role.readonlyDesc': 'Can only view their own content — no edits allowed.',
+  'userForm.warn.rootUser': '"admin" is the system root user — its enabled state and role cannot be changed.',
+  'userForm.warn.selfEditRole': 'A super admin cannot change their own role to prevent accidents.',
 };

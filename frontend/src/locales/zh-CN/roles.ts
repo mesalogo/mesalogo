@@ -31,4 +31,472 @@ export default {
   'toolManagement.createFailed': '创建能力失败',
   'toolManagement.updateCapabilitySuccess': '更新能力成功',
   'toolManagement.updateCapabilityFailed': '更新能力失败',
+
+  // ----- ToolManagement (extended) -----
+  'toolManagement.fetchMcpFailed': '获取MCP服务器列表失败',
+  'toolManagement.serverToolsUnsupported': '服务器 {{id}} 的工具列表格式不支持',
+  'toolManagement.serverToolsEmpty': '服务器 {{id}} 的工具列表为空',
+  'toolManagement.fetchServerToolsFailed': '获取服务器 {{id}} 的工具列表失败: {{error}}',
+  'toolManagement.fetchCategoriesFailed': '获取分类列表失败',
+  'toolManagement.fetchCapabilitiesFailed': '获取能力列表失败',
+  'toolManagement.fetchRolesFailed': '获取角色列表失败',
+  'toolManagement.capabilityUpdated': '能力更新成功',
+  'toolManagement.capabilityCreated': '能力创建成功',
+  'toolManagement.confirmDelete': '确认删除',
+  'toolManagement.confirmDeleteContent': '确定要删除能力 "{{name}}" 吗？',
+  'toolManagement.deleteSuccess': '能力删除成功',
+  'toolManagement.deleteFailed': '删除能力失败',
+  'toolManagement.roleAssignSuccess': '角色关联更新成功',
+  'toolManagement.roleAssignFailed': '更新角色关联失败',
+  'toolManagement.toolsLoading': '正在加载所有服务器工具，请稍候...',
+  'toolManagement.toolsLoaded': '所有服务器工具加载完成',
+  'toolManagement.tempCategoryAdded': '已添加临时分类："{{name}}"，提交表单后生效',
+  'toolManagement.categoryAdded': '已成功保存分类："{{name}}"',
+  'toolManagement.categoryAddFailed': '添加分类失败',
+  'toolManagement.toolSelectPlaceholder': '请选择要关联的工具',
+  'toolManagement.serverNode': '{{id}} 服务器',
+  'toolManagement.removeServerFailed': '移除服务器工具失败，请重试',
+  'toolManagement.toolsSelectedSummary': '{{server}}[{{count}}个工具已选]',
+
+  // type labels
+  'toolManagement.type.core': '基础能力',
+  'toolManagement.type.advanced': '高级能力',
+  'toolManagement.type.supervision': '监督能力',
+  'toolManagement.type.execution': '执行能力',
+  'toolManagement.type.specialized': '专业能力',
+  'toolManagement.type.unknown': '未知',
+
+  // columns
+  'toolManagement.col.name': '名称',
+  'toolManagement.col.description': '描述提示词',
+  'toolManagement.col.type': '类型',
+  'toolManagement.col.source': '来源',
+  'toolManagement.col.associatedTools': '关联服务器/工具',
+  'toolManagement.col.associatedRoles': '关联角色',
+  'toolManagement.col.securityLevel': '安全级别',
+  'toolManagement.col.defaultEnabled': '默认启用',
+  'toolManagement.col.actions': '操作',
+
+  // source tags
+  'toolManagement.source.system': '系统',
+  'toolManagement.source.systemTip': '系统资源，所有用户可见可用',
+  'toolManagement.source.shared': '共享',
+  'toolManagement.source.sharedTip': '用户共享资源，所有用户可见可用',
+  'toolManagement.source.private': '私有',
+  'toolManagement.source.privateTip': '私有资源，仅创建者可见',
+
+  // tool/role list cells
+  'toolManagement.noTools': '无关联工具',
+  'toolManagement.noToolsInline': '无工具',
+  'toolManagement.serverCount': '{{count}} 个服务器',
+  'toolManagement.serverDetailsSuffix': ' (点击查看详情)',
+  'toolManagement.serverNoToolsSuffix': ' (无工具)',
+  'toolManagement.popoverTitle.tools': '关联工具/服务器',
+  'toolManagement.popoverTitle.roles': '关联角色',
+  'toolManagement.moreRoles': '+{{count}} 个角色',
+  'toolManagement.noRoles': '无关联角色',
+
+  // security levels
+  'toolManagement.security.low': '低风险',
+  'toolManagement.security.medium': '中风险',
+  'toolManagement.security.high': '高风险',
+  'toolManagement.security.lowOpt': '低风险 (1级)',
+  'toolManagement.security.mediumOpt': '中风险 (2级)',
+  'toolManagement.security.highOpt': '高风险 (3级)',
+
+  // boolean
+  'toolManagement.yes': '是',
+  'toolManagement.no': '否',
+
+  // action tooltips
+  'toolManagement.action.edit': '编辑能力',
+  'toolManagement.action.linkRoles': '关联角色',
+  'toolManagement.action.delete': '删除能力',
+  'toolManagement.action.newCapability': '新建能力',
+
+  // type summary tags
+  'toolManagement.summary.core': '基础能力: {{count}}',
+  'toolManagement.summary.advanced': '高级能力: {{count}}',
+  'toolManagement.summary.supervision': '监督能力: {{count}}',
+  'toolManagement.summary.execution': '执行能力: {{count}}',
+  'toolManagement.summary.specialized': '专业能力: {{count}}',
+  'toolManagement.summary.total': '总计: {{count}}',
+
+  // pagination
+  'toolManagement.pagination.total': '共 {{total}} 条',
+
+  // edit/new capability modal
+  'toolManagement.modal.editTitle': '编辑能力',
+  'toolManagement.modal.newTitle': '新建能力',
+  'toolManagement.form.name': '名称',
+  'toolManagement.form.nameRequired': '请输入能力名称',
+  'toolManagement.form.namePlaceholder': '请输入能力名称，例如: environment_sensing',
+  'toolManagement.form.descLabel': '描述提示词',
+  'toolManagement.form.descRequired': '请输入能力描述提示词',
+  'toolManagement.form.descPlaceholder': '请输入能力描述提示词，例如: 你具备记忆能力，在记忆的时候要使用记忆工具，比如read_graph来获取图谱信息、search_node来搜索知识节点',
+  'toolManagement.form.typeLabel': '类型',
+  'toolManagement.form.typeRequired': '请选择能力类型',
+  'toolManagement.form.typePlaceholder': '请选择能力类型',
+  'toolManagement.form.addCustom': '添加 "{{name}}"',
+  'toolManagement.form.unsaved': '未保存',
+  'toolManagement.form.iconLabel': '图标',
+  'toolManagement.form.iconPlaceholder': '请输入图标名称，例如: function',
+  'toolManagement.form.securityLabel': '安全级别',
+  'toolManagement.form.securityRequired': '请选择安全级别',
+  'toolManagement.form.securityPlaceholder': '请选择安全级别',
+  'toolManagement.form.defaultEnabled': '默认启用',
+  'toolManagement.form.sharedTooltip': '勾选后，该能力将对所有用户可见可用（但只有创建者可编辑）',
+  'toolManagement.form.shared': '共享给所有用户',
+  'toolManagement.form.linkToolsLabel': '关联工具',
+  'toolManagement.alert.title': '提示',
+  'toolManagement.alert.description': '请选择该能力可以使用的工具。拥有此能力的角色将可以使用这些工具。系统会自动加载所有可用的工具，包括所有MCP服务器工具和自定义工具。',
+
+  // role-link modal
+  'toolManagement.modal.linkRolesTitle': '关联角色 - {{name}}',
+  'toolManagement.form.selectRolesLabel': '选择角色',
+  'toolManagement.form.selectRolesRequired': '请选择要关联的角色',
+  'toolManagement.form.selectRolesPlaceholder': '请选择要关联的角色',
+
+  // tool-link modal
+  'toolManagement.modal.linkToolsTitle': '关联工具 - {{name}}',
+  'toolManagement.form.selectToolsLabel': '选择工具',
+  'toolManagement.form.selectToolsRequired': '请选择要关联的工具',
+  'toolManagement.form.selectToolsPlaceholder': '请选择要关联的工具',
+
+  // ----- ExternalRoleModal 外部智能体导入/编辑 -----
+  'externalRole.editTitle': '编辑外部智能体',
+  'externalRole.importTitle': '导入外部智能体',
+  'externalRole.cancel': '取消',
+  'externalRole.update': '更新',
+  'externalRole.import': '导入',
+  'externalRole.external': '外部',
+  'externalRole.custom': '自定义',
+  'externalRole.advancedConfig': '高级配置',
+  'externalRole.connectionTest': '连接测试',
+  'externalRole.testButton': '测试连接',
+  'externalRole.testInputLabel': '测试输入:',
+  'externalRole.responseLabel': '响应内容:',
+  'externalRole.testInputDefault': '你好！请简单介绍一下你自己，这是一个连接测试。',
+
+  // tooltip note
+  'externalRole.note.title': '外部智能体说明：',
+  'externalRole.note.standaloneTitle': '独立运行',
+  'externalRole.note.standalone': '：外部智能体在第三方平台上运行，本系统仅作为接口调用',
+  'externalRole.note.noLocalToolsTitle': '无法调用本地工具',
+  'externalRole.note.noLocalTools': '：无法使用系统内置的工具和能力',
+  'externalRole.note.dependsTitle': '依赖外部平台',
+  'externalRole.note.depends': '：功能完全依赖于所选外部平台的能力和限制',
+  'externalRole.note.latencyTitle': '网络延迟',
+  'externalRole.note.latency': '：响应速度受网络状况和外部平台性能影响',
+  'externalRole.note.privacyTitle': '数据隐私',
+  'externalRole.note.privacy': '：对话数据会发送到外部平台，请注意数据安全',
+
+  // messages
+  'externalRole.testSuccess': '连接测试成功',
+  'externalRole.testFailed': '连接测试失败',
+  'externalRole.streamingTestSuccess': '流式连接测试成功',
+  'externalRole.streamingTestDone': '流式连接测试完成',
+  'externalRole.streamingTestFailed': '流式连接测试失败',
+  'externalRole.networkError': '网络错误',
+  'externalRole.fillRequired': '请填写必要的连接信息',
+  'externalRole.connecting': '正在连接...',
+  'externalRole.noResponse': '未收到响应内容',
+  'externalRole.headersParseFailed': '自定义请求头解析失败，将被忽略',
+  'externalRole.importFailed': '导入失败',
+  'externalRole.unknownError': '未知错误',
+
+  // status tags
+  'externalRole.status.testing': '正在测试',
+  'externalRole.status.testingMsg': '正在测试连接，请稍候...',
+  'externalRole.status.awaitingResponse': '等待响应中...',
+  'externalRole.status.receiving': '正在接收',
+  'externalRole.status.connected': '连接成功',
+  'externalRole.status.streaming': '(流式响应中...)',
+  'externalRole.status.awaitingContent': '等待响应内容...',
+  'externalRole.status.failed': '连接失败',
+  'externalRole.status.clickToTest': '点击"测试连接"按钮开始测试',
+
+  // fields
+  'externalRole.field.roleName': '角色名称',
+  'externalRole.field.description': '描述',
+  'externalRole.field.roleType': '角色类型',
+  'externalRole.field.platform': '平台类型',
+  'externalRole.field.apiKey': 'API密钥',
+  'externalRole.field.apiServer': 'API服务器地址',
+  'externalRole.field.model': '模型',
+  'externalRole.field.modelId': '模型标识符',
+  'externalRole.field.agentId': '智能体ID',
+  'externalRole.field.fastgptAppId': '应用ID',
+  'externalRole.field.userId': '用户ID',
+  'externalRole.field.platformName': '平台名称',
+  'externalRole.field.applicationType': '应用类型',
+  'externalRole.field.instructions': '指令集',
+  'externalRole.field.sysInstructions': '系统指令',
+  'externalRole.field.customHeaders': '自定义请求头',
+  'externalRole.field.timeout': '超时时间',
+  'externalRole.field.responseMode': '响应模式',
+  'externalRole.field.userIdentifier': '用户标识',
+
+  // placeholders
+  'externalRole.placeholder.roleName': '请输入角色名称',
+  'externalRole.placeholder.description': '请简要描述该角色的功能和特点',
+  'externalRole.placeholder.platform': '请选择平台类型',
+  'externalRole.placeholder.model': '请选择模型',
+  'externalRole.placeholder.openaiInstructions': '可选，Assistant的系统指令',
+  'externalRole.placeholder.difyAppType': '请选择应用类型',
+  'externalRole.placeholder.fastgptKey': 'app-xxxxxx (应用特定密钥)',
+  'externalRole.placeholder.platformName': '例如：Claude, Gemini, Xinference等',
+  'externalRole.placeholder.customServer': '例如：https://api.example.com/v1',
+  'externalRole.placeholder.customKey': '请输入API密钥',
+  'externalRole.placeholder.customAgentId': '如平台支持，请输入智能体ID',
+  'externalRole.placeholder.customModelId': '如平台支持，请输入模型标识符',
+  'externalRole.placeholder.sysInstructions': '可选，智能体的系统指令',
+  'externalRole.placeholder.customHeaders': '可选，JSON格式，例如：{"x-api-key": "value", "Authorization": "Bearer xxx"}',
+  'externalRole.placeholder.responseMode': '选择响应模式',
+
+  // dify options
+  'externalRole.dify.chatbot': 'Chatbot - 对话助手',
+  'externalRole.dify.textGenerator': 'Text Generator - 文本生成',
+  'externalRole.dify.agent': 'Agent - 智能助手',
+  'externalRole.dify.chatflow': 'Chatflow - 对话流',
+  'externalRole.dify.workflow': 'Workflow - 工作流',
+
+  // response modes
+  'externalRole.responseMode.blocking': '阻塞模式',
+  'externalRole.responseMode.streaming': '流式模式',
+
+  // required
+  'externalRole.req.roleName': '请输入角色名称',
+  'externalRole.req.description': '请输入描述',
+  'externalRole.req.platform': '请选择平台类型',
+  'externalRole.req.model': '请选择使用的模型',
+  'externalRole.req.openaiApiKey': '请输入OpenAI API密钥',
+  'externalRole.req.openaiAssistantId': '请输入OpenAI Assistant ID',
+  'externalRole.req.difyServer': '请输入Dify API服务器地址',
+  'externalRole.req.difyKey': '请输入Dify应用的API密钥',
+  'externalRole.req.difyAppType': '请选择Dify应用类型',
+  'externalRole.req.fastgptServer': '请输入FastGPT API服务器地址',
+  'externalRole.req.fastgptKey': '请输入FastGPT应用的API密钥',
+  'externalRole.req.fastgptKeyPattern': 'API密钥格式不正确，应以"fastgpt-"或"app-"开头',
+  'externalRole.req.fastgptAppId': '请输入FastGPT应用ID',
+  'externalRole.req.cozeServer': '请输入Coze API服务器地址',
+  'externalRole.req.cozeKey': '请输入Coze平台的API密钥',
+  'externalRole.req.cozeBotId': '请输入Coze平台的Bot ID',
+  'externalRole.req.userId': '请输入用户ID',
+  'externalRole.req.platformName': '请输入平台名称',
+  'externalRole.req.customServer': '请输入API服务器地址',
+  'externalRole.req.customKey': '请输入API密钥',
+  'externalRole.req.timeout': '请输入超时时间',
+  'externalRole.req.urlPattern': '请输入完整的URL地址，必须以http://或https://开头',
+
+  // extra
+  'externalRole.extra.urlPattern': '请输入完整的API地址，必须以http://或https://开头',
+  'externalRole.extra.fastgptAppId': 'FastGPT应用的唯一标识符',
+  'externalRole.extra.cozeServer': 'Coze API服务器地址',
+  'externalRole.extra.cozePat': '从Coze开发者平台获取的Personal Access Token',
+  'externalRole.extra.cozeBotId': 'Coze智能体的唯一标识符',
+  'externalRole.extra.userId': '用于标识API调用用户，可以是任意字符串',
+  'externalRole.extra.timeout': 'API请求超时时间（秒）',
+  'externalRole.extra.responseMode': '选择API响应模式，默认跟随全局流式响应设置',
+  'externalRole.extra.userIdentifier': '用于标识API调用用户（可选）',
+
+  // ----- SkillManagement skills.* (table headers / page chrome) -----
+  'skills.name': '名称',
+  'skills.description': '描述',
+  'skills.status': '状态',
+  'skills.securityLevel': '安全等级',
+  'skills.actions': '操作',
+  'skills.title': '技能管理',
+  'skills.sync': '同步文件系统',
+  'skills.import': '导入技能',
+  'skills.create': '新建技能',
+  'skills.empty': '暂无技能，点击"新建技能"或"导入技能"开始',
+  'skills.createTitle': '新建技能',
+
+  // ----- SkillManagement skillMgmt.* (modals / messages) -----
+  'skillMgmt.subtitle': '管理和配置智能体可用的技能，技能绑定到角色后会在对话中自动激活',
+  'skillMgmt.save': '保存',
+  'skillMgmt.editTitle': '编辑技能: {{name}}',
+  'skillMgmt.importPreviewTitle': '导入技能预览',
+  'skillMgmt.confirmDelete': '确定删除该技能？',
+  'skillMgmt.confirmImport': '确认导入',
+
+  // switch
+  'skillMgmt.switch.on': '启用',
+  'skillMgmt.switch.off': '禁用',
+
+  // security levels
+  'skillMgmt.secLevel.low': '低',
+  'skillMgmt.secLevel.mid': '中',
+  'skillMgmt.secLevel.high': '高',
+  'skillMgmt.secLevel.lowDesc': '低 - 只读操作',
+  'skillMgmt.secLevel.midDesc': '中 - 可修改文件',
+  'skillMgmt.secLevel.highDesc': '高 - 可执行脚本',
+  'skillMgmt.secLevel.highDescRestricted': '高 - 可执行脚本(受限)',
+
+  // actions
+  'skillMgmt.action.edit': '编辑',
+  'skillMgmt.action.export': '导出',
+
+  // fields
+  'skillMgmt.field.nameKebab': '技能名称 (kebab-case)',
+  'skillMgmt.field.displayName': '显示名称',
+  'skillMgmt.field.triggerDesc': '触发描述',
+  'skillMgmt.field.securityLevel': '安全等级',
+
+  // placeholders
+  'skillMgmt.ph.displayName': 'e.g. 财务报告生成',
+  'skillMgmt.ph.displayNameEdit': '中文显示名称',
+  'skillMgmt.ph.triggerDesc': '描述何时应该触发此技能...',
+
+  // requireds
+  'skillMgmt.req.name': '请输入技能名称',
+  'skillMgmt.req.namePattern': '只允许小写字母、数字和连字符',
+  'skillMgmt.req.description': '请输入描述',
+
+  // extras
+  'skillMgmt.extra.triggerDesc': '当用户请求匹配此描述时，Agent 会自动激活该技能',
+  'skillMgmt.extra.triggerDescEdit': '模型根据此描述判断是否激活技能，需详细包含所有触发场景',
+  'skillMgmt.extra.levelExtra': '等级 ≥ 3 时将禁止执行脚本',
+
+  // tabs
+  'skillMgmt.tab.basic': '基本信息',
+  'skillMgmt.tab.scripts': '脚本',
+  'skillMgmt.tab.references': '参考资料',
+  'skillMgmt.tab.assets': '资源文件',
+
+  // table columns
+  'skillMgmt.col.fileName': '文件名',
+  'skillMgmt.col.path': '路径',
+  'skillMgmt.col.size': '大小',
+
+  // empties
+  'skillMgmt.empty.scripts': '暂无脚本文件',
+  'skillMgmt.empty.references': '暂无参考资料',
+  'skillMgmt.empty.assets': '暂无资源文件',
+
+  // import preview
+  'skillMgmt.preview.name': '技能名称:',
+  'skillMgmt.preview.description': '描述:',
+  'skillMgmt.preview.scriptsCount': '脚本数:',
+  'skillMgmt.preview.referencesCount': '参考资料数:',
+  'skillMgmt.preview.assetsCount': '资源文件数:',
+  'skillMgmt.preview.none': '无',
+  'skillMgmt.preview.existsWarn': '同名技能已存在，导入将覆盖',
+
+  // messages
+  'skillMgmt.msg.fetchFailed': '获取技能列表失败',
+  'skillMgmt.msg.createSuccess': '技能创建成功',
+  'skillMgmt.msg.createFailed': '创建失败',
+  'skillMgmt.msg.detailFailed': '获取技能详情失败',
+  'skillMgmt.msg.basicSaved': '基本信息已保存',
+  'skillMgmt.msg.contentSaved': 'SKILL.md 保存成功',
+  'skillMgmt.msg.saveFailed': '保存失败',
+  'skillMgmt.msg.deleteSuccess': '删除成功',
+  'skillMgmt.msg.deleteFailed': '删除失败',
+  'skillMgmt.msg.updateFailed': '更新失败',
+  'skillMgmt.msg.exportFailed': '导出失败',
+  'skillMgmt.msg.previewFailed': '预览失败',
+  'skillMgmt.msg.importSuccess': '导入成功',
+  'skillMgmt.msg.importFailed': '导入失败',
+  'skillMgmt.msg.syncDone': '同步完成: 新增 {{created}} 个，更新 {{updated}} 个',
+  'skillMgmt.msg.syncFailed': '同步失败',
+
+  // ----- InternalRoleModal 内部角色模态框 -----
+  'intRole.unknown': '未知',
+  'intRole.unknownError': '未知错误',
+  'intRole.defaultTestPrompt': '请简单地介绍一下你自己。',
+  'intRole.assistantSystemPrompt': '你是一个专业的AI提示词工程师，擅长根据角色描述生成高质量的系统提示词。',
+
+  // tabs
+  'intRole.tab.roleSettings': '角色设置',
+  'intRole.tab.capabilities': '能力设置',
+  'intRole.tab.knowledge': '知识库绑定',
+  'intRole.tab.skills': '技能绑定',
+
+  // fields
+  'intRole.field.name': '角色名称',
+  'intRole.field.source': '角色类型',
+  'intRole.field.model': '使用的模型',
+  'intRole.field.description': '描述',
+  'intRole.field.systemPrompt': '系统提示词',
+
+  // placeholders
+  'intRole.ph.description': '请简要描述该角色的功能和特点',
+  'intRole.ph.systemPrompt': '请输入详细的系统提示词，用于定义角色的行为和回答风格',
+  'intRole.ph.leaveBlank': '留空则不设置',
+
+  // required messages
+  'intRole.req.name': '请输入角色名称',
+  'intRole.req.source': '请选择角色类型',
+  'intRole.req.model': '请选择使用的模型',
+  'intRole.req.description': '请输入描述',
+  'intRole.req.systemPrompt': '请输入系统提示词',
+  'intRole.req.temperatureRange': '温度值范围为0-2',
+  'intRole.req.topPRange': 'Top P值范围为0-1',
+  'intRole.req.freqPenaltyRange': '频率惩罚值范围为-2到2',
+  'intRole.req.presPenaltyRange': '存在惩罚值范围为-2到2',
+
+  // misc
+  'intRole.newRoleHint': '新建角色默认为内部类型，如需创建外部角色请使用"导入外部智能体"功能',
+  'intRole.model.defaultText': '默认文本生成',
+  'intRole.tip.shareAll': '勾选后，该角色将对所有用户可见可用（但只有创建者可编辑）',
+  'intRole.shareAll': '共享给所有用户',
+  'intRole.assistantGenerate': '辅助生成',
+  'intRole.assistantDisabledHint': '辅助生成功能未启用，请在系统设置中开启',
+  'intRole.assistantHint': '点击"辅助生成"可根据角色名称和描述自动生成系统提示词',
+  'intRole.advancedParams': '高级参数设置',
+  'intRole.modelParams': '模型参数',
+  'intRole.frequencyPenalty': '频率惩罚',
+  'intRole.presencePenalty': '存在惩罚',
+  'intRole.tip.temperature': '控制生成文本的随机性',
+  'intRole.tip.topP': '控制生成文本的多样性',
+  'intRole.tip.frequencyPenalty': '减少重复使用相同词语的可能性',
+  'intRole.tip.presencePenalty': '减少讨论相同主题的可能性',
+  'intRole.testRole': '测试角色',
+  'intRole.testRoleResp': '测试角色响应',
+  'intRole.test': '测试',
+  'intRole.testRoleHint': '测试说明: 将使用上面填写的系统提示词内容作为测试输入，验证角色响应效果',
+  'intRole.testFailed': '测试失败: {{msg}}',
+
+  // capability types
+  'intRole.capType.core': '核心能力',
+  'intRole.capType.advanced': '高级能力',
+  'intRole.capType.supervision': '监督能力',
+  'intRole.capType.execution': '执行能力',
+  'intRole.capType.specialized': '专业能力',
+  'intRole.capHint': '选择智能体可以使用的能力，这些能力将决定智能体可以执行的操作范围和权限级别。',
+
+  // empties
+  'intRole.empty.noCapData': '暂无能力数据',
+  'intRole.empty.noKB': '暂无可用的知识库',
+  'intRole.empty.noKBHint': '请先创建内部知识库或配置外部知识库，然后再进行绑定',
+
+  // kb
+  'intRole.kb.internal': '内部',
+  'intRole.kb.external': '外部',
+  'intRole.kb.statusOk': '正常',
+  'intRole.kb.statusErr': '异常',
+  'intRole.kb.noDesc': '暂无描述',
+  'intRole.kb.providerLabel': '提供商: {{v}}',
+  'intRole.kb.idLabel': 'ID: {{v}}',
+
+  // skill
+  'intRole.skill.empty': '暂无可用技能，请先在技能管理中创建',
+  'intRole.skill.alertTitle': '技能绑定',
+  'intRole.skill.alertDesc': '选择要绑定到此角色的技能。绑定后，Agent 在对话中会根据技能描述自动激活对应技能。',
+
+  // messages
+  'intRole.msg.assistantOff': '辅助生成功能未启用，请在系统设置中开启',
+  'intRole.msg.fillNameDescFirst': '请先填写角色名称和描述，然后再使用辅助生成',
+  'intRole.msg.loadTplFailed': '获取提示词模板失败，请检查系统设置',
+  'intRole.msg.sysPromptGenerated': '系统提示词生成完成',
+  'intRole.msg.assistantFailed': '辅助生成失败: {{msg}}',
+  'intRole.msg.pickModelFirst': '请先选择一个模型',
+  'intRole.msg.completeForm': '请先完成表单填写',
+
+  // errors
+  'intRole.err.noSysPromptTpl': '未获取到角色系统提示词生成模板',
+  'intRole.err.noDefaultTextModel': '未找到默认文本生成模型配置',
+  'intRole.err.noPickedModel': '未找到所选模型配置',
 };

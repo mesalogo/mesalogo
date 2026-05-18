@@ -409,7 +409,7 @@ const ActionTaskDetail = ({ taskIdProp }) => {
           {/* 返回/切换任务按钮（合并返回和切换窗口功能） */}
           <Space.Compact>
             <Button onClick={handleBack}>
-              <LeftOutlined /> 返回
+              <LeftOutlined /> {t('actionTaskDetail.back')}
             </Button>
             <Dropdown
               trigger={['click', 'hover']}
@@ -428,10 +428,10 @@ const ActionTaskDetail = ({ taskIdProp }) => {
                             <div style={{ minWidth: 200, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                               <div style={{ flex: 1 }}>
                                 <div style={{ fontWeight: 500, fontSize: 13 }}>
-                                  {taskInfo?.title || `任务 ${windowTaskId.slice(0, 8)}...`}
+                                  {taskInfo?.title || t('actionTaskDetail.taskTitleFallback', { id: windowTaskId.slice(0, 8) })}
                                 </div>
                                 <div style={{ fontSize: 11, color: 'var(--custom-text-secondary)', marginTop: 2 }}>
-                                  {taskInfo?.actionSpaceName || '未知行动空间'}
+                                  {taskInfo?.actionSpaceName || t('actionTaskDetail.unknownActionSpace')}
                                 </div>
                               </div>
                               {/* 已加载窗口显示绿色光标 */}
@@ -456,25 +456,25 @@ const ActionTaskDetail = ({ taskIdProp }) => {
                   // 未加载的任务（不在windows中且不是当前任务）
                   const loadedTaskIds = windows ? new Set([...windows.keys(), activeTaskId]) : new Set([activeTaskId]);
                   const unloadedItems = allTasks
-                    .filter(t => !loadedTaskIds.has(t.id))
-                    .map(t => ({
-                      key: `unloaded-${t.id}`,
-                      taskId: t.id,
+                    .filter(taskItem => !loadedTaskIds.has(taskItem.id))
+                    .map(taskItem => ({
+                      key: `unloaded-${taskItem.id}`,
+                      taskId: taskItem.id,
                       label: (
                         <div style={{ minWidth: 200, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: 500, fontSize: 13 }}>
-                              {t.title}
+                              {taskItem.title}
                             </div>
                             <div style={{ fontSize: 11, color: 'var(--custom-text-secondary)', marginTop: 2 }}>
-                              {t.action_space?.name || t.action_space_name || '未知行动空间'}
+                              {taskItem.action_space?.name || taskItem.action_space_name || t('actionTaskDetail.unknownActionSpace')}
                             </div>
                           </div>
                         </div>
                       ),
                       icon: <WindowsOutlined style={{ color: 'var(--custom-text-secondary)' }} />,
                       onClick: () => {
-                        navigate(`/action-tasks/detail/${t.id}`);
+                        navigate(`/action-tasks/detail/${taskItem.id}`);
                       }
                     }));
                   
@@ -493,7 +493,7 @@ const ActionTaskDetail = ({ taskIdProp }) => {
                   if (allItems.length === 0) {
                     return [{
                       key: 'no-tasks',
-                      label: '暂无其他任务',
+                      label: t('actionTaskDetail.noOtherTasks'),
                       disabled: true
                     }];
                   }
@@ -504,7 +504,7 @@ const ActionTaskDetail = ({ taskIdProp }) => {
               placement="bottomLeft"
             >
               <Button>
-                <DownOutlined /> 切换
+                <DownOutlined /> {t('actionTaskDetail.switch')}
               </Button>
             </Dropdown>
           </Space.Compact>

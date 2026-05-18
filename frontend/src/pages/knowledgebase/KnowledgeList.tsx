@@ -5,10 +5,12 @@ import knowledgeAPI from '../../services/api/knowledge';
 import KnowledgeDetailModal from './KnowledgeDetailModal';
 import TestSearchModal from './components/TestSearchModal';
 import KnowledgeFormModal from './components/KnowledgeFormModal';
+import { useTranslation } from 'react-i18next';
 
 const { TextArea } = Input;
 
 const KnowledgeList = forwardRef(({ onViewDocuments, hideCreateButton = false }: { onViewDocuments: any, hideCreateButton?: boolean }, ref) => {
+  const { t } = useTranslation();
   const { modal, message } = App.useApp();
   const [knowledges, setKnowledges] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -31,11 +33,11 @@ const KnowledgeList = forwardRef(({ onViewDocuments, hideCreateButton = false }:
       if (response && response.success) {
         setKnowledges(response.data);
       } else {
-        message.error(response?.message || '获取知识库列表失败');
+        message.error(response?.message || t('kbList.msg.fetchFailed'));
       }
     } catch (error) {
-      console.error('获取知识库列表失败:', error);
-      message.error('获取知识库列表失败');
+      console.error('fetch KB list failed:', error);
+      message.error(t('kbList.msg.fetchFailed'));
     } finally {
       setLoading(false);
     }
@@ -63,26 +65,23 @@ const KnowledgeList = forwardRef(({ onViewDocuments, hideCreateButton = false }:
       }
       
       if (editingId) {
-        // 更新知识库
         const response = await knowledgeAPI.update(editingId, values);
         if (response.success) {
-          message.success('知识库更新成功');
-          fetchKnowledges(); // 重新获取列表
+          message.success(t('kbList.msg.updateSuccess'));
+          fetchKnowledges();
         } else {
-          message.error(response.message || '更新知识库失败');
+          message.error(response.message || t('kbList.msg.updateFailed'));
         }
       } else {
-        // 创建知识库
         const response = await knowledgeAPI.create(values);
         if (response.success) {
-          message.success('知识库创建成功');
-          fetchKnowledges(); // 重新获取列表
+          message.success(t('kbList.msg.createSuccess'));
+          fetchKnowledges();
         } else {
-          // 检查是否是配额超限错误
           if (response.status === 403 && response.quota) {
-            message.error(`配额超限：${response.message || '您的计划已达到知识库数量上限'}`);
+            message.error(t('kbList.msg.quotaExceeded', { detail: response.message || t('kbList.msg.kbQuotaReached') }));
           } else {
-            message.error(response.message || '创建知识库失败');
+            message.error(response.message || t('kbList.msg.createFailed'));
           }
         }
       }
@@ -90,37 +89,36 @@ const KnowledgeList = forwardRef(({ onViewDocuments, hideCreateButton = false }:
       form.resetFields();
       setEditingId(null);
     } catch (error: any) {
-      console.error('操作知识库失败:', error);
-      // 检查是否是配额超限错误
+      console.error('KB op failed:', error);
       if (error.response?.status === 403 && error.response?.data?.quota) {
-        message.error(`配额超限：${error.response.data.message || '您的计划已达到知识库数量上限'}`);
+        message.error(t('kbList.msg.quotaExceeded', { detail: error.response.data.message || t('kbList.msg.kbQuotaReached') }));
       } else {
-        message.error(editingId ? '更新知识库失败' : '创建知识库失败');
+        message.error(editingId ? t('kbList.msg.updateFailed') : t('kbList.msg.createFailed'));
       }
     }
   };
 
 
 
-  // 处理删除知识库
+  // delete KB
   const handleDelete = (id) => {
     modal.confirm({
-      title: '确认删除',
-      content: '确定要删除这个知识库吗？删除后无法恢复。',
-      okText: '确定',
-      cancelText: '取消',
+      title: t('kbList.confirm.deleteTitle'),
+      content: t('kbList.confirm.deleteContent'),
+      okText: t('kbList.confirm.ok'),
+      cancelText: t('kbList.confirm.cancel'),
       onOk: async () => {
         try {
           const response = await knowledgeAPI.delete(id);
           if (response.success) {
-            message.success('知识库删除成功');
-            fetchKnowledges(); // 重新获取列表
+            message.success(t('kbList.msg.deleteSuccess'));
+            fetchKnowledges();
           } else {
-            message.error(response.message || '删除知识库失败');
+            message.error(response.message || t('kbList.msg.deleteFailed'));
           }
         } catch (error) {
-          console.error('删除知识库失败:', error);
-          message.error('删除知识库失败');
+          console.error('delete KB failed:', error);
+          message.error(t('kbList.msg.deleteFailed'));
         }
       }
     });
@@ -185,7 +183,7 @@ const KnowledgeList = forwardRef(({ onViewDocuments, hideCreateButton = false }:
 
   const columns = [
     {
-      title: '名称',
+      title: t('kbList.col.name'),
       dataIndex: 'name',
       key: 'name',
       width: 200,
@@ -211,114 +209,109 @@ const KnowledgeList = forwardRef(({ onViewDocuments, hideCreateButton = false }:
       ),
     },
     {
-      title: '描述',
+      title: t('kbList.col.description'),
       dataIndex: 'description',
       key: 'description',
       width: 200,
       ellipsis: true,
     },
     {
-      title: '类型',
+      title: t('kbList.col.type'),
       dataIndex: 'kb_type',
       key: 'kb_type',
       width: 120,
       render: (kb_type) => {
         if (kb_type === 'lightrag') {
           return (
-            <Tooltip title="LightRAG 知识图谱增强检索">
+            <Tooltip title={t('kbList.tip.lightrag')}>
               <Tag color="purple">LightRAG</Tag>
             </Tooltip>
           );
         }
         return (
-          <Tooltip title="传统向量检索">
+          <Tooltip title={t('kbList.tip.vector')}>
             <Tag color="blue">Vector</Tag>
           </Tooltip>
         );
       },
     },
     {
-      title: '来源',
+      title: t('kbList.col.source'),
       dataIndex: 'created_by',
       key: 'resource_source',
       width: 100,
       render: (created_by, record) => {
-        // 系统资源：created_by 为 null
         if (!created_by) {
           return (
-            <Tooltip title="系统资源，所有用户可见可用">
+            <Tooltip title={t('kbList.tip.system')}>
               <Tag icon={<GlobalOutlined />} color="blue">
-                系统
+                {t('kbList.source.system')}
               </Tag>
             </Tooltip>
           );
         }
-
-        // 用户共享资源：created_by 有值且 is_shared 为 true
         if (record.is_shared) {
           return (
-            <Tooltip title="用户共享资源，所有用户可见可用">
+            <Tooltip title={t('kbList.tip.shared')}>
               <Tag icon={<TeamOutlined />} color="green">
-                共享
+                {t('kbList.source.shared')}
               </Tag>
             </Tooltip>
           );
         }
-
-        // 私有资源：created_by 有值且 is_shared 为 false
         return (
-          <Tooltip title="私有资源，仅创建者可见">
+          <Tooltip title={t('kbList.tip.private')}>
             <Tag icon={<LockOutlined />} color="orange">
-              私有
+              {t('kbList.source.private')}
             </Tag>
           </Tooltip>
         );
       },
     },
     {
-      title: '图谱增强',
+      title: t('kbList.col.graphEnhance'),
       key: 'graph_enhancement',
       width: 100,
       render: (_, record) => {
         const enabled = record.settings?.graph_enhancement?.enabled;
         return enabled ? (
           <Tag color="green" icon={<ShareAltOutlined />}>
-            已启用
+            {t('kbList.graph.enabled')}
           </Tag>
         ) : (
           <Tag color="default">
-            未启用
+            {t('kbList.graph.disabled')}
           </Tag>
         );
       },
     },
     {
-      title: '文档数',
+      title: t('kbList.col.docCount'),
       dataIndex: 'document_count',
       key: 'document_count',
       width: 100,
     },
     {
-      title: '大小',
+      title: t('kbList.col.size'),
       dataIndex: 'size',
       key: 'size',
       width: 120,
     },
     {
-      title: '更新时间',
+      title: t('kbList.col.updatedAt'),
       dataIndex: 'updated_at',
       key: 'updated_at',
       width: 180,
       render: (date) => new Date(date).toLocaleString(),
     },
     {
-      title: '操作',
+      title: t('kbList.col.action'),
       key: 'action',
       width: 250,
       fixed: 'right' as const,
       render: (_, record) => (
         <Space>
-          <Tooltip title="查看详情">
+          <Tooltip title={t('kbList.action.view')}>
             <Button
               type="text"
               icon={<EyeOutlined />}
@@ -326,7 +319,7 @@ const KnowledgeList = forwardRef(({ onViewDocuments, hideCreateButton = false }:
               style={{ color: '#1677ff' }}
             />
           </Tooltip>
-          <Tooltip title="测试查询">
+          <Tooltip title={t('kbList.action.testQuery')}>
             <Button
               type="text"
               icon={<SearchOutlined />}
@@ -334,7 +327,7 @@ const KnowledgeList = forwardRef(({ onViewDocuments, hideCreateButton = false }:
               style={{ color: '#1677ff' }}
             />
           </Tooltip>
-          <Tooltip title="编辑知识库">
+          <Tooltip title={t('kbList.action.edit')}>
             <Button
               type="text"
               icon={<EditOutlined />}
@@ -342,7 +335,7 @@ const KnowledgeList = forwardRef(({ onViewDocuments, hideCreateButton = false }:
               style={{ color: '#1677ff' }}
             />
           </Tooltip>
-          <Tooltip title="删除知识库">
+          <Tooltip title={t('kbList.action.delete')}>
             <Button
               type="text"
               danger
@@ -364,7 +357,7 @@ const KnowledgeList = forwardRef(({ onViewDocuments, hideCreateButton = false }:
             icon={<PlusOutlined />}
             onClick={showCreateModal}
           >
-            新建知识库
+            {t('kbList.create')}
           </Button>
         </div>
       )}
@@ -387,13 +380,13 @@ const KnowledgeList = forwardRef(({ onViewDocuments, hideCreateButton = false }:
             pageSize: 10,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total) => `共 ${total} 条`,
+            showTotal: (total) => t('kbList.paginationTotal', { total }),
           }}
         />
       )}
 
       <Modal
-        title={editingId ? '编辑知识库' : '新建知识库'}
+        title={editingId ? t('kbList.edit') : t('kbList.create')}
         open={modalVisible}
         onOk={form.submit}
         onCancel={() => {
@@ -408,27 +401,27 @@ const KnowledgeList = forwardRef(({ onViewDocuments, hideCreateButton = false }:
         >
           <Form.Item
             name="name"
-            label="名称"
-            rules={[{ required: true, message: '请输入知识库名称' }]}
+            label={t('kbList.form.name')}
+            rules={[{ required: true, message: t('kbList.form.nameReq') }]}
           >
-            <Input placeholder="请输入知识库名称" />
+            <Input placeholder={t('kbList.form.namePh')} />
           </Form.Item>
           <Form.Item
             name="description"
-            label="描述"
+            label={t('kbList.form.description')}
           >
-            <TextArea rows={4} placeholder="请输入知识库描述（可选）" />
+            <TextArea rows={4} placeholder={t('kbList.form.descriptionPh')} />
           </Form.Item>
 
           <Form.Item
             name="is_shared"
             valuePropName="checked"
-            tooltip="勾选后，该知识库将对所有用户可见可用（但只有创建者可编辑）"
+            tooltip={t('kbList.form.sharedTooltip')}
           >
             <Checkbox>
               <Space>
                 <TeamOutlined />
-                共享给所有用户
+                {t('kbList.form.shared')}
               </Space>
             </Checkbox>
           </Form.Item>
@@ -440,15 +433,15 @@ const KnowledgeList = forwardRef(({ onViewDocuments, hideCreateButton = false }:
             label={
               <Space>
                 <ShareAltOutlined />
-                图谱增强
+                {t('kbList.col.graphEnhance')}
               </Space>
             }
-            tooltip="启用图谱增强可以通过知识图谱技术提升检索准确性和上下文理解能力"
+            tooltip={t('retrievalSettings.graphEnhanceTooltip')}
             valuePropName="checked"
           >
             <Switch
-              checkedChildren="启用"
-              unCheckedChildren="禁用"
+              checkedChildren={t('retrievalSettings.enabled')}
+              unCheckedChildren={t('retrievalSettings.disabled')}
             />
           </Form.Item>
 

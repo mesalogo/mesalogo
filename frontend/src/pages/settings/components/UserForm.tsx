@@ -28,6 +28,7 @@ import { subscriptionAPI, SubscriptionPlan } from '../../../services/api/subscri
 import api from '../../../services/api/axios';
 import { useAuth } from '../../../contexts/AuthContext';
 import { canEditUserRole } from '../../../constants/permissions';
+import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
@@ -35,6 +36,7 @@ const { TextArea } = Input;
 const { Option } = Select;
 
 const UserForm = ({ visible, user, onCancel, onSuccess }) => {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [allRoles, setAllRoles] = useState([]);
@@ -43,19 +45,17 @@ const UserForm = ({ visible, user, onCancel, onSuccess }) => {
   const [userSubscription, setUserSubscription] = useState<any>(null);
   const { user: currentUser } = useAuth();
   const isEditing = !!user;
-  const isRootUser = user && user.username === 'admin'; // 判断是否为根用户
+  const isRootUser = user && user.username === 'admin'; // root user check
 
-  // 检查是否可以编辑用户角色
   const canEditRole = user ? canEditUserRole(currentUser, user) : true;
 
-  // 获取所有角色
   useEffect(() => {
     const fetchRoles = async () => {
       try {
         const response = await api.get('/user-roles');
         setAllRoles(response.data.user_roles || []);
       } catch (error) {
-        console.error('获取角色列表失败:', error);
+        console.error('fetch user roles failed:', error);
       }
     };
     if (visible) {
@@ -63,7 +63,6 @@ const UserForm = ({ visible, user, onCancel, onSuccess }) => {
     }
   }, [visible]);
 
-  // 获取订阅计划列表
   useEffect(() => {
     const fetchPlans = async () => {
       try {
@@ -72,7 +71,7 @@ const UserForm = ({ visible, user, onCancel, onSuccess }) => {
           setSubscriptionPlans(response.data.plans);
         }
       } catch (error) {
-        console.error('获取订阅计划失败:', error);
+        console.error('fetch subscription plans failed:', error);
       }
     };
     if (visible && currentUser?.is_admin) {
@@ -80,16 +79,13 @@ const UserForm = ({ visible, user, onCancel, onSuccess }) => {
     }
   }, [visible, currentUser]);
 
-  // 获取用户当前角色和订阅
   useEffect(() => {
     const fetchUserData = async () => {
       if (isEditing && user) {
         try {
-          // 获取用户角色
           const rolesResponse = await api.get(`/users/${user.id}/roles`);
           setUserRoles(rolesResponse.data.roles || []);
-          
-          // 获取用户订阅
+
           if (currentUser?.is_admin) {
             const subResponse = await subscriptionAPI.adminGetUserSubscription(user.id);
             if (subResponse.success) {
@@ -97,7 +93,7 @@ const UserForm = ({ visible, user, onCancel, onSuccess }) => {
             }
           }
         } catch (error) {
-          console.error('获取用户数据失败:', error);
+          console.error('fetch user data failed:', error);
         }
       }
     };
@@ -174,7 +170,7 @@ const UserForm = ({ visible, user, onCancel, onSuccess }) => {
             await subscriptionAPI.adminUpdateUserSubscription(user.id, {
               plan_id: subscription_plan_id,
               expires_at: newExpiresAt,
-              notes: '管理员手动设置'
+              notes: t('userForm.note.adminManualSet')
             });
           }
         }
@@ -195,22 +191,22 @@ const UserForm = ({ visible, user, onCancel, onSuccess }) => {
             await subscriptionAPI.adminUpdateUserSubscription(response.data.user.id, {
               plan_id: subscription_plan_id,
               expires_at: newExpiresAt,
-              notes: '管理员创建时设置'
+              notes: t('userForm.note.adminCreateSet')
             });
           }
         }
       }
 
       if (response.success) {
-        message.success(isEditing ? '用户更新成功' : '用户创建成功');
+        message.success(isEditing ? t('userForm.msg.updateSuccess') : t('userForm.msg.createSuccess'));
         form.resetFields();
         onSuccess();
       } else {
-        message.error(response.message || (isEditing ? '更新用户失败' : '创建用户失败'));
+        message.error(response.message || (isEditing ? t('userForm.msg.updateFailed') : t('userForm.msg.createFailed')));
       }
     } catch (error) {
-      console.error('提交用户表单失败:', error);
-      message.error(error.response?.data?.error || (isEditing ? '更新用户失败' : '创建用户失败'));
+      console.error('submit user form failed:', error);
+      message.error(error.response?.data?.error || (isEditing ? t('userForm.msg.updateFailed') : t('userForm.msg.createFailed')));
     } finally {
       setLoading(false);
     }
@@ -221,47 +217,44 @@ const UserForm = ({ visible, user, onCancel, onSuccess }) => {
     onCancel();
   };
 
-  // 用户名验证规则
+  // username
   const usernameRules = [
-    { required: true, message: '请输入用户名' },
-    { min: 3, message: '用户名至少3个字符' },
-    { max: 50, message: '用户名不能超过50个字符' },
-    { pattern: /^[a-zA-Z0-9_]+$/, message: '用户名只能包含字母、数字和下划线' }
+    { required: true, message: t('userForm.req.username') },
+    { min: 3, message: t('userForm.req.usernameMin') },
+    { max: 50, message: t('userForm.req.usernameMax') },
+    { pattern: /^[a-zA-Z0-9_]+$/, message: t('userForm.req.usernamePattern') }
   ];
 
-  // 邮箱验证规则（非必选，但如果填写则需要格式正确）
+  // email (optional, must be valid if provided)
   const emailRules = [
     {
       validator: (_, value) => {
-        if (!value) {
-          // 邮箱为空时通过验证（非必选）
-          return Promise.resolve();
-        }
+        if (!value) return Promise.resolve();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(value)) {
-          return Promise.reject(new Error('请输入有效的邮箱地址'));
+          return Promise.reject(new Error(t('userForm.req.emailValid')));
         }
         return Promise.resolve();
       }
     }
   ];
 
-  // 密码验证规则（仅在创建模式下使用）
+  // password (create only)
   const passwordRules = [
-    { required: !isEditing, message: '请输入密码' },
-    { min: 6, message: '密码至少6个字符' },
-    { max: 100, message: '密码不能超过100个字符' }
+    { required: !isEditing, message: t('userForm.req.password') },
+    { min: 6, message: t('userForm.req.passwordMin') },
+    { max: 100, message: t('userForm.req.passwordMax') }
   ];
 
-  // 确认密码验证规则（仅在创建模式下使用）
+  // confirm password (create only)
   const confirmPasswordRules = [
-    { required: !isEditing, message: '请确认密码' },
+    { required: !isEditing, message: t('userForm.req.confirmPassword') },
     ({ getFieldValue }) => ({
       validator(_, value) {
         if (!value || getFieldValue('password') === value) {
           return Promise.resolve();
         }
-        return Promise.reject(new Error('两次输入的密码不一致'));
+        return Promise.reject(new Error(t('userForm.req.passwordMismatch')));
       },
     }),
   ];
@@ -271,14 +264,14 @@ const UserForm = ({ visible, user, onCancel, onSuccess }) => {
       title={
         <div>
           <UserOutlined style={{ marginRight: 8 }} />
-          {isEditing ? '编辑用户' : '创建用户'}
+          {isEditing ? t('userForm.editTitle') : t('userForm.createTitle')}
         </div>
       }
       open={visible}
       onCancel={handleCancel}
       footer={[
         <Button key="cancel" onClick={handleCancel}>
-          取消
+          {t('userForm.cancel')}
         </Button>,
         <Button
           key="submit"
@@ -286,7 +279,7 @@ const UserForm = ({ visible, user, onCancel, onSuccess }) => {
           loading={loading}
           onClick={() => form.submit()}
         >
-          {isEditing ? '更新' : '创建'}
+          {isEditing ? t('userForm.update') : t('userForm.create')}
         </Button>
       ]}
       width={600}
@@ -298,32 +291,31 @@ const UserForm = ({ visible, user, onCancel, onSuccess }) => {
         onFinish={handleSubmit}
         autoComplete="off"
       >
-        {/* 基本信息 */}
-        <Title level={5}>基本信息</Title>
-        
+        <Title level={5}>{t('userForm.section.basic')}</Title>
+
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
               name="username"
-              label="用户名"
+              label={t('userForm.field.username')}
               rules={usernameRules}
             >
               <Input
                 prefix={<UserOutlined />}
-                placeholder="请输入用户名"
-                disabled={isEditing} // 编辑时不允许修改用户名
+                placeholder={t('userForm.ph.username')}
+                disabled={isEditing}
               />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item
               name="email"
-              label="邮箱"
+              label={t('userForm.field.email')}
               rules={emailRules}
             >
               <Input
                 prefix={<MailOutlined />}
-                placeholder="请输入邮箱"
+                placeholder={t('userForm.ph.email')}
               />
             </Form.Item>
           </Col>
@@ -334,24 +326,24 @@ const UserForm = ({ visible, user, onCancel, onSuccess }) => {
             <Col span={12}>
               <Form.Item
                 name="password"
-                label="密码"
+                label={t('userForm.field.password')}
                 rules={passwordRules}
               >
                 <Input.Password
                   prefix={<LockOutlined />}
-                  placeholder="请输入密码"
+                  placeholder={t('userForm.ph.password')}
                 />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
                 name="confirmPassword"
-                label="确认密码"
+                label={t('userForm.field.confirmPassword')}
                 rules={confirmPasswordRules}
               >
                 <Input.Password
                   prefix={<LockOutlined />}
-                  placeholder="请再次输入密码"
+                  placeholder={t('userForm.ph.confirmPassword')}
                 />
               </Form.Item>
             </Col>
@@ -360,73 +352,69 @@ const UserForm = ({ visible, user, onCancel, onSuccess }) => {
 
         <Divider />
 
-        {/* 扩展信息 */}
-        <Title level={5}>扩展信息</Title>
-        
+        <Title level={5}>{t('userForm.section.extended')}</Title>
+
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
               name="display_name"
-              label="显示名称"
+              label={t('userForm.field.displayName')}
             >
               <Input
                 prefix={<UserOutlined />}
-                placeholder="请输入显示名称"
+                placeholder={t('userForm.ph.displayName')}
               />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item
               name="phone"
-              label="手机号码"
+              label={t('userForm.field.phone')}
             >
               <Input
                 prefix={<PhoneOutlined />}
-                placeholder="请输入手机号码"
+                placeholder={t('userForm.ph.phone')}
               />
             </Form.Item>
           </Col>
         </Row>
 
-
-
         <Form.Item
           name="notes"
-          label="备注"
+          label={t('userForm.field.notes')}
         >
           <TextArea
             rows={3}
-            placeholder="请输入备注信息"
+            placeholder={t('userForm.ph.notes')}
           />
         </Form.Item>
 
         <Divider />
 
-        {/* 权限设置 */}
-        <Title level={5}>权限设置</Title>
+        <Title level={5}>{t('userForm.section.permissions')}</Title>
 
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
               name="is_active"
-              label="账户状态"
+              label={t('userForm.field.accountStatus')}
               valuePropName="checked"
             >
               <Switch
-                checkedChildren="启用"
-                unCheckedChildren="禁用"
-                disabled={isRootUser} // 根用户不可禁用
+                checkedChildren={t('userForm.enabled')}
+                unCheckedChildren={t('userForm.disabled')}
+                disabled={isRootUser}
               />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item
               name="role_id"
-              label="用户角色"
-              rules={[{ required: true, message: '请选择用户角色' }]}
+              label={t('userForm.field.userRole')}
+              rules={[{ required: true, message: t('userForm.req.userRole') }]}
             >
               <Select
-                placeholder="请选择用户角色"
+                placeholder={t('userForm.ph.userRole')}
                 disabled={isRootUser || !canEditRole}
                 suffixIcon={<SafetyCertificateOutlined />}
               >
@@ -443,41 +431,40 @@ const UserForm = ({ visible, user, onCancel, onSuccess }) => {
           </Col>
         </Row>
 
-        {/* 订阅管理 - 仅管理员可见 */}
         {currentUser?.is_admin && subscriptionPlans.length > 0 && (
           <>
             <Divider />
             <Title level={5}>
               <CrownOutlined style={{ marginRight: 8 }} />
-              订阅管理
+              {t('userForm.section.subscription')}
             </Title>
 
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
                   name="subscription_plan_id"
-                  label="订阅计划"
+                  label={t('userForm.field.subscriptionPlan')}
                 >
                   <Select
-                    placeholder="请选择订阅计划"
+                    placeholder={t('userForm.ph.subscriptionPlan')}
                     suffixIcon={<CrownOutlined />}
                   >
                     {subscriptionPlans.map(plan => (
                       <Option key={plan.id} value={plan.id}>
                         <Space>
-                          <span 
-                            style={{ 
+                          <span
+                            style={{
                               display: 'inline-block',
                               width: 8,
                               height: 8,
                               borderRadius: '50%',
-                              backgroundColor: plan.badge_color 
-                            }} 
+                              backgroundColor: plan.badge_color
+                            }}
                           />
                           {plan.display_name}
                           {plan.price_monthly > 0 && (
                             <span style={{ color: '#999' }}>
-                              ¥{plan.price_monthly}/月
+                              {t('userForm.pricePerMonth', { price: plan.price_monthly })}
                             </span>
                           )}
                         </Space>
@@ -489,11 +476,11 @@ const UserForm = ({ visible, user, onCancel, onSuccess }) => {
               <Col span={12}>
                 <Form.Item
                   name="subscription_expires_at"
-                  label="到期时间"
+                  label={t('userForm.field.expiresAt')}
                 >
                   <DatePicker
                     style={{ width: '100%' }}
-                    placeholder="永不过期"
+                    placeholder={t('userForm.ph.neverExpire')}
                     allowClear
                     showTime={false}
                   />
@@ -503,21 +490,21 @@ const UserForm = ({ visible, user, onCancel, onSuccess }) => {
 
             {isEditing && userSubscription?.subscription && (
               <Alert
-                message="当前订阅信息"
+                message={t('userForm.currentSubInfo')}
                 description={
                   <div>
                     <div>
-                      <strong>计划：</strong>
-                      {userSubscription.plan?.display_name || '未知'}
+                      <strong>{t('userForm.sub.planLabel')}</strong>
+                      {userSubscription.plan?.display_name || t('userForm.sub.unknown')}
                     </div>
                     <div>
-                      <strong>状态：</strong>
-                      {userSubscription.subscription.status === 'active' ? '生效中' : 
-                       userSubscription.subscription.status === 'expired' ? '已过期' : '已取消'}
+                      <strong>{t('userForm.sub.statusLabel')}</strong>
+                      {userSubscription.subscription.status === 'active' ? t('userForm.sub.statusActive') :
+                       userSubscription.subscription.status === 'expired' ? t('userForm.sub.statusExpired') : t('userForm.sub.statusCancelled')}
                     </div>
                     {userSubscription.subscription.expires_at && (
                       <div>
-                        <strong>到期时间：</strong>
+                        <strong>{t('userForm.sub.expiresAtLabel')}</strong>
                         {dayjs(userSubscription.subscription.expires_at).format('YYYY-MM-DD')}
                       </div>
                     )}
@@ -532,20 +519,20 @@ const UserForm = ({ visible, user, onCancel, onSuccess }) => {
         )}
 
         <Alert
-          message="角色权限说明"
+          message={t('userForm.permAlertTitle')}
           description={
             <div>
-              <div><strong>超级管理员：</strong>拥有租户内所有权限，可以管理用户、系统设置和所有内容。</div>
-              <div><strong>普通用户：</strong>可以创建和管理自己的任务、行动空间，查看租户内的智能体。</div>
-              <div><strong>只读用户：</strong>只能查看自己创建的内容，不能进行任何修改操作。</div>
+              <div><strong>{t('userForm.role.superAdmin')}</strong>{t('userForm.role.superAdminDesc')}</div>
+              <div><strong>{t('userForm.role.regular')}</strong>{t('userForm.role.regularDesc')}</div>
+              <div><strong>{t('userForm.role.readonly')}</strong>{t('userForm.role.readonlyDesc')}</div>
               {isRootUser && (
                 <div style={{ marginTop: 8, color: '#fa8c16' }}>
-                  ⚠️ admin为系统根用户，其启用状态和角色不可修改。
+                  ⚠️ {t('userForm.warn.rootUser')}
                 </div>
               )}
               {!canEditRole && !isRootUser && (
                 <div style={{ marginTop: 8, color: '#fa8c16' }}>
-                  ⚠️ 超级管理员不能修改自己的角色，防止误操作。
+                  ⚠️ {t('userForm.warn.selfEditRole')}
                 </div>
               )}
             </div>

@@ -8,55 +8,41 @@ import {
   CheckCircleOutlined, CloseCircleOutlined, SettingOutlined 
 } from '@ant-design/icons';
 import { externalKnowledgeAPI } from '../../../services/api';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
 
-// 支持的提供商类型
+// Provider type definitions (labels are translated in render via t())
 const providerTypes = [
   {
     key: 'dify',
     name: 'Dify',
-    description: 'Dify.AI是一个强大的LLM应用开发平台',
+    descKey: 'extProvider.type.dify.desc',
     icon: <ApiOutlined style={{ color: '#1677ff' }} />,
-    fields: [
-      { name: 'base_url', label: '服务器地址', required: true, placeholder: '例如: https://api.dify.ai' },
-      { name: 'api_key', label: 'API密钥', required: true, placeholder: '请输入Dify API密钥' }
-    ]
   },
   {
     key: 'ragflow',
     name: 'RAGFlow',
-    description: 'RAGFlow是一个开源的检索增强生成平台',
+    descKey: 'extProvider.type.ragflow.desc',
     icon: <ApiOutlined style={{ color: '#52c41a' }} />,
-    fields: [
-      { name: 'base_url', label: '服务器地址', required: true, placeholder: '例如: https://api.ragflow.ai' },
-      { name: 'api_key', label: 'API密钥', required: true, placeholder: '请输入RAGFlow API密钥' }
-    ]
   },
   {
     key: 'fastgpt',
     name: 'FastGPT',
-    description: 'FastGPT是一个基于LLM的知识库问答系统',
+    descKey: 'extProvider.type.fastgpt.desc',
     icon: <ApiOutlined style={{ color: '#fa8c16' }} />,
-    fields: [
-      { name: 'base_url', label: '服务器地址', required: true, placeholder: '例如: https://fastgpt.run' },
-      { name: 'api_key', label: 'API密钥', required: true, placeholder: '请输入FastGPT API密钥' }
-    ]
   },
   {
     key: 'custom',
-    name: '自定义API',
-    description: '连接到自定义知识库API',
+    nameKey: 'extProvider.type.custom.name',
+    descKey: 'extProvider.type.custom.desc',
     icon: <ApiOutlined style={{ color: '#f5222d' }} />,
-    fields: [
-      { name: 'base_url', label: 'API地址', required: true, placeholder: '例如: https://your-api-server.com' },
-      { name: 'api_key', label: 'API密钥', required: true, placeholder: '请输入API密钥' }
-    ]
   }
 ];
 
 const ExternalProviders = forwardRef(({ hideCreateButton = false }: { hideCreateButton?: boolean }, ref) => {
+  const { t } = useTranslation();
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -80,12 +66,12 @@ const ExternalProviders = forwardRef(({ hideCreateButton = false }: { hideCreate
             api_key: providerDetail.api_key
           });
         } else {
-          message.error('获取提供商详情失败');
+          message.error(t('extProvider.msg.fetchDetailFailed'));
           return;
         }
       } catch (error) {
-        message.error('获取提供商详情失败');
-        console.error('获取提供商详情失败:', error);
+        message.error(t('extProvider.msg.fetchDetailFailed'));
+        console.error('fetch provider detail failed:', error);
         return;
       }
     } else {
@@ -111,11 +97,11 @@ const ExternalProviders = forwardRef(({ hideCreateButton = false }: { hideCreate
       if (response.success) {
         setProviders(response.data);
       } else {
-        message.error(response.message || '获取提供商列表失败');
+        message.error(response.message || t('extProvider.msg.fetchListFailed'));
       }
     } catch (error) {
-      message.error('获取提供商列表失败');
-      console.error('获取提供商列表失败:', error);
+      message.error(t('extProvider.msg.fetchListFailed'));
+      console.error('fetch providers failed:', error);
     } finally {
       setLoading(false);
     }
@@ -125,29 +111,27 @@ const ExternalProviders = forwardRef(({ hideCreateButton = false }: { hideCreate
   const handleSubmit = async (values) => {
     try {
       if (editingProvider) {
-        // 更新提供商
         const response = await externalKnowledgeAPI.updateProvider(editingProvider.id, values);
         if (response.success) {
-          message.success('提供商更新成功');
+          message.success(t('extProvider.msg.updateSuccess'));
           fetchProviders();
           setModalVisible(false);
         } else {
-          message.error(response.message || '更新失败');
+          message.error(response.message || t('extProvider.msg.updateFailed'));
         }
       } else {
-        // 创建提供商
         const response = await externalKnowledgeAPI.createProvider(values);
         if (response.success) {
-          message.success('提供商创建成功');
+          message.success(t('extProvider.msg.createSuccess'));
           fetchProviders();
           setModalVisible(false);
         } else {
-          message.error(response.message || '创建失败');
+          message.error(response.message || t('extProvider.msg.createFailed'));
         }
       }
     } catch (error) {
-      message.error(editingProvider ? '更新失败' : '创建失败');
-      console.error('提交失败:', error);
+      message.error(editingProvider ? t('extProvider.msg.updateFailed') : t('extProvider.msg.createFailed'));
+      console.error('submit failed:', error);
     }
   };
 
@@ -157,13 +141,13 @@ const ExternalProviders = forwardRef(({ hideCreateButton = false }: { hideCreate
     try {
       const response = await externalKnowledgeAPI.testProviderConnection(providerId);
       if (response.success) {
-        message.success(`连接测试成功 (响应时间: ${response.data.response_time}ms)`);
+        message.success(t('extProvider.msg.testSuccess', { ms: response.data.response_time }));
       } else {
-        message.error(response.message || '连接测试失败');
+        message.error(response.message || t('extProvider.msg.testFailed'));
       }
     } catch (error) {
-      message.error('连接测试失败');
-      console.error('连接测试失败:', error);
+      message.error(t('extProvider.msg.testFailed'));
+      console.error('test connection failed:', error);
     } finally {
       setTestingProvider(null);
     }
@@ -174,25 +158,25 @@ const ExternalProviders = forwardRef(({ hideCreateButton = false }: { hideCreate
     try {
       const response = await externalKnowledgeAPI.deleteProvider(providerId);
       if (response.success) {
-        message.success('提供商删除成功');
+        message.success(t('extProvider.msg.deleteSuccess'));
         fetchProviders();
       } else {
-        message.error(response.message || '删除失败');
+        message.error(response.message || t('extProvider.msg.deleteFailed'));
       }
     } catch (error) {
-      message.error('删除失败');
-      console.error('删除失败:', error);
+      message.error(t('extProvider.msg.deleteFailed'));
+      console.error('delete failed:', error);
     }
   };
 
-  // 获取提供商类型信息
   const getProviderTypeInfo = (type) => {
     return providerTypes.find(p => p.key === type) || providerTypes[0];
   };
+  const providerLabel = (p) => p.nameKey ? t(p.nameKey) : p.name;
 
   const columns = [
     {
-      title: '名称',
+      title: t('extProvider.col.name'),
       dataIndex: 'name',
       key: 'name',
       render: (text, record) => (
@@ -203,37 +187,37 @@ const ExternalProviders = forwardRef(({ hideCreateButton = false }: { hideCreate
       ),
     },
     {
-      title: '类型',
+      title: t('extProvider.col.type'),
       dataIndex: 'type',
       key: 'type',
       render: (type) => (
-        <Tag color="blue">{getProviderTypeInfo(type).name}</Tag>
+        <Tag color="blue">{providerLabel(getProviderTypeInfo(type))}</Tag>
       ),
     },
     {
-      title: '服务器地址',
+      title: t('extProvider.col.baseUrl'),
       dataIndex: 'base_url',
       key: 'base_url',
       ellipsis: true,
     },
     {
-      title: '知识库数量',
+      title: t('extProvider.col.kbCount'),
       dataIndex: 'knowledge_count',
       key: 'knowledge_count',
       render: (count) => <Badge count={count} showZero color="blue" />,
     },
     {
-      title: '创建时间',
+      title: t('extProvider.col.createdAt'),
       dataIndex: 'created_at',
       key: 'created_at',
       render: (date) => date ? new Date(date).toLocaleString() : '-',
     },
     {
-      title: '操作',
+      title: t('extProvider.col.action'),
       key: 'action',
       render: (_, record) => (
         <Space>
-          <Tooltip title="测试连接">
+          <Tooltip title={t('extProvider.action.test')}>
             <Button
               type="text"
               icon={<SyncOutlined />}
@@ -242,7 +226,7 @@ const ExternalProviders = forwardRef(({ hideCreateButton = false }: { hideCreate
               style={{ color: '#1677ff' }}
             />
           </Tooltip>
-          <Tooltip title="编辑">
+          <Tooltip title={t('extProvider.action.edit')}>
             <Button
               type="text"
               icon={<EditOutlined />}
@@ -251,18 +235,17 @@ const ExternalProviders = forwardRef(({ hideCreateButton = false }: { hideCreate
             />
           </Tooltip>
           <Popconfirm
-            title="确定要删除这个提供商吗？"
-            description="删除后将无法恢复，且会影响相关的外部知识库。"
+            title={t('extProvider.confirm.deleteTitle')}
+            description={t('extProvider.confirm.deleteDesc')}
             onConfirm={() => handleDelete(record.id)}
-            okText="确定"
-            cancelText="取消"
+            okText={t('extProvider.confirm.ok')}
+            cancelText={t('extProvider.confirm.cancel')}
           >
-            <Tooltip title="删除">
+            <Tooltip title={t('extProvider.action.delete')}>
               <Button
                 type="text"
                 danger
                 icon={<DeleteOutlined />}
-               
               />
             </Tooltip>
           </Popconfirm>
@@ -280,7 +263,7 @@ const ExternalProviders = forwardRef(({ hideCreateButton = false }: { hideCreate
             icon={<PlusOutlined />}
             onClick={() => showModal()}
           >
-            添加提供商
+            {t('extProvider.add')}
           </Button>
         </div>
       )}
@@ -301,13 +284,13 @@ const ExternalProviders = forwardRef(({ hideCreateButton = false }: { hideCreate
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
-            showTotal: (total) => `共 ${total} 个提供商`,
+            showTotal: (total) => t('extProvider.paginationTotal', { total }),
           }}
         />
       )}
 
       <Modal
-        title={editingProvider ? '编辑提供商' : '添加提供商'}
+        title={editingProvider ? t('extProvider.edit') : t('extProvider.add')}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
@@ -320,25 +303,25 @@ const ExternalProviders = forwardRef(({ hideCreateButton = false }: { hideCreate
         >
           <Form.Item
             name="name"
-            label="提供商名称"
-            rules={[{ required: true, message: '请输入提供商名称' }]}
+            label={t('extProvider.form.name')}
+            rules={[{ required: true, message: t('extProvider.form.nameReq') }]}
           >
-            <Input placeholder="请输入提供商名称" />
+            <Input placeholder={t('extProvider.form.namePh')} />
           </Form.Item>
 
           <Form.Item
             name="type"
-            label="提供商类型"
-            rules={[{ required: true, message: '请选择提供商类型' }]}
+            label={t('extProvider.form.type')}
+            rules={[{ required: true, message: t('extProvider.form.typeReq') }]}
           >
-            <Select placeholder="请选择提供商类型">
+            <Select placeholder={t('extProvider.form.typePh')}>
               {providerTypes.map(type => (
                 <Option key={type.key} value={type.key}>
                   <Space>
                     {type.icon}
-                    <span>{type.name}</span>
+                    <span>{providerLabel(type)}</span>
                     <Text type="secondary" style={{ fontSize: '12px' }}>
-                      {type.description}
+                      {t(type.descKey)}
                     </Text>
                   </Space>
                 </Option>
@@ -348,22 +331,22 @@ const ExternalProviders = forwardRef(({ hideCreateButton = false }: { hideCreate
 
           <Form.Item
             name="base_url"
-            label="服务器地址"
+            label={t('extProvider.form.baseUrl')}
             rules={[
-              { required: true, message: '请输入服务器地址' },
-              { type: 'url', message: '请输入有效的URL地址' }
+              { required: true, message: t('extProvider.form.baseUrlReq') },
+              { type: 'url', message: t('extProvider.form.baseUrlInvalid') }
             ]}
           >
-            <Input placeholder="例如: https://api.dify.ai" />
+            <Input placeholder={t('extProvider.form.baseUrlPh')} />
           </Form.Item>
 
           <Form.Item
             name="api_key"
-            label="API密钥"
-            rules={[{ required: true, message: '请输入API密钥' }]}
+            label={t('extProvider.form.apiKey')}
+            rules={[{ required: true, message: t('extProvider.form.apiKeyReq') }]}
           >
             <Input.Password
-              placeholder="请输入API密钥"
+              placeholder={t('extProvider.form.apiKeyPh')}
               visibilityToggle={true}
             />
           </Form.Item>
@@ -371,10 +354,10 @@ const ExternalProviders = forwardRef(({ hideCreateButton = false }: { hideCreate
           <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
             <Space>
               <Button onClick={() => setModalVisible(false)}>
-                取消
+                {t('extProvider.confirm.cancel')}
               </Button>
               <Button type="primary" htmlType="submit">
-                {editingProvider ? '更新' : '创建'}
+                {editingProvider ? t('extProvider.update') : t('extProvider.createBtn')}
               </Button>
             </Space>
           </Form.Item>

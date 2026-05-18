@@ -8,6 +8,7 @@ import {
   CodeOutlined, SaveOutlined, ReloadOutlined, QuestionCircleOutlined,
   CloudOutlined, InfoCircleOutlined, WarningOutlined
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import knowledgeAPI from '../../../services/api/knowledge';
 import { modelConfigAPI } from '../../../services/api/model';
 
@@ -16,6 +17,7 @@ const { Option } = Select;
 const { getChunkConfig, updateChunkConfig, getDefaultConfigs } = knowledgeAPI;
 
 const ChunkSettings = ({ knowledgeId }) => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(true);
@@ -27,7 +29,7 @@ const ChunkSettings = ({ knowledgeId }) => {
   const [defaultTextModel, setDefaultTextModel] = useState(null);
   const [defaultTextModelInfo, setDefaultTextModelInfo] = useState(null);
 
-  // ✅ 优化：使用 Form.useWatch 监听表单值变化，无需额外 state
+  // watch form value
   const chunkingStrategy = Form.useWatch('chunking_strategy', form) || 'semantic';
 
   useEffect(() => {
@@ -36,7 +38,6 @@ const ChunkSettings = ({ knowledgeId }) => {
     }
   }, [knowledgeId]);
 
-  // ✅ 优化：只在选择 slumber 方法时才加载模型配置
   useEffect(() => {
     if (selectedMethod === 'slumber' && textModels.length === 0) {
       loadModelConfigs();
@@ -50,30 +51,27 @@ const ChunkSettings = ({ knowledgeId }) => {
         modelConfigAPI.getDefaults()
       ]);
 
-      // 获取文本生成模型
       const textModelList = configs.filter(model =>
         model.modalities && model.modalities.includes('text_output')
       );
       setTextModels(textModelList);
 
-      // 使用 getDefaults() 获取完整的默认文本生成模型信息
       if (defaults?.text_model) {
         setDefaultTextModel(defaults.text_model.id);
         setDefaultTextModelInfo(defaults.text_model);
       } else {
-        // 备用方案：从配置列表中查找
         const defaultText = configs.find(model => model.is_default_text);
         setDefaultTextModel(defaultText?.id || null);
         setDefaultTextModelInfo(defaultText || null);
       }
     } catch (error) {
-      console.error('加载模型配置失败:', error);
+      console.error('load model configs failed:', error);
     }
   };
 
   const loadData = async () => {
     if (!knowledgeId) {
-      message.warning('请先选择一个知识库');
+      message.warning(t('chunkSettings.selectKbFirst'));
       setLoading(false);
       return;
     }
@@ -90,13 +88,12 @@ const ChunkSettings = ({ knowledgeId }) => {
       setSelectedMethod(config.method);
       setAllMethods(defaultsRes.data.methods);
 
-      // ✅ 优化：统一在这里设置表单初始值，不需要每个 Form.Item 都设置 initialValue
       form.setFieldsValue({
         method: config.method,
         ...config.config
       });
     } catch (error) {
-      message.error('加载配置失败: ' + error.message);
+      message.error(t('chunkSettings.loadFailed') + ': ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -106,10 +103,8 @@ const ChunkSettings = ({ knowledgeId }) => {
     setSelectedMethod(method);
     const methodInfo = allMethods.find(m => m.name === method);
     if (methodInfo) {
-      // ✅ 优化：重置为该方法的默认配置（后端已提供完整配置）
       const config = { ...methodInfo.default_config };
 
-      // 如果是 slumber 方法且没有设置 model_id，使用默认模型
       if (method === 'slumber' && !config.model_id && defaultTextModel) {
         config.model_id = defaultTextModel;
       }
@@ -132,13 +127,13 @@ const ChunkSettings = ({ knowledgeId }) => {
         config
       });
 
-      message.success('分段配置已保存');
-      loadData(); // 重新加载
+      message.success(t('chunkSettings.saveSuccess'));
+      loadData();
     } catch (error) {
       if (error.errorFields) {
-        message.error('请检查表单输入');
+        message.error(t('chunkSettings.checkForm'));
       } else {
-        message.error('保存失败: ' + error.message);
+        message.error(t('chunkSettings.saveFailed') + ': ' + error.message);
       }
     } finally {
       setSaving(false);
@@ -152,32 +147,32 @@ const ChunkSettings = ({ knowledgeId }) => {
         method: selectedMethod,
         ...methodInfo.default_config
       });
-      message.info('已恢复默认配置');
+      message.info(t('chunkSettings.resetDone'));
     }
   };
 
   const getPerformanceText = (performance) => {
     const map = {
-      'fastest': '⚡⚡⚡ 极快',
-      'fast': '⚡⚡ 快',
-      'slow': '⚡ 慢'
+      'fastest': `⚡⚡⚡ ${t('chunkSettings.perf.fastest')}`,
+      'fast': `⚡⚡ ${t('chunkSettings.perf.fast')}`,
+      'slow': `⚡ ${t('chunkSettings.perf.slow')}`
     };
     return map[performance] || performance;
   };
 
   const getPriorityTag = (priority) => {
     const map = {
-      'highest': { color: 'red', text: '最高优先级' },
-      'high': { color: 'orange', text: '高优先级' },
-      'medium': { color: 'blue', text: '中优先级' },
-      'low': { color: 'default', text: '低优先级' }
+      'highest': { color: 'red', text: t('chunkSettings.priority.highest') },
+      'high': { color: 'orange', text: t('chunkSettings.priority.high') },
+      'medium': { color: 'blue', text: t('chunkSettings.priority.medium') },
+      'low': { color: 'default', text: t('chunkSettings.priority.low') }
     };
     return map[priority];
   };
 
   const renderMethodSelector = () => {
     return (
-      <Form.Item name="method" label="分段方法">
+      <Form.Item name="method" label={t('chunkSettings.methodLabel')}>
         <Radio.Group onChange={(e) => handleMethodChange(e.target.value)} size="large">
           <Row gutter={[16, 16]}>
             {allMethods.map(method => {
@@ -203,24 +198,21 @@ const ChunkSettings = ({ knowledgeId }) => {
                     <Space orientation="vertical" size={0} style={{ width: '100%' }}>
                       <Space wrap>
                         <strong>{method.display_name}</strong>
-                        {/* 推荐标签 */}
-                        {method.name === 'recursive' && <Tag color="blue">推荐</Tag>}
-                        {method.name === 'late' && method.enabled && <Tag color="red">RAG优化</Tag>}
-                        {method.name === 'table' && method.enabled && <Tag color="orange">表格专用</Tag>}
-                        {/* 成本标签 */}
-                        {method.cost === 'high' && <Tag color="red">高成本</Tag>}
-                        {/* 未启用标签 */}
-                        {!method.enabled && <Tag>即将推出</Tag>}
+                        {method.name === 'recursive' && <Tag color="blue">{t('chunkSettings.tag.recommended')}</Tag>}
+                        {method.name === 'late' && method.enabled && <Tag color="red">{t('chunkSettings.tag.ragOptimized')}</Tag>}
+                        {method.name === 'table' && method.enabled && <Tag color="orange">{t('chunkSettings.tag.tableOnly')}</Tag>}
+                        {method.cost === 'high' && <Tag color="red">{t('chunkSettings.tag.highCost')}</Tag>}
+                        {!method.enabled && <Tag>{t('chunkSettings.tag.comingSoon')}</Tag>}
                       </Space>
                       <Text type="secondary" style={{ fontSize: '12px', marginTop: '4px' }}>
                         {method.description}
                       </Text>
                       <Space style={{ marginTop: '4px' }}>
                         <Text type="secondary" style={{ fontSize: '11px' }}>
-                          性能: {getPerformanceText(method.performance)}
+                          {t('chunkSettings.perfLabel')}: {getPerformanceText(method.performance)}
                         </Text>
                         <Text type="secondary" style={{ fontSize: '11px' }}>
-                          | 模型: {method.requires_model ? '需要' : '无需'}
+                          | {t('chunkSettings.modelLabel')}: {method.requires_model ? t('chunkSettings.modelRequired') : t('chunkSettings.modelNotRequired')}
                         </Text>
                       </Space>
                       {method.model_info && (
@@ -246,7 +238,7 @@ const ChunkSettings = ({ knowledgeId }) => {
 
     return (
       <>
-        {/* Recursive 特定参数 */}
+        {/* Recursive */}
         {selectedMethod === 'recursive' && (
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} lg={8}>
@@ -254,8 +246,8 @@ const ChunkSettings = ({ knowledgeId }) => {
                 name="chunking_strategy"
                 label={
                   <Space>
-                    <span>分割策略</span>
-                    <Tooltip title="选择文本分割的层级策略">
+                    <span>{t('chunkSettings.field.splitStrategy')}</span>
+                    <Tooltip title={t('chunkSettings.tooltip.splitStrategy')}>
                       <QuestionCircleOutlined />
                     </Tooltip>
                   </Space>
@@ -265,22 +257,22 @@ const ChunkSettings = ({ knowledgeId }) => {
                   style={{ width: '100%' }}
                   optionLabelProp="label"
                 >
-                  <Option value="semantic" label="智能分割（推荐）">
+                  <Option value="semantic" label={t('chunkSettings.strategy.semanticLabel')}>
                     <Space orientation="vertical" size={0}>
-                      <span>智能分割（推荐）</span>
-                      <Text type="secondary" style={{ fontSize: '12px' }}>段落+句子，适合90%的场景</Text>
+                      <span>{t('chunkSettings.strategy.semanticLabel')}</span>
+                      <Text type="secondary" style={{ fontSize: '12px' }}>{t('chunkSettings.strategy.semanticDesc')}</Text>
                     </Space>
                   </Option>
-                  <Option value="markdown" label="Markdown文档">
+                  <Option value="markdown" label={t('chunkSettings.strategy.markdownLabel')}>
                     <Space orientation="vertical" size={0}>
-                      <span>Markdown文档</span>
-                      <Text type="secondary" style={{ fontSize: '12px' }}>标题+段落，适合技术文档</Text>
+                      <span>{t('chunkSettings.strategy.markdownLabel')}</span>
+                      <Text type="secondary" style={{ fontSize: '12px' }}>{t('chunkSettings.strategy.markdownDesc')}</Text>
                     </Space>
                   </Option>
-                  <Option value="custom" label="自定义分隔符">
+                  <Option value="custom" label={t('chunkSettings.strategy.customLabel')}>
                     <Space orientation="vertical" size={0}>
-                      <span>自定义分隔符</span>
-                      <Text type="secondary" style={{ fontSize: '12px' }}>完全自定义规则</Text>
+                      <span>{t('chunkSettings.strategy.customLabel')}</span>
+                      <Text type="secondary" style={{ fontSize: '12px' }}>{t('chunkSettings.strategy.customDesc')}</Text>
                     </Space>
                   </Option>
                 </Select>
@@ -292,19 +284,19 @@ const ChunkSettings = ({ knowledgeId }) => {
                 name="chunk_size"
                 label={
                   <Space>
-                    <span>分块大小</span>
-                    <Tooltip title="每个分块的目标大小（token数）">
+                    <span>{t('chunkSettings.field.chunkSize')}</span>
+                    <Tooltip title={t('chunkSettings.tooltip.chunkSize')}>
                       <QuestionCircleOutlined />
                     </Tooltip>
                   </Space>
                 }
-                extra="推荐: 256-1024"
+                extra={t('chunkSettings.extra.chunkSizeRange')}
               >
                 <InputNumber
                   min={100}
                   max={2048}
                   style={{ width: '100%' }}
-                  placeholder="请输入分块大小"
+                  placeholder={t('chunkSettings.placeholder.chunkSize')}
                 />
               </Form.Item>
             </Col>
@@ -314,13 +306,13 @@ const ChunkSettings = ({ knowledgeId }) => {
                 name="min_characters_per_chunk"
                 label={
                   <Space>
-                    <span>最小字符数</span>
-                    <Tooltip title="每个分块的最小字符数">
+                    <span>{t('chunkSettings.field.minChars')}</span>
+                    <Tooltip title={t('chunkSettings.tooltip.minChars')}>
                       <QuestionCircleOutlined />
                     </Tooltip>
                   </Space>
                 }
-                extra="推荐: 10-100"
+                extra={t('chunkSettings.extra.minCharsRange')}
               >
                 <InputNumber
                   min={5}
@@ -330,15 +322,14 @@ const ChunkSettings = ({ knowledgeId }) => {
               </Form.Item>
             </Col>
 
-            {/* 当选择"自定义"策略时显示 */}
             {chunkingStrategy === 'custom' && (
               <>
                 <Col xs={24} sm={16}>
                   <Form.Item
                     name="custom_delimiters"
-                    label="自定义分隔符"
-                    tooltip="每行一个分隔符，优先级从上到下"
-                    extra="示例：第一行 '## '，第二行 '\n\n'，第三行 '. '"
+                    label={t('chunkSettings.field.customDelim')}
+                    tooltip={t('chunkSettings.tooltip.customDelim')}
+                    extra={t('chunkSettings.extra.customDelimExample')}
                   >
                     <Input.TextArea
                       rows={5}
@@ -352,17 +343,17 @@ const ChunkSettings = ({ knowledgeId }) => {
                     name="include_delim"
                     label={
                       <Space>
-                        <span>分隔符处理</span>
-                        <Tooltip title="分隔符如何处理">
+                        <span>{t('chunkSettings.field.includeDelim')}</span>
+                        <Tooltip title={t('chunkSettings.tooltip.includeDelim')}>
                           <QuestionCircleOutlined />
                         </Tooltip>
                       </Space>
                     }
                   >
                     <Select style={{ width: '100%' }}>
-                      <Option value="prev">包含在前一个块中</Option>
-                      <Option value="next">包含在后一个块中</Option>
-                      <Option value={null}>不包含分隔符</Option>
+                      <Option value="prev">{t('chunkSettings.delim.prev')}</Option>
+                      <Option value="next">{t('chunkSettings.delim.next')}</Option>
+                      <Option value={null}>{t('chunkSettings.delim.none')}</Option>
                     </Select>
                   </Form.Item>
                 </Col>
@@ -371,7 +362,7 @@ const ChunkSettings = ({ knowledgeId }) => {
           </Row>
         )}
 
-        {/* Token 特定参数 */}
+        {/* Token */}
         {selectedMethod === 'token' && (
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} lg={8}>
@@ -379,19 +370,19 @@ const ChunkSettings = ({ knowledgeId }) => {
                 name="chunk_size"
                 label={
                   <Space>
-                    <span>分块大小</span>
-                    <Tooltip title="每个分块的目标大小（token数）">
+                    <span>{t('chunkSettings.field.chunkSize')}</span>
+                    <Tooltip title={t('chunkSettings.tooltip.chunkSize')}>
                       <QuestionCircleOutlined />
                     </Tooltip>
                   </Space>
                 }
-                extra="推荐: 256-1024"
+                extra={t('chunkSettings.extra.chunkSizeRange')}
               >
                 <InputNumber
                   min={100}
                   max={2048}
                   style={{ width: '100%' }}
-                  placeholder="请输入分块大小"
+                  placeholder={t('chunkSettings.placeholder.chunkSize')}
                 />
               </Form.Item>
             </Col>
@@ -401,35 +392,35 @@ const ChunkSettings = ({ knowledgeId }) => {
                 name="chunk_overlap"
                 label={
                   <Space>
-                    <span>重叠大小</span>
-                    <Tooltip title="相邻分块的重叠部分，用于保持上下文连续性">
+                    <span>{t('chunkSettings.field.overlap')}</span>
+                    <Tooltip title={t('chunkSettings.tooltip.overlap')}>
                       <QuestionCircleOutlined />
                     </Tooltip>
                   </Space>
                 }
-                extra="约占分块大小的 10-20%"
+                extra={t('chunkSettings.extra.overlapRange')}
               >
                 <InputNumber
                   min={0}
                   max={512}
                   style={{ width: '100%' }}
-                  placeholder="请输入重叠大小"
+                  placeholder={t('chunkSettings.placeholder.overlap')}
                 />
               </Form.Item>
             </Col>
           </Row>
         )}
 
-        {/* Semantic 特定参数 */}
+        {/* Semantic */}
         {selectedMethod === 'semantic' && (
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} lg={8}>
               <Form.Item
                 name="embedding_model"
-                label="Embedding 模型"
+                label={t('chunkSettings.field.embeddingModel')}
               >
                 <Select style={{ width: '100%' }}>
-                  <Option value="all-MiniLM-L6-v2">all-MiniLM-L6-v2 (推荐)</Option>
+                  <Option value="all-MiniLM-L6-v2">{t('chunkSettings.embedding.miniLM6Recommended')}</Option>
                   <Option value="paraphrase-MiniLM-L6-v2">paraphrase-MiniLM-L6-v2</Option>
                 </Select>
               </Form.Item>
@@ -438,22 +429,22 @@ const ChunkSettings = ({ knowledgeId }) => {
             <Col xs={24} sm={12} lg={8}>
               <Form.Item
                 name="similarity_threshold"
-                label="相似度阈值"
-                extra="取值范围: 0-1，推荐: 0.5"
+                label={t('chunkSettings.field.simThreshold')}
+                extra={t('chunkSettings.extra.simThreshold')}
               >
                 <InputNumber
                   min={0}
                   max={1}
                   step={0.1}
                   style={{ width: '100%' }}
-                  placeholder="请输入相似度阈值"
+                  placeholder={t('chunkSettings.placeholder.simThreshold')}
                 />
               </Form.Item>
             </Col>
           </Row>
         )}
 
-        {/* Sentence 特定参数 */}
+        {/* Sentence */}
         {selectedMethod === 'sentence' && (
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} lg={8}>
@@ -461,19 +452,19 @@ const ChunkSettings = ({ knowledgeId }) => {
                 name="chunk_size"
                 label={
                   <Space>
-                    <span>分块大小</span>
-                    <Tooltip title="每个分块的目标大小（token数）">
+                    <span>{t('chunkSettings.field.chunkSize')}</span>
+                    <Tooltip title={t('chunkSettings.tooltip.chunkSize')}>
                       <QuestionCircleOutlined />
                     </Tooltip>
                   </Space>
                 }
-                extra="推荐: 256-1024"
+                extra={t('chunkSettings.extra.chunkSizeRange')}
               >
                 <InputNumber
                   min={100}
                   max={2048}
                   style={{ width: '100%' }}
-                  placeholder="请输入分块大小"
+                  placeholder={t('chunkSettings.placeholder.chunkSize')}
                 />
               </Form.Item>
             </Col>
@@ -483,19 +474,19 @@ const ChunkSettings = ({ knowledgeId }) => {
                 name="chunk_overlap"
                 label={
                   <Space>
-                    <span>重叠大小</span>
-                    <Tooltip title="相邻分块的重叠部分，用于保持上下文连续性">
+                    <span>{t('chunkSettings.field.overlap')}</span>
+                    <Tooltip title={t('chunkSettings.tooltip.overlap')}>
                       <QuestionCircleOutlined />
                     </Tooltip>
                   </Space>
                 }
-                extra="约占分块大小的 10-20%"
+                extra={t('chunkSettings.extra.overlapRange')}
               >
                 <InputNumber
                   min={0}
                   max={512}
                   style={{ width: '100%' }}
-                  placeholder="请输入重叠大小"
+                  placeholder={t('chunkSettings.placeholder.overlap')}
                 />
               </Form.Item>
             </Col>
@@ -505,8 +496,8 @@ const ChunkSettings = ({ knowledgeId }) => {
                 name="min_sentences_per_chunk"
                 label={
                   <Space>
-                    <span>每块最少句子数</span>
-                    <Tooltip title="确保每个分块至少包含指定数量的句子">
+                    <span>{t('chunkSettings.field.minSentences')}</span>
+                    <Tooltip title={t('chunkSettings.tooltip.minSentences')}>
                       <QuestionCircleOutlined />
                     </Tooltip>
                   </Space>
@@ -518,7 +509,7 @@ const ChunkSettings = ({ knowledgeId }) => {
           </Row>
         )}
 
-        {/* Token 特定参数 */}
+        {/* Token tokenizer */}
         {selectedMethod === 'token' && (
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} lg={8}>
@@ -527,7 +518,7 @@ const ChunkSettings = ({ knowledgeId }) => {
                 label="Tokenizer"
               >
                 <Select style={{ width: '100%' }}>
-                  <Option value="gpt2">GPT-2 (推荐)</Option>
+                  <Option value="gpt2">{t('chunkSettings.tokenizer.gpt2Recommended')}</Option>
                   <Option value="bert">BERT</Option>
                   <Option value="roberta">RoBERTa</Option>
                 </Select>
@@ -536,16 +527,16 @@ const ChunkSettings = ({ knowledgeId }) => {
           </Row>
         )}
 
-        {/* Code 特定参数 */}
+        {/* Code */}
         {selectedMethod === 'code' && (
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} lg={8}>
               <Form.Item
                 name="language"
-                label="编程语言"
+                label={t('chunkSettings.field.programmingLang')}
               >
                 <Select style={{ width: '100%' }}>
-                  <Option value="auto">自动检测</Option>
+                  <Option value="auto">{t('chunkSettings.lang.auto')}</Option>
                   <Option value="python">Python</Option>
                   <Option value="javascript">JavaScript</Option>
                   <Option value="java">Java</Option>
@@ -559,8 +550,8 @@ const ChunkSettings = ({ knowledgeId }) => {
                 name="chunk_size"
                 label={
                   <Space>
-                    <span>分块大小</span>
-                    <Tooltip title="每个代码块的目标大小">
+                    <span>{t('chunkSettings.field.chunkSize')}</span>
+                    <Tooltip title={t('chunkSettings.tooltip.codeChunkSize')}>
                       <QuestionCircleOutlined />
                     </Tooltip>
                   </Space>
@@ -572,16 +563,16 @@ const ChunkSettings = ({ knowledgeId }) => {
           </Row>
         )}
 
-        {/* Late Chunking 特定参数 */}
+        {/* Late */}
         {selectedMethod === 'late' && (
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} lg={8}>
               <Form.Item
                 name="embedding_model"
-                label="Embedding 模型"
+                label={t('chunkSettings.field.embeddingModel')}
               >
                 <Select style={{ width: '100%' }}>
-                  <Option value="all-MiniLM-L6-v2">all-MiniLM-L6-v2 (推荐)</Option>
+                  <Option value="all-MiniLM-L6-v2">{t('chunkSettings.embedding.miniLM6Recommended')}</Option>
                   <Option value="paraphrase-MiniLM-L6-v2">paraphrase-MiniLM-L6-v2</Option>
                 </Select>
               </Form.Item>
@@ -592,13 +583,13 @@ const ChunkSettings = ({ knowledgeId }) => {
                 name="chunk_size"
                 label={
                   <Space>
-                    <span>分块大小</span>
-                    <Tooltip title="每个分块的目标大小（token数）">
+                    <span>{t('chunkSettings.field.chunkSize')}</span>
+                    <Tooltip title={t('chunkSettings.tooltip.chunkSize')}>
                       <QuestionCircleOutlined />
                     </Tooltip>
                   </Space>
                 }
-                extra="推荐: 256-1024"
+                extra={t('chunkSettings.extra.chunkSizeRange')}
               >
                 <InputNumber min={100} max={2048} style={{ width: '100%' }} />
               </Form.Item>
@@ -606,12 +597,12 @@ const ChunkSettings = ({ knowledgeId }) => {
           </Row>
         )}
 
-        {/* Table Chunking 特定参数 */}
+        {/* Table */}
         {selectedMethod === 'table' && (
           <>
             <Alert
-              message="⚠️ 重要提示"
-              description="TableChunker 仅适用于包含 Markdown 表格的文档。如果文档不包含表格，分段将失败。建议先检查文档是否包含表格，或使用【递归分割】等通用方法。"
+              message={t('chunkSettings.table.alertTitle')}
+              description={t('chunkSettings.table.alertDesc')}
               type="warning"
               showIcon
               style={{ marginBottom: 16 }}
@@ -623,14 +614,14 @@ const ChunkSettings = ({ knowledgeId }) => {
                   label={
                     <Space>
                       <span>Tokenizer</span>
-                      <Tooltip title="用于计算chunk大小的tokenizer">
+                      <Tooltip title={t('chunkSettings.tooltip.tokenizer')}>
                         <QuestionCircleOutlined />
                       </Tooltip>
                     </Space>
                   }
                 >
                   <Select style={{ width: '100%' }}>
-                    <Option value="character">字符级（character）</Option>
+                    <Option value="character">{t('chunkSettings.tokenizer.character')}</Option>
                     <Option value="gpt2">GPT-2</Option>
                     <Option value="o200k_base">GPT-4</Option>
                   </Select>
@@ -642,13 +633,13 @@ const ChunkSettings = ({ knowledgeId }) => {
                   name="chunk_size"
                   label={
                     <Space>
-                      <span>分块大小</span>
-                      <Tooltip title="每个分块的最大token/字符数">
+                      <span>{t('chunkSettings.field.chunkSize')}</span>
+                      <Tooltip title={t('chunkSettings.tooltip.tableChunkSize')}>
                         <QuestionCircleOutlined />
                       </Tooltip>
                     </Space>
                   }
-                  extra="推荐: 512-4096"
+                  extra={t('chunkSettings.extra.tableChunkSizeRange')}
                 >
                   <InputNumber min={100} max={8192} style={{ width: '100%' }} />
                 </Form.Item>
@@ -657,7 +648,7 @@ const ChunkSettings = ({ knowledgeId }) => {
           </>
         )}
 
-        {/* Neural Chunking 特定参数 */}
+        {/* Neural */}
         {selectedMethod === 'neural' && (
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} lg={8}>
@@ -665,15 +656,15 @@ const ChunkSettings = ({ knowledgeId }) => {
                 name="model"
                 label={
                   <Space>
-                    <span>Neural 模型</span>
-                    <Tooltip title="使用fine-tuned模型进行语义分割">
+                    <span>{t('chunkSettings.field.neuralModel')}</span>
+                    <Tooltip title={t('chunkSettings.tooltip.neuralModel')}>
                       <QuestionCircleOutlined />
                     </Tooltip>
                   </Space>
                 }
               >
                 <Select style={{ width: '100%' }}>
-                  <Option value="mirth/chonky_distilbert_base_uncased_1">DistilBERT Base (推荐)</Option>
+                  <Option value="mirth/chonky_distilbert_base_uncased_1">{t('chunkSettings.neural.distilBertRecommended')}</Option>
                   <Option value="mirth/chonky_modernbert_base_1">ModernBERT Base</Option>
                   <Option value="mirth/chonky_modernbert_large_1">ModernBERT Large</Option>
                 </Select>
@@ -685,13 +676,13 @@ const ChunkSettings = ({ knowledgeId }) => {
                 name="min_characters_per_chunk"
                 label={
                   <Space>
-                    <span>最小字符数</span>
-                    <Tooltip title="每个分块的最小字符数">
+                    <span>{t('chunkSettings.field.minChars')}</span>
+                    <Tooltip title={t('chunkSettings.tooltip.minChars')}>
                       <QuestionCircleOutlined />
                     </Tooltip>
                   </Space>
                 }
-                extra="推荐: 10-100"
+                extra={t('chunkSettings.extra.minCharsRange')}
               >
                 <InputNumber min={5} max={200} style={{ width: '100%' }} />
               </Form.Item>
@@ -699,13 +690,13 @@ const ChunkSettings = ({ knowledgeId }) => {
           </Row>
         )}
 
-        {/* Slumber (LLM) Chunking 特定参数 */}
+        {/* Slumber */}
         {selectedMethod === 'slumber' && (
           <>
             <div style={{ marginBottom: 16 }}>
               <Text type="warning" style={{ display: 'flex', alignItems: 'center' }}>
                 <WarningOutlined style={{ marginRight: 8 }} />
-                高成本方法：LLM分割使用大语言模型进行语义分析，速度较慢且成本较高。仅推荐用于极高质量要求的场景。
+                {t('chunkSettings.slumber.warn')}
               </Text>
             </div>
             <Row gutter={[16, 16]}>
@@ -715,14 +706,14 @@ const ChunkSettings = ({ knowledgeId }) => {
                   label={
                     <Space>
                       <CloudOutlined style={{ color: '#1677ff' }} />
-                      <span>文本生成模型</span>
+                      <span>{t('chunkSettings.field.textModel')}</span>
                     </Space>
                   }
-                  tooltip="用于语义分析的大语言模型"
-                  rules={[{ required: true, message: '请选择文本生成模型' }]}
+                  tooltip={t('chunkSettings.tooltip.textModel')}
+                  rules={[{ required: true, message: t('chunkSettings.required.textModel') }]}
                 >
                   <Select
-                    placeholder="选择文本生成模型"
+                    placeholder={t('chunkSettings.placeholder.textModel')}
                     allowClear
                     showSearch
                     filterOption={(input, option) =>
@@ -730,14 +721,12 @@ const ChunkSettings = ({ knowledgeId }) => {
                     }
                     style={{ width: '100%', borderRadius: '6px' }}
                     options={[
-                      // 默认模型选项
                       {
                         value: 'default',
-                        label: `默认文本生成模型${defaultTextModelInfo ? ` (${defaultTextModelInfo.name})` : ''}`,
+                        label: `${t('chunkSettings.defaultTextModel')}${defaultTextModelInfo ? ` (${defaultTextModelInfo.name})` : ''}`,
                         isDefault: true,
                         model: defaultTextModelInfo
                       },
-                      // 其他模型选项（排除默认模型避免重复）
                       ...(textModels && textModels.length > 0 ?
                         textModels
                           .filter(model => model.id !== defaultTextModel)
@@ -754,8 +743,8 @@ const ChunkSettings = ({ knowledgeId }) => {
                         return (
                           <div>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                              <span style={{ fontWeight: 'bold' }}>默认文本生成模型</span>
-                              <Tag color="blue">默认</Tag>
+                              <span style={{ fontWeight: 'bold' }}>{t('chunkSettings.defaultTextModel')}</span>
+                              <Tag color="blue">{t('chunkSettings.default')}</Tag>
                             </div>
                             {option.data.model && (
                               <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)' }}>
@@ -784,13 +773,13 @@ const ChunkSettings = ({ knowledgeId }) => {
                   name="chunk_size"
                   label={
                     <Space>
-                      <span>分块大小</span>
-                      <Tooltip title="每个分块的目标大小（token数）">
+                      <span>{t('chunkSettings.field.chunkSize')}</span>
+                      <Tooltip title={t('chunkSettings.tooltip.chunkSize')}>
                         <QuestionCircleOutlined />
                       </Tooltip>
                     </Space>
                   }
-                  extra="推荐: 1024-4096"
+                  extra={t('chunkSettings.extra.slumberChunkSizeRange')}
                 >
                   <InputNumber min={512} max={8192} style={{ width: '100%' }} />
                 </Form.Item>
@@ -801,13 +790,13 @@ const ChunkSettings = ({ knowledgeId }) => {
                   name="candidate_size"
                   label={
                     <Space>
-                      <span>候选块大小</span>
-                      <Tooltip title="用于LLM分析的候选分块大小">
+                      <span>{t('chunkSettings.field.candidateSize')}</span>
+                      <Tooltip title={t('chunkSettings.tooltip.candidateSize')}>
                         <QuestionCircleOutlined />
                       </Tooltip>
                     </Space>
                   }
-                  extra="推荐: 64-256"
+                  extra={t('chunkSettings.extra.candidateSizeRange')}
                 >
                   <InputNumber min={32} max={512} style={{ width: '100%' }} />
                 </Form.Item>
@@ -820,7 +809,6 @@ const ChunkSettings = ({ knowledgeId }) => {
   };
 
   const renderPreview = () => {
-    // 只为token方法显示预览（recursive使用策略，难以预估）
     if (selectedMethod !== 'token') {
       return null;
     }
@@ -835,14 +823,14 @@ const ChunkSettings = ({ knowledgeId }) => {
 
     return (
       <Alert
-        message="效果预览"
+        message={t('chunkSettings.preview.title')}
         description={
           <Space orientation="vertical">
-            <Text>📄 平均每1000字 → 约 {estimateChunks(1000)} 个分块</Text>
-            <Text>📚 10000字文档 → 约 {estimateChunks(10000)} 个分块</Text>
+            <Text>📄 {t('chunkSettings.preview.line1k', { count: estimateChunks(1000) })}</Text>
+            <Text>📚 {t('chunkSettings.preview.line10k', { count: estimateChunks(10000) })}</Text>
             {overlap > 0 && (
               <Text type="secondary" style={{ fontSize: '12px' }}>
-                * 重叠: {overlap} 字，有效分块大小: {effectiveSize} 字
+                {t('chunkSettings.preview.overlapNote', { overlap, effective: effectiveSize })}
               </Text>
             )}
           </Space>
@@ -860,21 +848,20 @@ const ChunkSettings = ({ knowledgeId }) => {
         <div style={{ textAlign: 'center', padding: '40px 0' }}>
           <Space direction="vertical">
             <InfoCircleOutlined style={{ fontSize: 48, color: '#1677ff' }} />
-            <Text strong>请先选择知识库</Text>
-            <Text type="secondary">请从知识库列表中选择一个知识库，然后进入设置页面。</Text>
+            <Text strong>{t('chunkSettings.selectKbFirst')}</Text>
+            <Text type="secondary">{t('chunkSettings.selectKbHint')}</Text>
           </Space>
         </div>
       </Card>
     );
   }
 
-  // 移除loading的Spin显示，配置加载很快，直接显示表单即可
   return (
     <Card
       title={
         <Space>
-          <span>分段设置</span>
-          <Tooltip title="这些设置决定了文档如何被分块。不同的文档类型适合不同的分段方法。修改配置后，只影响新上传的文档。">
+          <span>{t('chunkSettings.cardTitle')}</span>
+          <Tooltip title={t('chunkSettings.cardTooltip')}>
             <InfoCircleOutlined style={{ color: '#1677ff', fontSize: 14 }} />
           </Tooltip>
         </Space>
@@ -882,10 +869,10 @@ const ChunkSettings = ({ knowledgeId }) => {
       extra={
         <Space>
           <Button icon={<ReloadOutlined />} onClick={handleReset}>
-            恢复默认
+            {t('chunkSettings.resetBtn')}
           </Button>
           <Button type="primary" icon={<SaveOutlined />} loading={saving} onClick={handleSave}>
-            保存
+            {t('chunkSettings.saveBtn')}
           </Button>
         </Space>
       }

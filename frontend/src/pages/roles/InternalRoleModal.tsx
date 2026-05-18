@@ -153,7 +153,7 @@ const InternalRoleModal = ({
           });
           setSelectedCapabilities(defaultCapabilities);
         } catch (error) {
-          console.error('获取默认能力失败:', error);
+          console.error('load default capabilities failed:', error);
           setSelectedCapabilities({});
         }
       };
@@ -166,7 +166,7 @@ const InternalRoleModal = ({
     setTestVisible(false);
     setActiveFormTab('roleSettings');
 
-    // 加载技能列表和角色绑定的技能
+    // load skill list and role-bound skills
     if (visible) {
       const loadSkills = async () => {
         setLoadingSkills(true);
@@ -180,7 +180,7 @@ const InternalRoleModal = ({
             setSelectedSkills([]);
           }
         } catch (e) {
-          console.error('加载技能失败:', e);
+          console.error('load skills failed:', e);
         } finally {
           setLoadingSkills(false);
         }
@@ -192,13 +192,13 @@ const InternalRoleModal = ({
   const handleAssistantGenerate = async () => {
     try {
       if (!globalSettings.enableAssistantGeneration) {
-        message.warning('辅助生成功能未启用，请在系统设置中开启');
+        message.warning(t('intRole.msg.assistantOff'));
         return;
       }
 
       const values = form.getFieldsValue(['name', 'description']);
       if (!values.name || !values.description) {
-        message.warning('请先填写角色名称和描述，然后再使用辅助生成');
+        message.warning(t('intRole.msg.fillNameDescFirst'));
         return;
       }
 
@@ -209,11 +209,11 @@ const InternalRoleModal = ({
         const templates = await settingsAPI.getPromptTemplates();
         promptTemplate = templates.roleSystemPrompt;
         if (!promptTemplate) {
-          throw new Error('未获取到角色系统提示词生成模板');
+          throw new Error(t('intRole.err.noSysPromptTpl'));
         }
       } catch (error) {
-        console.error('获取提示词模板失败:', error);
-        message.error('获取提示词模板失败，请检查系统设置');
+        console.error('load prompt template failed:', error);
+        message.error(t('intRole.msg.loadTplFailed'));
         setAssistantGenerating(false);
         return;
       }
@@ -237,16 +237,16 @@ const InternalRoleModal = ({
         modelToUse,
         generatePrompt,
         handleStreamResponse,
-        "你是一个专业的AI提示词工程师，擅长根据角色描述生成高质量的系统提示词。",
+        t('intRole.assistantSystemPrompt'),
         { temperature: 0.7, max_tokens: 1000 }
       );
 
       const cleanedPrompt = generatedPrompt.replace(/null/g, '').replace(/undefined/g, '').trim();
       form.setFieldsValue({ systemPrompt: cleanedPrompt });
-      message.success('系统提示词生成完成');
+      message.success(t('intRole.msg.sysPromptGenerated'));
     } catch (error) {
-      console.error('辅助生成失败:', error);
-      message.error(`辅助生成失败: ${error.message || '未知错误'}`);
+      console.error('assistant generate failed:', error);
+      message.error(t('intRole.msg.assistantFailed', { msg: error.message || t('intRole.unknownError') }));
     } finally {
       setAssistantGenerating(false);
     }
@@ -256,7 +256,7 @@ const InternalRoleModal = ({
     try {
       const values = await form.validateFields();
       if (values.model === undefined) {
-        message.error('请先选择一个模型');
+        message.error(t('intRole.msg.pickModelFirst'));
         return;
       }
 
@@ -285,7 +285,7 @@ const InternalRoleModal = ({
         if (values.model === null || values.model === '') {
           selectedModelConfig = models.find(m => m.is_default_text) || models.find(m => m.modalities && m.modalities.includes('text_output'));
           if (!selectedModelConfig) {
-            throw new Error('未找到默认文本生成模型配置');
+            throw new Error(t('intRole.err.noDefaultTextModel'));
           }
         } else {
           selectedModelConfig = models.find(m => m.id.toString() === values.model?.toString());
@@ -294,24 +294,24 @@ const InternalRoleModal = ({
             if (defaultModel) {
               selectedModelConfig = defaultModel;
             } else {
-              throw new Error('未找到所选模型配置');
+              throw new Error(t('intRole.err.noPickedModel'));
             }
           }
         }
 
         await modelConfigAPI.testModelStream(
           selectedModelConfig.id,
-          values.systemPrompt || "请简单地介绍一下你自己。",
+          values.systemPrompt || t('intRole.defaultTestPrompt'),
           handleStreamResponse,
           values.systemPrompt,
           advancedParams
         );
       } catch (error) {
-        console.error('测试LLM失败:', error);
-        setTestResult(`测试失败: ${error.message || '未知错误'}`);
+        console.error('test LLM failed:', error);
+        setTestResult(t('intRole.testFailed', { msg: error.message || t('intRole.unknownError') }));
       }
     } catch (error) {
-      message.error('请先完成表单填写');
+      message.error(t('intRole.msg.completeForm'));
     }
   };
 
@@ -335,7 +335,7 @@ const InternalRoleModal = ({
         selectedSkills
       });
     } catch (error) {
-      console.error('保存失败:', error);
+      console.error('save failed:', error);
     } finally {
       setSaving(false);
     }
@@ -355,11 +355,11 @@ const InternalRoleModal = ({
     }
 
     const typeLabels = {
-      'core': '核心能力',
-      'advanced': '高级能力',
-      'supervision': '监督能力',
-      'execution': '执行能力',
-      'specialized': '专业能力'
+      'core': t('intRole.capType.core'),
+      'advanced': t('intRole.capType.advanced'),
+      'supervision': t('intRole.capType.supervision'),
+      'execution': t('intRole.capType.execution'),
+      'specialized': t('intRole.capType.specialized'),
     };
 
     const typeIcons = {
@@ -371,13 +371,13 @@ const InternalRoleModal = ({
     };
 
     if (Object.keys(capabilities).length === 0) {
-      return <Empty description="暂无能力数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />;
+      return <Empty description={t('intRole.empty.noCapData')} image={Empty.PRESENTED_IMAGE_SIMPLE} />;
     }
 
     return (
       <div>
         <div style={{ marginBottom: 16 }}>
-          <Text>选择智能体可以使用的能力，这些能力将决定智能体可以执行的操作范围和权限级别。</Text>
+          <Text>{t('intRole.capHint')}</Text>
         </div>
 
         {Object.entries(capabilities).map(([type, capList]: [string, any]) => {
@@ -445,10 +445,10 @@ const InternalRoleModal = ({
         <div style={{ textAlign: 'center', padding: '50px 0' }}>
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description="暂无可用的知识库"
+            description={t('intRole.empty.noKB')}
           >
             <Text type="secondary">
-              请先创建内部知识库或配置外部知识库，然后再进行绑定
+              {t('intRole.empty.noKBHint')}
             </Text>
           </Empty>
         </div>
@@ -489,24 +489,24 @@ const InternalRoleModal = ({
                               color={kb.type === 'internal' ? 'green' : 'blue'}
                               style={{ marginLeft: 8, fontSize: '10px' }}
                             >
-                              {kb.type === 'internal' ? '内部' : '外部'}
+                              {kb.type === 'internal' ? t('intRole.kb.internal') : t('intRole.kb.external')}
                             </Tag>
                             <Badge
                               status={kb.status === 'active' ? 'success' : 'error'}
-                              text={kb.status === 'active' ? '正常' : '异常'}
+                              text={kb.status === 'active' ? t('intRole.kb.statusOk') : t('intRole.kb.statusErr')}
                               style={{ marginLeft: 8 }}
                             />
                           </div>
                           <Text type="secondary" style={{ fontSize: '12px', display: 'block' }}>
-                            {kb.description || '暂无描述'}
+                            {kb.description || t('intRole.kb.noDesc')}
                           </Text>
                           <div style={{ marginTop: 4, display: 'flex', alignItems: 'center' }}>
                             <Text type="secondary" style={{ fontSize: '11px' }}>
-                              提供商: {kb.provider_name || '未知'}
+                              {t('intRole.kb.providerLabel', { v: kb.provider_name || t('intRole.unknown') })}
                             </Text>
                             {kb.external_id && (
                               <Text type="secondary" style={{ fontSize: '11px', marginLeft: 12 }}>
-                                ID: {kb.external_id}
+                                {t('intRole.kb.idLabel', { v: kb.external_id })}
                               </Text>
                             )}
                           </div>
@@ -536,14 +536,14 @@ const InternalRoleModal = ({
     }
 
     if (allSkills.length === 0) {
-      return <Empty description="暂无可用技能，请先在技能管理中创建" />;
+      return <Empty description={t('intRole.skill.empty')} />;
     }
 
     return (
       <div>
         <Alert
-          message="技能绑定"
-          description="选择要绑定到此角色的技能。绑定后，Agent 在对话中会根据技能描述自动激活对应技能。"
+          message={t('intRole.skill.alertTitle')}
+          description={t('intRole.skill.alertDesc')}
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
@@ -593,36 +593,36 @@ const InternalRoleModal = ({
         items={[
           {
             key: 'roleSettings',
-            label: <span><SettingOutlined />角色设置</span>,
+            label: <span><SettingOutlined />{t('intRole.tab.roleSettings')}</span>,
             forceRender: true,
             children: (
               <Form form={form} layout="vertical">
                 <Form.Item
                   name="name"
-                  label="角色名称"
-                  rules={[{ required: true, message: '请输入角色名称' }]}
+                  label={t('intRole.field.name')}
+                  rules={[{ required: true, message: t('intRole.req.name') }]}
                 >
-                  <Input placeholder="请输入角色名称" />
+                  <Input placeholder={t('intRole.req.name')} />
                 </Form.Item>
 
                 <Form.Item
                   name="source"
-                  label="角色类型"
-                  rules={[{ required: true, message: '请选择角色类型' }]}
+                  label={t('intRole.field.source')}
+                  rules={[{ required: true, message: t('intRole.req.source') }]}
                   initialValue="internal"
                 >
                   {selectedRole ? (
                     <div>
                       <Tag color={selectedRole.source === 'external' ? 'green' : 'blue'}>
-                        {selectedRole.source === 'external' ? '外部' : '内部'}
+                        {selectedRole.source === 'external' ? t('intRole.kb.external') : t('intRole.kb.internal')}
                       </Tag>
                       <Input type="hidden" value={selectedRole.source || 'internal'} />
                     </div>
                   ) : (
                     <div>
-                      <Tag color="blue">内部</Tag>
+                      <Tag color="blue">{t('intRole.kb.internal')}</Tag>
                       <Text type="secondary" style={{ marginLeft: 8 }}>
-                        新建角色默认为内部类型，如需创建外部角色请使用"导入外部智能体"功能
+                        {t('intRole.newRoleHint')}
                       </Text>
                       <Input type="hidden" value="internal" />
                     </div>
@@ -631,21 +631,21 @@ const InternalRoleModal = ({
 
                 <Form.Item
                   name="model"
-                  label="使用的模型"
+                  label={t('intRole.field.model')}
                   rules={[
                     {
                       validator: (_, value) => {
                         if (value === undefined) {
-                          return Promise.reject(new Error('请选择使用的模型'));
+                          return Promise.reject(new Error(t('intRole.req.model')));
                         }
                         return Promise.resolve();
                       }
                     }
                   ]}
                 >
-                  <Select placeholder="请选择使用的模型" loading={loadingModels}>
+                  <Select placeholder={t('intRole.req.model')} loading={loadingModels}>
                     <Option key="default" value="">
-                      默认文本生成 {(() => {
+                      {t('intRole.model.defaultText')} {(() => {
                         const defaultModel = models.find(m => m.is_default_text) || models.find(m => m.is_default);
                         return defaultModel ? `(${defaultModel.name})` : '';
                       })()}
@@ -660,17 +660,17 @@ const InternalRoleModal = ({
 
                 <Form.Item
                   name="description"
-                  label="描述"
-                  rules={[{ required: true, message: '请输入描述' }]}
+                  label={t('intRole.field.description')}
+                  rules={[{ required: true, message: t('intRole.req.description') }]}
                 >
-                  <TextArea rows={2} placeholder="请简要描述该角色的功能和特点" />
+                  <TextArea rows={2} placeholder={t('intRole.ph.description')} />
                 </Form.Item>
 
-                <Form.Item name="is_shared" valuePropName="checked" tooltip="勾选后，该角色将对所有用户可见可用（但只有创建者可编辑）">
+                <Form.Item name="is_shared" valuePropName="checked" tooltip={t('intRole.tip.shareAll')}>
                   <Checkbox>
                     <Space>
                       <TeamOutlined />
-                      共享给所有用户
+                      {t('intRole.shareAll')}
                     </Space>
                   </Checkbox>
                 </Form.Item>
@@ -679,7 +679,7 @@ const InternalRoleModal = ({
                   name="systemPrompt"
                   label={
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                      <span>系统提示词</span>
+                      <span>{t('intRole.field.systemPrompt')}</span>
                       <Button
                         type="link"
                         icon={<RobotOutlined />}
@@ -689,20 +689,20 @@ const InternalRoleModal = ({
 
                         style={{ color: '#1677ff', fontSize: '12px', padding: '0 4px', height: 'auto' }}
                       >
-                        辅助生成
+                        {t('intRole.assistantGenerate')}
                       </Button>
                     </div>
                   }
-                  rules={[{ required: true, message: '请输入系统提示词' }]}
+                  rules={[{ required: true, message: t('intRole.req.systemPrompt') }]}
                   extra={
                     !globalSettings.enableAssistantGeneration ?
-                      <Text type="secondary" style={{ fontSize: '12px' }}>辅助生成功能未启用，请在系统设置中开启</Text> :
-                      <Text type="secondary" style={{ fontSize: '12px' }}>点击"辅助生成"可根据角色名称和描述自动生成系统提示词</Text>
+                      <Text type="secondary" style={{ fontSize: '12px' }}>{t('intRole.assistantDisabledHint')}</Text> :
+                      <Text type="secondary" style={{ fontSize: '12px' }}>{t('intRole.assistantHint')}</Text>
                   }
                 >
                   <TextArea
                     rows={6}
-                    placeholder="请输入详细的系统提示词，用于定义角色的行为和回答风格"
+                    placeholder={t('intRole.ph.systemPrompt')}
                     style={{
                       backgroundColor: assistantGenerating ? '#f6ffed' : undefined,
                       borderColor: assistantGenerating ? '#b7eb8f' : undefined
@@ -710,12 +710,12 @@ const InternalRoleModal = ({
                   />
                 </Form.Item>
 
-                <Divider>高级参数设置</Divider>
+                <Divider>{t('intRole.advancedParams')}</Divider>
 
                 <Collapse ghost items={[
                   {
                     key: "1",
-                    label: "模型参数",
+                    label: t('intRole.modelParams'),
                     children: (
                       <>
                         <Row gutter={16}>
@@ -725,16 +725,16 @@ const InternalRoleModal = ({
                               label={
                                 <Space>
                                   <span>Temperature</span>
-                                  <Tooltip title="控制生成文本的随机性">
+                                  <Tooltip title={t('intRole.tip.temperature')}>
                                     <QuestionCircleOutlined />
                                   </Tooltip>
                                 </Space>
                               }
                               rules={[
-                                { type: 'number', min: 0, max: 2, message: '温度值范围为0-2' }
+                                { type: 'number', min: 0, max: 2, message: t('intRole.req.temperatureRange') }
                               ]}
                             >
-                              <InputNumber min={0} max={2} step={0.1} placeholder="留空则不设置" style={{ width: '100%' }} />
+                              <InputNumber min={0} max={2} step={0.1} placeholder={t('intRole.ph.leaveBlank')} style={{ width: '100%' }} />
                             </Form.Item>
                           </Col>
                           <Col span={12}>
@@ -743,16 +743,16 @@ const InternalRoleModal = ({
                               label={
                                 <Space>
                                   <span>Top P</span>
-                                  <Tooltip title="控制生成文本的多样性">
+                                  <Tooltip title={t('intRole.tip.topP')}>
                                     <QuestionCircleOutlined />
                                   </Tooltip>
                                 </Space>
                               }
                               rules={[
-                                { type: 'number', min: 0, max: 1, message: 'Top P值范围为0-1' }
+                                { type: 'number', min: 0, max: 1, message: t('intRole.req.topPRange') }
                               ]}
                             >
-                              <InputNumber min={0} max={1} step={0.1} placeholder="留空则不设置" style={{ width: '100%' }} />
+                              <InputNumber min={0} max={1} step={0.1} placeholder={t('intRole.ph.leaveBlank')} style={{ width: '100%' }} />
                             </Form.Item>
                           </Col>
                         </Row>
@@ -763,17 +763,17 @@ const InternalRoleModal = ({
                               name="frequencyPenalty"
                               label={
                                 <Space>
-                                  <span>频率惩罚</span>
-                                  <Tooltip title="减少重复使用相同词语的可能性">
+                                  <span>{t('intRole.frequencyPenalty')}</span>
+                                  <Tooltip title={t('intRole.tip.frequencyPenalty')}>
                                     <QuestionCircleOutlined />
                                   </Tooltip>
                                 </Space>
                               }
                               rules={[
-                                { type: 'number', min: -2, max: 2, message: '频率惩罚值范围为-2到2' }
+                                { type: 'number', min: -2, max: 2, message: t('intRole.req.freqPenaltyRange') }
                               ]}
                             >
-                              <InputNumber min={-2} max={2} step={0.1} placeholder="留空则不设置" style={{ width: '100%' }} />
+                              <InputNumber min={-2} max={2} step={0.1} placeholder={t('intRole.ph.leaveBlank')} style={{ width: '100%' }} />
                             </Form.Item>
                           </Col>
                           <Col span={12}>
@@ -781,17 +781,17 @@ const InternalRoleModal = ({
                               name="presencePenalty"
                               label={
                                 <Space>
-                                  <span>存在惩罚</span>
-                                  <Tooltip title="减少讨论相同主题的可能性">
+                                  <span>{t('intRole.presencePenalty')}</span>
+                                  <Tooltip title={t('intRole.tip.presencePenalty')}>
                                     <QuestionCircleOutlined />
                                   </Tooltip>
                                 </Space>
                               }
                               rules={[
-                                { type: 'number', min: -2, max: 2, message: '存在惩罚值范围为-2到2' }
+                                { type: 'number', min: -2, max: 2, message: t('intRole.req.presPenaltyRange') }
                               ]}
                             >
-                              <InputNumber min={-2} max={2} step={0.1} placeholder="留空则不设置" style={{ width: '100%' }} />
+                              <InputNumber min={-2} max={2} step={0.1} placeholder={t('intRole.ph.leaveBlank')} style={{ width: '100%' }} />
                             </Form.Item>
                           </Col>
                         </Row>
@@ -800,17 +800,17 @@ const InternalRoleModal = ({
                   }
                 ]} />
 
-                <Divider>测试角色</Divider>
+                <Divider>{t('intRole.testRole')}</Divider>
 
                 <Form.Item>
                   <Card
-                    title="测试角色响应"
+                    title={t('intRole.testRoleResp')}
 
                     style={{ marginBottom: 16 }}
-                    extra={<Button type="primary" onClick={handleTestLLM}>测试</Button>}
+                    extra={<Button type="primary" onClick={handleTestLLM}>{t('intRole.test')}</Button>}
                   >
                     <div style={{ marginBottom: 8, color: 'var(--custom-text-secondary)' }}>
-                      测试说明: 将使用上面填写的系统提示词内容作为测试输入，验证角色响应效果
+                      {t('intRole.testRoleHint')}
                     </div>
 
                     {testVisible && (
@@ -835,19 +835,19 @@ const InternalRoleModal = ({
           },
           {
             key: 'capabilities',
-            label: <span><FunctionOutlined />能力设置</span>,
+            label: <span><FunctionOutlined />{t('intRole.tab.capabilities')}</span>,
             forceRender: true,
             children: renderCapabilitiesTabContent()
           },
           {
             key: 'knowledge',
-            label: <span><DatabaseOutlined />知识库绑定</span>,
+            label: <span><DatabaseOutlined />{t('intRole.tab.knowledge')}</span>,
             forceRender: true,
             children: renderKnowledgeTabContent()
           },
           {
             key: 'skills',
-            label: <span><ThunderboltOutlined />技能绑定</span>,
+            label: <span><ThunderboltOutlined />{t('intRole.tab.skills')}</span>,
             forceRender: true,
             children: renderSkillsTabContent()
           }

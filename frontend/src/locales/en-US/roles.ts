@@ -31,4 +31,472 @@ export default {
   'toolManagement.createFailed': 'Failed to create capability',
   'toolManagement.updateCapabilitySuccess': 'Capability updated successfully',
   'toolManagement.updateCapabilityFailed': 'Failed to update capability',
+
+  // ----- ToolManagement (extended) -----
+  'toolManagement.fetchMcpFailed': 'Failed to fetch MCP server list',
+  'toolManagement.serverToolsUnsupported': 'Tool-list format for server {{id}} is not supported',
+  'toolManagement.serverToolsEmpty': 'Tool list for server {{id}} is empty',
+  'toolManagement.fetchServerToolsFailed': 'Failed to fetch tool list for server {{id}}: {{error}}',
+  'toolManagement.fetchCategoriesFailed': 'Failed to fetch category list',
+  'toolManagement.fetchCapabilitiesFailed': 'Failed to fetch capabilities',
+  'toolManagement.fetchRolesFailed': 'Failed to fetch role list',
+  'toolManagement.capabilityUpdated': 'Capability updated',
+  'toolManagement.capabilityCreated': 'Capability created',
+  'toolManagement.confirmDelete': 'Confirm delete',
+  'toolManagement.confirmDeleteContent': 'Are you sure you want to delete capability "{{name}}"?',
+  'toolManagement.deleteSuccess': 'Capability deleted',
+  'toolManagement.deleteFailed': 'Failed to delete capability',
+  'toolManagement.roleAssignSuccess': 'Role assignment updated',
+  'toolManagement.roleAssignFailed': 'Failed to update role assignment',
+  'toolManagement.toolsLoading': 'Loading tools from all servers, please wait...',
+  'toolManagement.toolsLoaded': 'All server tools loaded',
+  'toolManagement.tempCategoryAdded': 'Temporary category "{{name}}" added — will take effect after the form is submitted',
+  'toolManagement.categoryAdded': 'Category "{{name}}" saved',
+  'toolManagement.categoryAddFailed': 'Failed to add category',
+  'toolManagement.toolSelectPlaceholder': 'Please select tools to associate',
+  'toolManagement.serverNode': '{{id}} server',
+  'toolManagement.removeServerFailed': 'Failed to remove server tools, please try again',
+  'toolManagement.toolsSelectedSummary': '{{server}}[{{count}} tools selected]',
+
+  // type labels
+  'toolManagement.type.core': 'Core',
+  'toolManagement.type.advanced': 'Advanced',
+  'toolManagement.type.supervision': 'Supervision',
+  'toolManagement.type.execution': 'Execution',
+  'toolManagement.type.specialized': 'Specialized',
+  'toolManagement.type.unknown': 'Unknown',
+
+  // columns
+  'toolManagement.col.name': 'Name',
+  'toolManagement.col.description': 'Description prompt',
+  'toolManagement.col.type': 'Type',
+  'toolManagement.col.source': 'Source',
+  'toolManagement.col.associatedTools': 'Servers / tools',
+  'toolManagement.col.associatedRoles': 'Roles',
+  'toolManagement.col.securityLevel': 'Security level',
+  'toolManagement.col.defaultEnabled': 'Default enabled',
+  'toolManagement.col.actions': 'Actions',
+
+  // source tags
+  'toolManagement.source.system': 'System',
+  'toolManagement.source.systemTip': 'System resource — visible and usable to every user',
+  'toolManagement.source.shared': 'Shared',
+  'toolManagement.source.sharedTip': 'Shared user resource — visible and usable to every user',
+  'toolManagement.source.private': 'Private',
+  'toolManagement.source.privateTip': 'Private resource — visible only to its creator',
+
+  // tool/role list cells
+  'toolManagement.noTools': 'No tools linked',
+  'toolManagement.noToolsInline': 'No tools',
+  'toolManagement.serverCount': '{{count}} server(s)',
+  'toolManagement.serverDetailsSuffix': ' (click for details)',
+  'toolManagement.serverNoToolsSuffix': ' (no tools)',
+  'toolManagement.popoverTitle.tools': 'Linked tools / servers',
+  'toolManagement.popoverTitle.roles': 'Linked roles',
+  'toolManagement.moreRoles': '+{{count}} more',
+  'toolManagement.noRoles': 'No roles linked',
+
+  // security levels
+  'toolManagement.security.low': 'Low risk',
+  'toolManagement.security.medium': 'Medium risk',
+  'toolManagement.security.high': 'High risk',
+  'toolManagement.security.lowOpt': 'Low risk (level 1)',
+  'toolManagement.security.mediumOpt': 'Medium risk (level 2)',
+  'toolManagement.security.highOpt': 'High risk (level 3)',
+
+  // boolean
+  'toolManagement.yes': 'Yes',
+  'toolManagement.no': 'No',
+
+  // action tooltips
+  'toolManagement.action.edit': 'Edit capability',
+  'toolManagement.action.linkRoles': 'Link roles',
+  'toolManagement.action.delete': 'Delete capability',
+  'toolManagement.action.newCapability': 'New capability',
+
+  // type summary tags
+  'toolManagement.summary.core': 'Core: {{count}}',
+  'toolManagement.summary.advanced': 'Advanced: {{count}}',
+  'toolManagement.summary.supervision': 'Supervision: {{count}}',
+  'toolManagement.summary.execution': 'Execution: {{count}}',
+  'toolManagement.summary.specialized': 'Specialized: {{count}}',
+  'toolManagement.summary.total': 'Total: {{count}}',
+
+  // pagination
+  'toolManagement.pagination.total': '{{total}} items',
+
+  // edit/new capability modal
+  'toolManagement.modal.editTitle': 'Edit capability',
+  'toolManagement.modal.newTitle': 'New capability',
+  'toolManagement.form.name': 'Name',
+  'toolManagement.form.nameRequired': 'Please enter a capability name',
+  'toolManagement.form.namePlaceholder': 'Enter a capability name, e.g. environment_sensing',
+  'toolManagement.form.descLabel': 'Description prompt',
+  'toolManagement.form.descRequired': 'Please enter a description prompt',
+  'toolManagement.form.descPlaceholder': 'Enter a description prompt, e.g. "You have memory capability — use memory tools such as read_graph and search_node to access the knowledge graph."',
+  'toolManagement.form.typeLabel': 'Type',
+  'toolManagement.form.typeRequired': 'Please select a capability type',
+  'toolManagement.form.typePlaceholder': 'Select a capability type',
+  'toolManagement.form.addCustom': 'Add "{{name}}"',
+  'toolManagement.form.unsaved': 'unsaved',
+  'toolManagement.form.iconLabel': 'Icon',
+  'toolManagement.form.iconPlaceholder': 'Enter an icon name, e.g. function',
+  'toolManagement.form.securityLabel': 'Security level',
+  'toolManagement.form.securityRequired': 'Please select a security level',
+  'toolManagement.form.securityPlaceholder': 'Select a security level',
+  'toolManagement.form.defaultEnabled': 'Default enabled',
+  'toolManagement.form.sharedTooltip': 'When ticked the capability is visible & usable to everyone (only the creator can edit it).',
+  'toolManagement.form.shared': 'Share with all users',
+  'toolManagement.form.linkToolsLabel': 'Linked tools',
+  'toolManagement.alert.title': 'Note',
+  'toolManagement.alert.description': 'Pick the tools this capability can use. Roles that hold the capability can call these tools. All available tools are loaded automatically — every MCP-server tool and every custom tool.',
+
+  // role-link modal
+  'toolManagement.modal.linkRolesTitle': 'Link roles — {{name}}',
+  'toolManagement.form.selectRolesLabel': 'Select roles',
+  'toolManagement.form.selectRolesRequired': 'Please select the roles to link',
+  'toolManagement.form.selectRolesPlaceholder': 'Select the roles to link',
+
+  // tool-link modal
+  'toolManagement.modal.linkToolsTitle': 'Link tools — {{name}}',
+  'toolManagement.form.selectToolsLabel': 'Select tools',
+  'toolManagement.form.selectToolsRequired': 'Please select the tools to link',
+  'toolManagement.form.selectToolsPlaceholder': 'Select the tools to link',
+
+  // ----- ExternalRoleModal external-agent import/edit -----
+  'externalRole.editTitle': 'Edit external agent',
+  'externalRole.importTitle': 'Import external agent',
+  'externalRole.cancel': 'Cancel',
+  'externalRole.update': 'Update',
+  'externalRole.import': 'Import',
+  'externalRole.external': 'External',
+  'externalRole.custom': 'Custom',
+  'externalRole.advancedConfig': 'Advanced configuration',
+  'externalRole.connectionTest': 'Connection test',
+  'externalRole.testButton': 'Test connection',
+  'externalRole.testInputLabel': 'Test input:',
+  'externalRole.responseLabel': 'Response:',
+  'externalRole.testInputDefault': 'Hi! Please introduce yourself briefly — this is a connectivity test.',
+
+  // tooltip note
+  'externalRole.note.title': 'About external agents:',
+  'externalRole.note.standaloneTitle': 'Runs standalone',
+  'externalRole.note.standalone': ': the external agent runs on a 3rd-party platform; this system is only the caller.',
+  'externalRole.note.noLocalToolsTitle': 'No local tools',
+  'externalRole.note.noLocalTools': ': built-in tools and capabilities of this system cannot be used.',
+  'externalRole.note.dependsTitle': 'Depends on external platform',
+  'externalRole.note.depends': ': functionality fully depends on the capabilities & limits of the selected platform.',
+  'externalRole.note.latencyTitle': 'Network latency',
+  'externalRole.note.latency': ': response speed depends on network conditions and the external platform.',
+  'externalRole.note.privacyTitle': 'Data privacy',
+  'externalRole.note.privacy': ': conversation data is sent to the external platform — mind the data security.',
+
+  // messages
+  'externalRole.testSuccess': 'Connection test succeeded',
+  'externalRole.testFailed': 'Connection test failed',
+  'externalRole.streamingTestSuccess': 'Streaming connection test succeeded',
+  'externalRole.streamingTestDone': 'Streaming connection test complete',
+  'externalRole.streamingTestFailed': 'Streaming connection test failed',
+  'externalRole.networkError': 'Network error',
+  'externalRole.fillRequired': 'Please fill in the required connection fields',
+  'externalRole.connecting': 'Connecting...',
+  'externalRole.noResponse': 'No response received',
+  'externalRole.headersParseFailed': 'Failed to parse custom headers — they will be ignored',
+  'externalRole.importFailed': 'Import failed',
+  'externalRole.unknownError': 'Unknown error',
+
+  // status tags
+  'externalRole.status.testing': 'Testing',
+  'externalRole.status.testingMsg': 'Testing connection, please wait...',
+  'externalRole.status.awaitingResponse': 'Awaiting response...',
+  'externalRole.status.receiving': 'Receiving',
+  'externalRole.status.connected': 'Connected',
+  'externalRole.status.streaming': '(streaming...)',
+  'externalRole.status.awaitingContent': 'Awaiting response content...',
+  'externalRole.status.failed': 'Connection failed',
+  'externalRole.status.clickToTest': 'Click "Test connection" to start',
+
+  // fields
+  'externalRole.field.roleName': 'Role name',
+  'externalRole.field.description': 'Description',
+  'externalRole.field.roleType': 'Role type',
+  'externalRole.field.platform': 'Platform',
+  'externalRole.field.apiKey': 'API key',
+  'externalRole.field.apiServer': 'API server URL',
+  'externalRole.field.model': 'Model',
+  'externalRole.field.modelId': 'Model identifier',
+  'externalRole.field.agentId': 'Agent ID',
+  'externalRole.field.fastgptAppId': 'App ID',
+  'externalRole.field.userId': 'User ID',
+  'externalRole.field.platformName': 'Platform name',
+  'externalRole.field.applicationType': 'Application type',
+  'externalRole.field.instructions': 'Instructions',
+  'externalRole.field.sysInstructions': 'System instructions',
+  'externalRole.field.customHeaders': 'Custom headers',
+  'externalRole.field.timeout': 'Timeout',
+  'externalRole.field.responseMode': 'Response mode',
+  'externalRole.field.userIdentifier': 'User identifier',
+
+  // placeholders
+  'externalRole.placeholder.roleName': 'Enter a role name',
+  'externalRole.placeholder.description': 'Briefly describe the role functionality and traits',
+  'externalRole.placeholder.platform': 'Select a platform',
+  'externalRole.placeholder.model': 'Select a model',
+  'externalRole.placeholder.openaiInstructions': 'Optional — system instructions for the Assistant',
+  'externalRole.placeholder.difyAppType': 'Select an application type',
+  'externalRole.placeholder.fastgptKey': 'app-xxxxxx (app-specific key)',
+  'externalRole.placeholder.platformName': 'e.g. Claude, Gemini, Xinference',
+  'externalRole.placeholder.customServer': 'e.g. https://api.example.com/v1',
+  'externalRole.placeholder.customKey': 'Enter an API key',
+  'externalRole.placeholder.customAgentId': 'If the platform supports it, enter an agent ID',
+  'externalRole.placeholder.customModelId': 'If the platform supports it, enter a model identifier',
+  'externalRole.placeholder.sysInstructions': 'Optional — system instructions for the agent',
+  'externalRole.placeholder.customHeaders': 'Optional JSON, e.g. {"x-api-key": "value", "Authorization": "Bearer xxx"}',
+  'externalRole.placeholder.responseMode': 'Select a response mode',
+
+  // dify options
+  'externalRole.dify.chatbot': 'Chatbot — conversational assistant',
+  'externalRole.dify.textGenerator': 'Text Generator — text generation',
+  'externalRole.dify.agent': 'Agent — agent assistant',
+  'externalRole.dify.chatflow': 'Chatflow — conversation flow',
+  'externalRole.dify.workflow': 'Workflow',
+
+  // response modes
+  'externalRole.responseMode.blocking': 'Blocking',
+  'externalRole.responseMode.streaming': 'Streaming',
+
+  // required
+  'externalRole.req.roleName': 'Please enter a role name',
+  'externalRole.req.description': 'Please enter a description',
+  'externalRole.req.platform': 'Please select a platform',
+  'externalRole.req.model': 'Please select a model',
+  'externalRole.req.openaiApiKey': 'Please enter the OpenAI API key',
+  'externalRole.req.openaiAssistantId': 'Please enter the OpenAI Assistant ID',
+  'externalRole.req.difyServer': 'Please enter the Dify API server URL',
+  'externalRole.req.difyKey': 'Please enter the Dify app API key',
+  'externalRole.req.difyAppType': 'Please select a Dify application type',
+  'externalRole.req.fastgptServer': 'Please enter the FastGPT API server URL',
+  'externalRole.req.fastgptKey': 'Please enter the FastGPT app API key',
+  'externalRole.req.fastgptKeyPattern': 'Invalid API key format — must start with "fastgpt-" or "app-"',
+  'externalRole.req.fastgptAppId': 'Please enter the FastGPT app ID',
+  'externalRole.req.cozeServer': 'Please enter the Coze API server URL',
+  'externalRole.req.cozeKey': 'Please enter the Coze API key',
+  'externalRole.req.cozeBotId': 'Please enter the Coze Bot ID',
+  'externalRole.req.userId': 'Please enter a user ID',
+  'externalRole.req.platformName': 'Please enter a platform name',
+  'externalRole.req.customServer': 'Please enter an API server URL',
+  'externalRole.req.customKey': 'Please enter an API key',
+  'externalRole.req.timeout': 'Please enter a timeout value',
+  'externalRole.req.urlPattern': 'Please enter a full URL starting with http:// or https://',
+
+  // extra
+  'externalRole.extra.urlPattern': 'Enter a full API URL starting with http:// or https://',
+  'externalRole.extra.fastgptAppId': 'Unique identifier of the FastGPT app',
+  'externalRole.extra.cozeServer': 'Coze API server URL',
+  'externalRole.extra.cozePat': 'Personal Access Token from the Coze developer platform',
+  'externalRole.extra.cozeBotId': 'Unique identifier of the Coze agent',
+  'externalRole.extra.userId': 'Used to identify the API caller — any string',
+  'externalRole.extra.timeout': 'API request timeout (seconds)',
+  'externalRole.extra.responseMode': 'Pick an API response mode; defaults to the global streaming setting',
+  'externalRole.extra.userIdentifier': 'Optional — used to identify the API caller',
+
+  // ----- SkillManagement skills.* (table headers / page chrome) -----
+  'skills.name': 'Name',
+  'skills.description': 'Description',
+  'skills.status': 'Status',
+  'skills.securityLevel': 'Security level',
+  'skills.actions': 'Actions',
+  'skills.title': 'Skill management',
+  'skills.sync': 'Sync filesystem',
+  'skills.import': 'Import skill',
+  'skills.create': 'New skill',
+  'skills.empty': 'No skills yet — click "New skill" or "Import skill" to start',
+  'skills.createTitle': 'New skill',
+
+  // ----- SkillManagement skillMgmt.* (modals / messages) -----
+  'skillMgmt.subtitle': 'Manage and configure skills available to agents — skills bound to a role activate automatically in conversations.',
+  'skillMgmt.save': 'Save',
+  'skillMgmt.editTitle': 'Edit skill: {{name}}',
+  'skillMgmt.importPreviewTitle': 'Import preview',
+  'skillMgmt.confirmDelete': 'Delete this skill?',
+  'skillMgmt.confirmImport': 'Confirm import',
+
+  // switch
+  'skillMgmt.switch.on': 'On',
+  'skillMgmt.switch.off': 'Off',
+
+  // security levels
+  'skillMgmt.secLevel.low': 'Low',
+  'skillMgmt.secLevel.mid': 'Mid',
+  'skillMgmt.secLevel.high': 'High',
+  'skillMgmt.secLevel.lowDesc': 'Low — read-only operations',
+  'skillMgmt.secLevel.midDesc': 'Mid — can modify files',
+  'skillMgmt.secLevel.highDesc': 'High — can execute scripts',
+  'skillMgmt.secLevel.highDescRestricted': 'High — can execute scripts (restricted)',
+
+  // actions
+  'skillMgmt.action.edit': 'Edit',
+  'skillMgmt.action.export': 'Export',
+
+  // fields
+  'skillMgmt.field.nameKebab': 'Skill name (kebab-case)',
+  'skillMgmt.field.displayName': 'Display name',
+  'skillMgmt.field.triggerDesc': 'Trigger description',
+  'skillMgmt.field.securityLevel': 'Security level',
+
+  // placeholders
+  'skillMgmt.ph.displayName': 'e.g. Financial report generator',
+  'skillMgmt.ph.displayNameEdit': 'Display name',
+  'skillMgmt.ph.triggerDesc': 'Describe when this skill should be triggered...',
+
+  // requireds
+  'skillMgmt.req.name': 'Please enter the skill name',
+  'skillMgmt.req.namePattern': 'Only lowercase letters, digits, and hyphens allowed',
+  'skillMgmt.req.description': 'Please enter a description',
+
+  // extras
+  'skillMgmt.extra.triggerDesc': 'The Agent auto-activates the skill when the user request matches this description.',
+  'skillMgmt.extra.triggerDescEdit': 'The model decides activation from this description; include all trigger scenarios in detail.',
+  'skillMgmt.extra.levelExtra': 'Script execution is forbidden when level ≥ 3.',
+
+  // tabs
+  'skillMgmt.tab.basic': 'Basic info',
+  'skillMgmt.tab.scripts': 'Scripts',
+  'skillMgmt.tab.references': 'References',
+  'skillMgmt.tab.assets': 'Assets',
+
+  // table columns
+  'skillMgmt.col.fileName': 'File name',
+  'skillMgmt.col.path': 'Path',
+  'skillMgmt.col.size': 'Size',
+
+  // empties
+  'skillMgmt.empty.scripts': 'No script files',
+  'skillMgmt.empty.references': 'No reference files',
+  'skillMgmt.empty.assets': 'No asset files',
+
+  // import preview
+  'skillMgmt.preview.name': 'Skill name:',
+  'skillMgmt.preview.description': 'Description:',
+  'skillMgmt.preview.scriptsCount': '# scripts:',
+  'skillMgmt.preview.referencesCount': '# references:',
+  'skillMgmt.preview.assetsCount': '# assets:',
+  'skillMgmt.preview.none': 'None',
+  'skillMgmt.preview.existsWarn': 'A skill with the same name exists — import will overwrite',
+
+  // messages
+  'skillMgmt.msg.fetchFailed': 'Failed to fetch skill list',
+  'skillMgmt.msg.createSuccess': 'Skill created',
+  'skillMgmt.msg.createFailed': 'Creation failed',
+  'skillMgmt.msg.detailFailed': 'Failed to fetch skill detail',
+  'skillMgmt.msg.basicSaved': 'Basic info saved',
+  'skillMgmt.msg.contentSaved': 'SKILL.md saved',
+  'skillMgmt.msg.saveFailed': 'Save failed',
+  'skillMgmt.msg.deleteSuccess': 'Deleted',
+  'skillMgmt.msg.deleteFailed': 'Delete failed',
+  'skillMgmt.msg.updateFailed': 'Update failed',
+  'skillMgmt.msg.exportFailed': 'Export failed',
+  'skillMgmt.msg.previewFailed': 'Preview failed',
+  'skillMgmt.msg.importSuccess': 'Imported',
+  'skillMgmt.msg.importFailed': 'Import failed',
+  'skillMgmt.msg.syncDone': 'Sync done: {{created}} created, {{updated}} updated',
+  'skillMgmt.msg.syncFailed': 'Sync failed',
+
+  // ----- InternalRoleModal -----
+  'intRole.unknown': 'Unknown',
+  'intRole.unknownError': 'Unknown error',
+  'intRole.defaultTestPrompt': 'Please briefly introduce yourself.',
+  'intRole.assistantSystemPrompt': 'You are a professional AI prompt engineer who writes high-quality system prompts from a role description.',
+
+  // tabs
+  'intRole.tab.roleSettings': 'Role',
+  'intRole.tab.capabilities': 'Capabilities',
+  'intRole.tab.knowledge': 'Knowledge bases',
+  'intRole.tab.skills': 'Skills',
+
+  // fields
+  'intRole.field.name': 'Role name',
+  'intRole.field.source': 'Role type',
+  'intRole.field.model': 'Model',
+  'intRole.field.description': 'Description',
+  'intRole.field.systemPrompt': 'System prompt',
+
+  // placeholders
+  'intRole.ph.description': 'Describe what this role does',
+  'intRole.ph.systemPrompt': 'Detailed system prompt that defines the role\'s behaviour and tone',
+  'intRole.ph.leaveBlank': 'Leave blank to skip',
+
+  // required messages
+  'intRole.req.name': 'Please enter a name',
+  'intRole.req.source': 'Please pick a role type',
+  'intRole.req.model': 'Please pick a model',
+  'intRole.req.description': 'Please enter a description',
+  'intRole.req.systemPrompt': 'Please enter the system prompt',
+  'intRole.req.temperatureRange': 'Temperature must be between 0 and 2',
+  'intRole.req.topPRange': 'Top P must be between 0 and 1',
+  'intRole.req.freqPenaltyRange': 'Frequency penalty must be between -2 and 2',
+  'intRole.req.presPenaltyRange': 'Presence penalty must be between -2 and 2',
+
+  // misc
+  'intRole.newRoleHint': 'New roles default to internal. Use "Import external agent" to create an external role.',
+  'intRole.model.defaultText': 'Default text generation',
+  'intRole.tip.shareAll': 'When checked, this role is visible/usable by all users (only the creator can edit).',
+  'intRole.shareAll': 'Share with all users',
+  'intRole.assistantGenerate': 'Auto generate',
+  'intRole.assistantDisabledHint': 'Auto generate is disabled — enable it in System Settings.',
+  'intRole.assistantHint': 'Click "Auto generate" to draft a system prompt from the role name and description.',
+  'intRole.advancedParams': 'Advanced parameters',
+  'intRole.modelParams': 'Model parameters',
+  'intRole.frequencyPenalty': 'Frequency penalty',
+  'intRole.presencePenalty': 'Presence penalty',
+  'intRole.tip.temperature': 'Controls randomness of generated text',
+  'intRole.tip.topP': 'Controls diversity of generated text',
+  'intRole.tip.frequencyPenalty': 'Reduces the chance of repeating the same words',
+  'intRole.tip.presencePenalty': 'Reduces the chance of repeating the same topics',
+  'intRole.testRole': 'Test role',
+  'intRole.testRoleResp': 'Test role response',
+  'intRole.test': 'Test',
+  'intRole.testRoleHint': 'Uses the system prompt above to verify the role response.',
+  'intRole.testFailed': 'Test failed: {{msg}}',
+
+  // capability types
+  'intRole.capType.core': 'Core',
+  'intRole.capType.advanced': 'Advanced',
+  'intRole.capType.supervision': 'Supervision',
+  'intRole.capType.execution': 'Execution',
+  'intRole.capType.specialized': 'Specialised',
+  'intRole.capHint': 'Pick the capabilities this agent can use. They define the range of actions and the permission level.',
+
+  // empties
+  'intRole.empty.noCapData': 'No capabilities available',
+  'intRole.empty.noKB': 'No knowledge bases available',
+  'intRole.empty.noKBHint': 'Create an internal KB or configure an external KB first, then bind it.',
+
+  // kb
+  'intRole.kb.internal': 'Internal',
+  'intRole.kb.external': 'External',
+  'intRole.kb.statusOk': 'OK',
+  'intRole.kb.statusErr': 'Error',
+  'intRole.kb.noDesc': 'No description',
+  'intRole.kb.providerLabel': 'Provider: {{v}}',
+  'intRole.kb.idLabel': 'ID: {{v}}',
+
+  // skill
+  'intRole.skill.empty': 'No skills available — create one in Skill Management first.',
+  'intRole.skill.alertTitle': 'Skill binding',
+  'intRole.skill.alertDesc': 'Pick skills to bind to this role. The agent will activate them automatically based on the skill description.',
+
+  // messages
+  'intRole.msg.assistantOff': 'Auto generate is disabled — enable it in System Settings.',
+  'intRole.msg.fillNameDescFirst': 'Please fill in the role name and description first.',
+  'intRole.msg.loadTplFailed': 'Failed to load the prompt template — check System Settings.',
+  'intRole.msg.sysPromptGenerated': 'System prompt generated',
+  'intRole.msg.assistantFailed': 'Auto generate failed: {{msg}}',
+  'intRole.msg.pickModelFirst': 'Please pick a model first',
+  'intRole.msg.completeForm': 'Please complete the form first',
+
+  // errors
+  'intRole.err.noSysPromptTpl': 'No role system-prompt template found',
+  'intRole.err.noDefaultTextModel': 'No default text-generation model configured',
+  'intRole.err.noPickedModel': 'Selected model not found',
 };
