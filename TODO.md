@@ -241,8 +241,64 @@ async def _execute_true_parallel(task: 'Task') -> None:
 
 ---
 
+## 历史债 / Refactor backlog (model-config 系列)
+
+> 由 2026-05-19 "拆 custom_headers / custom_body" PR 收尾时盘点出。背景见
+> `docs/agents/failures/2026-05-19-additional-params-as-junk-drawer.md`。
+> 顺序很重要：PR2 → PR3 → PR4 → PR5（不能并行做）。每项都必须自带测试。
+
+### PR2 — `embedding_service.py` 包归位（路径错位）
+
+- **现象**：通用 embedding 服务住在 `app/services/vector_db_tidb/`，被 7 处反向 import（含 `vector_db_milvus.py`）。它和 TiDB 没有耦合。
+- **解法**：移到 `app/services/embedding/embedding_service.py`，与 `vector_db_*` 并列；同时合并 `app/utils/embedding.py`（重名/职责重叠）。
+- **不留 compat shim**（AGENTS.md §3.2）：一次性改完 7 处 import。
+- **测试**：
+  - `tests/contract/imports/test_embedding_import_path.py`：断言 `from app.services.embedding import embedding_service` 工作，且全代码库不再有 `from app.services.vector_db_tidb.embedding_service` 残留（ripgrep 断言）。
+  - 既有 knowledge_base 路径的 integration 测试跑通。
+
+### PR3 — embedding HTTP 调用 async 化（违反 backend AGENTS §3.1）
+
+- **现象**：`_generate_embeddings_openai_api` / `_generate_embeddings_ollama_api` 用同步 `requests.post`，阻塞 event loop。
+- **解法**：换 `httpx.AsyncClient`，调用方加 `await`；调用面：`knowledge_vectorizer*.py`、`document_processor.py`、`vector_db_milvus.py`。
+- **测试**：
+  - `tests/unit/services/embedding/test_async.py`：assert 不再 import `requests`，函数是 `async def`。
+  - `tests/integration/services/embedding/test_concurrent_calls.py`：`asyncio.gather` 一批请求耗时近似单次（验证 event loop 没被阻塞）。
+
+### PR4 — `additional_params` 灭活（最重的一项）⭐
+
+> **核心理念**：HTTP 出站只有 header / body / URL query 三个槽。`additional_params` 当前承载的 4 种用法都不是"第三种合法槽"，是错位：
+> 1. `dimensions` (embedding HTTP body) → 应该走 `custom_body`
+> 2. `use_fp16` / `batch_size` (reranker 本地构造器参数) → 不属于 ModelConfig
+> 3. `embedding_dim` (LightRAG 子进程 env var) → 不属于 ModelConfig
+>
+> 它存在的代价：用户看到模型设置里有"附加参数"框，以为可以塞 `temperature`，但永远不会生效，无任何报错——这是产品体验的暗坑。
+
+- **解法**：
+  1. **数据迁移（Alembic）**：把所有 `model_configs.additional_params.dimensions` 搬到 `custom_body.dimensions`。
+  2. `use_fp16` / `batch_size` → 迁到 `SystemSetting`（已有 KV 表）或新建 `RerankerSettings` 表，按 reranker 而不是按 model 存。
+  3. `embedding_dim` → 同 1（合并到 `custom_body.dimensions`，LightRAG 配置读这个）。
+  4. **删除 `ModelConfig.additional_params` 列**（Alembic upgrade + downgrade 都要写）。
+  5. 前端删掉"本地参数（高级）"折叠区。
+  6. 后端 grep 删除所有 `.additional_params` 引用（reranker_service / lightrag_config / agent_service / embedding_service 等）。
+- **测试**：
+  - migration 双向：`tests/integration/db/test_migrations.py` 跑 upgrade → 验证数据搬运 → downgrade → 验证回退。
+  - contract：`tests/contract/openapi/test_model_config_no_additional_params.py` 断言响应字段集合不含 `additional_params`。
+  - 回归：reranker / lightrag / embedding 三条调用路径仍工作。
+- **依赖**：PR2、PR3 先合，避免和路径 / async 化的修改踩车。
+
+### PR5 — `ModelClient.send_request` 签名一等公民化
+
+- **现象**：`send_request(api_url, api_key, messages, model, ...)` 接拍扁后的原始字段，每次 ModelConfig 新增字段都要在 13 个调用点重复传一次（本次新增 `custom_headers/custom_body/modalities` 就在 7 处手动写了三次）。
+- **解法**：主签名改成 `send_request(model_config: ModelConfig, messages, ...)`；一次性改完所有 13 个调用点；删旧签名（不留兼容 shim，按 AGENTS.md §3.2）。
+- **测试**：
+  - unit：`tests/unit/services/conversation/test_send_request_threads_modelconfig.py`，用 mock httpx 验证 `model_config` 上的每个相关字段（headers/body/timeout/modalities/...）都正确进入出站请求。
+  - 既有 integration / e2e 跑通。
+
+---
+
 ## 已完成功能
 
+- [x] **自定义请求参数拆分**（2026-05-19 PR1）：`ModelConfig` 增加 `custom_headers` / `custom_body` 两列，分别合并到出站 HTTP 请求的 headers / body；新建 `app/services/llm_http` 提供 `merge_custom_headers` / `merge_custom_body`（含 Content-Type 保护 + 按 modalities 给出软警告）；7 处 chat 入口 + embedding 服务接通；前端表单按 modalities 动态切换 placeholder/tooltip；保留 `additional_params` 作为本地参数过渡（详见 §历史债 PR4 灭活计划）。文档：`docs/agents/model-config-custom-params.md`。
 - [x] 自主任务改为编排框架
 - [x] 总结上下文消息优化（去掉工具调用参数）
 - [x] print → logger 迁移

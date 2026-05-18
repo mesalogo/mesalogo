@@ -427,7 +427,10 @@ class SupervisorRuleChecker:
                 is_stream=False,
                 agent_info=agent_info,
                 temperature=0.3,  # 使用较低的温度确保一致性
-                max_tokens=1000
+                max_tokens=1000,
+                __custom_headers__=model_config.get('custom_headers') or {},
+                __custom_body__=model_config.get('custom_body') or {},
+                __modalities__=model_config.get('modalities') or [],
             )
             
             # 解析响应
@@ -506,7 +509,11 @@ class SupervisorRuleChecker:
                     'model_id': role_model.model_id,
                     'base_url': role_model.base_url,
                     'api_key': role_model.api_key,
-                    'provider': role_model.provider
+                    'provider': role_model.provider,
+                    # 透传 custom_headers / custom_body / modalities 给 send_request
+                    'custom_headers': role_model.custom_headers or {},
+                    'custom_body': role_model.custom_body or {},
+                    'modalities': role_model.modalities or [],
                 }
             else:
                 logger.warning("未找到可用的模型配置")

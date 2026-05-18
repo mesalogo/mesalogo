@@ -135,6 +135,7 @@ Before writing or changing code, read the matching doc as needed (all under `doc
 | Heartbeat / self-driven agents | `docs/feature-heartbeat/PLAN.md` + `policies.md` + `stop-the-world.md` |
 | **Adding/editing frontend user-visible strings** | `docs/agents/i18n.md` (namespace layout + `t()` rules; never hard-code CJK) |
 | **Writing or modifying any test** | `tests/AGENTS.md` (30-second decision tree) |
+| **Adding/editing model custom params (headers/body) or touching `ModelConfig.{custom_headers,custom_body,additional_params}`** | `docs/agents/model-config-custom-params.md` (three-bag split + `app/services/llm_http` merge helpers) |
 | Deployment / Docker / performance | `abm-docker/README.md` + `docs/feature-parallellab/PLAN-5000-concurrency.md` |
 
 If no matching doc exists → **create one** (even just a "placeholder" line), then write your decision into it. This is the Harness "living docs" principle.

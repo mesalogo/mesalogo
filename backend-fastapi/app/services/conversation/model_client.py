@@ -335,7 +335,13 @@ class ModelClient:
                 }
 
             # 添加其他参数（根据提供商过滤）
-            excluded_keys = ['agent_info', 'task_id', 'conversation_id', 'config', 'provider']
+            # __custom_headers__ / __custom_body__ / __modalities__ 是预留 kwargs，
+            # 由调用方从 ModelConfig 透传过来，在下方统一合并到 headers / payload，
+            # 不允许作为模型采样参数泄漏进 payload。详见 docs/agents/model-config-custom-params.md
+            excluded_keys = [
+                'agent_info', 'task_id', 'conversation_id', 'config', 'provider',
+                '__custom_headers__', '__custom_body__', '__modalities__',
+            ]
 
             for key, value in kwargs.items():
                 if value is not None and value != [] and key not in excluded_keys:
@@ -365,6 +371,18 @@ class ModelClient:
                     payload['tools'] = agent_info['tools']
                     if 'tool_choice' not in payload:
                         payload['tool_choice'] = "auto"
+
+            # 合并用户配置的 custom_headers / custom_body（来自 ModelConfig）
+            # 调用方通过预留 kwarg __custom_headers__ / __custom_body__ 透传进来。
+            # 类型校验交给 llm_http 模块；非 dict 输入会抛 TypeError，让上游崩出（fail loud）。
+            from app.services.llm_http import merge_custom_headers, merge_custom_body
+            custom_headers = kwargs.get('__custom_headers__')
+            custom_body = kwargs.get('__custom_body__')
+            modalities = kwargs.get('__modalities__')
+            if custom_headers:
+                headers = merge_custom_headers(headers, custom_headers)
+            if custom_body:
+                payload = merge_custom_body(payload, custom_body, modalities=modalities)
 
             # 根据调试开关输出详细日志
             if DEBUG_LLM_RESPONSE:
@@ -843,6 +861,9 @@ class ModelClient:
                     is_stream=True,
                     callback=handle_stream_chunk,
                     agent_info=agent_info,
+                    __custom_headers__=getattr(config, 'custom_headers', None) or {},
+                    __custom_body__=getattr(config, 'custom_body', None) or {},
+                    __modalities__=getattr(config, 'modalities', None) or [],
                     **filtered_params
                 )
 
@@ -876,6 +897,9 @@ class ModelClient:
                     model=config.model_id,
                     is_stream=False,
                     agent_info=agent_info,
+                    __custom_headers__=getattr(config, 'custom_headers', None) or {},
+                    __custom_body__=getattr(config, 'custom_body', None) or {},
+                    __modalities__=getattr(config, 'modalities', None) or [],
                     **filtered_params
                 )
 
@@ -963,6 +987,9 @@ class ModelClient:
                 is_stream=True,
                 callback=streaming_callback,
                 agent_info=agent_info,
+                __custom_headers__=getattr(config, 'custom_headers', None) or {},
+                __custom_body__=getattr(config, 'custom_body', None) or {},
+                __modalities__=getattr(config, 'modalities', None) or [],
                 **filtered_params
             )
 

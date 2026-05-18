@@ -70,6 +70,8 @@ const ModelConfigsPage = () => {
       requestTimeout: 60,
       modalities: ['text_input', 'text_output'],
       capabilities: [],
+      customHeaders: '{}',
+      customBody: '{}',
       additionalParams: '{}',
       formatCompatibility: 'custom'
     });
@@ -94,6 +96,8 @@ const ModelConfigsPage = () => {
         requestTimeout: model.request_timeout,
         modalities: model.modalities || ['text_input', 'text_output'],
         capabilities: model.capabilities || [],
+        customHeaders: JSON.stringify(model.custom_headers || {}, null, 2),
+        customBody: JSON.stringify(model.custom_body || {}, null, 2),
         additionalParams: JSON.stringify(model.additional_params || {}, null, 2),
         formatCompatibility: model.format_compatibility || 'openai'
       });
@@ -425,17 +429,31 @@ const ModelConfigsPage = () => {
     try {
       const values = await modelForm.validateFields();
       
-      // 解析JSON参数
-      let additionalParams = {};
-      if (values.additionalParams && values.additionalParams.trim()) {
+      // 解析三类 JSON 字段：自定义请求头 / 自定义请求体 / 本地参数。
+      // 任一非对象（数组 / 字符串 / 数字）都按错误处理；空串视为 {}。
+      const parseJsonDict = (raw: string | undefined, fieldLabel: string): Record<string, any> | null => {
+        if (!raw || !raw.trim()) return {};
+        let parsed: any;
         try {
-          additionalParams = JSON.parse(values.additionalParams);
+          parsed = JSON.parse(raw);
         } catch (e) {
-          message.error('附加参数格式错误，请输入有效的JSON');
-          return;
+          message.error(t('modelConfig.form.jsonParseError', { field: fieldLabel }));
+          return null;
         }
-      }
-      
+        if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+          message.error(t('modelConfig.form.jsonNotObjectError', { field: fieldLabel }));
+          return null;
+        }
+        return parsed;
+      };
+
+      const customHeaders = parseJsonDict(values.customHeaders, t('modelConfig.form.customHeaders'));
+      if (customHeaders === null) return;
+      const customBody = parseJsonDict(values.customBody, t('modelConfig.form.customBody'));
+      if (customBody === null) return;
+      const additionalParams = parseJsonDict(values.additionalParams, t('modelConfig.form.additionalParams'));
+      if (additionalParams === null) return;
+
       const modelData = {
         name: values.name,
         provider: values.provider,
@@ -447,6 +465,8 @@ const ModelConfigsPage = () => {
         request_timeout: values.requestTimeout,
         modalities: values.modalities || ['text_input', 'text_output'],
         capabilities: values.capabilities || [],
+        custom_headers: customHeaders,
+        custom_body: customBody,
         additional_params: additionalParams,
         format_compatibility: values.formatCompatibility || 'openai'
       };

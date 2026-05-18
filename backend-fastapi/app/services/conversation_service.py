@@ -739,6 +739,11 @@ class ConversationService:
                     task_id=task_id,  # 添加任务ID
                     conversation_id=conversation_id,  # 添加会话ID
                     send_target=send_target,  # 传递 send_target 用于区分监督者会话和任务会话
+                    # 透传 ModelConfig 的 custom_headers / custom_body / modalities；
+                    # 这些保留 kwarg 也会被 stream_handler 在工具调用后续轮自动透传。
+                    __custom_headers__=(role_model.custom_headers or {}),
+                    __custom_body__=(role_model.custom_body or {}),
+                    __modalities__=(role_model.modalities or []),
                     **role_model_params
                 )
 
@@ -1107,13 +1112,18 @@ class ConversationService:
             else:
                 # 使用标准ModelClient处理内部角色
                 model_client = ModelClient()
+                _internal_model = result[3]
                 api_response = model_client.send_request(
-                    api_url=result[3].base_url,
-                    api_key=result[3].api_key,
+                    api_url=_internal_model.base_url,
+                    api_key=_internal_model.api_key,
                     messages=result[4],
-                    model=result[3].model_id,
+                    model=_internal_model.model_id,
                     is_stream=False,
                     agent_info=agent_info,
+                    # 透传 ModelConfig 的 custom_headers / custom_body / modalities
+                    __custom_headers__=(_internal_model.custom_headers or {}),
+                    __custom_body__=(_internal_model.custom_body or {}),
+                    __modalities__=(_internal_model.modalities or []),
                     **result[6]
                 )
 

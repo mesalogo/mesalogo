@@ -147,40 +147,57 @@ class EmbeddingService:
         """使用OpenAI API生成嵌入向量"""
         try:
             import requests
-            
+            from app.services.llm_http import (
+                merge_custom_headers,
+                merge_custom_body,
+            )
+
             # 准备请求数据
-            headers = {
+            base_headers = {
                 'Authorization': f'Bearer {model_config.api_key}',
                 'Content-Type': 'application/json'
             }
-            
+            # 合并 ModelConfig.custom_headers
+            headers = merge_custom_headers(
+                base_headers,
+                getattr(model_config, 'custom_headers', None) or {},
+            )
+
             url = f"{model_config.base_url.rstrip('/')}/embeddings"
-            
+
             # 阿里云 DashScope 限制 batch size 为 10
             is_dashscope = 'dashscope' in model_config.base_url.lower()
             batch_size = 10 if is_dashscope else len(texts)
-            
+
             all_embeddings = []
-            
+
             # 分批处理
             for i in range(0, len(texts), batch_size):
                 batch_texts = texts[i:i + batch_size]
-                
-                data = {
+
+                base_body = {
                     'input': batch_texts,
                     'model': model_config.model_id
                 }
-                
-                # 添加额外参数
+
+                # 本地参数：additional_params['dimensions']（保留向后兼容；
+                # 新写入应放到 custom_body 里）
                 additional_params = model_config.additional_params or {}
                 if 'dimensions' in additional_params:
-                    data['dimensions'] = additional_params['dimensions']
-                
+                    base_body['dimensions'] = additional_params['dimensions']
+
+                # 合并 ModelConfig.custom_body（如 encoding_format 等）
+                data = merge_custom_body(
+                    base_body,
+                    getattr(model_config, 'custom_body', None) or {},
+                    modalities=getattr(model_config, 'modalities', None),
+                )
+
                 # 发送请求
                 response = requests.post(
-                    url, 
-                    headers=headers, 
-                    json=data, 
+                    url,
+                    headers=headers,
+                    json=data,
                     timeout=model_config.request_timeout or 30
                 )
                 
@@ -233,22 +250,37 @@ class EmbeddingService:
             # 准备所有嵌入向量
             all_embeddings = []
 
+            from app.services.llm_http import (
+                merge_custom_headers,
+                merge_custom_body,
+            )
+
             # Ollama API通常一次处理一个文本，所以我们逐个处理
             for text in texts:
-                # 准备请求数据
-                data = {
+                # 基础请求体
+                base_body = {
                     'model': model_config.model_id,
                     'input': text
                 }
+                data = merge_custom_body(
+                    base_body,
+                    getattr(model_config, 'custom_body', None) or {},
+                    modalities=getattr(model_config, 'modalities', None),
+                )
 
-                # 准备请求头
-                headers = {
+                # 基础请求头
+                base_headers = {
                     'Content-Type': 'application/json'
                 }
 
                 # 如果有API密钥，添加到请求头
                 if model_config.api_key:
-                    headers['Authorization'] = f'Bearer {model_config.api_key}'
+                    base_headers['Authorization'] = f'Bearer {model_config.api_key}'
+
+                headers = merge_custom_headers(
+                    base_headers,
+                    getattr(model_config, 'custom_headers', None) or {},
+                )
 
                 # 发送请求
                 response = requests.post(

@@ -56,6 +56,8 @@ def get_model_configs(
             'is_default_rerank': getattr(config, 'is_default_rerank', False),
             'modalities': config.modalities,
             'capabilities': config.capabilities,
+            'custom_headers': config.custom_headers or {},
+            'custom_body': config.custom_body or {},
             'additional_params': config.additional_params,
             'format_compatibility': config.format_compatibility or 'openai',
             'created_at': config.created_at.isoformat(),
@@ -153,6 +155,8 @@ def get_model_config(
         'is_default_rerank': getattr(config, 'is_default_rerank', False),
         'modalities': config.modalities,
         'capabilities': config.capabilities,
+        'custom_headers': config.custom_headers or {},
+        'custom_body': config.custom_body or {},
         'additional_params': config.additional_params,
         'format_compatibility': config.format_compatibility or 'openai',
         'created_at': config.created_at.isoformat(),
@@ -187,6 +191,14 @@ async def create_model_config(request: Request):
         if request_timeout is not None and (request_timeout < 10 or request_timeout > 300):
             raise HTTPException(status_code=400, detail='request_timeout must be between 10 and 300 seconds')
 
+    # custom_headers / custom_body 必须是 JSON 对象（dict）;
+    # 见 docs/agents/model-config-custom-params.md 与 backend-fastapi/AGENTS.md §4
+    # "No silent fallbacks" — 类型不匹配直接 400，禁止静默改写为 {}。
+    if 'custom_headers' in data and not isinstance(data.get('custom_headers'), dict):
+        raise HTTPException(status_code=400, detail='custom_headers must be a JSON object')
+    if 'custom_body' in data and not isinstance(data.get('custom_body'), dict):
+        raise HTTPException(status_code=400, detail='custom_body must be a JSON object')
+
     # 如果设置为默认文本生成模型，需要更新其他文本生成模型
     if data.get('is_default_text'):
         existing_text_defaults = ModelConfig.query.filter_by(is_default_text=True).all()
@@ -215,6 +227,8 @@ async def create_model_config(request: Request):
         is_default_embedding=data.get('is_default_embedding', False),
         modalities=data.get('modalities', []),
         capabilities=data.get('capabilities', []),
+        custom_headers=data.get('custom_headers', {}),
+        custom_body=data.get('custom_body', {}),
         additional_params=data.get('additional_params', {}),
         format_compatibility=data.get('format_compatibility', 'openai')
     )
@@ -261,6 +275,12 @@ async def update_model_config(config_id: str, request: Request):
         if request_timeout is not None and (request_timeout < 10 or request_timeout > 300):
             raise HTTPException(status_code=400, detail='request_timeout must be between 10 and 300 seconds')
 
+    # custom_headers / custom_body 必须是 JSON 对象（dict）; fail loud
+    if 'custom_headers' in data and not isinstance(data.get('custom_headers'), dict):
+        raise HTTPException(status_code=400, detail='custom_headers must be a JSON object')
+    if 'custom_body' in data and not isinstance(data.get('custom_body'), dict):
+        raise HTTPException(status_code=400, detail='custom_body must be a JSON object')
+
     # 如果设置为默认文本生成模型，需要更新其他文本生成模型
     if data.get('is_default_text') and not getattr(config, 'is_default_text', False):
         existing_text_defaults = ModelConfig.query.filter_by(is_default_text=True).all()
@@ -298,6 +318,9 @@ async def update_model_config(config_id: str, request: Request):
         'is_default_rerank': getattr(config, 'is_default_rerank', False),
         'modalities': config.modalities,
         'capabilities': config.capabilities,
+        'custom_headers': config.custom_headers or {},
+        'custom_body': config.custom_body or {},
+        'additional_params': config.additional_params,
         'format_compatibility': config.format_compatibility or 'openai',
         'updated_at': config.updated_at.isoformat()
     }

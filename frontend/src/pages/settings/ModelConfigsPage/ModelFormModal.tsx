@@ -13,7 +13,8 @@ import {
   Skeleton,
   Typography,
   Space,
-  Dropdown
+  Dropdown,
+  Collapse
 } from 'antd';
 import {
   InfoCircleOutlined,
@@ -622,20 +623,83 @@ const ModelFormModal = ({
           </Col>
         </Row>
         
-        {/* 附加参数 */}
+        {/* 自定义请求头 */}
         <Row gutter={24}>
           <Col span={24}>
             <Form.Item
-              name="additionalParams"
-              label={t('modelConfig.form.additionalParams')}
-              tooltip={t('modelConfig.form.additionalParamsTooltip')}
+              name="customHeaders"
+              label={t('modelConfig.form.customHeaders')}
+              tooltip={t('modelConfig.form.customHeadersTooltip')}
             >
               <TextArea
-                rows={4}
-                placeholder={t('modelConfig.form.additionalParamsPlaceholder')}
+                rows={3}
+                placeholder={t('modelConfig.form.customHeadersPlaceholder')}
                 style={{ fontFamily: 'monospace' }}
               />
             </Form.Item>
+          </Col>
+        </Row>
+
+        {/* 自定义请求体（按 modalities 给出不同 placeholder/tooltip） */}
+        <Row gutter={24}>
+          <Col span={24}>
+            <Form.Item
+              shouldUpdate={(prev, curr) =>
+                JSON.stringify(prev?.modalities || []) !== JSON.stringify(curr?.modalities || [])
+              }
+              noStyle
+            >
+              {({ getFieldValue }) => {
+                const mods: string[] = getFieldValue('modalities') || [];
+                let placeholderKey = 'modelConfig.form.customBodyPlaceholder.chat';
+                let tooltipKey = 'modelConfig.form.customBodyTooltip.chat';
+                if (mods.includes('rerank_output')) {
+                  placeholderKey = 'modelConfig.form.customBodyPlaceholder.rerank';
+                  tooltipKey = 'modelConfig.form.customBodyTooltip.rerank';
+                } else if (mods.includes('vector_output')) {
+                  placeholderKey = 'modelConfig.form.customBodyPlaceholder.embedding';
+                  tooltipKey = 'modelConfig.form.customBodyTooltip.embedding';
+                }
+                return (
+                  <Form.Item
+                    name="customBody"
+                    label={t('modelConfig.form.customBody')}
+                    tooltip={t(tooltipKey)}
+                  >
+                    <TextArea
+                      rows={4}
+                      placeholder={t(placeholderKey)}
+                      style={{ fontFamily: 'monospace' }}
+                    />
+                  </Form.Item>
+                );
+              }}
+            </Form.Item>
+          </Col>
+        </Row>
+
+        {/* 本地参数（高级；非网络请求字段：reranker use_fp16、embedding dimensions 等） */}
+        <Row gutter={24}>
+          <Col span={24}>
+            <Collapse ghost>
+              <Collapse.Panel
+                header={t('modelConfig.form.localParams')}
+                key="local-params"
+              >
+                <Form.Item
+                  name="additionalParams"
+                  label={t('modelConfig.form.additionalParams')}
+                  tooltip={t('modelConfig.form.additionalParamsLocalTooltip')}
+                  style={{ marginBottom: 0 }}
+                >
+                  <TextArea
+                    rows={3}
+                    placeholder={t('modelConfig.form.additionalParamsPlaceholder')}
+                    style={{ fontFamily: 'monospace' }}
+                  />
+                </Form.Item>
+              </Collapse.Panel>
+            </Collapse>
           </Col>
         </Row>
       </Form>

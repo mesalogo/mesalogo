@@ -978,7 +978,15 @@ class ModelConfig(BaseMixin, db.Model):
     is_default_rerank = Column(Boolean, default=False)  # 是否为默认重排序模型
     modalities = Column(JSON, default=list)  # 模型模态，如text_input, text_output, image_input等
     capabilities = Column(JSON, default=list)  # 模型特性标签，如function_calling, reasoning等
-    additional_params = Column(JSON, default=dict)  # 额外参数
+    # custom_headers / custom_body: 用户自定义注入到对上游模型 API 的出站 HTTP 请求中
+    # custom_headers → 合并进出站请求 headers (e.g. Azure api-key, OpenRouter X-Title)
+    # custom_body    → 合并进出站请求 body / SDK kwargs (e.g. reasoning_effort, top_k 扩展字段)
+    custom_headers = Column(JSON, default=dict, nullable=False, server_default='{}')
+    custom_body = Column(JSON, default=dict, nullable=False, server_default='{}')
+    # additional_params: 本地 (in-process) 参数 - 仅用于本进程内构造器/SDK 客户端/环境变量
+    # 例如 reranker 的 use_fp16, batch_size；embedding 的 dimensions；LightRAG 的 embedding_dim
+    # ⚠️ 不再向 additional_params 添加新的"会发送给上游"的字段；请改用 custom_body / custom_headers
+    additional_params = Column(JSON, default=dict)  # 本地参数（local-only），见上方注释
     format_compatibility = Column(String(20), default='openai')  # 格式兼容性: openai, anthropic, custom
 
     def __repr__(self):

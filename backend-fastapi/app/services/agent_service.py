@@ -127,6 +127,8 @@ class AgentService:
                 'is_default': model.is_default,
                 'max_output_tokens': model.max_output_tokens,
                 'context_window': model.context_window,
+                'custom_headers': model.custom_headers or {},
+                'custom_body': model.custom_body or {},
                 'additional_params': model.additional_params,
                 'request_timeout': model.request_timeout
             } for model in model_configs]
