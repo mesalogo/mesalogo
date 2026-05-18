@@ -64,3 +64,5 @@ rank-bm25
 
 # asyncio 兼容
 nest-asyncio
+
+websockify
