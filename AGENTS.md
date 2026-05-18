@@ -107,6 +107,7 @@ These are **red lines (红线)**, not suggestions. Self-check before any action.
 - ❌ **No blocking I/O on async paths** (`requests.get`, `time.sleep`, large synchronous file reads/writes). The project is moving toward 5000-concurrency (5000 并发); one blocking call drags down the whole event loop. Use `httpx.AsyncClient` / `asyncio.to_thread`.
 - ❌ **Do not migrate schema by editing `models.py` table fields directly.** Write an Alembic migration in `backend-fastapi/migrations/`.
 - ❌ **Do not change the permission semantics of `supervisor_*.py` / `rule_sandbox.py`** (the Harness constraint layer / Harness 约束层). One wrong rule lets an experiment perform an illegal action. If you must touch this, read `docs/agents/supervisor-rules.md` first (create the file with background notes if it doesn't exist yet).
+- ❌ **No hard-coded user-visible Chinese (硬编码中文) in frontend `.tsx` source.** Every label / placeholder / button text / `message.*` toast must go through `useTranslation()`. Do not write `t('foo') || '中文 fallback'` either — add the missing key. Use the per-feature namespaces under `frontend/src/locales/<lang>/<ns>.ts`; never recreate the legacy `zh-CN.ts` / `en-US.ts` monolith. See `docs/agents/i18n.md` and current debt in `docs/agents/i18n-hardcoded-cjk-report.md`. CI gate: `node frontend/scripts/check-i18n-keys.js` (zh/en must stay key-consistent).
 
 ### 3.3 Agent-behavior red lines (about you)
 
@@ -131,6 +132,7 @@ Before writing or changing code, read the matching doc as needed (all under `doc
 | LightRAG / vector store | `docs/feature-knowledge-base/lightrag-PLAN.md` |
 | Workflow Graph orchestration | `docs/feature-workflow-graph/PLAN.md` |
 | Heartbeat / self-driven agents | `docs/feature-heartbeat/PLAN.md` + `policies.md` + `stop-the-world.md` |
+| **Adding/editing frontend user-visible strings** | `docs/agents/i18n.md` (namespace layout + `t()` rules; never hard-code CJK) |
 | **Writing or modifying any test** | `tests/AGENTS.md` (30-second decision tree) |
 | Deployment / Docker / performance | `abm-docker/README.md` + `docs/feature-parallellab/PLAN-5000-concurrency.md` |
 

@@ -247,6 +247,11 @@ async def _execute_true_parallel(task: 'Task') -> None:
 - [x] 总结上下文消息优化（去掉工具调用参数）
 - [x] print → logger 迁移
 - [x] Claude `<tool_call>` 调用完善
+- [x] 前端 i18n 文件结构拆分（locales 拆成 23 个 namespace；zh/en key 一致性校验；新增 `docs/agents/i18n.md` 指南；删除 `GraphitiTab_old.tsx` 孤儿；样板页 Agents/History/Login/LightRAGDocumentManager/RagasEvaluation 改造为纯 `t()` 调用）
+
+## 进行中
+
+- [ ] **前端硬编码中文清理**：当前仍有 225 个 `.tsx` 文件含约 5274 行用户可见硬编码中文。债务地图见 `docs/agents/i18n-hardcoded-cjk-report.md`（由 `frontend/scripts/scan-hardcoded-cjk.js` 自动生成）。已完成（用户高频页）：`AutonomousTaskModal.tsx`、`ActionSpaceDetail.tsx`、`ExperimentListPage.tsx`、`ExperimentDesign.tsx`、`DocumentManager.tsx`。Top 30 剩余热点：`ObserverManagement.tsx` / `JointSpaceManagement.tsx` / `ToolManagement.tsx` / `ChunkSettings.tsx` / `GraphitiTab.tsx` / `MarketPage.tsx` / …。每次清理后重跑扫描刷新报告。
 
 ---
 
