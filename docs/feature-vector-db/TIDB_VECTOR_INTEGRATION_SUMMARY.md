@@ -112,7 +112,7 @@ export TIDB_DATABASE_URL="mysql://user:password@host:port/database"
 
 ### 基础使用
 ```python
-from app.services.vector_db import vector_db
+from app.services.vector_db_tidb import vector_db
 
 # 初始化服务
 vector_db.initialize(connection_string)

@@ -103,7 +103,7 @@ from graphiti_core.nodes import EpisodeType
 from graphiti_core.embedder.base import BaseEmbedder
 from graphiti_core.embedder.config import EmbedderConfig
 
-from app.services.vector_db.embedding_service import embedding_service
+from app.services.vector_db_tidb.embedding_service import embedding_service
 from app.models import ModelConfig
 
 logger = logging.getLogger(__name__)
@@ -558,7 +558,7 @@ class CustomerEntity(EntityNode):
 ### 3. 与现有向量数据库协同
 
 ```python
-from app.services.vector_db import vector_db_service
+from app.services.vector_db_tidb import vector_db_service
 
 async def hybrid_knowledge_search(query: str, top_k: int = 10):
     """混合知识搜索：结合 Graphiti 和现有向量数据库"""
@@ -710,7 +710,7 @@ def monitor_graphiti_performance(func):
 2. **嵌入模型加载失败**
    ```python
    # 检查现有嵌入服务状态
-   from app.services.vector_db.embedding_service import embedding_service
+   from app.services.vector_db_tidb.embedding_service import embedding_service
    model = embedding_service.get_default_embedding_model()
    print(f"默认嵌入模型: {model.name if model else 'None'}")
    ```
@@ -740,7 +740,7 @@ async def debug_graphiti_status():
     print(f"Graphiti 初始化状态: {graphiti_service.is_initialized()}")
 
     # 检查嵌入服务
-    from app.services.vector_db.embedding_service import embedding_service
+    from app.services.vector_db_tidb.embedding_service import embedding_service
     model = embedding_service.get_default_embedding_model()
     print(f"嵌入模型: {model.name if model else 'None'}")
 

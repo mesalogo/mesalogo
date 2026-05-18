@@ -321,7 +321,7 @@ config = {
 ### 1. 创建知识库
 
 ```python
-from app.services.vector_db_service import get_vector_db_service
+from app.services.vector_db_milvus import get_vector_db_service
 
 vector_db_service = get_vector_db_service()
 

@@ -7,8 +7,8 @@
 import logging
 from typing import Dict, Any, List, Tuple
 from app.models import KnowledgeFileChunk, Knowledge, db
-from app.services.vector_db.embedding_service import embedding_service
-from app.services.vector_db_service import get_vector_db_service, get_collection_name
+from app.services.vector_db_tidb.embedding_service import embedding_service
+from app.services.vector_db_milvus import get_vector_db_service, get_collection_name
 
 logger = logging.getLogger(__name__)
 

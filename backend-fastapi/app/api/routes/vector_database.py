@@ -142,7 +142,7 @@ def _validate_config(provider: str, config: Dict[str, Any], result: VectorDBTest
     """Level 1: 配置验证"""
     try:
         # 检查嵌入模型
-        from app.services.vector_db.embedding_service import embedding_service
+        from app.services.vector_db_tidb.embedding_service import embedding_service
         default_model = embedding_service.get_default_embedding_model()
         if not default_model:
             result.set_config_validation(False, "未配置默认嵌入模型，请先在模型配置中设置默认嵌入模型")
@@ -354,9 +354,9 @@ class TiDBTestOperations(VectorDBTestOperations):
     def _initialize_services(self):
         """初始化TiDB服务"""
         if not self.table_manager:
-            from app.services.vector_db.table_manager import vector_table_manager
-            from app.services.vector_db.vector_operations import vector_operations
-            from app.services.vector_db.tidb_connection import tidb_connection_manager
+            from app.services.vector_db_tidb.table_manager import vector_table_manager
+            from app.services.vector_db_tidb.vector_operations import vector_operations
+            from app.services.vector_db_tidb.tidb_connection import tidb_connection_manager
 
             self.table_manager = vector_table_manager
             self.vector_operations = vector_operations
@@ -367,7 +367,7 @@ class TiDBTestOperations(VectorDBTestOperations):
         try:
             self._initialize_services()
 
-            from app.services.vector_db.models import VectorCollection, VectorDistanceMetric
+            from app.services.vector_db_tidb.models import VectorCollection, VectorDistanceMetric
 
             test_collection = VectorCollection(
                 name=self.test_container_name,
@@ -386,7 +386,7 @@ class TiDBTestOperations(VectorDBTestOperations):
         try:
             self._initialize_services()
 
-            from app.services.vector_db.models import VectorRecord, VectorDataType
+            from app.services.vector_db_tidb.models import VectorRecord, VectorDataType
             import uuid
             from datetime import datetime
 
@@ -421,7 +421,7 @@ class TiDBTestOperations(VectorDBTestOperations):
         try:
             self._initialize_services()
 
-            from app.services.vector_db.models import VectorDistanceMetric
+            from app.services.vector_db_tidb.models import VectorDistanceMetric
 
             success, results, _ = self.vector_operations.search_vectors(
                 table_name=self.test_container_name,
@@ -732,7 +732,7 @@ def _test_generic_vector_operations(provider: str, config: Dict[str, Any], resul
 def _test_tidb_connection(config: Dict[str, Any], result: VectorDBTestResult) -> bool:
     """TiDB连接测试"""
     try:
-        from app.services.vector_db.tidb_config import tidb_config_manager
+        from app.services.vector_db_tidb.tidb_config import tidb_config_manager
 
         connection_string = config.get('connectionString')
         tidb_config = tidb_config_manager.create_config(connection_string)
@@ -1127,8 +1127,8 @@ TiDB向量数据库API路由
 
 from typing import Dict, Any
 
-from app.services.vector_db.tidb_config import tidb_config_manager, TiDBConfig
-from app.services.vector_db.models import VectorCollection, VectorDistanceMetric, VectorDataType
+from app.services.vector_db_tidb.tidb_config import tidb_config_manager, TiDBConfig
+from app.services.vector_db_tidb.models import VectorCollection, VectorDistanceMetric, VectorDataType
 from app.models import ModelConfig
 
 logger = logging.getLogger(__name__)

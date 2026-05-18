@@ -12,12 +12,12 @@ work at import time:
     submodule they need (see AGENTS.md §3.2 "no legacy-API back-compat
     shims"). Concretely: do not import ``vector_db.tidb_vector_service``
     or ``vector_db.initialize_vector_db`` from the package root; import
-    ``app.services.vector_db.tidb_vector_service`` etc. directly.
+    ``app.services.vector_db_tidb.tidb_vector_service`` etc. directly.
 
 Import the matching submodule for what you need:
 
-    from app.services.vector_db.tidb_config import tidb_config_manager
-    from app.services.vector_db.tidb_vector_service import tidb_vector_service
-    from app.services.vector_db.embedding_service import embedding_service
-    from app.services.vector_db.models import VectorDistanceMetric, VectorDataType
+    from app.services.vector_db_tidb.tidb_config import tidb_config_manager
+    from app.services.vector_db_tidb.tidb_vector_service import tidb_vector_service
+    from app.services.vector_db_tidb.embedding_service import embedding_service
+    from app.services.vector_db_tidb.models import VectorDistanceMetric, VectorDataType
 """

@@ -68,7 +68,7 @@ pip install tidb-vector[client]==0.0.9 pymysql==1.1.1 sentence-transformers==3.3
 ### 2. 基础配置
 
 ```python
-from app.services.vector_db import initialize_vector_db, vector_db
+from app.services.vector_db_tidb import initialize_vector_db, vector_db
 
 # 初始化向量数据库服务
 connection_string = "mysql://user:password@host:port/database"
@@ -140,7 +140,7 @@ if success:
 ### 1. 自定义嵌入模型
 
 ```python
-from app.services.vector_db.embedding_service import embedding_service
+from app.services.vector_db_tidb.embedding_service import embedding_service
 
 # 使用指定的嵌入模型
 success, embeddings, meta_info = embedding_service.generate_embeddings(
@@ -152,7 +152,7 @@ success, embeddings, meta_info = embedding_service.generate_embeddings(
 ### 2. 批量操作
 
 ```python
-from app.services.vector_db.vector_operations import vector_operations
+from app.services.vector_db_tidb.vector_operations import vector_operations
 
 # 批量插入文档和向量
 success, message, info = vector_operations.batch_insert_with_embeddings(
@@ -332,7 +332,7 @@ import logging
 
 # 启用详细日志
 logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger('app.services.vector_db')
+logger = logging.getLogger('app.services.vector_db_tidb')
 ```
 
 ## 最佳实践

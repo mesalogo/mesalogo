@@ -35,7 +35,7 @@ def handle_process_file_pipeline(job_id: str, params: Dict[str, Any], context: D
         }
     """
     from app.models import db, KnowledgeDocument, KnowledgeFileConversion, KnowledgeFileChunking, KnowledgeFileChunk, KnowledgeFileEmbedding, Job
-    from app.services.vector_db_service import get_vector_db_service, get_collection_name
+    from app.services.vector_db_milvus import get_vector_db_service, get_collection_name
     
     manager = context["manager"]
     knowledge_id = params["knowledge_id"]

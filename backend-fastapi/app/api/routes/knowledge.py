@@ -464,7 +464,7 @@ def delete_knowledge(knowledge_id, current_user=Depends(get_current_user)):
         # 2. 删除向量数据库中的整个知识库（drop collection）
         vector_deleted = False
         try:
-            from app.services.vector_db_service import get_vector_db_service, get_collection_name
+            from app.services.vector_db_milvus import get_vector_db_service, get_collection_name
             
             vector_db_service = get_vector_db_service()
             if vector_db_service.is_available():
@@ -2806,7 +2806,7 @@ async def search_knowledge(knowledge_id, request: Request):
 
         # 使用知识库查询服务（支持混合检索）
         from app.services.knowledge_base.knowledge_query_service import KnowledgeQueryService
-        from app.services.vector_db_service import get_vector_db_service
+        from app.services.vector_db_milvus import get_vector_db_service
         
         score_threshold = data.get('score_threshold', 0.0)
         

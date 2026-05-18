@@ -110,7 +110,7 @@ class DocumentChunker:
             
             # 6.3 删除 Milvus 中的向量
             try:
-                from app.services.vector_db_service import get_vector_db_service, get_collection_name
+                from app.services.vector_db_milvus import get_vector_db_service, get_collection_name
                 
                 vector_db_service = get_vector_db_service()
                 if vector_db_service.is_available():

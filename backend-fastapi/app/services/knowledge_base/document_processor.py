@@ -160,7 +160,7 @@ class VectorProcessor:
                         model_config=None) -> Tuple[bool, List[Dict[str, Any]], Dict[str, Any]]:
         """对文本块进行向量化"""
         try:
-            from app.services.vector_db.embedding_service import embedding_service
+            from app.services.vector_db_tidb.embedding_service import embedding_service
             
             # 提取文本
             texts = [chunk['text'] for chunk in chunks]
@@ -207,7 +207,7 @@ class KnowledgeBaseProcessor:
                 return False, {'error': '向量化处理失败', 'details': vector_info}
             
             # 3. 存储到向量数据库
-            from app.services.vector_db_service import get_vector_db_service
+            from app.services.vector_db_milvus import get_vector_db_service
             vector_db_service = get_vector_db_service()
 
             if vector_db_service.is_available():

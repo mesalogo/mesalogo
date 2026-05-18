@@ -15,7 +15,7 @@ from app.extensions import db
 from app.models import (
     Role, Knowledge, RoleKnowledge, KnowledgeDocument, KnowledgeFileChunk
 )
-from app.services.vector_db_service import get_vector_db_service, get_collection_name
+from app.services.vector_db_milvus import get_vector_db_service, get_collection_name
 from app.services.external_knowledge import ExternalKnowledgeService
 from app.services.knowledge_base.bm25_search_service import BM25SearchService, reciprocal_rank_fusion, weighted_fusion
 from app.services.knowledge_base.reranker_service import RerankerService

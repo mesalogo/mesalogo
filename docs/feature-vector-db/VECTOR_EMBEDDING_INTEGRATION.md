@@ -87,7 +87,7 @@ if not default_model:
 ### 1. 嵌入模型服务集成
 
 ```python
-from app.services.vector_db.embedding_service import embedding_service
+from app.services.vector_db_tidb.embedding_service import embedding_service
 
 # 获取默认嵌入模型
 default_model = embedding_service.get_default_embedding_model()
@@ -102,8 +102,8 @@ embed_success, embeddings, embed_info = embedding_service.generate_embeddings(
 ### 2. TiDB向量操作集成
 
 ```python
-from app.services.vector_db.vector_operations import vector_operations
-from app.services.vector_db.table_manager import vector_table_manager
+from app.services.vector_db_tidb.vector_operations import vector_operations
+from app.services.vector_db_tidb.table_manager import vector_table_manager
 
 # 创建测试表
 table_success, table_message = vector_table_manager.create_table(
