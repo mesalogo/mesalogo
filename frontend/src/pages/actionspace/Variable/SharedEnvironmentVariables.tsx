@@ -8,11 +8,13 @@ import {
   ShareAltOutlined, LockOutlined, UnlockOutlined
 } from '@ant-design/icons';
 import sharedEnvironmentVariablesAPI from '../../../services/api/sharedEnvironmentVariables';
+import { useTranslation } from 'react-i18next';
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;
 
 const SharedEnvironmentVariables = () => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const [variables, setVariables] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -27,7 +29,7 @@ const SharedEnvironmentVariables = () => {
       const data = await sharedEnvironmentVariablesAPI.getAll();
       setVariables(data);
     } catch (error) {
-      message.error('获取共享环境变量失败');
+      message.error(t('sharedEnvVar.msg.fetchFailed'));
     } finally {
       setLoading(false);
     }
@@ -65,10 +67,10 @@ const SharedEnvironmentVariables = () => {
   const handleDeleteVariable = async (id) => {
     try {
       await sharedEnvironmentVariablesAPI.delete(id);
-      message.success('共享环境变量删除成功');
+      message.success(t('sharedEnvVar.msg.deleteSuccess'));
       fetchVariables();
     } catch (error) {
-      message.error(error.response?.data?.error || '删除失败');
+      message.error(error.response?.data?.error || t('sharedEnvVar.msg.deleteFailed'));
     }
   };
 
@@ -87,16 +89,16 @@ const SharedEnvironmentVariables = () => {
 
       if (editingVariable) {
         await sharedEnvironmentVariablesAPI.update(editingVariable.id, variableData);
-        message.success('共享环境变量更新成功');
+        message.success(t('sharedEnvVar.msg.updateSuccess'));
       } else {
         await sharedEnvironmentVariablesAPI.create(variableData);
-        message.success('共享环境变量创建成功');
+        message.success(t('sharedEnvVar.msg.createSuccess'));
       }
 
       setIsModalVisible(false);
       fetchVariables();
     } catch (error) {
-      message.error(error.response?.data?.error || '操作失败');
+      message.error(error.response?.data?.error || t('sharedEnvVar.msg.opFailed'));
     }
   };
 
@@ -106,23 +108,23 @@ const SharedEnvironmentVariables = () => {
     form.resetFields();
   };
 
-  // 表格列定义
+  // table columns
   const columns = [
     {
-      title: '变量名',
+      title: t('sharedEnvVar.col.name'),
       dataIndex: 'name',
       key: 'name',
       width: 150,
       render: (text) => <Text code>{text}</Text>
     },
     {
-      title: '显示标签',
+      title: t('sharedEnvVar.col.label'),
       dataIndex: 'label',
       key: 'label',
       width: 150
     },
     {
-      title: '默认值',
+      title: t('sharedEnvVar.col.defaultValue'),
       dataIndex: 'value',
       key: 'value',
       width: 200,
@@ -133,7 +135,7 @@ const SharedEnvironmentVariables = () => {
       )
     },
     {
-      title: '权限',
+      title: t('sharedEnvVar.col.permission'),
       dataIndex: 'is_readonly',
       key: 'is_readonly',
       width: 80,
@@ -142,22 +144,21 @@ const SharedEnvironmentVariables = () => {
           icon={readonly ? <LockOutlined /> : <UnlockOutlined />}
           color={readonly ? 'red' : 'green'}
         >
-          {readonly ? '只读' : '读写'}
+          {readonly ? t('sharedEnvVar.readonly') : t('sharedEnvVar.readwrite')}
         </Tag>
       )
     },
     {
-      title: '绑定空间',
+      title: t('sharedEnvVar.col.boundSpaces'),
       dataIndex: 'bound_spaces',
       key: 'bound_spaces',
       width: 200,
       render: (boundSpaces) => {
         if (!boundSpaces || boundSpaces.length === 0) {
-          return <Text type="secondary">未绑定</Text>;
+          return <Text type="secondary">{t('sharedEnvVar.notBound')}</Text>;
         }
 
         if (boundSpaces.length <= 2) {
-          // 如果绑定空间数量少，直接显示所有空间名称
           return (
             <Space size={4} wrap>
               {boundSpaces.map(space => (
@@ -168,7 +169,6 @@ const SharedEnvironmentVariables = () => {
             </Space>
           );
         } else {
-          // 如果绑定空间较多，显示前两个和数量
           return (
             <Space size={4} wrap>
               {boundSpaces.slice(0, 2).map(space => (
@@ -179,7 +179,7 @@ const SharedEnvironmentVariables = () => {
               <Tooltip
                 title={
                   <div>
-                    <div style={{ marginBottom: 4 }}>所有绑定空间：</div>
+                    <div style={{ marginBottom: 4 }}>{t('sharedEnvVar.allBoundSpaces')}</div>
                     {boundSpaces.map(space => (
                       <div key={space.id}>• {space.name}</div>
                     ))}
@@ -187,7 +187,7 @@ const SharedEnvironmentVariables = () => {
                 }
               >
                 <Tag color="orange">
-                  +{boundSpaces.length - 2}个
+                  {t('sharedEnvVar.moreCount', { count: boundSpaces.length - 2 })}
                 </Tag>
               </Tooltip>
             </Space>
@@ -196,25 +196,25 @@ const SharedEnvironmentVariables = () => {
       }
     },
     {
-      title: '描述',
+      title: t('sharedEnvVar.col.description'),
       dataIndex: 'description',
       key: 'description',
       ellipsis: true,
       render: (text) => (
         <Tooltip title={text}>
-          <Text type="secondary">{text || '无描述'}</Text>
+          <Text type="secondary">{text || t('sharedEnvVar.noDesc')}</Text>
         </Tooltip>
       )
     },
     {
-      title: '创建时间',
+      title: t('sharedEnvVar.col.createdAt'),
       dataIndex: 'created_at',
       key: 'created_at',
       width: 150,
       render: (text) => text ? new Date(text).toLocaleString() : '-'
     },
     {
-      title: '操作',
+      title: t('sharedEnvVar.col.actions'),
       key: 'actions',
       width: 120,
       fixed: 'right' as const,
@@ -222,25 +222,23 @@ const SharedEnvironmentVariables = () => {
         <Space>
           <Button
             type="text"
-           
             icon={<EditOutlined />}
             onClick={() => handleEditVariable(record)}
           />
           <Popconfirm
-            title="确定删除这个共享环境变量吗？"
+            title={t('sharedEnvVar.confirm.deleteTitle')}
             description={
               record.bound_spaces && record.bound_spaces.length > 0
-                ? `该变量已被 ${record.bound_spaces.length} 个行动空间绑定（${record.bound_spaces.map(s => s.name).join('、')}），删除后将影响这些空间`
-                : '删除后无法恢复'
+                ? t('sharedEnvVar.confirm.deleteWithBindings', { count: record.bound_spaces.length, names: record.bound_spaces.map(s => s.name).join(t('sharedEnvVar.listSep')) })
+                : t('sharedEnvVar.confirm.deleteDesc')
             }
             onConfirm={() => handleDeleteVariable(record.id)}
-            okText="确定"
-            cancelText="取消"
+            okText={t('sharedEnvVar.confirm.ok')}
+            cancelText={t('sharedEnvVar.confirm.cancel')}
             disabled={record.bound_spaces && record.bound_spaces.length > 0}
           >
             <Button
               type="text"
-             
               danger
               icon={<DeleteOutlined />}
               disabled={record.bound_spaces && record.bound_spaces.length > 0}
@@ -255,24 +253,24 @@ const SharedEnvironmentVariables = () => {
     <div>
       <div style={{ marginBottom: 16 }}>
         <Text type="secondary">
-          管理可在多个行动空间中共享的环境变量，提高变量复用性和一致性
+          {t('sharedEnvVar.pageDesc')}
         </Text>
       </div>
 
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <Text strong>共 {variables.length} 个共享环境变量</Text>
+          <Text strong>{t('sharedEnvVar.totalCount', { count: variables.length })}</Text>
         </div>
         <Space>
           <Button icon={<ReloadOutlined />} onClick={fetchVariables}>
-            刷新
+            {t('sharedEnvVar.refresh')}
           </Button>
           <Button
             type="primary"
             icon={<PlusOutlined />}
             onClick={handleCreateVariable}
           >
-            创建共享变量
+            {t('sharedEnvVar.createBtn')}
           </Button>
         </Space>
       </div>
@@ -287,13 +285,13 @@ const SharedEnvironmentVariables = () => {
           pageSize: 10,
           showSizeChanger: true,
           showQuickJumper: true,
-          showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`
+          showTotal: (total, range) => t('sharedEnvVar.paginationRange', { from: range[0], to: range[1], total })
         }}
       />
 
-      {/* 添加/编辑共享变量对话框 */}
+      {/* add/edit modal */}
       <Modal
-        title={`${editingVariable ? '编辑' : '创建'}共享环境变量`}
+        title={editingVariable ? t('sharedEnvVar.editTitle') : t('sharedEnvVar.createTitle')}
         open={isModalVisible}
         onCancel={handleModalCancel}
         onOk={handleModalSubmit}
@@ -306,34 +304,34 @@ const SharedEnvironmentVariables = () => {
         >
           <Form.Item
             name="name"
-            label="变量名"
+            label={t('sharedEnvVar.col.name')}
             rules={[
-              { required: true, message: '请输入变量名' },
-              { pattern: /^[a-zA-Z][a-zA-Z0-9_]*$/, message: '变量名必须以字母开头，只能包含字母、数字和下划线' }
+              { required: true, message: t('sharedEnvVar.form.nameReq') },
+              { pattern: /^[a-zA-Z][a-zA-Z0-9_]*$/, message: t('sharedEnvVar.form.namePattern') }
             ]}
           >
             <Input 
-              placeholder="输入变量名，如: shared_config" 
+              placeholder={t('sharedEnvVar.form.namePh')}
               disabled={!!editingVariable}
             />
           </Form.Item>
 
           <Form.Item
             name="label"
-            label="显示标签"
-            rules={[{ required: true, message: '请输入显示标签' }]}
+            label={t('sharedEnvVar.col.label')}
+            rules={[{ required: true, message: t('sharedEnvVar.form.labelReq') }]}
           >
-            <Input placeholder="输入显示标签，如: 共享配置" />
+            <Input placeholder={t('sharedEnvVar.form.labelPh')} />
           </Form.Item>
 
           <Form.Item
             name="value"
-            label="默认值"
-            rules={[{ required: true, message: '请输入默认值' }]}
+            label={t('sharedEnvVar.col.defaultValue')}
+            rules={[{ required: true, message: t('sharedEnvVar.form.valueReq') }]}
           >
             <TextArea 
               rows={3} 
-              placeholder="输入默认值"
+              placeholder={t('sharedEnvVar.form.valuePh')}
               showCount
               maxLength={500}
             />
@@ -341,12 +339,12 @@ const SharedEnvironmentVariables = () => {
 
           <Form.Item
             name="description"
-            label="描述"
-            extra="可选，描述该变量的用途和使用场景"
+            label={t('sharedEnvVar.col.description')}
+            extra={t('sharedEnvVar.form.descriptionExtra')}
           >
             <TextArea 
               rows={2} 
-              placeholder="描述该变量的用途和使用场景（可选）"
+              placeholder={t('sharedEnvVar.form.descriptionPh')}
               showCount
               maxLength={200}
             />
@@ -354,13 +352,13 @@ const SharedEnvironmentVariables = () => {
 
           <Form.Item
             name="is_readonly"
-            label="权限设置"
+            label={t('sharedEnvVar.form.permission')}
             valuePropName="checked"
-            extra="只读变量在任务中不能被修改，适用于配置类变量"
+            extra={t('sharedEnvVar.form.permissionExtra')}
           >
             <Switch
-              checkedChildren="读写"
-              unCheckedChildren="只读"
+              checkedChildren={t('sharedEnvVar.readwrite')}
+              unCheckedChildren={t('sharedEnvVar.readonly')}
             />
           </Form.Item>
         </Form>
