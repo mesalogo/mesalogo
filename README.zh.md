@@ -12,6 +12,12 @@
 
 [English](./README.md) · [文档](./docs/) · [架构](./docs/key-arch/) · [路线图](./TODO.md)
 
+<p>
+  <img src="./docs/pics/login.jpg" alt="MesaLogo 登录页" width="48%" />
+  &nbsp;
+  <img src="./docs/pics/task-1.jpg" alt="MesaLogo 行动任务面板与多智能体协作视图" width="48%" />
+</p>
+
 </div>
 
 ---

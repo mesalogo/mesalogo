@@ -112,7 +112,64 @@ Phase 1 MVP does not enforce ODM (Open Domain Model / 开放领域约束). Calli
 
 ---
 
-## 4. Checklist for adding a new route (新路由)
+## 4. No silent fallbacks (零兜底原则)
+
+> Established 2026-05-18. Triggered by `init_database()` originally calling
+> `create_all()` as a "fallback" alongside Alembic, which silently masked
+> schema drift between code and DB.
+
+**Rule.** When the project depends on a piece of infrastructure to be in a
+specific state (DB schema matches code, Redis reachable, required config
+key set, MCP server alive at startup, …), the code must **fail loud and
+abort** when that precondition is unmet. It must **not** "try the next
+best thing", "log and continue", or "create a stub so the rest of the
+service can start".
+
+The reason is asymmetric cost: a service that fails to start triggers
+the on-call/dev terminal immediately; a service that starts and then
+returns subtly wrong data corrupts state and is found out hours or days
+later, usually only after a user complaint.
+
+### What this looks like in practice
+
+- **Do**: `raise RuntimeError(...)` / let the exception propagate out of
+  `startup_event`. uvicorn will exit non-zero. systemd / docker / your
+  terminal will all notice.
+- **Don't**: wrap the failing operation in `try / except Exception` and
+  log it. That is the textbook silent fallback.
+- **Don't**: have two execution paths "in case the primary one fails"
+  unless both are part of the documented contract (e.g. cache miss →
+  DB read is fine; "Alembic isn't installed → run `create_all()`
+  instead" is **not** fine).
+
+### Exceptions (the only allowed bypasses)
+
+A fallback / skip is allowed **only** when:
+
+1. It is the documented mechanism for the operator to take responsibility
+   themselves (e.g. `ABM_SKIP_DB_MIGRATE=1` says "I'll run `alembic
+   upgrade head` outside the process; please don't auto-migrate"), and
+2. It is gated by an explicit signal (env var / config flag / CLI arg)
+   that the operator must set, and
+3. The bypass branch logs a `logger.warning(...)` saying which guarantee
+   is now the operator's responsibility.
+
+Implicit "if it doesn't work, try this other way" fallbacks are not
+allowed under this rule, period. If you think your case is an
+exception, write it up in `docs/agents/failures/` first.
+
+### Concrete current users of this rule
+
+- `core/database.py::init_database` and `_auto_migrate` raise on any
+  Alembic / GET_LOCK / introspection error. The only bypass is
+  `ABM_SKIP_DB_MIGRATE=1`. See `backend-fastapi/alembic/README.md`.
+- Open follow-up: `_seed_if_needed` and `_load_system_settings`
+  currently swallow exceptions. Those will be brought under this rule
+  in a separate change.
+
+---
+
+## 5. Checklist for adding a new route (新路由)
 
 1. Route function in `app/api/routes/<module>.py`.
 2. Mount the router in `app/api/__init__.py` or `main.py`.
@@ -124,7 +181,7 @@ Phase 1 MVP does not enforce ODM (Open Domain Model / 开放领域约束). Calli
 
 ---
 
-## 5. Performance / 5000-concurrency notes
+## 6. Performance / 5000-concurrency notes
 
 `docs/feature-parallellab/PLAN-5000-concurrency.md` is the target state. For any recent PR, self-check:
 
@@ -136,7 +193,7 @@ Phase 1 MVP does not enforce ODM (Open Domain Model / 开放领域约束). Calli
 
 ---
 
-## 6. Tests
+## 7. Tests
 
 Full rules: ⭐ [`/tests/AGENTS.md`](../tests/AGENTS.md) (30-second decision tree, directory layout, fixture naming, red lines, minimum set for new features).
 
@@ -145,7 +202,7 @@ Full rules: ⭐ [`/tests/AGENTS.md`](../tests/AGENTS.md) (30-second decision tre
 - Location: **repo-root `/tests/`** (promoted from `backend-fastapi/tests/` on 2026-05-18). `tests/conftest.py` injects `backend-fastapi/` into `sys.path`, so `from app.* import ...` / `from core.* import ...` still work.
 - Layout: **mirror `app/`**. `app/services/heartbeat/clock.py` ↔ `tests/unit/services/heartbeat/test_clock.py`.
 - Layers: `unit/` (ms, no I/O) / `integration/` (s, DB+Redis) / `e2e/` (min, full pipeline) / `contract/` (signatures non-regression).
-- Framework: pytest + anyio (**not** `pytest-asyncio`, see `/tests/AGENTS.md §6`).
+- Framework: pytest + anyio (**not** `pytest-asyncio`, see `/tests/AGENTS.md §7`).
 - Run from repo root: `pytest tests/...`. The repo-root `pytest.ini` is authoritative.
 - **Bug-fix flow is non-negotiable**: first write a test that **reproduces** the bug and watch it **fail**, then fix to green. Otherwise you don't know if you fixed it.
 - LLM **may** be mocked — use `MockLLM` from `tests/fixtures/mocks/llm.py` via dependency injection.
@@ -155,7 +212,7 @@ Full rules: ⭐ [`/tests/AGENTS.md`](../tests/AGENTS.md) (30-second decision tre
 
 ---
 
-## 7. Config / secrets (配置 / 密钥)
+## 8. Config / secrets (配置 / 密钥)
 
 - Dev uses `config.conf` (INI format) + `.env`.
 - **Never commit `config.conf` or any key.** `.gitignore` covers this, but watch out for an agent doing `git add -f` to bypass it.
@@ -163,4 +220,4 @@ Full rules: ⭐ [`/tests/AGENTS.md`](../tests/AGENTS.md) (30-second decision tre
 
 ---
 
-_last human review: 2026-05-18_ (test tree promoted to repo-root `/tests/`; stray `test_*.py` scripts renamed to `check_*.py` / `smoke_*.py`; `app/utils/document_parser_test.py` → `document_parser_probe.py`)
+_last human review: 2026-05-18_ (test tree promoted to repo-root `/tests/`; stray `test_*.py` scripts renamed to `check_*.py` / `smoke_*.py`; `app/utils/document_parser_test.py` → `document_parser_probe.py`; added §4 "No silent fallbacks" + auto Alembic migration on startup)

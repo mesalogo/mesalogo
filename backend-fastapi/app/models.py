@@ -710,7 +710,17 @@ class ActionTask(BaseMixin, db.Model):
     direct_agents = relationship("Agent", back_populates="action_task")
     messages = relationship("Message", back_populates="action_task")
     environment_variables = relationship("ActionTaskEnvironmentVariable", back_populates="action_task")
-    conversations = relationship("Conversation", back_populates="action_task")
+    # NOTE: cascade + passive_deletes work together with ondelete='CASCADE' on
+    # Conversation.action_task_id (see the Conversation model below). Without
+    # this, deleting an ActionTask makes SQLAlchemy try to NULL the child FK,
+    # which collides with the NOT NULL column and raises MariaDB 1048.
+    # See docs/agents/failures/2026-05-18-action-task-delete-cascade-default.md.
+    conversations = relationship(
+        "Conversation",
+        back_populates="action_task",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
     published_versions = relationship("PublishedTask", back_populates="action_task", cascade="all, delete-orphan")
 
     def __repr__(self):
@@ -723,7 +733,11 @@ class Conversation(BaseMixin, db.Model):
     status = Column(String(20), default='active')  # active, completed, terminated
     mode = Column(String(20), default='sequential')  # sequential, panel
 
-    action_task_id = Column(String(36), ForeignKey('action_tasks.id'), nullable=False)
+    # ondelete='CASCADE': DB-level guarantee that deleting an ActionTask wipes
+    # its conversations. Paired with ActionTask.conversations (cascade="all,
+    # delete-orphan", passive_deletes=True) on the parent side so SQLAlchemy
+    # does NOT try to NULL this column out before the parent row is removed.
+    action_task_id = Column(String(36), ForeignKey('action_tasks.id', ondelete='CASCADE'), nullable=False)
 
     action_task = relationship("ActionTask", back_populates="conversations")
     agents = relationship("ConversationAgent", back_populates="conversation")

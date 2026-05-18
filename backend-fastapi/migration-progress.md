@@ -102,6 +102,23 @@ vnc, workspace
   - `/api/settings` → 50 keys
 - [x] Swagger UI：`/docs` 可访问
 
+## Phase 8: Alembic 接入 ✅ (2026-05-18)
+
+- [x] `alembic init alembic` — 骨架就位
+- [x] `alembic/env.py` 重写：DB URL 从 `core.config.settings.DATABASE_URI`
+      读取（不写 ini，避免泄密）；`target_metadata =
+      app.extensions.db.Model.metadata`
+- [x] Baseline revision `fedea876a659`（autogenerate 出空 diff，
+      确认 `create_all()` 输出与 `models.py` 一致）；运行库已
+      `alembic stamp head`
+- [x] 第一次 schema 修复 revision `a51a7c66578c` —
+      `conversations.action_task_id` FK 加上 `ON DELETE CASCADE`，
+      配合 `ActionTask.conversations.cascade="all, delete-orphan"`
+      解决"删除带会话的任务时 MariaDB 1048"问题
+- [x] `backend-fastapi/alembic/README.md` — 全新库 / 已有库 / 日常工作流的操作指南
+- [x] 旧的 `backend-fastapi/migrations/` 目录保留为历史（LightRAG 手写 SQL），
+      不接收新迁移
+
 ---
 
 ## 剩余工作

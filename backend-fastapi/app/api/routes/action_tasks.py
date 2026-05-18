@@ -676,7 +676,11 @@ async def create_action_task(request: Request, current_user=Depends(get_current_
         # 继续处理，不中断任务创建
 
     # 使用任务详情的API获取结果
-    task_detail = get_action_task(new_task.id)
+    # NOTE: get_action_task 是 FastAPI 路由处理函数，签名里 current_user=Depends(...) 只在
+    # 由框架注入时生效。这里是普通 Python 调用，必须显式把已经解析过的 current_user 传进去，
+    # 否则它会拿到一个 Depends 对象，触发
+    #   AttributeError: 'Depends' object has no attribute 'is_admin'
+    task_detail = get_action_task(new_task.id, current_user=current_user)
     return task_detail
 
 @router.put('/action-tasks/{task_id}')
@@ -735,7 +739,13 @@ def delete_action_task(task_id, request: Request, current_user=Depends(get_curre
         raise HTTPException(status_code=403, detail={'error': '无权限删除此行动任务'})
 
     # 获取级联删除参数
-    cascade = request.query_params.get('cascade', 'false').lower() == 'true'
+    # NOTE: 默认值是 true，与前端 actionTask.delete() 的默认值保持一致。
+    #   这里的 cascade 是"业务层级联"：主动停止 autonomous_task、清理 workspace
+    #   文件、清理 environment_variables / agents 等业务侧资源。
+    #   数据库层面的引用完整性由 schema 上的 FK ON DELETE CASCADE 兜底
+    #   （见 alembic revision a51a7c66578c），即使 cascade=false 也不会再因为
+    #   ORM 尝试 NULL 出子外键而触发 MariaDB 1048。
+    cascade = request.query_params.get('cascade', 'true').lower() == 'true'
     # 获取强制清理参数
     force_cleanup = request.query_params.get('force_cleanup', 'false').lower() == 'true'
 

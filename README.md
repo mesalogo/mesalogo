@@ -12,6 +12,12 @@
 
 [中文](./README.zh.md) · [Documentation](./docs/) · [Architecture](./docs/key-arch/) · [Roadmap](./TODO.md)
 
+<p>
+  <img src="./docs/pics/login.jpg" alt="MesaLogo login screen" width="48%" />
+  &nbsp;
+  <img src="./docs/pics/task-1.jpg" alt="MesaLogo action-task dashboard with multi-agent panel" width="48%" />
+</p>
+
 </div>
 
 ---

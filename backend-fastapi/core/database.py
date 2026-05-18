@@ -58,34 +58,151 @@ def get_db():
 
 def init_database():
     """
-    初始化数据库：创建表 + 种子数据
+    Initialise the database on application startup.
 
-    在应用启动时调用（替代 Flask 的 with app.app_context(): db.create_all()）
+    Order of operations (no silent fallbacks — any failure raises and
+    aborts startup, see backend-fastapi/AGENTS.md §"No silent fallbacks"):
+
+    1. Ensure import of every ORM model so SQLAlchemy metadata is
+       complete before Alembic introspects it.
+    2. Auto-migrate the schema to alembic head:
+         - empty DB                       → ``alembic upgrade head`` (creates schema)
+         - existing DB w/o ``alembic_version`` → ``alembic stamp head`` then upgrade head
+         - existing DB managed by alembic → ``alembic upgrade head`` (no-op if current)
+       In every case, ``alembic upgrade head`` is the final step, so a
+       schema drift between code and DB will surface here as an exception.
+    3. Seed initial data if required.
+    4. Load ``system_settings`` rows into the in-memory ``settings`` singleton.
+
+    Bypass (use **only** when an external operator manages migrations):
+        export ABM_SKIP_DB_MIGRATE=1
     """
-    from app.extensions import db as flask_compat_db
-
-    # 确保 data 目录存在（SQLite 场景）
+    # 1. SQLite data dir
     if settings.DATABASE_URI.startswith('sqlite'):
         data_dir = os.path.join(BASE_DIR, 'data')
         os.makedirs(data_dir, exist_ok=True)
 
-    # 导入所有模型，确保 metadata 注册完整
-    from app.models import Agent, Role, SystemSetting
-    from app.models import ActionSpace, ActionSpaceEnvironmentVariable, RoleVariable, ExternalEnvironmentVariable
+    # 2. Trigger every ORM model so metadata is complete for Alembic
+    import app.models  # noqa: F401
 
-    # 创建所有表
-    flask_compat_db.Model.metadata.create_all(bind=engine)
+    # 3. Schema → head
+    if os.environ.get('ABM_SKIP_DB_MIGRATE') == '1':
+        logger.warning(
+            "ABM_SKIP_DB_MIGRATE=1 — skipping automatic Alembic migration. "
+            "The operator is expected to have run `alembic upgrade head` manually. "
+            "If the schema is actually behind the code, ORM queries will fail at runtime."
+        )
+    else:
+        _auto_migrate()
 
-    # 验证
     inspector = inspect(engine)
     tables = inspector.get_table_names()
-    logger.info(f"数据库表创建成功: {tables}")
+    logger.info(f"数据库表数量: {len(tables)} (含 alembic_version)")
 
-    # 初始化种子数据
+    # 4. Seed + load system settings
     _seed_if_needed()
-
-    # 加载系统设置到 settings 单例
     _load_system_settings()
+
+
+# ─── Alembic auto-migration ──────────────────────────────────────────────
+# Why this lives in core/database.py instead of being a separate CLI step:
+#   uvicorn dev/prod startup is the single ground-truth entry point for
+#   "this version of the code is now running". Coupling migration to it
+#   makes "running code" ⇔ "schema at code's expected head" a hard
+#   invariant, instead of relying on humans to remember `alembic upgrade
+#   head` before each deploy.
+#
+# No silent fallbacks: any failure of GET_LOCK, of Alembic itself, or of
+# the introspection step is allowed to bubble up. Startup must die loud
+# rather than serve traffic on a half-migrated DB.
+
+_MIGRATION_LOCK_NAME = 'abm_alembic_upgrade'
+_MIGRATION_LOCK_TIMEOUT_SECONDS = 60
+
+
+def _auto_migrate() -> None:
+    """Bring the DB schema to ``alembic head``.
+
+    See decision matrix in :func:`init_database`. This function is
+    safe to call from multiple workers concurrently because it serialises
+    via a MySQL ``GET_LOCK`` named lock; for SQLite the lock is a no-op
+    since SQLite already serialises writes at the file level.
+    """
+    from alembic.config import Config
+    from alembic import command
+
+    alembic_ini = os.path.join(BASE_DIR, 'alembic.ini')
+    if not os.path.isfile(alembic_ini):
+        raise RuntimeError(
+            f"alembic.ini not found at {alembic_ini}; "
+            "the project requires Alembic to manage schema. "
+            "See backend-fastapi/alembic/README.md."
+        )
+
+    cfg = Config(alembic_ini)
+
+    # Inspect before locking so a totally unreachable DB fails fast and
+    # cleanly with a connection error, not a confusing GET_LOCK timeout.
+    inspector = inspect(engine)
+    existing = set(inspector.get_table_names())
+    has_alembic = 'alembic_version' in existing
+    has_business_tables = bool(existing - {'alembic_version'})
+
+    _acquire_migration_lock()
+    try:
+        if not has_business_tables:
+            logger.info("Empty DB detected — running `alembic upgrade head`")
+            command.upgrade(cfg, 'head')
+        elif not has_alembic:
+            # Legacy DB created by the old `create_all()` path before
+            # Alembic was wired up. Adopt it as the baseline, then
+            # upgrade in case the code's head is ahead.
+            logger.warning(
+                "Existing tables found but no alembic_version row — "
+                "stamping as baseline then upgrading to head"
+            )
+            command.stamp(cfg, 'head')
+            command.upgrade(cfg, 'head')
+        else:
+            logger.info("Running `alembic upgrade head` (no-op if already at head)")
+            command.upgrade(cfg, 'head')
+    finally:
+        _release_migration_lock()
+
+
+def _acquire_migration_lock() -> None:
+    """Serialise concurrent startup workers via a MySQL named lock.
+
+    No-op for SQLite (single-writer at file level) and for any other
+    backend that doesn't expose ``GET_LOCK`` — in those cases the
+    operator is responsible for ensuring only one process performs
+    migrations at startup.
+    """
+    if not settings.DATABASE_URI.startswith('mysql'):
+        return
+
+    with engine.connect() as conn:
+        got = conn.execute(
+            text("SELECT GET_LOCK(:name, :timeout)"),
+            {'name': _MIGRATION_LOCK_NAME, 'timeout': _MIGRATION_LOCK_TIMEOUT_SECONDS},
+        ).scalar()
+        if got != 1:
+            # 0 = timeout, NULL = error
+            raise RuntimeError(
+                f"Could not acquire migration lock '{_MIGRATION_LOCK_NAME}' "
+                f"within {_MIGRATION_LOCK_TIMEOUT_SECONDS}s. Another worker may "
+                "be migrating, or a previous worker died holding the lock."
+            )
+
+
+def _release_migration_lock() -> None:
+    if not settings.DATABASE_URI.startswith('mysql'):
+        return
+    with engine.connect() as conn:
+        conn.execute(
+            text("SELECT RELEASE_LOCK(:name)"),
+            {'name': _MIGRATION_LOCK_NAME},
+        )
 
 
 def _seed_if_needed():
