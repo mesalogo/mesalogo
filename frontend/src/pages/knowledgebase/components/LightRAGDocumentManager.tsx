@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Space, App, Typography, Tag, Upload, Alert } from 'antd';
+import { Table, Button, Space, App, Tag, Upload, Alert } from 'antd';
 import { DeleteOutlined, ReloadOutlined, SyncOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined, InfoCircleOutlined, UploadOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import knowledgeAPI from '../../../services/api/knowledge';
-
-const { Title, Text } = Typography;
 
 interface LightRAGDocumentManagerProps {
   knowledgeId: string;
   workspace?: string;
 }
 
-const LightRAGDocumentManager: React.FC<LightRAGDocumentManagerProps> = ({ 
+const LightRAGDocumentManager: React.FC<LightRAGDocumentManagerProps> = ({
   knowledgeId,
-  workspace 
 }) => {
+  const { t } = useTranslation('knowledgebase');
   const { message, modal } = App.useApp();
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -21,24 +20,26 @@ const LightRAGDocumentManager: React.FC<LightRAGDocumentManagerProps> = ({
 
   useEffect(() => {
     fetchDocuments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [knowledgeId]);
 
-  // 获取文档列表
+  // Fetch document list
   const fetchDocuments = async () => {
     try {
       setLoading(true);
       const response = await knowledgeAPI.lightrag.getDocuments(knowledgeId);
       if (response.success) {
-        // 确保 data 是数组
+        // Ensure data is an array
         const docs = response.data?.documents || response.data || [];
         setDocuments(Array.isArray(docs) ? docs : []);
       } else {
-        message.error(response.message || '获取文档列表失败');
+        message.error(response.message || t('lightragDoc.fetchFailed'));
         setDocuments([]);
       }
     } catch (error) {
-      console.error('获取文档列表失败:', error);
-      message.error('获取文档列表失败');
+      // eslint-disable-next-line no-console
+      console.error('Failed to fetch document list:', error);
+      message.error(t('lightragDoc.fetchFailed'));
       setDocuments([]);
     } finally {
       setLoading(false);
@@ -56,109 +57,109 @@ const LightRAGDocumentManager: React.FC<LightRAGDocumentManagerProps> = ({
       const response = await knowledgeAPI.uploadFile(knowledgeId, formData);
       
       if (response.success) {
-        message.success(`文件 "${file.name}" 上传成功，正在处理...`);
-        
-        // 延迟刷新文档列表
+        message.success(t('lightragDoc.uploadSuccess', { name: file.name }));
+
+        // Refresh document list after a short delay
         setTimeout(() => {
           fetchDocuments();
         }, 2000);
-        
+
         return true;
       } else {
-        message.error(response.message || '上传失败');
+        message.error(response.message || t('lightragDoc.uploadFailed'));
         return false;
       }
     } catch (error: any) {
-      console.error('上传失败:', error);
-      message.error('上传失败');
+      // eslint-disable-next-line no-console
+      console.error('Upload failed:', error);
+      message.error(t('lightragDoc.uploadFailed'));
       return false;
     } finally {
       setUploading(false);
     }
   };
 
-  // 处理删除文档
+  // Handle document deletion
   const handleDelete = (record: any) => {
     modal.confirm({
-      title: '确认删除',
-      content: `确定要删除文档 "${record.name}" 吗？删除后无法恢复。`,
-      okText: '确定',
-      cancelText: '取消',
+      title: t('lightragDoc.confirmDeleteTitle'),
+      content: t('lightragDoc.confirmDeleteContent', { name: record.name }),
+      okText: t('lightragDoc.confirmOk'),
+      cancelText: t('lightragDoc.confirmCancel'),
       okType: 'danger',
       onOk: async () => {
         try {
           const response = await knowledgeAPI.lightrag.deleteDocument(knowledgeId, record.id);
           if (response.success) {
-            message.success('文档删除成功');
+            message.success(t('lightragDoc.deleteSuccess'));
             fetchDocuments();
           } else {
-            message.error(response.message || '删除失败');
+            message.error(response.message || t('lightragDoc.deleteFailed'));
           }
         } catch (error) {
-          console.error('删除失败:', error);
-          message.error('删除失败');
+          // eslint-disable-next-line no-console
+          console.error('Delete failed:', error);
+          message.error(t('lightragDoc.deleteFailed'));
         }
       }
     });
   };
 
-  // 同步所有文档
+  // Sync all documents
   const handleSyncAll = async () => {
     modal.confirm({
-      title: '同步所有文档',
-      content: '确定要将所有文档同步到 LightRAG 吗？这可能需要一些时间。',
-      okText: '确定',
-      cancelText: '取消',
+      title: t('lightragDoc.confirmSyncTitle'),
+      content: t('lightragDoc.confirmSyncContent'),
+      okText: t('lightragDoc.confirmOk'),
+      cancelText: t('lightragDoc.confirmCancel'),
       onOk: async () => {
         try {
           const response = await knowledgeAPI.lightrag.syncAll(knowledgeId);
           if (response.success) {
-            message.success('同步任务已提交');
+            message.success(t('lightragDoc.syncQueued'));
             setTimeout(() => {
               fetchDocuments();
             }, 2000);
           } else {
-            message.error(response.message || '同步失败');
+            message.error(response.message || t('lightragDoc.syncFailed'));
           }
         } catch (error) {
-          console.error('同步失败:', error);
-          message.error('同步失败');
+          // eslint-disable-next-line no-console
+          console.error('Sync failed:', error);
+          message.error(t('lightragDoc.syncFailed'));
         }
       }
     });
   };
 
-  // 渲染同步状态
+  // Render sync status tag
   const renderSyncStatus = (record: any) => {
     if (record.lightrag_synced) {
-      return <Tag icon={<CheckCircleOutlined />} color="success">已同步</Tag>;
+      return <Tag icon={<CheckCircleOutlined />} color="success">{t('lightragDoc.sync.synced')}</Tag>;
     }
-    
     if (record.lightrag_sync_job_id) {
-      return <Tag icon={<ClockCircleOutlined />} color="processing">同步中</Tag>;
+      return <Tag icon={<ClockCircleOutlined />} color="processing">{t('lightragDoc.sync.syncing')}</Tag>;
     }
-    
-    return <Tag icon={<CloseCircleOutlined />} color="default">未同步</Tag>;
+    return <Tag icon={<CloseCircleOutlined />} color="default">{t('lightragDoc.sync.notSynced')}</Tag>;
   };
 
-  // 渲染 LightRAG 处理状态
-  // LightRAG API 返回的状态: PENDING, PROCESSING, PREPROCESSED, PROCESSED, FAILED
+  // Render LightRAG processing status tag.
+  // LightRAG API states: PENDING, PROCESSING, PREPROCESSED, PROCESSED, FAILED.
   const renderLightRAGStatus = (record: any) => {
     const status = record.lightrag_status || 'UNKNOWN';
-    
     switch (status) {
       case 'PROCESSED':
-        return <Tag color="success">已完成</Tag>;
+        return <Tag color="success">{t('lightragDoc.status.processed')}</Tag>;
       case 'PREPROCESSED':
-        return <Tag color="cyan">预处理完成</Tag>;
+        return <Tag color="cyan">{t('lightragDoc.status.preprocessed')}</Tag>;
       case 'PROCESSING':
-        return <Tag color="processing">处理中</Tag>;
+        return <Tag color="processing">{t('lightragDoc.status.processing')}</Tag>;
       case 'PENDING':
-        return <Tag color="default">等待中</Tag>;
+        return <Tag color="default">{t('lightragDoc.status.pending')}</Tag>;
       case 'FAILED':
-        return <Tag color="error">失败</Tag>;
+        return <Tag color="error">{t('lightragDoc.status.failed')}</Tag>;
       case 'UNKNOWN':
-        return <Tag color="warning">未知</Tag>;
+        return <Tag color="warning">{t('lightragDoc.status.unknown')}</Tag>;
       default:
         return <Tag color="default">{status}</Tag>;
     }
@@ -166,40 +167,40 @@ const LightRAGDocumentManager: React.FC<LightRAGDocumentManagerProps> = ({
 
   const columns = [
     {
-      title: '文档名称',
+      title: t('lightragDoc.col.name'),
       dataIndex: 'name',
       key: 'name',
       width: 300,
       ellipsis: true,
     },
     {
-      title: '同步状态',
+      title: t('lightragDoc.col.syncStatus'),
       key: 'sync_status',
       width: 120,
       render: (_: any, record: any) => renderSyncStatus(record),
     },
     {
-      title: 'LightRAG 状态',
+      title: t('lightragDoc.col.lightragStatus'),
       key: 'lightrag_status',
       width: 120,
       render: (_: any, record: any) => renderLightRAGStatus(record),
     },
     {
-      title: 'Workspace',
+      title: t('lightragDoc.col.workspace'),
       dataIndex: 'lightrag_workspace',
       key: 'lightrag_workspace',
       width: 200,
       ellipsis: true,
     },
     {
-      title: '上传时间',
+      title: t('lightragDoc.col.uploadedAt'),
       dataIndex: 'created_at',
       key: 'created_at',
       width: 180,
       render: (date: string) => date ? new Date(date).toLocaleString() : '-',
     },
     {
-      title: '操作',
+      title: t('lightragDoc.col.actions'),
       key: 'action',
       width: 150,
       fixed: 'right' as const,
@@ -211,7 +212,7 @@ const LightRAGDocumentManager: React.FC<LightRAGDocumentManagerProps> = ({
             icon={<DeleteOutlined />}
             onClick={() => handleDelete(record)}
           >
-            删除
+            {t('lightragDoc.action.delete')}
           </Button>
         </Space>
       ),
@@ -221,8 +222,8 @@ const LightRAGDocumentManager: React.FC<LightRAGDocumentManagerProps> = ({
   return (
     <div>
       <Alert
-        message="LightRAG 文档管理"
-        description="上传的文档将自动提交到 LightRAG 进行知识图谱构建，支持多种查询模式（local/global/hybrid/mix）。"
+        message={t('lightragDoc.alertTitle')}
+        description={t('lightragDoc.alertDesc')}
         type="info"
         showIcon
         icon={<InfoCircleOutlined />}
@@ -233,7 +234,7 @@ const LightRAGDocumentManager: React.FC<LightRAGDocumentManagerProps> = ({
         <Upload
           beforeUpload={(file) => {
             handleUpload(file);
-            return false; // 阻止自动上传
+            return false; // Prevent auto-upload
           }}
           showUploadList={false}
           multiple
@@ -243,7 +244,7 @@ const LightRAGDocumentManager: React.FC<LightRAGDocumentManagerProps> = ({
             type="primary"
             loading={uploading}
           >
-            上传文档
+            {t('lightragDoc.upload')}
           </Button>
         </Upload>
         <Button
@@ -251,13 +252,13 @@ const LightRAGDocumentManager: React.FC<LightRAGDocumentManagerProps> = ({
           onClick={fetchDocuments}
           loading={loading}
         >
-          刷新列表
+          {t('lightragDoc.refresh')}
         </Button>
         <Button
           icon={<SyncOutlined />}
           onClick={handleSyncAll}
         >
-          同步所有文档
+          {t('lightragDoc.syncAll')}
         </Button>
       </Space>
 
@@ -270,7 +271,7 @@ const LightRAGDocumentManager: React.FC<LightRAGDocumentManagerProps> = ({
           pageSize: 10,
           showSizeChanger: true,
           showQuickJumper: true,
-          showTotal: (total) => `共 ${total} 条`,
+          showTotal: (total) => t('lightragDoc.pagination.total', { total }),
         }}
         scroll={{ x: 'max-content' }}
       />

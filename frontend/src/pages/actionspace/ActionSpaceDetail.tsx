@@ -1,22 +1,24 @@
-// ActionSpaceDetail.js
-// 此文件包含行动空间详情页组件，从ActionSpaceOverview.js拆分出来
+// ActionSpaceDetail.tsx
+// Action-space detail page split out of ActionSpaceOverview.
+//
+// i18n: all user-visible strings use the `actionspace` namespace via
+// `useTranslation('actionspace')`. Do not re-introduce hardcoded CJK; add new
+// keys to `src/locales/{zh-CN,en-US}/actionspace.ts` and reuse `t()`.
 
 import React, { useState, useEffect } from 'react';
 import {
   Card, Button, Table, Tabs, Empty,
   Space, Modal, Form, Input, message,
-  Typography, Tag, Select, Radio, Dropdown, Menu, Skeleton, Collapse, InputNumber, Row, Col, Checkbox
+  Typography, Tag, Select, Skeleton, Collapse, Row, Col, Checkbox
 } from 'antd';
 import {
-  PlusOutlined, TableOutlined, AppstoreOutlined,
-  EditOutlined, DeleteOutlined, InfoCircleOutlined,
-  FilterOutlined, EllipsisOutlined, LinkOutlined,
+  PlusOutlined,
+  EditOutlined,
   ArrowLeftOutlined, SaveOutlined, CloseOutlined, TeamOutlined
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { actionSpaceAPI } from '../../services/api/actionspace';
 import { roleAPI } from '../../services/api/role';
-import api from '../../services/api/axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import RuleSetAssociation from './RuleSetAssociation';
 import ObserverManagement from './ObserverManagement';
@@ -28,68 +30,62 @@ import { OrchestrationTab } from './orchestration';
 const { Title, Paragraph, Text } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
-const { Panel } = Collapse;
 
 const ActionSpaceDetail = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('actionspace');
   const { id } = useParams(); // 从URL参数获取空间ID
   const navigate = useNavigate();
 
-  const [selectedSpace, setSelectedSpace] = useState(null);
+  const [selectedSpace, setSelectedSpace] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [modelConfigs, setModelConfigs] = useState([]);
+  const [, setModelConfigs] = useState<any[]>([]);
 
-  // 环境变量相关状态和方法
+  // Environment-variable state
   const [envVarModalVisible, setEnvVarModalVisible] = useState(false);
   const [envVarForm] = Form.useForm();
-  const [editingEnvVar, setEditingEnvVar] = useState(null);
-  const [currentRoleId, setCurrentRoleId] = useState(null);
-  const [envVarType, setEnvVarType] = useState('space'); // 'space' 或 'role'
+  const [editingEnvVar, setEditingEnvVar] = useState<any>(null);
+  const [currentRoleId, setCurrentRoleId] = useState<any>(null);
+  const [envVarType, setEnvVarType] = useState<'space' | 'role'>('space');
 
-  // 角色相关状态和方法
-  const [editingRole, setEditingRole] = useState(null);
+  // Role state
+  const [editingRole, setEditingRole] = useState<any>(null);
   const [roleModalVisible, setRoleModalVisible] = useState(false);
   const [roleForm] = Form.useForm();
-  const [availableRoles, setAvailableRoles] = useState([]); // 存储可用的角色列表
-  const [selectedRoleIds, setSelectedRoleIds] = useState([]); // 存储多选的角色ID
+  const [availableRoles, setAvailableRoles] = useState<any[]>([]);
+  const [selectedRoleIds, setSelectedRoleIds] = useState<any[]>([]);
 
-  // 标签管理相关状态
+  // Tag state
   const [tagModalVisible, setTagModalVisible] = useState(false);
-  const [availableTags, setAvailableTags] = useState([]);
+  const [availableTags, setAvailableTags] = useState<any[]>([]);
   const [tagsLoading, setTagsLoading] = useState(false);
-  const [selectedTagIds, setSelectedTagIds] = useState([]); // 多选标签ID列表
+  const [selectedTagIds, setSelectedTagIds] = useState<any[]>([]);
 
-  // 基本信息编辑相关状态
+  // Basic-info edit state
   const [isEditingBasicInfo, setIsEditingBasicInfo] = useState(false);
   const [basicInfoForm] = Form.useForm();
 
-  // Tab管理状态
+  // Tab state
   const [activeTabKey, setActiveTabKey] = useState('basic');
 
 
 
-  // 获取空间详情
+  // Fetch space detail (with roles + role variables)
   const fetchSpaceDetail = async () => {
     setLoading(true);
     try {
-      // 获取行动空间详情
       const spaceDetail = await actionSpaceAPI.getDetail(id);
-
-      // 获取该行动空间关联的角色
       const roles = await actionSpaceAPI.getRoles(id);
 
-      // 为每个角色获取环境变量
-      const rolesWithVars = await Promise.all((roles || []).map(async (role) => {
+      const rolesWithVars = await Promise.all((roles || []).map(async (role: any) => {
         try {
           const variables = await roleAPI.getVariables(role.id, id);
           return { ...role, environment_variables: variables || [] };
         } catch (error) {
-          console.error(`获取角色变量失败:`, error);
+          console.error('fetch role variables failed:', error);
           return { ...role, environment_variables: [] };
         }
       }));
 
-      // 合并空间详情和角色信息（包含环境变量）
       const spaceWithRoles = {
         ...spaceDetail,
         roles: rolesWithVars || []
@@ -97,26 +93,25 @@ const ActionSpaceDetail = () => {
 
       setSelectedSpace(spaceWithRoles);
     } catch (error) {
-      console.error('获取行动空间详情失败:', error);
-      message.error('获取行动空间详情失败');
+      console.error('fetch action-space detail failed:', error);
+      message.error(t('actionSpaceDetail.roles.fetchDetailFailed'));
     } finally {
       setLoading(false);
     }
   };
 
-  // 获取模型配置
+  // Fetch model configurations
   const fetchModelConfigs = async () => {
     try {
       const models = await roleAPI.getModelConfigs();
       setModelConfigs(models);
       return models;
     } catch (error) {
-      console.error('获取模型配置失败:', error);
+      console.error('fetch model configs failed:', error);
       return [];
     }
   };
 
-  // 在组件加载时获取数据
   useEffect(() => {
     fetchSpaceDetail();
     fetchModelConfigs();
@@ -124,27 +119,14 @@ const ActionSpaceDetail = () => {
 
 
 
-  // 根据模型ID获取模型名称
-  const getModelNameById = (modelId) => {
-    if (!modelId) return '未指定';
-
-    const modelConfig = modelConfigs.find(m => m.id.toString() === modelId.toString());
-    if (modelConfig) {
-      return `${modelConfig.name} (${modelConfig.model_id})`;
-    }
-
-    // 如果没找到配置，返回ID
-    return `模型 ID: ${modelId}`;
-  };
-
-  // 获取可用角色
+  // Fetch available roles
   const fetchAvailableRoles = async () => {
     try {
       const roles = await roleAPI.getAvailableRoles();
       setAvailableRoles(roles);
     } catch (error) {
-      console.error('获取可用角色失败:', error);
-      message.error('获取可用角色失败');
+      console.error('fetch available roles failed:', error);
+      message.error(t('actionSpaceDetail.roles.fetchAvailableFailed'));
     }
   };
 
@@ -154,11 +136,10 @@ const ActionSpaceDetail = () => {
     }
   }, [roleModalVisible]);
 
-  // 渲染标签（支持编辑）
-  const renderTags = (tags = []) => {
+  // Render tags (editable)
+  const renderTags = (tags: any[] = []) => {
     return (
       <Space size={[0, 8]} wrap>
-        {/* 添加标签按钮 */}
         <Tag
           style={{
             background: 'var(--custom-card-bg)',
@@ -174,11 +155,10 @@ const ActionSpaceDetail = () => {
           icon={<PlusOutlined />}
           onClick={handleAddTag}
         >
-          添加标签
+          {t('actionSpaceDetail.tag.add')}
         </Tag>
 
-        {/* 现有标签 */}
-        {tags && tags.length > 0 && tags.map(tag => (
+        {tags && tags.length > 0 && tags.map((tag: any) => (
           <Tag
             key={tag.id}
             color={tag.color || '#1677ff'}
@@ -197,24 +177,21 @@ const ActionSpaceDetail = () => {
     );
   };
 
-  // 获取可用标签
   const fetchAvailableTags = async () => {
     setTagsLoading(true);
     try {
       const tags = await actionSpaceAPI.getAllTags();
       setAvailableTags(tags);
     } catch (error) {
-      console.error('获取标签列表失败:', error);
-      message.error('获取标签列表失败');
+      console.error('fetch tag list failed:', error);
+      message.error(t('actionSpaceDetail.tag.fetchFailed'));
     } finally {
       setTagsLoading(false);
     }
   };
 
-  // 处理添加标签
   const handleAddTag = () => {
-    // 初始化已添加的标签为选中状态
-    const existingTagIds = selectedSpace.tags?.map(tag => tag.id) || [];
+    const existingTagIds = selectedSpace.tags?.map((tag: any) => tag.id) || [];
     setSelectedTagIds(existingTagIds);
     setTagModalVisible(true);
     fetchAvailableTags();
@@ -222,33 +199,25 @@ const ActionSpaceDetail = () => {
 
 
 
-  // 处理标签选择（多选）
-  const handleTagSelect = (tagId) => {
+  const handleTagSelect = (tagId: any) => {
     setSelectedTagIds(prev => {
       if (prev.includes(tagId)) {
-        // 如果已选中，则取消选中
         return prev.filter(id => id !== tagId);
       } else {
-        // 如果未选中，则添加到选中列表
         return [...prev, tagId];
       }
     });
   };
 
-  // 确认标签选择（支持添加和删除）
   const handleConfirmAddTags = async () => {
     try {
-      const existingTagIds = selectedSpace.tags?.map(tag => tag.id) || [];
+      const existingTagIds = selectedSpace.tags?.map((tag: any) => tag.id) || [];
 
-      // 找出需要添加的标签（在选中列表中但不在现有列表中）
       const tagsToAdd = selectedTagIds.filter(tagId => !existingTagIds.includes(tagId));
+      const tagsToRemove = existingTagIds.filter((tagId: any) => !selectedTagIds.includes(tagId));
 
-      // 找出需要删除的标签（在现有列表中但不在选中列表中）
-      const tagsToRemove = existingTagIds.filter(tagId => !selectedTagIds.includes(tagId));
+      const operations: Array<Promise<any>> = [];
 
-      const operations = [];
-
-      // 添加新标签
       if (tagsToAdd.length > 0) {
         const addPromises = tagsToAdd.map(tagId =>
           actionSpaceAPI.addTag(selectedSpace.id, tagId)
@@ -256,9 +225,8 @@ const ActionSpaceDetail = () => {
         operations.push(...addPromises);
       }
 
-      // 删除取消选中的标签
       if (tagsToRemove.length > 0) {
-        const removePromises = tagsToRemove.map(tagId =>
+        const removePromises = tagsToRemove.map((tagId: any) =>
           actionSpaceAPI.removeTag(selectedSpace.id, tagId)
         );
         operations.push(...removePromises);
@@ -269,38 +237,36 @@ const ActionSpaceDetail = () => {
 
         let message_text = '';
         if (tagsToAdd.length > 0 && tagsToRemove.length > 0) {
-          message_text = `成功添加 ${tagsToAdd.length} 个标签，移除 ${tagsToRemove.length} 个标签`;
+          message_text = t('actionSpaceDetail.tag.opMixed', { added: tagsToAdd.length, removed: tagsToRemove.length });
         } else if (tagsToAdd.length > 0) {
-          message_text = `成功添加 ${tagsToAdd.length} 个标签`;
+          message_text = t('actionSpaceDetail.tag.opAddOnly', { count: tagsToAdd.length });
         } else if (tagsToRemove.length > 0) {
-          message_text = `成功移除 ${tagsToRemove.length} 个标签`;
+          message_text = t('actionSpaceDetail.tag.opRemoveOnly', { count: tagsToRemove.length });
         }
 
         message.success(message_text);
       } else {
-        message.info('标签没有变化');
+        message.info(t('actionSpaceDetail.tag.opNoChange'));
       }
 
       setTagModalVisible(false);
       setSelectedTagIds([]);
-      fetchSpaceDetail(); // 重新获取数据
+      fetchSpaceDetail();
     } catch (error) {
-      console.error('标签操作失败:', error);
-      message.error('标签操作失败');
+      console.error('tag operation failed:', error);
+      message.error(t('actionSpaceDetail.tag.opFailed'));
     }
   };
 
-  // 取消添加标签
   const handleCancelAddTags = () => {
     setTagModalVisible(false);
     setSelectedTagIds([]);
   };
 
-  // 基本信息编辑相关方法
+  // Basic info editing
   const handleEditBasicInfo = () => {
     if (!selectedSpace) return;
 
-    // 设置表单初始值
     basicInfoForm.setFieldsValue({
       name: selectedSpace.name,
       description: selectedSpace.description,
@@ -330,9 +296,9 @@ const ActionSpaceDetail = () => {
       await actionSpaceAPI.update(selectedSpace.id, updateData);
       message.success(t('actionSpaceDetail.basicInfoUpdateSuccess'));
       setIsEditingBasicInfo(false);
-      fetchSpaceDetail(); // 重新获取数据
+      fetchSpaceDetail();
     } catch (error) {
-      console.error('更新基本信息失败:', error);
+      console.error('update basic info failed:', error);
       message.error(t('actionSpaceDetail.basicInfoUpdateFailed'));
     }
   };
@@ -342,18 +308,17 @@ const ActionSpaceDetail = () => {
     basicInfoForm.resetFields();
   };
 
-  // 角色管理相关方法
+  // Role management
   const handleAddRole = () => {
     roleForm.resetFields();
     setEditingRole(null);
-    setSelectedRoleIds([]); // 重置选中的角色ID列表
+    setSelectedRoleIds([]);
     setRoleModalVisible(true);
   };
 
-  const handleEditRole = (role) => {
+  const handleEditRole = (role: any) => {
     setEditingRole(role);
 
-    // 找到角色对应的角色ID
     const roleId = role.id;
 
     roleForm.setFieldsValue({
@@ -368,81 +333,66 @@ const ActionSpaceDetail = () => {
       const values = await roleForm.validateFields();
 
       if (!selectedSpace) {
-        message.error('请先选择一个行动空间');
+        message.error(t('actionSpaceDetail.roles.spaceRequired'));
         return;
       }
 
       if (editingRole) {
-        // 更新已有角色
         const roleData = {
-          role_id: values.role_id, // UUID格式，不需要parseInt
+          role_id: values.role_id,
           additional_prompt: values.additional_prompt || ''
         };
         await actionSpaceAPI.updateRole(selectedSpace.id, editingRole.id, roleData);
-        message.success('角色更新成功');
+        message.success(t('actionSpaceDetail.roles.updateSuccess'));
       } else {
-        // 添加新角色 - 支持多选
         if (Array.isArray(values.role_ids) && values.role_ids.length > 0) {
-          // 多角色添加
           const rolePrompts = values.rolePrompts || {};
 
-          // 创建一个Promise数组来处理所有角色添加请求
-          const addRolePromises = values.role_ids.map(roleId => {
+          const addRolePromises = values.role_ids.map((roleId: any) => {
             const roleData = {
-              role_id: roleId, // UUID格式，不需要parseInt
+              role_id: roleId,
               additional_prompt: rolePrompts[roleId] || ''
             };
             return actionSpaceAPI.addRole(selectedSpace.id, roleData);
           });
 
-          // 等待所有角色添加完成
           await Promise.all(addRolePromises);
-          message.success(`成功添加 ${values.role_ids.length} 个角色`);
+          message.success(t('actionSpaceDetail.roles.addedNCount', { count: values.role_ids.length }));
         } else if (values.role_id) {
-          // 单角色添加（兼容旧版本）
           const roleData = {
-            role_id: values.role_id, // UUID格式，不需要parseInt
+            role_id: values.role_id,
             additional_prompt: values.additional_prompt || ''
           };
           await actionSpaceAPI.addRole(selectedSpace.id, roleData);
-          message.success('角色添加成功');
+          message.success(t('actionSpaceDetail.roles.addSuccess'));
         } else {
-          message.error('请至少选择一个角色');
+          message.error(t('actionSpaceDetail.roles.atLeastOne'));
           return;
         }
       }
 
       setRoleModalVisible(false);
-      fetchSpaceDetail(); // 重新获取数据
+      fetchSpaceDetail();
     } catch (error) {
-      console.error('角色操作失败:', error);
-      message.error('角色操作失败');
+      console.error('role operation failed:', error);
+      message.error(t('actionSpaceDetail.roles.opFailed'));
     }
   };
 
-  const handleViewRoleVars = (role) => {
-    // 切换到环境变量标签页并聚焦到该角色的折叠面板
-    setActiveTabKey('environment');
-    setTimeout(() => {
-      const element = document.querySelector(`div[data-node-key="${role.id}"]`) as HTMLElement;
-      element?.click();
-    }, 300);
-  };
-
-  const handleDeleteRole = async (roleId) => {
+  const handleDeleteRole = async (roleId: any) => {
     if (!selectedSpace || !roleId) return;
 
     try {
       await actionSpaceAPI.deleteRole(selectedSpace.id, roleId);
-      message.success('角色删除成功');
-      fetchSpaceDetail(); // 重新获取数据
+      message.success(t('actionSpaceDetail.roles.deleteSuccess'));
+      fetchSpaceDetail();
     } catch (error) {
-      console.error('删除角色失败:', error);
-      message.error('删除角色失败');
+      console.error('delete role failed:', error);
+      message.error(t('actionSpaceDetail.roles.deleteFailed'));
     }
   };
 
-  // 环境变量相关方法
+  // Environment variables
   const handleAddSpaceEnvVar = () => {
     envVarForm.resetFields();
     setEditingEnvVar(null);
@@ -450,7 +400,7 @@ const ActionSpaceDetail = () => {
     setEnvVarModalVisible(true);
   };
 
-  const handleEditSpaceEnvVar = (envVar) => {
+  const handleEditSpaceEnvVar = (envVar: any) => {
     setEditingEnvVar(envVar);
     envVarForm.setFieldsValue({
       name: envVar.name,
@@ -461,24 +411,24 @@ const ActionSpaceDetail = () => {
     setEnvVarModalVisible(true);
   };
 
-  const handleDeleteSpaceEnvVar = (envVar) => {
+  const handleDeleteSpaceEnvVar = (envVar: any) => {
     Modal.confirm({
-      title: '确认删除',
-      content: `确定要删除环境变量 "${envVar.name}" 吗？`,
+      title: t('actionSpaceDetail.env.deleteConfirmTitle'),
+      content: t('actionSpaceDetail.env.deleteSpaceVarContent', { name: envVar.name }),
       onOk: async () => {
         try {
           await actionSpaceAPI.deleteSpaceEnvVar(selectedSpace.id, envVar.id);
-          message.success('环境变量删除成功');
-          fetchSpaceDetail(); // 重新获取数据
+          message.success(t('actionSpaceDetail.env.deleteSpaceSuccess'));
+          fetchSpaceDetail();
         } catch (error) {
-          console.error('删除环境变量失败:', error);
-          message.error('删除环境变量失败');
+          console.error('delete space env var failed:', error);
+          message.error(t('actionSpaceDetail.env.deleteSpaceFailed'));
         }
       }
     });
   };
 
-  const handleAddRoleVarForRole = (roleId) => {
+  const handleAddRoleVarForRole = (roleId: any) => {
     envVarForm.resetFields();
     setEditingEnvVar(null);
     setCurrentRoleId(roleId);
@@ -486,7 +436,7 @@ const ActionSpaceDetail = () => {
     setEnvVarModalVisible(true);
   };
 
-  const handleEditRoleEnvVar = (envVar, roleId) => {
+  const handleEditRoleEnvVar = (envVar: any, roleId: any) => {
     setEditingEnvVar(envVar);
     setCurrentRoleId(roleId);
     envVarForm.setFieldsValue({
@@ -498,18 +448,18 @@ const ActionSpaceDetail = () => {
     setEnvVarModalVisible(true);
   };
 
-  const handleDeleteRoleEnvVar = (envVar, roleId) => {
+  const handleDeleteRoleEnvVar = (envVar: any, roleId: any) => {
     Modal.confirm({
-      title: '确认删除',
-      content: `确定要删除角色变量 "${envVar.name}" 吗？`,
+      title: t('actionSpaceDetail.env.deleteConfirmTitle'),
+      content: t('actionSpaceDetail.env.deleteRoleVarContent', { name: envVar.name }),
       onOk: async () => {
         try {
           await actionSpaceAPI.deleteRoleEnvVar(selectedSpace.id, roleId, envVar.id);
-          message.success('角色变量删除成功');
-          fetchSpaceDetail(); // 重新获取数据
+          message.success(t('actionSpaceDetail.env.deleteRoleSuccess'));
+          fetchSpaceDetail();
         } catch (error) {
-          console.error('删除角色变量失败:', error);
-          message.error('删除角色变量失败');
+          console.error('delete role env var failed:', error);
+          message.error(t('actionSpaceDetail.env.deleteRoleFailed'));
         }
       }
     });
@@ -520,11 +470,10 @@ const ActionSpaceDetail = () => {
       const values = await envVarForm.validateFields();
 
       if (!selectedSpace) {
-        message.error('请先选择一个行动空间');
+        message.error(t('actionSpaceDetail.env.spaceRequired'));
         return;
       }
 
-      // 构造请求数据，类型固定为text
       const envVarData = {
         name: values.name,
         label: values.label,
@@ -532,38 +481,31 @@ const ActionSpaceDetail = () => {
       };
 
       if (envVarType === 'space') {
-        // 空间级环境变量
         if (editingEnvVar) {
-          // 更新
           await actionSpaceAPI.updateSpaceEnvVar(selectedSpace.id, editingEnvVar.id, envVarData);
-          message.success('环境变量更新成功');
+          message.success(t('actionSpaceDetail.env.spaceVarUpdated'));
         } else {
-          // 新增
           await actionSpaceAPI.addSpaceEnvVar(selectedSpace.id, envVarData);
-          message.success('环境变量添加成功');
+          message.success(t('actionSpaceDetail.env.spaceVarAdded'));
         }
       } else if (envVarType === 'role' && currentRoleId) {
-        // 角色级环境变量
         if (editingEnvVar) {
-          // 更新
           await actionSpaceAPI.updateRoleEnvVar(selectedSpace.id, currentRoleId, editingEnvVar.id, envVarData);
-          message.success('角色变量更新成功');
+          message.success(t('actionSpaceDetail.env.roleVarUpdated'));
         } else {
-          // 新增
           await actionSpaceAPI.addRoleEnvVar(selectedSpace.id, currentRoleId, envVarData);
-          message.success('角色变量添加成功');
+          message.success(t('actionSpaceDetail.env.roleVarAdded'));
         }
       }
 
       setEnvVarModalVisible(false);
-      fetchSpaceDetail(); // 重新获取数据
+      fetchSpaceDetail();
     } catch (error) {
-      console.error('环境变量操作失败:', error);
-      message.error('环境变量操作失败');
+      console.error('env var operation failed:', error);
+      message.error(t('actionSpaceDetail.env.opFailed'));
     }
   };
 
-  // 返回列表页
   const handleBackToList = () => {
     navigate('/action-spaces/overview');
   };
@@ -571,7 +513,6 @@ const ActionSpaceDetail = () => {
   if (loading) {
     return (
       <div className="action-space-detail-page">
-        {/* 显示与实际页面一致的页面头部 */}
         <div className="page-header" style={{ marginBottom: 16 }}>
           <Space>
             <Button
@@ -586,7 +527,6 @@ const ActionSpaceDetail = () => {
         </div>
 
         <div style={{ padding: '16px 0' }}>
-          {/* 标签栏骨架屏 */}
           <div style={{ marginBottom: 16 }}>
             <Space>
               <Skeleton.Button active style={{ width: 100 }} />
@@ -597,7 +537,6 @@ const ActionSpaceDetail = () => {
             </Space>
           </div>
 
-          {/* 内容骨架屏 */}
           <Row gutter={[16, 16]}>
             <Col span={24}>
               <Card>
@@ -637,7 +576,16 @@ const ActionSpaceDetail = () => {
     );
   }
 
-
+  const envOp = editingEnvVar
+    ? t('actionSpaceDetail.envModal.op.edit')
+    : t('actionSpaceDetail.envModal.op.add');
+  const envScope = envVarType === 'space'
+    ? t('actionSpaceDetail.envModal.scope.space')
+    : t('actionSpaceDetail.envModal.scope.role');
+  const envModalTitle = t('actionSpaceDetail.envModal.title', { op: envOp, scope: envScope });
+  const roleModalTitle = editingRole
+    ? t('actionSpaceDetail.roles.modal.editTitle')
+    : t('actionSpaceDetail.roles.modal.addTitle');
 
   return (
     <div className="action-space-detail-page">
@@ -659,7 +607,7 @@ const ActionSpaceDetail = () => {
         items={[
           {
             key: 'basic',
-            label: t('actionSpaceDetail.basicInfo'),
+            label: t('actionSpaceDetail.tab.basic'),
             children: (
               <Card
                 title={t('actionSpaceDetail.basicInfo')}
@@ -692,81 +640,79 @@ const ActionSpaceDetail = () => {
                 }
               >
                 {!isEditingBasicInfo ? (
-                  // 只读模式
                   <>
                     <div style={{ marginBottom: 16 }}>
-                      <Title level={5}>名称</Title>
+                      <Title level={5}>{t('actionSpaceDetail.field.name')}</Title>
                       <Paragraph>{selectedSpace.name}</Paragraph>
                     </div>
 
                     <div style={{ marginBottom: 16 }}>
-                      <Title level={5}>描述</Title>
+                      <Title level={5}>{t('actionSpaceDetail.field.description')}</Title>
                       <Paragraph>{selectedSpace.description}</Paragraph>
                     </div>
 
                     <div style={{ marginBottom: 16 }}>
-                      <Title level={5}>标签</Title>
+                      <Title level={5}>{t('actionSpaceDetail.field.tags')}</Title>
                       {renderTags(selectedSpace.tags)}
                     </div>
 
                     <div style={{ marginBottom: 16 }}>
-                      <Title level={5}>共享状态</Title>
+                      <Title level={5}>{t('actionSpaceDetail.field.sharedStatus')}</Title>
                       <Paragraph>
                         {selectedSpace.is_shared ? (
-                          <Tag icon={<TeamOutlined />} color="blue">已共享给所有用户</Tag>
+                          <Tag icon={<TeamOutlined />} color="blue">{t('actionSpaceDetail.shared.yes')}</Tag>
                         ) : (
-                          <Tag>仅自己可见</Tag>
+                          <Tag>{t('actionSpaceDetail.shared.no')}</Tag>
                         )}
                       </Paragraph>
                     </div>
 
                     <div style={{ marginBottom: 16 }}>
-                      <Title level={5}>背景设定</Title>
-                      <Paragraph>{selectedSpace.settings?.background || '无背景设定'}</Paragraph>
+                      <Title level={5}>{t('actionSpaceDetail.field.background')}</Title>
+                      <Paragraph>{selectedSpace.settings?.background || t('actionSpaceDetail.empty.background')}</Paragraph>
                     </div>
 
                     <div style={{ marginBottom: 16 }}>
-                      <Title level={5}>基本原则</Title>
-                      <Paragraph>{selectedSpace.settings?.rules || '无基本原则'}</Paragraph>
+                      <Title level={5}>{t('actionSpaceDetail.field.rules')}</Title>
+                      <Paragraph>{selectedSpace.settings?.rules || t('actionSpaceDetail.empty.rules')}</Paragraph>
                     </div>
 
                     <div style={{ marginBottom: 16 }}>
-                      <Title level={5}>ODD框架配置</Title>
+                      <Title level={5}>{t('actionSpaceDetail.field.oddFramework')}</Title>
                       <Paragraph style={{ color: 'var(--custom-text-secondary)' }}>
-                        {selectedSpace.odd_framework?.purpose || '无ODD框架配置'}
+                        {selectedSpace.odd_framework?.purpose || t('actionSpaceDetail.empty.odd')}
                       </Paragraph>
                       <Text type="secondary" style={{ fontSize: '12px' }}>
-                        * ODD框架配置为只读信息
+                        {t('actionSpaceDetail.odd.readonly')}
                       </Text>
                     </div>
                   </>
                 ) : (
-                  // 编辑模式
                   <Form
                     form={basicInfoForm}
                     layout="vertical"
                   >
                     <Form.Item
                       name="name"
-                      label="名称"
-                      rules={[{ required: true, message: '请输入行动空间名称' }]}
+                      label={t('actionSpaceDetail.field.name')}
+                      rules={[{ required: true, message: t('actionSpaceDetail.required.name') }]}
                     >
-                      <Input placeholder="输入行动空间名称" />
+                      <Input placeholder={t('actionSpaceDetail.placeholder.name')} />
                     </Form.Item>
 
                     <Form.Item
                       name="description"
-                      label="描述"
-                      rules={[{ required: true, message: '请输入行动空间描述' }]}
+                      label={t('actionSpaceDetail.field.description')}
+                      rules={[{ required: true, message: t('actionSpaceDetail.required.description') }]}
                     >
-                      <TextArea rows={3} placeholder="输入行动空间描述" />
+                      <TextArea rows={3} placeholder={t('actionSpaceDetail.placeholder.description')} />
                     </Form.Item>
 
-                    <Form.Item label="标签">
+                    <Form.Item label={t('actionSpaceDetail.field.tags')}>
                       <div>
                         {renderTags(selectedSpace.tags)}
                         <Text type="secondary" style={{ fontSize: '12px', display: 'block', marginTop: 8 }}>
-                          * 标签可通过上方的"添加标签"按钮进行编辑
+                          {t('actionSpaceDetail.tagEditHint')}
                         </Text>
                       </div>
                     </Form.Item>
@@ -774,38 +720,38 @@ const ActionSpaceDetail = () => {
                     <Form.Item
                       name="is_shared"
                       valuePropName="checked"
-                      tooltip="勾选后，该行动空间将对所有用户可见可用（但只有创建者可编辑）"
+                      tooltip={t('actionSpaceDetail.shared.tooltip')}
                     >
                       <Checkbox>
                         <Space>
                           <TeamOutlined />
-                          共享给所有用户
+                          {t('actionSpaceDetail.shared.toggle')}
                         </Space>
                       </Checkbox>
                     </Form.Item>
 
                     <Form.Item
                       name="background"
-                      label="背景设定"
+                      label={t('actionSpaceDetail.field.background')}
                     >
-                      <TextArea rows={4} placeholder="输入背景设定" />
+                      <TextArea rows={4} placeholder={t('actionSpaceDetail.placeholder.background')} />
                     </Form.Item>
 
                     <Form.Item
                       name="rules"
-                      label="基本原则"
+                      label={t('actionSpaceDetail.field.rules')}
                     >
-                      <TextArea rows={4} placeholder="输入基本原则" />
+                      <TextArea rows={4} placeholder={t('actionSpaceDetail.placeholder.rules')} />
                     </Form.Item>
 
-                    <Form.Item label="ODD框架配置">
+                    <Form.Item label={t('actionSpaceDetail.field.oddFramework')}>
                       <div style={{ padding: '8px 12px', backgroundColor: 'var(--custom-hover-bg)', borderRadius: '6px' }}>
                         <Text type="secondary">
-                          {selectedSpace.odd_framework?.purpose || '无ODD框架配置'}
+                          {selectedSpace.odd_framework?.purpose || t('actionSpaceDetail.empty.odd')}
                         </Text>
                         <br />
                         <Text type="secondary" style={{ fontSize: '12px' }}>
-                          * ODD框架配置为只读信息，无法编辑
+                          {t('actionSpaceDetail.oddReadonly')}
                         </Text>
                       </div>
                     </Form.Item>
@@ -816,22 +762,22 @@ const ActionSpaceDetail = () => {
           },
           {
             key: 'roles',
-            label: '角色管理',
+            label: t('actionSpaceDetail.tab.roles'),
             children: (
               <Card
-                title="行动空间角色"
+                title={t('actionSpaceDetail.roles.cardTitle')}
                 extra={
                   <Button
                     type="primary"
                     icon={<PlusOutlined />}
                     onClick={handleAddRole}
                   >
-                    添加角色
+                    {t('actionSpaceDetail.roles.addBtn')}
                   </Button>
                 }
               >
                 <Paragraph>
-                  以下是与该行动空间关联的角色，将在创建行动任务时被实例化。
+                  {t('actionSpaceDetail.roles.intro')}
                 </Paragraph>
                 {selectedSpace.roles && selectedSpace.roles.length > 0 ? (
                   <Table
@@ -839,7 +785,7 @@ const ActionSpaceDetail = () => {
                     rowKey="id"
                     columns={[
                       {
-                        title: '角色名称',
+                        title: t('actionSpaceDetail.roles.col.name'),
                         dataIndex: 'name',
                         key: 'name',
                         width: '20%',
@@ -849,52 +795,54 @@ const ActionSpaceDetail = () => {
                             <Tag
                               color={record.source === 'external' ? 'orange' : 'blue'}
                             >
-                              {record.source === 'external' ? '外部' : '内部'}
+                              {record.source === 'external'
+                                ? t('actionSpaceDetail.roles.tag.external')
+                                : t('actionSpaceDetail.roles.tag.internal')}
                             </Tag>
                           </div>
                         )
                       },
-                      { title: '描述', dataIndex: 'description', key: 'description', ellipsis: true, width: '25%' },
+                      { title: t('actionSpaceDetail.roles.col.description'), dataIndex: 'description', key: 'description', ellipsis: true, width: '25%' },
                       {
-                        title: '额外提示词',
+                        title: t('actionSpaceDetail.roles.col.additionalPrompt'),
                         dataIndex: 'additional_prompt',
                         key: 'additional_prompt',
                         ellipsis: true,
                         width: '30%',
-                        render: text => text || '无'
+                        render: (text: any) => text || t('actionSpaceDetail.roles.noAdditionalPrompt')
                       },
                       {
-                        title: '操作',
+                        title: t('actionSpaceDetail.roles.col.actions'),
                         key: 'action',
                         width: '25%',
-                        render: (_, record) => (
+                        render: (_: any, record: any) => (
                           <Space>
-                            <Button type="link" onClick={() => handleEditRole(record)}>编辑</Button>
-                            <Button type="link" danger onClick={() => handleDeleteRole(record.id)}>删除</Button>
+                            <Button type="link" onClick={() => handleEditRole(record)}>{t('actionSpaceDetail.roles.col.edit')}</Button>
+                            <Button type="link" danger onClick={() => handleDeleteRole(record.id)}>{t('actionSpaceDetail.roles.col.delete')}</Button>
                           </Space>
                         )
                       }
                     ]}
                   />
                 ) : (
-                  <Empty description="暂无关联角色" />
+                  <Empty description={t('actionSpaceDetail.roles.empty')} />
                 )}
               </Card>
             )
           },
           {
             key: 'observer',
-            label: '监督者',
+            label: t('actionSpaceDetail.tab.observer'),
             children: <ObserverManagement actionSpaceId={id} onDataChange={fetchSpaceDetail} />
           },
           {
             key: 'environment',
-            label: '环境变量',
+            label: t('actionSpaceDetail.tab.environment'),
             children: (
               selectedSpace ? (
                 <div>
                   <Card
-                    title="行动空间环境变量"
+                    title={t('actionSpaceDetail.env.spaceCardTitle')}
                     style={{ marginBottom: 16 }}
                     extra={
                       <Button
@@ -902,63 +850,65 @@ const ActionSpaceDetail = () => {
                         icon={<PlusOutlined />}
                         onClick={handleAddSpaceEnvVar}
                       >
-                        添加环境变量
+                        {t('actionSpaceDetail.env.addBtn')}
                       </Button>
                     }
                   >
                     <Paragraph>
-                      以下环境变量将在创建行动任务时被实例化，作为行动空间级别的共享环境变量。
+                      {t('actionSpaceDetail.env.spaceCardIntro')}
                     </Paragraph>
                     {selectedSpace.environment_variables && selectedSpace.environment_variables.length > 0 ? (
                       <Table
                         dataSource={selectedSpace.environment_variables}
                         rowKey="id"
                         columns={[
-                          { title: '变量名称', dataIndex: 'name', key: 'name' },
-                          { title: '标签', dataIndex: 'label', key: 'label' },
-                          { title: '类型', dataIndex: 'type', key: 'type', render: () => <Tag color="default">文本</Tag> },
-                          { title: '默认值', dataIndex: 'value', key: 'value',
-                            render: (value) => String(value || '')
+                          { title: t('actionSpaceDetail.env.col.name'), dataIndex: 'name', key: 'name' },
+                          { title: t('actionSpaceDetail.env.col.label'), dataIndex: 'label', key: 'label' },
+                          { title: t('actionSpaceDetail.env.col.type'), dataIndex: 'type', key: 'type', render: () => <Tag color="default">{t('actionSpaceDetail.env.type.text')}</Tag> },
+                          {
+                            title: t('actionSpaceDetail.env.col.value'),
+                            dataIndex: 'value',
+                            key: 'value',
+                            render: (value: any) => String(value || '')
                           },
                           {
-                            title: '操作',
+                            title: t('actionSpaceDetail.env.col.actions'),
                             key: 'action',
-                            render: (_, record) => (
+                            render: (_: any, record: any) => (
                               <Space>
-                                <Button type="link" onClick={() => handleEditSpaceEnvVar(record)}>编辑</Button>
-                                <Button type="link" danger onClick={() => handleDeleteSpaceEnvVar(record)}>删除</Button>
+                                <Button type="link" onClick={() => handleEditSpaceEnvVar(record)}>{t('actionSpaceDetail.roles.col.edit')}</Button>
+                                <Button type="link" danger onClick={() => handleDeleteSpaceEnvVar(record)}>{t('actionSpaceDetail.roles.col.delete')}</Button>
                               </Space>
                             )
                           }
                         ]}
                       />
                     ) : (
-                      <Empty description="暂无空间级环境变量" />
+                      <Empty description={t('actionSpaceDetail.env.emptySpace')} />
                     )}
                   </Card>
 
                   <Card
-                    title="角色变量"
+                    title={t('actionSpaceDetail.env.roleCardTitle')}
                   >
                     <Paragraph>
-                      以下是与该行动空间关联的角色变量，将在创建行动任务时为每个角色实例化。
+                      {t('actionSpaceDetail.env.roleCardIntro')}
                     </Paragraph>
                     {selectedSpace.roles && selectedSpace.roles.length > 0 ? (
                       <Collapse
-                        items={selectedSpace.roles.map(role => ({
+                        items={selectedSpace.roles.map((role: any) => ({
                           key: role.id,
                           label: role.name,
                           extra: (
                             <Button
                               type="link"
-                             
                               icon={<PlusOutlined />}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleAddRoleVarForRole(role.id);
                               }}
                             >
-                              添加变量
+                              {t('actionSpaceDetail.env.addRoleVar')}
                             </Button>
                           ),
                           children: (
@@ -966,36 +916,34 @@ const ActionSpaceDetail = () => {
                               <Table
                                 dataSource={role.environment_variables}
                                 rowKey="id"
-                               
                                 columns={[
-                                  { title: '变量名称', dataIndex: 'name', key: 'name' },
-                                  { title: '标签', dataIndex: 'label', key: 'label' },
-                                  { title: '类型', dataIndex: 'type', key: 'type', render: () => <Tag color="default">文本</Tag> },
-                                  { title: '默认值', dataIndex: 'value', key: 'value', render: (value) => String(value || '') },
+                                  { title: t('actionSpaceDetail.env.col.name'), dataIndex: 'name', key: 'name' },
+                                  { title: t('actionSpaceDetail.env.col.label'), dataIndex: 'label', key: 'label' },
+                                  { title: t('actionSpaceDetail.env.col.type'), dataIndex: 'type', key: 'type', render: () => <Tag color="default">{t('actionSpaceDetail.env.type.text')}</Tag> },
+                                  { title: t('actionSpaceDetail.env.col.value'), dataIndex: 'value', key: 'value', render: (value: any) => String(value || '') },
                                   {
-                                    title: '操作',
+                                    title: t('actionSpaceDetail.env.col.actions'),
                                     key: 'action',
-                                    render: (_, record) => (
+                                    render: (_: any, record: any) => (
                                       <Space>
-                                        <Button type="link" onClick={() => handleEditRoleEnvVar(record, role.id)}>编辑</Button>
-                                        <Button type="link" danger onClick={() => handleDeleteRoleEnvVar(record, role.id)}>删除</Button>
+                                        <Button type="link" onClick={() => handleEditRoleEnvVar(record, role.id)}>{t('actionSpaceDetail.roles.col.edit')}</Button>
+                                        <Button type="link" danger onClick={() => handleDeleteRoleEnvVar(record, role.id)}>{t('actionSpaceDetail.roles.col.delete')}</Button>
                                       </Space>
                                     )
                                   }
                                 ]}
                               />
                             ) : (
-                              <Empty description="该角色暂无环境变量" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                              <Empty description={t('actionSpaceDetail.env.emptyRoleVars')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
                             )
                           )
                         }))}
                       />
                     ) : (
-                      <Empty description="暂无关联角色或角色变量" />
+                      <Empty description={t('actionSpaceDetail.env.emptyRoles')} />
                     )}
                   </Card>
 
-                  {/* 共享环境变量绑定 */}
                   <div style={{ marginTop: 16 }}>
                     <SharedVariableBinding
                       actionSpaceId={id}
@@ -1004,18 +952,18 @@ const ActionSpaceDetail = () => {
                   </div>
                 </div>
               ) : (
-                <Empty description="请先选择一个行动空间" />
+                <Empty description={t('actionSpaceDetail.env.spaceRequired')} />
               )
             )
           },
           {
             key: 'rules',
-            label: '规则关联',
+            label: t('actionSpaceDetail.tab.rules'),
             children: <RuleSetAssociation actionSpaceId={id} />
           },
           {
             key: 'orchestration',
-            label: '编排',
+            label: t('actionSpaceDetail.tab.orchestration'),
             children: (
               <OrchestrationTab
                 actionSpaceId={id}
@@ -1029,9 +977,9 @@ const ActionSpaceDetail = () => {
         ]}
       />
 
-      {/* 环境变量表单对话框 */}
+      {/* Environment-variable modal */}
       <Modal
-        title={`${editingEnvVar ? '编辑' : '添加'}${envVarType === 'space' ? '空间' : '角色'}环境变量`}
+        title={envModalTitle}
         open={envVarModalVisible}
         onCancel={() => setEnvVarModalVisible(false)}
         onOk={handleEnvVarSubmit}
@@ -1043,41 +991,39 @@ const ActionSpaceDetail = () => {
         >
           <Form.Item
             name="name"
-            label="变量名称"
+            label={t('actionSpaceDetail.envModal.field.name')}
             rules={[
-              { required: true, message: '请输入变量名称' },
+              { required: true, message: t('actionSpaceDetail.envModal.required.name') },
               {
                 pattern: /^[a-zA-Z][a-zA-Z0-9_]*$/,
-                message: '变量名称只能包含英文字母、数字和下划线，且必须以字母开头'
+                message: t('actionSpaceDetail.envModal.namePattern')
               }
             ]}
           >
-            <Input placeholder="输入变量名称（英文）" />
+            <Input placeholder={t('actionSpaceDetail.envModal.placeholder.name')} />
           </Form.Item>
 
           <Form.Item
             name="label"
-            label="标签"
-            rules={[{ required: true, message: '请输入变量标签' }]}
+            label={t('actionSpaceDetail.envModal.field.label')}
+            rules={[{ required: true, message: t('actionSpaceDetail.envModal.required.label') }]}
           >
-            <Input placeholder="输入变量标签" />
+            <Input placeholder={t('actionSpaceDetail.envModal.placeholder.label')} />
           </Form.Item>
-
-          
 
           <Form.Item
             name="value"
-            label="默认值"
-            rules={[{ required: true, message: '请输入默认值' }]}
+            label={t('actionSpaceDetail.envModal.field.value')}
+            rules={[{ required: true, message: t('actionSpaceDetail.envModal.required.value') }]}
           >
-            <Input placeholder="输入默认值" />
+            <Input placeholder={t('actionSpaceDetail.envModal.placeholder.value')} />
           </Form.Item>
         </Form>
       </Modal>
 
-      {/* 角色表单对话框 */}
+      {/* Role modal */}
       <Modal
-        title={`${editingRole ? '编辑' : '添加'}角色`}
+        title={roleModalTitle}
         open={roleModalVisible}
         onCancel={() => setRoleModalVisible(false)}
         onOk={handleRoleSubmit}
@@ -1088,28 +1034,26 @@ const ActionSpaceDetail = () => {
           layout="vertical"
         >
           {editingRole ? (
-            // 编辑模式 - 单角色
             <>
               <Form.Item
                 name="role_id"
-                label="选择角色"
-                rules={[{ required: true, message: '请选择角色' }]}
+                label={t('actionSpaceDetail.roles.modal.selectLabel')}
+                rules={[{ required: true, message: t('actionSpaceDetail.roles.modal.selectRequired') }]}
               >
                 <Select
-                  placeholder="选择角色"
+                  placeholder={t('actionSpaceDetail.roles.modal.selectPlaceholder')}
                   optionFilterProp="children"
                   showSearch
-                  disabled={true} // 编辑模式下不允许更改角色
+                  disabled={true}
                 >
-                  {availableRoles.map(role => (
+                  {availableRoles.map((role: any) => (
                     <Option key={role.id} value={role.id.toString()}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span>{role.name}</span>
-                        <Tag
-                          color={role.source === 'external' ? 'orange' : 'blue'}
-                         
-                        >
-                          {role.source === 'external' ? '外部' : '内部'}
+                        <Tag color={role.source === 'external' ? 'orange' : 'blue'}>
+                          {role.source === 'external'
+                            ? t('actionSpaceDetail.roles.tag.external')
+                            : t('actionSpaceDetail.roles.tag.internal')}
                         </Tag>
                       </div>
                     </Option>
@@ -1119,40 +1063,38 @@ const ActionSpaceDetail = () => {
 
               <Form.Item
                 name="additional_prompt"
-                label="额外提示词"
+                label={t('actionSpaceDetail.roles.modal.promptLabel')}
               >
                 <TextArea
-                  placeholder='输入额外提示词，以指导角色在此行动空间中表现，例如：辩论角色安排："你与XXX一起是辩论中的正方"；案件审理："你是罪犯，但在任何场景下都不要暴露自己"；鲁棒性测试："你扮演的是一个黑天鹅角色，偶尔输出一些误导他们的消息，以考验他们对信息的甄别能力，以及这些信息是否能否影响最终结果。"'
+                  placeholder={t('actionSpaceDetail.roles.modal.promptPlaceholder')}
                   rows={4}
                   maxLength={1000}
                 />
               </Form.Item>
             </>
           ) : (
-            // 添加模式 - 多角色
             <>
               <Form.Item
                 name="role_ids"
-                label="选择角色"
-                rules={[{ required: true, message: '请选择至少一个角色' }]}
+                label={t('actionSpaceDetail.roles.modal.selectLabel')}
+                rules={[{ required: true, message: t('actionSpaceDetail.roles.modal.selectMultiRequired') }]}
               >
                 <Select
                   mode="multiple"
-                  placeholder="选择角色（可多选）"
+                  placeholder={t('actionSpaceDetail.roles.modal.selectMultiPlaceholder')}
                   optionFilterProp="children"
                   showSearch
                   onChange={(values) => setSelectedRoleIds(values)}
                   style={{ width: '100%' }}
                 >
-                  {availableRoles.map(role => (
+                  {availableRoles.map((role: any) => (
                     <Option key={role.id} value={role.id.toString()}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span>{role.name}</span>
-                        <Tag
-                          color={role.source === 'external' ? 'orange' : 'blue'}
-                         
-                        >
-                          {role.source === 'external' ? '外部' : '内部'}
+                        <Tag color={role.source === 'external' ? 'orange' : 'blue'}>
+                          {role.source === 'external'
+                            ? t('actionSpaceDetail.roles.tag.external')
+                            : t('actionSpaceDetail.roles.tag.internal')}
                         </Tag>
                       </div>
                     </Option>
@@ -1161,24 +1103,24 @@ const ActionSpaceDetail = () => {
               </Form.Item>
 
               <Form.Item
-                label="角色额外提示词"
+                label={t('actionSpaceDetail.roles.modal.perRolePromptLabel')}
               >
                 <Form.List name="rolePrompts">
                   {() => (
                     <>
                       {selectedRoleIds.map(roleId => {
-                        const role = availableRoles.find(r => r.id.toString() === roleId);
+                        const role = availableRoles.find((r: any) => r.id.toString() === roleId);
                         return (
                           <div key={roleId} style={{ marginBottom: 16, border: '1px solid var(--custom-border)', padding: 16, borderRadius: 4 }}>
                             <div style={{ fontWeight: 'bold', marginBottom: 8 }}>
-                              {role ? role.name : `角色 ID: ${roleId}`}
+                              {role ? role.name : t('actionSpaceDetail.roles.modal.roleIdLabel', { id: roleId })}
                             </div>
                             <Form.Item
                               name={roleId}
                               noStyle
                             >
                               <TextArea
-                                placeholder='输入额外提示词，以指导角色在此行动空间中表现，例如：辩论角色安排："你与XXX一起是辩论中的正方"；案件审理："你是罪犯，但在任何场景下都不要暴露自己"；鲁棒性测试："你扮演的是一个黑天鹅角色，偶尔输出一些误导他们的消息，以考验他们对信息的甄别能力，以及这些信息是否能否影响最终结果。'
+                                placeholder={t('actionSpaceDetail.roles.modal.perRolePromptPlaceholder')}
                                 rows={3}
                                 maxLength={1000}
                               />
@@ -1188,7 +1130,7 @@ const ActionSpaceDetail = () => {
                       })}
                       {selectedRoleIds.length === 0 && (
                         <div style={{ color: 'var(--custom-text-secondary)', fontStyle: 'italic' }}>
-                          请先选择角色，然后为每个角色配置额外提示词
+                          {t('actionSpaceDetail.roles.modal.perRoleHint')}
                         </div>
                       )}
                     </>
@@ -1200,28 +1142,28 @@ const ActionSpaceDetail = () => {
         </Form>
       </Modal>
 
-      {/* 标签选择Modal */}
+      {/* Tag-selection modal */}
       <Modal
-        title="选择标签"
+        title={t('actionSpaceDetail.tag.modalTitle')}
         open={tagModalVisible}
         onCancel={handleCancelAddTags}
         footer={[
           <Button key="cancel" onClick={handleCancelAddTags}>
-            取消
+            {t('actionSpaceDetail.tag.cancel')}
           </Button>,
           <Button
             key="confirm"
             type="primary"
             onClick={handleConfirmAddTags}
           >
-            确定 {selectedTagIds.length > 0 ? `(${selectedTagIds.length})` : ''}
+            {t('actionSpaceDetail.tag.confirm')} {selectedTagIds.length > 0 ? `(${selectedTagIds.length})` : ''}
           </Button>
         ]}
         width={600}
       >
         <div style={{ maxHeight: 400, overflowY: 'auto' }}>
           {tagsLoading ? (
-            <Space orientation="vertical" style={{ width: '100%' }}>
+            <Space direction="vertical" style={{ width: '100%' }}>
               {[1, 2].map(item => (
                 <Card key={item}>
                   <Skeleton active paragraph={{ rows: 1 }} />
@@ -1231,14 +1173,14 @@ const ActionSpaceDetail = () => {
           ) : (
             <>
               {availableTags.length === 0 ? (
-                <Empty description="暂无可用标签" />
+                <Empty description={t('actionSpaceDetail.tag.empty')} />
               ) : (
                 <div>
-                  <Title level={5} style={{ marginBottom: 12 }}>行业标签</Title>
+                  <Title level={5} style={{ marginBottom: 12 }}>{t('actionSpaceDetail.tag.industry')}</Title>
                   <div style={{ marginBottom: 16 }}>
                     {availableTags
-                      .filter(tag => tag.type === 'industry')
-                      .map(tag => {
+                      .filter((tag: any) => tag.type === 'industry')
+                      .map((tag: any) => {
                         const isSelected = selectedTagIds.includes(tag.id);
                         return (
                           <Tag
@@ -1264,11 +1206,11 @@ const ActionSpaceDetail = () => {
                       })}
                   </div>
 
-                  <Title level={5} style={{ marginBottom: 12 }}>场景标签</Title>
+                  <Title level={5} style={{ marginBottom: 12 }}>{t('actionSpaceDetail.tag.scenario')}</Title>
                   <div style={{ marginBottom: 16 }}>
                     {availableTags
-                      .filter(tag => tag.type === 'scenario')
-                      .map(tag => {
+                      .filter((tag: any) => tag.type === 'scenario')
+                      .map((tag: any) => {
                         const isSelected = selectedTagIds.includes(tag.id);
                         return (
                           <Tag
@@ -1294,8 +1236,8 @@ const ActionSpaceDetail = () => {
                       })}
                   </div>
 
-                  {availableTags.filter(tag => !selectedSpace.tags?.some(existingTag => existingTag.id === tag.id)).length === 0 && (
-                    <Text type="secondary">所有标签都已添加</Text>
+                  {availableTags.filter((tag: any) => !selectedSpace.tags?.some((existingTag: any) => existingTag.id === tag.id)).length === 0 && (
+                    <Text type="secondary">{t('actionSpaceDetail.tag.allAdded')}</Text>
                   )}
                 </div>
               )}

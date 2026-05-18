@@ -82,12 +82,12 @@ const ExperimentListPage = () => {
         setExperiments(response.experiments);
       }
     } catch (error) {
-      console.error('加载实验列表失败:', error);
-      message.error('加载实验列表失败');
+      console.error('load experiment list failed:', error);
+      message.error(t('parallelLab.list.loadFailed'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const loadActionSpaces = useCallback(async () => {
     try {
@@ -99,7 +99,7 @@ const ExperimentListPage = () => {
         variables: s.environment_variables?.map((v: any) => v.name) || []
       })));
     } catch (error) {
-      console.error('加载行动空间失败:', error);
+      console.error('load action spaces failed:', error);
     }
   }, []);
 
@@ -116,7 +116,7 @@ const ExperimentListPage = () => {
         assistantGenerationModel: settingsData?.assistant_generation_model || 'default'
       });
     } catch (error) {
-      console.error('加载模型和设置失败:', error);
+      console.error('load models and settings failed:', error);
     }
   }, []);
 
@@ -138,7 +138,7 @@ const ExperimentListPage = () => {
       setActiveTab(latestExp.status === 'created' && !latestExp.is_template ? 'design' : 'detail');
       setModalVisible(true);
     } catch (error) {
-      console.error('获取实验详情失败:', error);
+      console.error('get experiment details failed:', error);
       // 降级使用列表中的数据
       setSelectedExperiment(exp);
       setIsEditMode(exp.status !== 'running' && !exp.is_template);
@@ -151,14 +151,16 @@ const ExperimentListPage = () => {
   const handleClone = async (id: string, name: string, isTemplate: boolean, e?: React.MouseEvent) => {
     e?.stopPropagation();
     try {
-      const response = await parallelExperimentApi.cloneExperiment(id, `${name} - 副本`);
+      const response = await parallelExperimentApi.cloneExperiment(id, t('parallelLab.list.cloneSuffix', { name }));
       if (response.success) {
-        message.success(isTemplate ? '已基于模板创建实验' : '实验复制成功');
+        message.success(isTemplate
+          ? t('parallelLab.list.templateCloneSuccess')
+          : t('parallelLab.list.cloneSuccess'));
         loadExperiments();
         setModalVisible(false);
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || '复制失败');
+      message.error(error.response?.data?.error || t('parallelLab.list.cloneFailed'));
     }
   };
 
@@ -167,11 +169,11 @@ const ExperimentListPage = () => {
     try {
       const response = await parallelExperimentApi.stopExperiment(id);
       if (response.success) {
-        message.success('实验已停止');
+        message.success(t('parallelLab.list.experimentStopped'));
         loadExperiments();
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || '停止失败');
+      message.error(error.response?.data?.error || t('parallelLab.list.stopFailed'));
     }
   };
 
@@ -180,11 +182,11 @@ const ExperimentListPage = () => {
     try {
       const response = await parallelExperimentApi.pauseExperiment(id);
       if (response.success) {
-        message.success('实验已暂停');
+        message.success(t('parallelLab.list.experimentPaused'));
         loadExperiments();
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || '暂停失败');
+      message.error(error.response?.data?.error || t('parallelLab.list.pauseFailed'));
     }
   };
 
@@ -193,11 +195,11 @@ const ExperimentListPage = () => {
     try {
       const response = await parallelExperimentApi.resumeExperiment(id);
       if (response.success) {
-        message.success('实验已恢复');
+        message.success(t('parallelLab.list.experimentResumed'));
         loadExperiments();
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || '恢复失败');
+      message.error(error.response?.data?.error || t('parallelLab.list.resumeFailed'));
     }
   };
 
@@ -205,21 +207,21 @@ const ExperimentListPage = () => {
   const handleDelete = async (id: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
     Modal.confirm({
-      title: '确认删除',
-      content: '删除后无法恢复，确定要删除这个实验吗？',
-      okText: '删除',
+      title: t('parallelLab.list.confirmDelete'),
+      content: t('parallelLab.list.deleteWarning'),
+      okText: t('parallelLab.list.delete'),
       okType: 'danger',
-      cancelText: '取消',
+      cancelText: t('parallelLab.list.cancel'),
       onOk: async () => {
         try {
           const response = await parallelExperimentApi.deleteExperiment(id);
           if (response.success) {
-            message.success('实验已删除');
+            message.success(t('parallelLab.list.experimentDeleted'));
             setModalVisible(false);
             loadExperiments();
           }
         } catch (error: any) {
-          message.error(error.response?.data?.error || '删除失败');
+          message.error(error.response?.data?.error || t('parallelLab.list.deleteFailed'));
         }
       }
     });
@@ -228,7 +230,7 @@ const ExperimentListPage = () => {
   // 创建草稿实验（仅基础信息）
   const handleCreateDraftExperiment = async () => {
     if (!selectedSpace || !experimentConfig.name) {
-      message.warning('请选择行动空间并填写实验名称');
+      message.warning(t('parallelLab.list.selectSpaceAndName'));
       return;
     }
     setCreateLoading(true);
@@ -239,7 +241,7 @@ const ExperimentListPage = () => {
         source_action_space_id: selectedSpace
       });
       if (response.success) {
-        message.success('实验创建成功，请继续配置实验参数');
+        message.success(t('parallelLab.list.createSuccess'));
         setCreateModalVisible(false);
         setExperimentConfig({ name: '', description: '' });
         setSelectedSpace(null);
@@ -255,7 +257,7 @@ const ExperimentListPage = () => {
         }
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || '创建实验失败');
+      message.error(error.response?.data?.error || t('parallelLab.list.createFailed'));
     } finally {
       setCreateLoading(false);
     }
@@ -285,14 +287,14 @@ const ExperimentListPage = () => {
       };
       const response = await parallelExperimentApi.updateExperiment(selectedExperiment.id, updateConfig);
       if (response.success) {
-        message.success('配置已保存');
+        message.success(t('parallelLab.list.configSaved'));
         await loadExperiments();
         // 更新 selectedExperiment
         const updated = (await parallelExperimentApi.getExperiment(selectedExperiment.id)).experiment;
         setSelectedExperiment(updated);
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || '保存配置失败');
+      message.error(error.response?.data?.error || t('parallelLab.list.saveConfigFailed'));
     } finally {
       setEditLoading(false);
     }
@@ -304,7 +306,7 @@ const ExperimentListPage = () => {
     // 验证主题是否填写
     const taskConfig = selectedExperiment.config?.task_config;
     if (!taskConfig?.topic || taskConfig.topic.trim() === '') {
-      message.warning('请先在实验设计中填写讨论主题');
+      message.warning(t('parallelLab.list.configTopicInDesign'));
       setActiveTab('design');
       return;
     }
@@ -312,14 +314,14 @@ const ExperimentListPage = () => {
     try {
       const response = await parallelExperimentApi.startExperiment(selectedExperiment.id);
       if (response.success) {
-        message.success('实验已启动');
+        message.success(t('parallelLab.list.experimentStarted'));
         setIsEditMode(false);
         setModalVisible(false);
         // 跳转到执行监控页面
         navigate('/parallel-lab/monitoring');
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || '启动实验失败');
+      message.error(error.response?.data?.error || t('parallelLab.list.startFailed'));
     } finally {
       setEditLoading(false);
     }
@@ -333,19 +335,19 @@ const ExperimentListPage = () => {
       const expDetail = await parallelExperimentApi.getExperiment(expId);
       const taskConfig = expDetail.experiment?.config?.task_config;
       if (!taskConfig?.topic || taskConfig.topic.trim() === '') {
-        message.warning('请先配置讨论主题');
+        message.warning(t('parallelLab.list.configTopicFirst'));
         // 打开实验详情进行编辑
         handleOpenExperiment(expDetail.experiment);
         return;
       }
       const response = await parallelExperimentApi.startExperiment(expId);
       if (response.success) {
-        message.success('实验已启动');
+        message.success(t('parallelLab.list.experimentStarted'));
         // 跳转到执行监控页面
         navigate('/parallel-lab/monitoring');
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || '启动实验失败');
+      message.error(error.response?.data?.error || t('parallelLab.list.startFailed'));
     }
   };
 
@@ -365,12 +367,12 @@ const ExperimentListPage = () => {
       return null; // 模板标签已在右上角显示
     }
     const statusMap: Record<string, { status: any; text: string }> = {
-      created: { status: 'default', text: '已创建' },
-      running: { status: 'processing', text: '运行中' },
-      paused: { status: 'warning', text: '已暂停' },
-      completed: { status: 'success', text: '已完成' },
-      failed: { status: 'error', text: '失败' },
-      stopped: { status: 'default', text: '已停止' }
+      created: { status: 'default', text: t('parallelLab.list.statusCreated') },
+      running: { status: 'processing', text: t('parallelLab.list.statusRunning') },
+      paused: { status: 'warning', text: t('parallelLab.list.statusPaused') },
+      completed: { status: 'success', text: t('parallelLab.list.statusCompleted') },
+      failed: { status: 'error', text: t('parallelLab.list.statusFailed') },
+      stopped: { status: 'default', text: t('parallelLab.list.statusStopped') }
     };
     const config = statusMap[exp.status] || { status: 'default', text: exp.status };
     return <Badge status={config.status} text={config.text} />;
@@ -394,17 +396,17 @@ const ExperimentListPage = () => {
   const renderCardActions = (exp: any) => {
     if (exp.is_template) {
       return [
-        <Tooltip title="查看详情" key="view">
+        <Tooltip title={t('parallelLab.list.viewDetails')} key="view">
           <EyeOutlined style={{ color: '#1677ff' }} onClick={() => handleOpenExperiment(exp)} />
         </Tooltip>,
-        <Tooltip title="使用模板" key="use">
+        <Tooltip title={t('parallelLab.list.useTemplate')} key="use">
           <CopyOutlined style={{ color: '#722ed1' }} onClick={(e) => handleClone(exp.id, exp.name, true, e)} />
         </Tooltip>
       ];
     }
 
     const actions = [
-      <Tooltip title="查看详情" key="view">
+      <Tooltip title={t('parallelLab.list.viewDetails')} key="view">
         <EyeOutlined style={{ color: '#1677ff' }} onClick={() => handleOpenExperiment(exp)} />
       </Tooltip>
     ];
@@ -412,48 +414,48 @@ const ExperimentListPage = () => {
     // created 状态：显示启动按钮
     if (exp.status === 'created') {
       actions.push(
-        <Tooltip title="启动实验" key="start">
+        <Tooltip title={t('parallelLab.list.start')} key="start">
           <PlayCircleOutlined style={{ color: '#52c41a' }} onClick={(e) => { e.stopPropagation(); handleStartExpFromList(exp.id); }} />
         </Tooltip>
       );
     } else if (exp.status === 'running') {
       actions.push(
-        <Tooltip title="暂停" key="pause">
+        <Tooltip title={t('parallelLab.list.pause')} key="pause">
           <PauseCircleOutlined style={{ color: '#faad14' }} onClick={(e) => { e.stopPropagation(); handlePause(exp.id); }} />
         </Tooltip>,
-        <Tooltip title="停止" key="stop">
+        <Tooltip title={t('parallelLab.list.stop')} key="stop">
           <StopOutlined style={{ color: '#ff4d4f' }} onClick={(e) => { e.stopPropagation(); handleStop(exp.id); }} />
         </Tooltip>
       );
     } else if (exp.status === 'paused') {
       actions.push(
-        <Tooltip title="恢复" key="resume">
+        <Tooltip title={t('parallelLab.list.resume')} key="resume">
           <PlayCircleOutlined style={{ color: '#52c41a' }} onClick={(e) => { e.stopPropagation(); handleResume(exp.id); }} />
         </Tooltip>,
-        <Tooltip title="停止" key="stop">
+        <Tooltip title={t('parallelLab.list.stop')} key="stop">
           <StopOutlined style={{ color: '#ff4d4f' }} onClick={(e) => { e.stopPropagation(); handleStop(exp.id); }} />
         </Tooltip>
       );
     } else if (['completed', 'stopped', 'failed'].includes(exp.status)) {
-      // completed / stopped / failed 状态：可以重新执行
+      // completed / stopped / failed: can restart
       actions.push(
-        <Tooltip title={`重新执行 (第 ${(exp.current_iteration || 0) + 1} 轮)`} key="restart">
+        <Tooltip title={t('parallelLab.list.restartRound', { round: (exp.current_iteration || 0) + 1 })} key="restart">
           <PlayCircleOutlined style={{ color: '#52c41a' }} onClick={(e) => { e.stopPropagation(); handleStartExpFromList(exp.id); }} />
         </Tooltip>,
-        <Tooltip title="复制" key="clone">
+        <Tooltip title={t('parallelLab.list.clone')} key="clone">
           <CopyOutlined style={{ color: '#722ed1' }} onClick={(e) => handleClone(exp.id, exp.name, false, e)} />
         </Tooltip>,
-        <Tooltip title="删除" key="delete">
+        <Tooltip title={t('parallelLab.list.delete')} key="delete">
           <DeleteOutlined style={{ color: '#ff4d4f' }} onClick={(e) => handleDelete(exp.id, e)} />
         </Tooltip>
       );
     } else {
-      // created 状态
+      // created
       actions.push(
-        <Tooltip title="复制" key="clone">
+        <Tooltip title={t('parallelLab.list.clone')} key="clone">
           <CopyOutlined style={{ color: '#722ed1' }} onClick={(e) => handleClone(exp.id, exp.name, false, e)} />
         </Tooltip>,
-        <Tooltip title="删除" key="delete">
+        <Tooltip title={t('parallelLab.list.delete')} key="delete">
           <DeleteOutlined style={{ color: '#ff4d4f' }} onClick={(e) => handleDelete(exp.id, e)} />
         </Tooltip>
       );
@@ -467,11 +469,11 @@ const ExperimentListPage = () => {
     if (!selectedExperiment) return;
     try {
       await parallelExperimentApi.updateExperiment(selectedExperiment.id, { name, description });
-      message.success('基本信息已保存');
+      message.success(t('parallelLab.list.basicInfoSaved'));
       await loadExperiments();
       setSelectedExperiment({ ...selectedExperiment, name, description });
     } catch (error: any) {
-      message.error(error.response?.data?.error || '保存失败');
+      message.error(error.response?.data?.error || t('parallelLab.list.saveFailed'));
     }
   };
 
@@ -487,18 +489,18 @@ const ExperimentListPage = () => {
         {canEdit ? (
           <Card size="small" style={{ marginBottom: 16 }}>
             <Form layout="vertical">
-              <Form.Item label="实验名称" required style={{ marginBottom: 12 }}>
+              <Form.Item label={t('parallelLab.list.experimentName')} required style={{ marginBottom: 12 }}>
                 <Input
                   value={exp.name}
                   onChange={(e) => setSelectedExperiment({ ...exp, name: e.target.value })}
-                  placeholder="输入实验名称"
+                  placeholder={t('parallelLab.list.experimentNamePlaceholder')}
                 />
               </Form.Item>
-              <Form.Item label="实验描述" required style={{ marginBottom: 12 }}>
+              <Form.Item label={t('parallelLab.list.experimentDesc')} required style={{ marginBottom: 12 }}>
                 <Input.TextArea
                   value={exp.description || ''}
                   onChange={(e) => setSelectedExperiment({ ...exp, description: e.target.value })}
-                  placeholder="描述实验目的（必填）"
+                  placeholder={t('parallelLab.list.experimentDescPlaceholder')}
                   rows={3}
                 />
               </Form.Item>
@@ -508,7 +510,7 @@ const ExperimentListPage = () => {
                   onClick={() => handleUpdateBasicInfo(exp.name, exp.description || '')}
                   disabled={!exp.name || !exp.description}
                 >
-                  保存基本信息
+                  {t('parallelLab.list.saveBasicInfo')}
                 </Button>
               </Form.Item>
             </Form>
@@ -516,20 +518,20 @@ const ExperimentListPage = () => {
         ) : null}
 
         <Descriptions column={2} bordered size="small">
-          {!canEdit && <Descriptions.Item label="实验名称">{exp.name}</Descriptions.Item>}
-          <Descriptions.Item label="状态">{renderStatus(exp)}</Descriptions.Item>
-          {!canEdit && <Descriptions.Item label="描述" span={2}>{exp.description || '-'}</Descriptions.Item>}
-          <Descriptions.Item label="行动空间">{exp.source_action_space_name || '-'}</Descriptions.Item>
-          <Descriptions.Item label="创建时间">
+          {!canEdit && <Descriptions.Item label={t('parallelLab.list.experimentName')}>{exp.name}</Descriptions.Item>}
+          <Descriptions.Item label={t('parallelLab.list.status')}>{renderStatus(exp)}</Descriptions.Item>
+          {!canEdit && <Descriptions.Item label={t('parallelLab.list.description')} span={2}>{exp.description || '-'}</Descriptions.Item>}
+          <Descriptions.Item label={t('parallelLab.list.actionSpace')}>{exp.source_action_space_name || '-'}</Descriptions.Item>
+          <Descriptions.Item label={t('parallelLab.list.createdAt')}>
             {exp.created_at ? new Date(exp.created_at).toLocaleString() : '-'}
           </Descriptions.Item>
           {!exp.is_template && (
             <>
-              <Descriptions.Item label="当前轮次">第 {exp.current_iteration || 0} 轮</Descriptions.Item>
-              <Descriptions.Item label="总运行数">{exp.total_runs || 0}</Descriptions.Item>
-              <Descriptions.Item label="已完成">{exp.completed_runs || 0}</Descriptions.Item>
-              <Descriptions.Item label="失败">{exp.failed_runs || 0}</Descriptions.Item>
-              <Descriptions.Item label="开始时间">
+              <Descriptions.Item label={t('parallelLab.list.currentRound')}>{t('parallelLab.list.roundFormat', { round: exp.current_iteration || 0 })}</Descriptions.Item>
+              <Descriptions.Item label={t('parallelLab.list.totalRuns')}>{exp.total_runs || 0}</Descriptions.Item>
+              <Descriptions.Item label={t('parallelLab.list.completed')}>{exp.completed_runs || 0}</Descriptions.Item>
+              <Descriptions.Item label={t('parallelLab.list.failed')}>{exp.failed_runs || 0}</Descriptions.Item>
+              <Descriptions.Item label={t('parallelLab.list.startTime')}>
                 {exp.start_time ? new Date(exp.start_time).toLocaleString() : '-'}
               </Descriptions.Item>
             </>
@@ -540,35 +542,35 @@ const ExperimentListPage = () => {
           <Space>
             {exp.is_template ? (
               <Button type="primary" icon={<CopyOutlined />} onClick={() => handleClone(exp.id, exp.name, true)}>
-                使用此模板创建实验
+                {t('parallelLab.list.useTemplateCreate')}
               </Button>
             ) : (
               <>
                 {exp.status === 'created' && (
                   <Button type="primary" icon={<PlayCircleOutlined />} onClick={handleStartExperiment} loading={editLoading}>
-                    启动实验
+                    {t('parallelLab.list.start')}
                   </Button>
                 )}
                 {['completed', 'stopped', 'failed'].includes(exp.status) && (
                   <Button type="primary" icon={<PlayCircleOutlined />} onClick={handleStartExperiment} loading={editLoading}>
-                    重新执行 (第 {(exp.current_iteration || 0) + 1} 轮)
+                    {t('parallelLab.list.restartRound', { round: (exp.current_iteration || 0) + 1 })}
                   </Button>
                 )}
                 {exp.status === 'running' && (
                   <>
-                    <Button icon={<PauseCircleOutlined />} onClick={() => handlePause(exp.id)}>暂停</Button>
-                    <Button danger icon={<StopOutlined />} onClick={() => handleStop(exp.id)}>停止</Button>
+                    <Button icon={<PauseCircleOutlined />} onClick={() => handlePause(exp.id)}>{t('parallelLab.list.pause')}</Button>
+                    <Button danger icon={<StopOutlined />} onClick={() => handleStop(exp.id)}>{t('parallelLab.list.stop')}</Button>
                   </>
                 )}
                 {exp.status === 'paused' && (
                   <>
-                    <Button type="primary" icon={<PlayCircleOutlined />} onClick={() => handleResume(exp.id)}>恢复</Button>
-                    <Button danger icon={<StopOutlined />} onClick={() => handleStop(exp.id)}>停止</Button>
+                    <Button type="primary" icon={<PlayCircleOutlined />} onClick={() => handleResume(exp.id)}>{t('parallelLab.list.resume')}</Button>
+                    <Button danger icon={<StopOutlined />} onClick={() => handleStop(exp.id)}>{t('parallelLab.list.stop')}</Button>
                   </>
                 )}
-                <Button icon={<CopyOutlined />} onClick={() => handleClone(exp.id, exp.name, false)}>复制实验</Button>
+                <Button icon={<CopyOutlined />} onClick={() => handleClone(exp.id, exp.name, false)}>{t('parallelLab.list.clone')}</Button>
                 {!['running', 'paused'].includes(exp.status) && (
-                  <Button danger icon={<DeleteOutlined />} onClick={() => handleDelete(exp.id)}>删除</Button>
+                  <Button danger icon={<DeleteOutlined />} onClick={() => handleDelete(exp.id)}>{t('parallelLab.list.delete')}</Button>
                 )}
               </>
             )}
@@ -598,7 +600,7 @@ const ExperimentListPage = () => {
   // 渲染实验卡片
   const renderExperimentCards = () => {
     if (filteredExperiments.length === 0) {
-      return <Empty description='暂无实验，点击"创建实验"开始' />;
+      return <Empty description={t('parallelLab.list.noExperiments')} />;
     }
 
     return (
@@ -623,7 +625,7 @@ const ExperimentListPage = () => {
                     margin: 0
                   }}
                 >
-                  模板
+                  {t('parallelLab.list.templateTag')}
                 </Tag>
               )}
 
@@ -637,7 +639,7 @@ const ExperimentListPage = () => {
 
               {/* 描述 */}
               <div style={{ fontSize: 13, color: 'var(--custom-text-secondary)', minHeight: 40, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any }}>
-                {exp.description || '暂无描述'}
+                {exp.description || t('parallelLab.list.noDescription')}
               </div>
 
               {/* 进度条 */}
@@ -738,7 +740,7 @@ const ExperimentListPage = () => {
 
       {/* 实验详情 Modal */}
       <Modal
-        title={selectedExperiment?.name || '实验详情'}
+        title={selectedExperiment?.name || t('parallelLab.list.fallbackTitle')}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
@@ -751,12 +753,12 @@ const ExperimentListPage = () => {
           items={[
             {
               key: 'detail',
-              label: <span><InfoCircleOutlined /> 详情</span>,
+              label: <span><InfoCircleOutlined /> {t('parallelLab.list.detail')}</span>,
               children: renderDetailTab()
             },
             {
               key: 'design',
-              label: <span><SettingOutlined /> 实验设计</span>,
+              label: <span><SettingOutlined /> {t('parallelLab.list.design')}</span>,
               children: selectedExperiment && (
                 <ExperimentDesign
                   actionSpaces={actionSpaces}
@@ -789,9 +791,9 @@ const ExperimentListPage = () => {
         />
       </Modal>
 
-      {/* 创建实验 Modal */}
+      {/* Create experiment modal */}
       <Modal
-        title="创建实验"
+        title={t('parallelLab.list.createExperiment')}
         open={createModalVisible}
         onCancel={() => {
           setCreateModalVisible(false);
@@ -799,23 +801,23 @@ const ExperimentListPage = () => {
           setSelectedSpace(null);
         }}
         onOk={handleCreateDraftExperiment}
-        okText="创建"
-        cancelText="取消"
+        okText={t('parallelLab.list.create')}
+        cancelText={t('parallelLab.list.cancel')}
         confirmLoading={createLoading}
         width={500}
         destroyOnHidden
       >
         <Form layout="vertical">
-          <Form.Item label="实验名称" required>
+          <Form.Item label={t('parallelLab.list.experimentName')} required>
             <Input
-              placeholder="输入实验名称"
+              placeholder={t('parallelLab.list.experimentNamePlaceholder')}
               value={experimentConfig.name}
               onChange={(e) => setExperimentConfig({ ...experimentConfig, name: e.target.value })}
             />
           </Form.Item>
-          <Form.Item label="行动空间" required>
+          <Form.Item label={t('parallelLab.list.actionSpace')} required>
             <Select
-              placeholder="选择行动空间"
+              placeholder={t('parallelLab.list.selectActionSpacePlaceholder')}
               value={selectedSpace}
               onChange={setSelectedSpace}
             >
@@ -824,9 +826,9 @@ const ExperimentListPage = () => {
               ))}
             </Select>
           </Form.Item>
-          <Form.Item label="实验描述">
+          <Form.Item label={t('parallelLab.list.experimentDesc')}>
             <Input.TextArea
-              placeholder="描述实验目的（可选）"
+              placeholder={t('parallelLab.list.descriptionPlaceholderOptional')}
               value={experimentConfig.description}
               onChange={(e) => setExperimentConfig({ ...experimentConfig, description: e.target.value })}
               rows={3}

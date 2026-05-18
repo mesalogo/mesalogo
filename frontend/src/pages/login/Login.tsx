@@ -86,7 +86,7 @@ const Login = () => {
       console.log('收到 OAuth 协议回调:', data);
       
       if (data.error) {
-        message.error(t('message.oauthError') || 'OAuth登录失败');
+        message.error(t('message.oauthError'));
         return;
       }
       
@@ -156,12 +156,13 @@ const Login = () => {
         }
       } else {
         localStorage.removeItem('oauth_provider');
-        message.error(t('message.oauthError') || 'OAuth登录失败');
+        message.error(t('message.oauthError'));
       }
     } catch (error) {
-      console.error('OAuth登录错误:', error);
+      // eslint-disable-next-line no-console
+      console.error('OAuth login error:', error);
       localStorage.removeItem('oauth_provider');
-      message.error(t('message.oauthError') || 'OAuth登录失败');
+      message.error(t('message.oauthError'));
     } finally {
       setOauthLoading(null);
     }
@@ -250,7 +251,7 @@ const Login = () => {
           {oauthProviders.length > 0 && (
             <>
               <Divider plain style={{ margin: '16px 0' }}>
-                <span style={{ color: 'var(--custom-text-secondary)', fontSize: '13px' }}>{t('login.orLoginWith') || '或使用以下方式登录'}</span>
+                <span style={{ color: 'var(--custom-text-secondary)', fontSize: '13px' }}>{t('login.orLoginWith')}</span>
               </Divider>
               <Space orientation="vertical" style={{ width: '100%' }} size="middle">
                 {oauthProviders.map((provider) => (
@@ -262,7 +263,7 @@ const Login = () => {
                     block
                     size="large"
                   >
-                    {t(`login.oauth.${provider.id}`) || `使用 ${provider.name} 登录`}
+                    {t([`login.oauth.${provider.id}`, 'login.oauth.generic'], { name: provider.name })}
                   </Button>
                 ))}
               </Space>

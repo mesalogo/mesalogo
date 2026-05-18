@@ -1,54 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Button, 
-  Table, 
-  Space, 
-  Typography, 
-  Select, 
-  Input, 
-  Progress, 
-  Tag, 
-  Modal, 
-  Form, 
-  message, 
+import {
+  Card,
+  Button,
+  Table,
+  Space,
+  Typography,
+  Select,
+  Input,
+  Progress,
+  Tag,
+  Modal,
+  Form,
+  message,
   Tooltip,
   Statistic,
   Row,
   Col,
   Alert,
-  Spin,
-  Empty
 } from 'antd';
-import { 
-  PlayCircleOutlined, 
-  StopOutlined, 
-  EyeOutlined, 
-  DownloadOutlined, 
+import {
+  PlayCircleOutlined,
+  StopOutlined,
+  EyeOutlined,
+  DownloadOutlined,
   SettingOutlined,
   InfoCircleOutlined,
   BarChartOutlined,
-  FileTextOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
-  SyncOutlined
+  SyncOutlined,
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
 
 const RagasEvaluation = () => {
+  const { t } = useTranslation('knowledgebase');
   const [loading, setLoading] = useState(false);
-  const [evaluations, setEvaluations] = useState([]);
-  const [knowledgeBases, setKnowledgeBases] = useState([]);
-  const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState(null);
+  const [evaluations, setEvaluations] = useState<any[]>([]);
+  const [knowledgeBases, setKnowledgeBases] = useState<any[]>([]);
+  const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<any>(null);
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
-  const [selectedEvaluation, setSelectedEvaluation] = useState(null);
+  const [selectedEvaluation, setSelectedEvaluation] = useState<any>(null);
   const [form] = Form.useForm();
 
-  // 模拟数据
+  // NOTE: these mock objects represent SERVER-SIDE entity records (names,
+  // descriptions etc. would arrive from the API once integration lands).
+  // They intentionally stay as raw strings — they are data, not UI copy.
   const mockEvaluations = [
     {
       id: 1,
@@ -62,10 +63,10 @@ const RagasEvaluation = () => {
         answer_relevancy: 0.78,
         context_precision: 0.82,
         context_recall: 0.76,
-        overall_score: 0.80
+        overall_score: 0.80,
       },
       testCases: 50,
-      passedCases: 40
+      passedCases: 40,
     },
     {
       id: 2,
@@ -75,7 +76,7 @@ const RagasEvaluation = () => {
       createdAt: '2024-01-16 09:15:00',
       progress: 65,
       testCases: 30,
-      completedCases: 19
+      completedCases: 19,
     },
     {
       id: 3,
@@ -84,31 +85,47 @@ const RagasEvaluation = () => {
       status: 'failed',
       createdAt: '2024-01-14 14:20:00',
       error: '测试数据格式错误',
-      testCases: 25
-    }
+      testCases: 25,
+    },
   ];
 
   const mockKnowledgeBases = [
     { id: 1, name: '产品知识库' },
     { id: 2, name: '技术文档库' },
     { id: 3, name: '客服知识库' },
-    { id: 4, name: '法律法规库' }
+    { id: 4, name: '法律法规库' },
   ];
 
   useEffect(() => {
     setEvaluations(mockEvaluations);
     setKnowledgeBases(mockKnowledgeBases);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 获取状态标签
-  const getStatusTag = (status) => {
-    const statusMap = {
-      'completed': { color: 'success', text: '已完成', icon: <CheckCircleOutlined /> },
-      'running': { color: 'processing', text: '运行中', icon: <SyncOutlined spin /> },
-      'failed': { color: 'error', text: '失败', icon: <CloseCircleOutlined /> },
-      'pending': { color: 'default', text: '等待中', icon: <InfoCircleOutlined /> }
+  const getStatusTag = (status: string) => {
+    const statusMap: Record<string, any> = {
+      completed: {
+        color: 'success',
+        text: t('ragas.status.completed'),
+        icon: <CheckCircleOutlined />,
+      },
+      running: {
+        color: 'processing',
+        text: t('ragas.status.running'),
+        icon: <SyncOutlined spin />,
+      },
+      failed: {
+        color: 'error',
+        text: t('ragas.status.failed'),
+        icon: <CloseCircleOutlined />,
+      },
+      pending: {
+        color: 'default',
+        text: t('ragas.status.pending'),
+        icon: <InfoCircleOutlined />,
+      },
     };
-    const config = statusMap[status] || statusMap['pending'];
+    const config = statusMap[status] || statusMap.pending;
     return (
       <Tag color={config.color} icon={config.icon}>
         {config.text}
@@ -116,168 +133,158 @@ const RagasEvaluation = () => {
     );
   };
 
-  // 获取指标颜色
-  const getMetricColor = (score) => {
+  const getMetricColor = (score: number) => {
     if (score >= 0.8) return '#52c41a';
     if (score >= 0.6) return '#faad14';
     return '#ff4d4f';
   };
 
-  // 表格列定义
   const columns = [
     {
-      title: '评测名称',
+      title: t('ragas.col.name'),
       dataIndex: 'name',
       key: 'name',
-      render: (text, record) => (
+      render: (text: string, record: any) => (
         <div>
           <div style={{ fontWeight: 500 }}>{text}</div>
           <Text type="secondary" style={{ fontSize: '12px' }}>
-            知识库: {record.knowledgeBase}
+            {t('ragas.kbLabel', { name: record.knowledgeBase })}
           </Text>
         </div>
-      )
+      ),
     },
     {
-      title: '状态',
+      title: t('ragas.col.status'),
       dataIndex: 'status',
       key: 'status',
       width: 120,
-      render: (status, record) => (
+      render: (status: string, record: any) => (
         <div>
           {getStatusTag(status)}
           {status === 'running' && record.progress && (
-            <Progress 
-              percent={record.progress} 
-              
+            <Progress
+              percent={record.progress}
               style={{ marginTop: 4 }}
               format={() => `${record.completedCases}/${record.testCases}`}
             />
           )}
         </div>
-      )
+      ),
     },
     {
-      title: '测试用例',
+      title: t('ragas.col.testCases'),
       key: 'testCases',
       width: 100,
-      render: (_, record) => (
+      render: (_: any, record: any) => (
         <div>
           <Text>{record.testCases}</Text>
           {record.passedCases && (
             <div>
               <Text type="success" style={{ fontSize: '12px' }}>
-                通过: {record.passedCases}
+                {t('ragas.col.passed', { count: record.passedCases })}
               </Text>
             </div>
           )}
         </div>
-      )
+      ),
     },
     {
-      title: '综合评分',
+      title: t('ragas.col.score'),
       key: 'score',
       width: 120,
-      render: (_, record) => {
+      render: (_: any, record: any) => {
         if (record.status === 'completed' && record.metrics) {
           return (
             <Statistic
               value={record.metrics.overall_score}
               precision={2}
-              styles={{ content: { 
-                color: getMetricColor(record.metrics.overall_score),
-                fontSize: '16px'
-              } }}
+              styles={{
+                content: {
+                  color: getMetricColor(record.metrics.overall_score),
+                  fontSize: '16px',
+                },
+              }}
               suffix="/1.0"
             />
           );
         }
         return <Text type="secondary">-</Text>;
-      }
+      },
     },
     {
-      title: '创建时间',
+      title: t('ragas.col.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 150,
-      render: (text) => <Text type="secondary">{text}</Text>
+      render: (text: string) => <Text type="secondary">{text}</Text>,
     },
     {
-      title: '操作',
+      title: t('ragas.col.actions'),
       key: 'actions',
       width: 200,
-      render: (_, record) => (
+      render: (_: any, record: any) => (
         <Space>
-          <Tooltip title="查看详情">
-            <Button 
-              
+          <Tooltip title={t('ragas.action.viewDetail')}>
+            <Button
               icon={<EyeOutlined />}
               onClick={() => handleViewDetail(record)}
             />
           </Tooltip>
           {record.status === 'running' && (
-            <Tooltip title="停止评测">
-              <Button 
-                
+            <Tooltip title={t('ragas.action.stop')}>
+              <Button
                 icon={<StopOutlined />}
                 onClick={() => handleStopEvaluation(record.id)}
               />
             </Tooltip>
           )}
           {record.status === 'completed' && (
-            <Tooltip title="下载报告">
-              <Button 
-                
+            <Tooltip title={t('ragas.action.download')}>
+              <Button
                 icon={<DownloadOutlined />}
                 onClick={() => handleDownloadReport(record.id)}
               />
             </Tooltip>
           )}
         </Space>
-      )
-    }
+      ),
+    },
   ];
 
-  // 处理创建评测
   const handleCreateEvaluation = () => {
     setCreateModalVisible(true);
   };
 
-  // 处理查看详情
-  const handleViewDetail = (evaluation) => {
+  const handleViewDetail = (evaluation: any) => {
     setSelectedEvaluation(evaluation);
     setDetailModalVisible(true);
   };
 
-  // 处理停止评测
-  const handleStopEvaluation = (id) => {
+  const handleStopEvaluation = (_id: number) => {
     Modal.confirm({
-      title: '确认停止评测',
-      content: '停止后的评测无法恢复，确定要停止吗？',
+      title: t('ragas.confirmStopTitle'),
+      content: t('ragas.confirmStopContent'),
       onOk: () => {
-        message.success('评测已停止');
-        // 这里应该调用API停止评测
-      }
+        message.success(t('ragas.stopSuccess'));
+        // TODO: call API to stop evaluation
+      },
     });
   };
 
-  // 处理下载报告
-  const handleDownloadReport = (id) => {
-    message.success('报告下载中...');
-    // 这里应该调用API下载报告
+  const handleDownloadReport = (_id: number) => {
+    message.success(t('ragas.downloadStarted'));
+    // TODO: call API to download report
   };
 
-  // 处理提交创建表单
-  const handleSubmitCreate = async (values) => {
+  const handleSubmitCreate = async (_values: any) => {
     try {
       setLoading(true);
-      // 这里应该调用API创建评测
-      console.log('创建评测:', values);
-      message.success('评测创建成功，正在启动...');
+      // TODO: call API to create evaluation
+      message.success(t('ragas.createSuccess'));
       setCreateModalVisible(false);
       form.resetFields();
     } catch (error) {
-      message.error('创建评测失败');
+      message.error(t('ragas.createFailed'));
     } finally {
       setLoading(false);
     }
@@ -288,33 +295,33 @@ const RagasEvaluation = () => {
       <div style={{ marginBottom: '24px' }}>
         <Title level={4} style={{ margin: 0, marginBottom: '8px' }}>
           <BarChartOutlined style={{ marginRight: '8px' }} />
-          RAGAS 评测管理
+          {t('ragas.title')}
         </Title>
-        <Text type="secondary">
-          基于RAGAS框架对知识库进行全面的RAG系统评测，包括忠实度、相关性、精确度和召回率等关键指标
-        </Text>
+        <Text type="secondary">{t('ragas.subtitle')}</Text>
       </div>
 
       <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'flex-end' }}>
         <Space>
           <Select
-            placeholder="选择知识库"
+            placeholder={t('ragas.selectKnowledgeBase')}
             style={{ width: 200 }}
             value={selectedKnowledgeBase}
             onChange={setSelectedKnowledgeBase}
             allowClear
           >
-            {knowledgeBases.map(kb => (
-              <Option key={kb.id} value={kb.id}>{kb.name}</Option>
+            {knowledgeBases.map((kb) => (
+              <Option key={kb.id} value={kb.id}>
+                {kb.name}
+              </Option>
             ))}
           </Select>
-          <Button icon={<SettingOutlined />}>评测配置</Button>
+          <Button icon={<SettingOutlined />}>{t('ragas.configureBtn')}</Button>
           <Button
             type="primary"
             icon={<PlayCircleOutlined />}
             onClick={handleCreateEvaluation}
           >
-            创建评测
+            {t('ragas.createBtn')}
           </Button>
         </Space>
       </div>
@@ -327,92 +334,97 @@ const RagasEvaluation = () => {
         pagination={{
           pageSize: 10,
           showSizeChanger: true,
-          showTotal: (total) => `共 ${total} 个评测任务`,
+          showTotal: (total) => t('ragas.pagination.total', { total }),
         }}
       />
 
-      {/* 创建评测模态框 */}
+      {/* Create modal */}
       <Modal
-        title="创建RAGAS评测"
+        title={t('ragas.create.title')}
         open={createModalVisible}
         onCancel={() => setCreateModalVisible(false)}
         footer={null}
         width={600}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmitCreate}
-        >
+        <Form form={form} layout="vertical" onFinish={handleSubmitCreate}>
           <Form.Item
             name="name"
-            label="评测名称"
-            rules={[{ required: true, message: '请输入评测名称' }]}
+            label={t('ragas.col.name')}
+            rules={[{ required: true, message: t('ragas.create.nameRequired') }]}
           >
-            <Input placeholder="请输入评测名称" />
+            <Input placeholder={t('ragas.create.namePlaceholder')} />
           </Form.Item>
 
           <Form.Item
             name="knowledgeBaseId"
-            label="选择知识库"
-            rules={[{ required: true, message: '请选择知识库' }]}
+            label={t('ragas.create.kbLabel')}
+            rules={[{ required: true, message: t('ragas.create.kbRequired') }]}
           >
-            <Select placeholder="请选择要评测的知识库">
-              {knowledgeBases.map(kb => (
-                <Option key={kb.id} value={kb.id}>{kb.name}</Option>
+            <Select placeholder={t('ragas.create.kbPlaceholder')}>
+              {knowledgeBases.map((kb) => (
+                <Option key={kb.id} value={kb.id}>
+                  {kb.name}
+                </Option>
               ))}
             </Select>
           </Form.Item>
 
           <Form.Item
             name="testData"
-            label="测试数据"
-            rules={[{ required: true, message: '请输入测试数据' }]}
+            label={t('ragas.create.testDataLabel')}
+            rules={[{ required: true, message: t('ragas.create.testDataRequired') }]}
           >
-            <TextArea
-              rows={6}
-              placeholder="请输入测试问题，每行一个问题，或上传JSON格式的测试数据文件"
-            />
+            <TextArea rows={6} placeholder={t('ragas.create.testDataPlaceholder')} />
           </Form.Item>
 
           <Form.Item
             name="metrics"
-            label="评测指标"
-            initialValue={['faithfulness', 'answer_relevancy', 'context_precision', 'context_recall']}
+            label={t('ragas.create.metricsLabel')}
+            initialValue={[
+              'faithfulness',
+              'answer_relevancy',
+              'context_precision',
+              'context_recall',
+            ]}
           >
-            <Select
-              mode="multiple"
-              placeholder="选择评测指标"
-            >
-              <Option value="faithfulness">忠实度 (Faithfulness)</Option>
-              <Option value="answer_relevancy">答案相关性 (Answer Relevancy)</Option>
-              <Option value="context_precision">上下文精确度 (Context Precision)</Option>
-              <Option value="context_recall">上下文召回率 (Context Recall)</Option>
+            <Select mode="multiple" placeholder={t('ragas.create.metricsPlaceholder')}>
+              <Option value="faithfulness">
+                {t('ragas.metric.faithfulness')} (Faithfulness)
+              </Option>
+              <Option value="answer_relevancy">
+                {t('ragas.metric.answerRelevancy')} (Answer Relevancy)
+              </Option>
+              <Option value="context_precision">
+                {t('ragas.metric.contextPrecision')} (Context Precision)
+              </Option>
+              <Option value="context_recall">
+                {t('ragas.metric.contextRecall')} (Context Recall)
+              </Option>
             </Select>
           </Form.Item>
 
           <Form.Item>
             <Space>
               <Button onClick={() => setCreateModalVisible(false)}>
-                取消
+                {t('ragas.create.cancel')}
               </Button>
               <Button type="primary" htmlType="submit" loading={loading}>
-                创建并启动评测
+                {t('ragas.create.submit')}
               </Button>
             </Space>
           </Form.Item>
         </Form>
       </Modal>
 
-      {/* 评测详情模态框 */}
+      {/* Detail modal */}
       <Modal
-        title="评测详情"
+        title={t('ragas.detail.title')}
         open={detailModalVisible}
         onCancel={() => setDetailModalVisible(false)}
         footer={[
           <Button key="close" onClick={() => setDetailModalVisible(false)}>
-            关闭
-          </Button>
+            {t('ragas.detail.close')}
+          </Button>,
         ]}
         width={800}
       >
@@ -422,7 +434,7 @@ const RagasEvaluation = () => {
               <Col span={12}>
                 <Card>
                   <Statistic
-                    title="评测名称"
+                    title={t('ragas.detail.name')}
                     value={selectedEvaluation.name}
                     styles={{ content: { fontSize: '16px' } }}
                   />
@@ -431,7 +443,7 @@ const RagasEvaluation = () => {
               <Col span={12}>
                 <Card>
                   <Statistic
-                    title="知识库"
+                    title={t('ragas.detail.kb')}
                     value={selectedEvaluation.knowledgeBase}
                     styles={{ content: { fontSize: '16px' } }}
                   />
@@ -439,48 +451,73 @@ const RagasEvaluation = () => {
               </Col>
             </Row>
 
-            {selectedEvaluation.status === 'completed' && selectedEvaluation.metrics && (
-              <Card title="评测指标" style={{ marginBottom: '16px' }}>
-                <Row gutter={16}>
-                  <Col span={6}>
-                    <Statistic
-                      title="忠实度"
-                      value={selectedEvaluation.metrics.faithfulness}
-                      precision={3}
-                      styles={{ content: { color: getMetricColor(selectedEvaluation.metrics.faithfulness) } }}
-                    />
-                  </Col>
-                  <Col span={6}>
-                    <Statistic
-                      title="答案相关性"
-                      value={selectedEvaluation.metrics.answer_relevancy}
-                      precision={3}
-                      styles={{ content: { color: getMetricColor(selectedEvaluation.metrics.answer_relevancy) } }}
-                    />
-                  </Col>
-                  <Col span={6}>
-                    <Statistic
-                      title="上下文精确度"
-                      value={selectedEvaluation.metrics.context_precision}
-                      precision={3}
-                      styles={{ content: { color: getMetricColor(selectedEvaluation.metrics.context_precision) } }}
-                    />
-                  </Col>
-                  <Col span={6}>
-                    <Statistic
-                      title="上下文召回率"
-                      value={selectedEvaluation.metrics.context_recall}
-                      precision={3}
-                      styles={{ content: { color: getMetricColor(selectedEvaluation.metrics.context_recall) } }}
-                    />
-                  </Col>
-                </Row>
-              </Card>
-            )}
+            {selectedEvaluation.status === 'completed' &&
+              selectedEvaluation.metrics && (
+                <Card title={t('ragas.detail.metrics')} style={{ marginBottom: '16px' }}>
+                  <Row gutter={16}>
+                    <Col span={6}>
+                      <Statistic
+                        title={t('ragas.metric.faithfulness')}
+                        value={selectedEvaluation.metrics.faithfulness}
+                        precision={3}
+                        styles={{
+                          content: {
+                            color: getMetricColor(
+                              selectedEvaluation.metrics.faithfulness
+                            ),
+                          },
+                        }}
+                      />
+                    </Col>
+                    <Col span={6}>
+                      <Statistic
+                        title={t('ragas.metric.answerRelevancy')}
+                        value={selectedEvaluation.metrics.answer_relevancy}
+                        precision={3}
+                        styles={{
+                          content: {
+                            color: getMetricColor(
+                              selectedEvaluation.metrics.answer_relevancy
+                            ),
+                          },
+                        }}
+                      />
+                    </Col>
+                    <Col span={6}>
+                      <Statistic
+                        title={t('ragas.metric.contextPrecision')}
+                        value={selectedEvaluation.metrics.context_precision}
+                        precision={3}
+                        styles={{
+                          content: {
+                            color: getMetricColor(
+                              selectedEvaluation.metrics.context_precision
+                            ),
+                          },
+                        }}
+                      />
+                    </Col>
+                    <Col span={6}>
+                      <Statistic
+                        title={t('ragas.metric.contextRecall')}
+                        value={selectedEvaluation.metrics.context_recall}
+                        precision={3}
+                        styles={{
+                          content: {
+                            color: getMetricColor(
+                              selectedEvaluation.metrics.context_recall
+                            ),
+                          },
+                        }}
+                      />
+                    </Col>
+                  </Row>
+                </Card>
+              )}
 
             {selectedEvaluation.error && (
               <Alert
-                message="评测失败"
+                message={t('ragas.detail.failedAlert')}
                 description={selectedEvaluation.error}
                 type="error"
                 showIcon

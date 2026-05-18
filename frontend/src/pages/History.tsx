@@ -4,7 +4,7 @@ import { DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 
 const History = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('history');
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -26,6 +26,7 @@ const History = () => {
 
   useEffect(() => {
     fetchConversations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleView = (record) => {
@@ -100,7 +101,7 @@ const History = () => {
 
   return (
     <div>
-      <Card title="历史记录">
+      <Card title={t('history.title')}>
         <Table
           columns={columns}
           dataSource={conversations}

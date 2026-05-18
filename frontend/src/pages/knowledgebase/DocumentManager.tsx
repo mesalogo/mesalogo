@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Table, Button, Space, App, Typography, Tag, Tooltip, Select, Input, Progress, Modal, Spin, Radio, Dropdown, Collapse, Segmented, Skeleton } from 'antd';
 import { UploadOutlined, DeleteOutlined, EyeOutlined, SearchOutlined, DownloadOutlined, ReloadOutlined, SyncOutlined, FileMarkdownOutlined, EyeOutlined as PreviewOutlined, FileTextOutlined, DownOutlined, ScissorOutlined, DatabaseOutlined, ThunderboltOutlined, CopyOutlined } from '@ant-design/icons';
 import knowledgeAPI from '../../services/api/knowledge';
@@ -13,6 +14,7 @@ const { Search } = Input;
 
 
 const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
+  const { t } = useTranslation();
   const { message, modal } = App.useApp();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -61,17 +63,17 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
       }
 
       if (response.success) {
-        console.log('获取到的文件列表:', response.data);
-        console.log('第一个文件的转换状态:', response.data[0]?.conversion_status);
-        console.log('第一个文件的完整数据:', JSON.stringify(response.data[0], null, 2));
+        console.log('document list received:', response.data);
+        console.log('first file conversion status:', response.data[0]?.conversion_status);
+        console.log('first file payload:', JSON.stringify(response.data[0], null, 2));
         setDocuments(response.data);
       } else {
-        message.error(response.message || '获取文件列表失败');
+        message.error(response.message || t('documentManager.fetchFailed'));
         setDocuments([]);
       }
     } catch (error) {
-      console.error('获取文件列表失败:', error);
-      message.error('获取文件列表失败');
+      console.error('fetch document list failed:', error);
+      message.error(t('documentManager.fetchFailed'));
       setDocuments([]);
     } finally {
       setLoading(false);
@@ -98,10 +100,10 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
     const failCount = results.filter(r => !r.success).length;
 
     if (successCount > 0) {
-      message.success(`成功上传 ${successCount} 个文件`);
+      message.success(t('documentManager.uploadSuccess', { count: successCount }));
     }
     if (failCount > 0) {
-      message.error(`${failCount} 个文件上传失败`);
+      message.error(t('documentManager.uploadFailed', { count: failCount }));
     }
 
     // 自动关闭上传对话框
@@ -125,28 +127,28 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
     }
 
     if (!knowledgeId) {
-      message.error('无法确定文件所属的知识库');
+      message.error(t('documentManager.cannotDetermineKnowledge'));
       return;
     }
 
     modal.confirm({
-      title: '确认删除文档',
-      content: `确定要删除文档 "${filename}" 吗？删除后无法恢复。`,
-      okText: '确定删除',
-      cancelText: '取消',
+      title: t('documentManager.confirmDelete'),
+      content: t('documentManager.confirmDeleteContent', { filename }),
+      okText: t('documentManager.confirmDeleteOk'),
+      cancelText: t('documentManager.batchDelete.cancel'),
       okType: 'danger',
       onOk: async () => {
         try {
           const response = await knowledgeAPI.deleteFile(knowledgeId, filename);
           if (response.success) {
-            message.success('文档删除成功');
-            fetchDocuments(selectedKnowledgeId); // 重新获取文件列表
+            message.success(t('documentManager.deleteSuccess'));
+            fetchDocuments(selectedKnowledgeId);
           } else {
-            message.error(response.message || '删除文档失败');
+            message.error(response.message || t('documentManager.deleteFailed'));
           }
         } catch (error) {
-          console.error('删除文档失败:', error);
-          message.error('删除文档失败');
+          console.error('delete document failed:', error);
+          message.error(t('documentManager.deleteFailed'));
         }
       }
     });
@@ -157,86 +159,77 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
     const knowledgeId = selectedKnowledgeId === 0 ? record.knowledge_id : selectedKnowledgeId;
 
     if (!knowledgeId) {
-      message.error('无法确定文件所属的知识库');
+      message.error(t('documentManager.cannotDetermineKnowledge'));
       return;
     }
 
-    // 如果已有任何处理数据，提示会清理
-    if (record.conversion_status === 'converted' || 
-        record.chunking_status === 'chunked' || 
+    if (record.conversion_status === 'converted' ||
+        record.chunking_status === 'chunked' ||
         record.embedding_status === 'embedded') {
-      // 根据当前状态决定提示内容
-      let content = '重新转换将清除当前的转换结果';
+      let content = t('documentManager.reconvertContent');
       if (record.chunking_status === 'chunked') {
-        content += '、分段数据';
+        content += t('documentManager.reconvertContentChunked');
       }
       if (record.embedding_status === 'embedded') {
-        content += '和向量嵌入';
+        content += t('documentManager.reconvertContentEmbedded');
       }
-      content += '，是否继续？';
-      
+      content += t('documentManager.reconvertContentEnd');
+
       modal.confirm({
-        title: '确认重新转换',
-        content: content,
-        okText: '继续',
-        cancelText: '取消',
+        title: t('documentManager.confirmReconvert'),
+        content,
+        okText: t('documentManager.batchProcess.confirmOk'),
+        cancelText: t('documentManager.batchProcess.cancel'),
         onOk: async () => {
           await executeConvert(knowledgeId, record);
         }
       });
     } else {
-      // 未转换的文档直接执行
       await executeConvert(knowledgeId, record);
     }
   };
 
   const executeConvert = async (knowledgeId, record) => {
-    const filePath = record.path || record.name; // 用于状态跟踪的显示名称
+    const filePath = record.path || record.name;
     try {
       setConvertingFiles(prev => new Set(prev).add(filePath));
 
       const response = await knowledgeAPI.convertFile(knowledgeId, record.id);
 
       if (response.success) {
-        message.success('文件转换任务已创建，正在后台处理...');
-
-        // 立即刷新文档列表以显示状态变化
+        message.success(t('documentManager.convertTaskCreated'));
         fetchDocuments(selectedKnowledgeId);
 
-        // 轮询检查转换状态
         const checkStatus = async () => {
           try {
             const statusResponse = await knowledgeAPI.getConversionStatus(knowledgeId, record.id);
 
             if (statusResponse.success) {
               const status = statusResponse.data.status;
-              console.log('转换状态:', status, statusResponse.data);
+              console.log('conversion status:', status, statusResponse.data);
 
               if (status === 'converted') {
-                message.success('文件转换完成！');
+                message.success(t('documentManager.convertSuccess'));
                 setConvertingFiles(prev => {
                   const newSet = new Set(prev);
                   newSet.delete(filePath);
                   return newSet;
                 });
-                // 刷新文档列表以更新转换状态
                 fetchDocuments(selectedKnowledgeId);
               } else if (status === 'conversion_failed') {
-                message.error(`文件转换失败: ${statusResponse.data.error_message || '未知错误'}`);
+                message.error(t('documentManager.convertFailed', { error: statusResponse.data.error_message || t('documentManager.unknownError') }));
                 setConvertingFiles(prev => {
                   const newSet = new Set(prev);
                   newSet.delete(filePath);
                   return newSet;
                 });
-                // 刷新文档列表以更新转换状态
                 fetchDocuments(selectedKnowledgeId);
               } else if (status === 'converting') {
-                // 继续轮询（5秒间隔，降低频率）
                 setTimeout(checkStatus, 5000);
               }
             }
           } catch (error) {
-            console.error('检查转换状态失败:', error);
+            console.error('check conversion status failed:', error);
             setConvertingFiles(prev => {
               const newSet = new Set(prev);
               newSet.delete(filePath);
@@ -245,10 +238,9 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
           }
         };
 
-        // 开始轮询（首次2秒后启动）
         setTimeout(checkStatus, 2000);
       } else {
-        message.error(response.message || '创建转换任务失败');
+        message.error(response.message || t('documentManager.convertTaskFailed'));
         setConvertingFiles(prev => {
           const newSet = new Set(prev);
           newSet.delete(filePath);
@@ -256,8 +248,8 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
         });
       }
     } catch (error) {
-      console.error('文件转换失败:', error);
-      message.error('文件转换失败');
+      console.error('file conversion failed:', error);
+      message.error(t('documentManager.convertTaskFailed'));
       setConvertingFiles(prev => {
         const newSet = new Set(prev);
         newSet.delete(filePath);
@@ -272,11 +264,10 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
     const filePath = record.path || record.name;
 
     if (!knowledgeId) {
-      message.error('无法确定文件所属的知识库');
+      message.error(t('documentManager.cannotDetermineKnowledge'));
       return;
     }
 
-    // 打开 Modal 并设置加载状态
     setChunksModalVisible(true);
     setCurrentFile(record);
     setChunksLoading(true);
@@ -287,14 +278,14 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
       if (response.success) {
         setChunksData(response.data.chunks || []);
       } else {
-        message.error(response.message || '获取分段数据失败');
+        message.error(response.message || t('documentManager.getChunksFailed'));
         setChunksModalVisible(false);
         setChunksData([]);
         setCurrentFile(null);
       }
     } catch (error) {
-      console.error('获取分段数据失败:', error);
-      message.error('获取分段数据失败');
+      console.error('get chunks failed:', error);
+      message.error(t('documentManager.getChunksFailed'));
       setChunksModalVisible(false);
       setChunksData([]);
       setCurrentFile(null);
@@ -309,15 +300,14 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
     const filePath = record.path || record.name;
 
     if (!knowledgeId) {
-      message.error('无法确定文件所属的知识库');
+      message.error(t('documentManager.cannotDetermineKnowledge'));
       return;
     }
 
-    // 打开 Modal 并设置加载状态
     setMarkdownModalVisible(true);
     setCurrentFile(record);
     setMarkdownLoading(true);
-    setMarkdownViewMode('rendered'); // 重置为渲染视图
+    setMarkdownViewMode('rendered');
 
     try {
       const response = await knowledgeAPI.getMarkdownContent(knowledgeId, record.id);
@@ -325,14 +315,14 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
       if (response.success) {
         setMarkdownContent(response.data.content);
       } else {
-        message.error(response.message || '获取 Markdown 内容失败');
+        message.error(response.message || t('documentManager.getMarkdownFailed'));
         setMarkdownModalVisible(false);
         setMarkdownContent('');
         setCurrentFile(null);
       }
     } catch (error) {
-      console.error('获取 Markdown 内容失败:', error);
-      message.error('获取 Markdown 内容失败');
+      console.error('get markdown content failed:', error);
+      message.error(t('documentManager.getMarkdownFailed'));
       setMarkdownModalVisible(false);
       setMarkdownContent('');
       setCurrentFile(null);
@@ -344,25 +334,23 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
   // 处理文件分段
   const handleChunk = async (record) => {
     const knowledgeId = selectedKnowledgeId === 0 ? record.knowledge_id : selectedKnowledgeId;
-    
+
     if (!knowledgeId) {
-      message.error('无法确定文件所属的知识库');
+      message.error(t('documentManager.cannotDetermineKnowledge'));
       return;
     }
 
-    // 如果未转换，提示需要先转换
     if (record.conversion_status !== 'converted') {
-      message.warning('请先转换文档为Markdown格式');
+      message.warning(t('documentManager.needConvertFirst'));
       return;
     }
 
-    // 如果已分段或已嵌入，提示会清理数据
     if (record.chunking_status === 'chunked' || record.embedding_status === 'embedded') {
       modal.confirm({
-        title: '确认重新分段',
-        content: '重新分段将清除当前的分段数据和向量嵌入，是否继续？',
-        okText: '继续',
-        cancelText: '取消',
+        title: t('documentManager.confirmRechunk'),
+        content: t('documentManager.rechunkContent'),
+        okText: t('documentManager.batchProcess.confirmOk'),
+        cancelText: t('documentManager.batchProcess.cancel'),
         onOk: async () => {
           await executeChunk(knowledgeId, record);
         }
@@ -375,69 +363,63 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
   const executeChunk = async (knowledgeId, record) => {
     try {
       const response = await knowledgeAPI.chunkFile(knowledgeId, record.id);
-      
+
       if (response.success) {
-        message.success('文件分段任务已创建，正在后台处理...');
-        
-        // 立即刷新文档列表以显示状态变化
+        message.success(t('documentManager.chunkTaskCreated'));
         fetchDocuments(selectedKnowledgeId);
-        
-        // 轮询检查分段状态
+
         const checkStatus = async () => {
           try {
             const statusResponse = await knowledgeAPI.getChunkingStatus(knowledgeId, record.id);
-            
+
             if (statusResponse.success) {
               const status = statusResponse.data.status;
-              
+
               if (status === 'chunked') {
-                message.success('文件分段完成！');
+                message.success(t('documentManager.chunkSuccess'));
                 fetchDocuments(selectedKnowledgeId);
               } else if (status === 'chunking_failed') {
-                message.error(`文件分段失败: ${statusResponse.data.error_message || '未知错误'}`);
+                message.error(t('documentManager.chunkFailed', { error: statusResponse.data.error_message || t('documentManager.unknownError') }));
                 fetchDocuments(selectedKnowledgeId);
               } else if (status === 'chunking') {
-                // 继续轮询（5秒间隔，降低频率）
                 setTimeout(checkStatus, 5000);
               }
             }
           } catch (error) {
-            console.error('检查分段状态失败:', error);
+            console.error('check chunking status failed:', error);
           }
         };
-        
+
         setTimeout(checkStatus, 2000);
       } else {
-        message.error(response.message || '创建分段任务失败');
+        message.error(response.message || t('documentManager.chunkTaskFailed'));
       }
     } catch (error) {
-      console.error('文件分段失败:', error);
-      message.error('文件分段失败');
+      console.error('file chunking failed:', error);
+      message.error(t('documentManager.chunkTaskFailed'));
     }
   };
 
   // 处理文件嵌入
   const handleEmbed = async (record) => {
     const knowledgeId = selectedKnowledgeId === 0 ? record.knowledge_id : selectedKnowledgeId;
-    
+
     if (!knowledgeId) {
-      message.error('无法确定文件所属的知识库');
+      message.error(t('documentManager.cannotDetermineKnowledge'));
       return;
     }
 
-    // 如果未分段，提示需要先分段
     if (record.chunking_status !== 'chunked') {
-      message.warning('请先对文档进行分段处理');
+      message.warning(t('documentManager.needChunkFirst'));
       return;
     }
 
-    // 如果已嵌入，提示会重新生成
     if (record.embedding_status === 'embedded') {
       modal.confirm({
-        title: '确认重新生成嵌入',
-        content: '重新生成向量嵌入将替换当前的向量数据，是否继续？',
-        okText: '继续',
-        cancelText: '取消',
+        title: t('documentManager.confirmReembed'),
+        content: t('documentManager.reembedContent'),
+        okText: t('documentManager.batchProcess.confirmOk'),
+        cancelText: t('documentManager.batchProcess.cancel'),
         onOk: async () => {
           await executeEmbed(knowledgeId, record);
         }
@@ -450,44 +432,40 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
   const executeEmbed = async (knowledgeId, record) => {
     try {
       const response = await knowledgeAPI.embedFile(knowledgeId, record.id);
-      
+
       if (response.success) {
-        message.success('向量嵌入任务已创建，正在后台处理...');
-        
-        // 立即刷新文档列表以显示状态变化
+        message.success(t('documentManager.embedTaskCreated'));
         fetchDocuments(selectedKnowledgeId);
-        
-        // 轮询检查嵌入状态
+
         const checkStatus = async () => {
           try {
             const statusResponse = await knowledgeAPI.getEmbeddingStatus(knowledgeId, record.id);
-            
+
             if (statusResponse.success) {
               const status = statusResponse.data.status;
-              
+
               if (status === 'embedded') {
-                message.success('向量嵌入完成！');
+                message.success(t('documentManager.embedSuccess'));
                 fetchDocuments(selectedKnowledgeId);
               } else if (status === 'embedding_failed') {
-                message.error(`向量嵌入失败: ${statusResponse.data.error_message || '未知错误'}`);
+                message.error(t('documentManager.embedFailed', { error: statusResponse.data.error_message || t('documentManager.unknownError') }));
                 fetchDocuments(selectedKnowledgeId);
               } else if (status === 'embedding') {
-                // 继续轮询（5秒间隔，降低频率）
                 setTimeout(checkStatus, 5000);
               }
             }
           } catch (error) {
-            console.error('检查嵌入状态失败:', error);
+            console.error('check embedding status failed:', error);
           }
         };
-        
+
         setTimeout(checkStatus, 2000);
       } else {
-        message.error(response.message || '创建嵌入任务失败');
+        message.error(response.message || t('documentManager.embedTaskFailed'));
       }
     } catch (error) {
-      console.error('向量嵌入失败:', error);
-      message.error('向量嵌入失败');
+      console.error('embedding failed:', error);
+      message.error(t('documentManager.embedTaskFailed'));
     }
   };
 
@@ -507,12 +485,12 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
                          record.embedding_status === 'embedded';
     
     modal.confirm({
-      title: hasProcessing ? '确认重新处理' : '确认处理文档',
-      content: hasProcessing 
-        ? '将重新执行完整的处理流程（转换→分段→嵌入），清除所有现有数据，是否继续？'
-        : '将执行完整的处理流程：转换→分段→嵌入，是否继续？',
-      okText: '继续',
-      cancelText: '取消',
+      title: hasProcessing ? t('documentManager.confirmReprocess') : t('documentManager.confirmProcess'),
+      content: hasProcessing
+        ? t('documentManager.reprocessContent')
+        : t('documentManager.processContent'),
+      okText: t('documentManager.batchProcess.confirmOk'),
+      cancelText: t('documentManager.batchProcess.cancel'),
       onOk: async () => {
         await executeProcess(knowledgeId, filePath, record);
       }
@@ -522,13 +500,13 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
   const executeProcess = async (knowledgeId, filePath, record) => {
     try {
       const response = await knowledgeAPI.processFile(knowledgeId, record.id);
-      
+
       if (response.success) {
-        message.success('文档处理流水线已启动，正在后台执行（转换→分段→嵌入）...');
-        
+        message.success(t('documentManager.pipelineStarted'));
+
         const jobId = response.data?.job_id;
         if (!jobId) {
-          message.warning('未获取到Job ID，请手动刷新查看处理进度');
+          message.warning(t('documentManager.pipelineNoJobId'));
           return;
         }
         
@@ -576,44 +554,39 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
             });
             
             if (jobStatus.status === 'completed') {
-              message.success('文档处理流水线完成！');
-              // 只在完成时刷新列表以获取完整数据
+              message.success(t('documentManager.pipelineSuccess'));
               fetchDocuments(selectedKnowledgeId);
             } else if (jobStatus.status === 'failed') {
-              const errorMsg = jobStatus.error || '未知错误';
-              message.error(`文档处理失败: ${errorMsg}`);
-              // 失败时也刷新列表
+              const errorMsg = jobStatus.error || t('documentManager.unknownError');
+              message.error(t('documentManager.pipelineFailed', { error: errorMsg }));
               fetchDocuments(selectedKnowledgeId);
             } else if (jobStatus.status === 'running' || jobStatus.status === 'pending') {
-              // 显示进度（运行中不刷新列表，只更新状态）
-              const progressMsg = jobStatus.message || '处理中...';
-              console.log(`Pipeline进度: ${jobStatus.progress}% - ${progressMsg}`);
+              const progressMsg = jobStatus.message || 'processing';
+              console.log(`Pipeline progress: ${jobStatus.progress}% - ${progressMsg}`);
               setTimeout(checkStatus, 5000);
             } else {
-              // 未知状态，继续轮询
               setTimeout(checkStatus, 5000);
             }
           } catch (error) {
-            console.error('检查Pipeline状态失败:', error);
-            // 出错时也继续轮询，避免误判
+            console.error('check Pipeline status failed:', error);
             setTimeout(checkStatus, 5000);
           }
         };
-        
+
         setTimeout(checkStatus, 1000);
       } else {
-        message.error(response.message || '创建处理任务失败');
+        message.error(response.message || t('documentManager.processTaskFailed'));
       }
     } catch (error) {
-      console.error('文档处理失败:', error);
-      message.error('文档处理失败');
+      console.error('document processing failed:', error);
+      message.error(t('documentManager.processFailed'));
     }
   };
 
   // 处理下载Markdown文件
   const handleDownloadMarkdown = () => {
     if (!markdownContent || !currentFile) {
-      message.error('没有可下载的内容');
+      message.error(t('documentManager.noContentToDownload'));
       return;
     }
 
@@ -638,43 +611,42 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
     
-    message.success('Markdown文件下载成功');
+    message.success(t('documentManager.downloadSuccess'));
   };
 
   // 打开复制到工作空间对话框
   const handleOpenCopyToWorkspace = async () => {
     if (!currentFile) {
-      message.error('请先选择文件');
+      message.error(t('documentManager.copyToWorkspace.selectFirst'));
       return;
     }
-    
+
     try {
-      // 获取行动任务列表，过滤掉并行实验克隆的任务
       const tasks = await actionTaskAPI.getAll();
       const filteredTasks = tasks.filter((task: any) => !task.is_experiment_clone);
       setActionTasks(filteredTasks);
       setSelectedTaskId(null);
       setCopyToWorkspaceModalVisible(true);
     } catch (error) {
-      console.error('获取行动任务列表失败:', error);
-      message.error('获取行动任务列表失败');
+      console.error('fetch action-task list failed:', error);
+      message.error(t('documentManager.copyToWorkspace.fetchTasksFailed'));
     }
   };
 
   // 执行复制到工作空间
   const handleCopyToWorkspace = async () => {
     if (!selectedTaskId) {
-      message.error('请选择目标行动任务');
+      message.error(t('documentManager.copyToWorkspace.selectTarget'));
       return;
     }
-    
+
     if (!currentFile) {
-      message.error('请先选择文件');
+      message.error(t('documentManager.copyToWorkspace.selectFirst'));
       return;
     }
-    
+
     const knowledgeId = selectedKnowledgeId === 0 ? currentFile.knowledge_id : selectedKnowledgeId;
-    
+
     try {
       setCopyLoading(true);
       const response = await knowledgeAPI.copyMarkdownToWorkspace(
@@ -682,16 +654,16 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
         currentFile.id,
         selectedTaskId
       );
-      
+
       if (response.success) {
-        message.success(`已复制到工作空间: ${response.data?.file_path || ''}`);
+        message.success(t('documentManager.copyToWorkspace.success', { path: response.data?.file_path || '' }));
         setCopyToWorkspaceModalVisible(false);
       } else {
-        message.error(response.message || '复制失败');
+        message.error(response.message || t('documentManager.copyToWorkspace.failed'));
       }
     } catch (error) {
-      console.error('复制到工作空间失败:', error);
-      message.error('复制到工作空间失败');
+      console.error('copy to workspace failed:', error);
+      message.error(t('documentManager.copyToWorkspace.failed'));
     } finally {
       setCopyLoading(false);
     }
@@ -709,7 +681,7 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
         return response.data.status;
       }
     } catch (error) {
-      console.error('检查转换状态失败:', error);
+      console.error('check conversion status failed:', error);
     }
 
     return 'not_converted';
@@ -740,15 +712,15 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
   // 批量处理文档
   const handleBatchProcess = async (fileIds) => {
     if (!fileIds || fileIds.length === 0) {
-      message.warning('请至少选择一个文件');
+      message.warning(t('documentManager.selectAtLeastOne'));
       return;
     }
 
     modal.confirm({
-      title: '确认批量处理',
-      content: `确定要处理选中的 ${fileIds.length} 个文档吗？将执行完整的处理流程（转换→分段→嵌入）`,
-      okText: '确定',
-      cancelText: '取消',
+      title: t('documentManager.confirmBatchProcess'),
+      content: t('documentManager.batchProcessContent', { count: fileIds.length }),
+      okText: t('documentManager.batchProcess.confirmOk'),
+      cancelText: t('documentManager.batchProcess.cancel'),
       onOk: async () => {
         for (const fileId of fileIds) {
           const record = documents.find(doc => doc.id === fileId);
@@ -756,7 +728,7 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
             await executeProcess(selectedKnowledgeId, record.path || record.name, record);
           }
         }
-        message.success(`已启动 ${fileIds.length} 个文档的处理任务`);
+        message.success(t('documentManager.batchProcessStarted', { count: fileIds.length }));
         setSelectedRowKeys([]);
       }
     });
@@ -765,20 +737,20 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
   // 处理全部文档
   const handleProcessAll = async () => {
     if (filteredDocuments.length === 0) {
-      message.warning('没有可处理的文档');
+      message.warning(t('documentManager.noDocumentsToProcess'));
       return;
     }
 
     modal.confirm({
-      title: '确认处理全部',
-      content: `确定要处理全部 ${filteredDocuments.length} 个文档吗？将执行完整的处理流程（转换→分段→嵌入）`,
-      okText: '确定',
-      cancelText: '取消',
+      title: t('documentManager.confirmProcessAll'),
+      content: t('documentManager.processAllContent', { count: filteredDocuments.length }),
+      okText: t('documentManager.batchProcess.confirmOk'),
+      cancelText: t('documentManager.batchProcess.cancel'),
       onOk: async () => {
         for (const record of filteredDocuments) {
           await executeProcess(selectedKnowledgeId, record.path || record.name, record);
         }
-        message.success(`已启动全部 ${filteredDocuments.length} 个文档的处理任务`);
+        message.success(t('documentManager.processAllStarted', { count: filteredDocuments.length }));
       }
     });
   };
@@ -786,15 +758,15 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
   // 批量删除文档
   const handleBatchDelete = async (fileIds) => {
     if (!fileIds || fileIds.length === 0) {
-      message.warning('请至少选择一个文件');
+      message.warning(t('documentManager.selectAtLeastOne'));
       return;
     }
 
     modal.confirm({
-      title: '确认批量删除',
-      content: `确定要删除选中的 ${fileIds.length} 个文档吗？删除后无法恢复。`,
-      okText: '确定删除',
-      cancelText: '取消',
+      title: t('documentManager.confirmBatchDelete'),
+      content: t('documentManager.batchDeleteContent', { count: fileIds.length }),
+      okText: t('documentManager.confirmDeleteOk'),
+      cancelText: t('documentManager.batchDelete.cancel'),
       okType: 'danger',
       onOk: async () => {
         let successCount = 0;
@@ -811,17 +783,17 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
                 failCount++;
               }
             } catch (error) {
-              console.error('删除文档失败:', error);
+              console.error('delete document failed:', error);
               failCount++;
             }
           }
         }
 
         if (successCount > 0) {
-          message.success(`成功删除 ${successCount} 个文档`);
+          message.success(t('documentManager.batchDeleteSuccess', { count: successCount }));
         }
         if (failCount > 0) {
-          message.error(`${failCount} 个文档删除失败`);
+          message.error(t('documentManager.batchDeleteFailed', { count: failCount }));
         }
 
         fetchDocuments(selectedKnowledgeId);
@@ -830,11 +802,11 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
     });
   };
 
-  // 动态生成列定义，当显示所有知识库时添加"所属知识库"列
+  // 动态生成列定义
   const getColumns = () => {
     const baseColumns: any[] = [
       {
-        title: '文件名',
+        title: t('documentManager.columns.filename'),
         dataIndex: 'name',
         key: 'name',
         width: 200,
@@ -848,10 +820,9 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
       },
     ];
 
-    // 如果显示所有知识库，添加"所属知识库"列
     if (selectedKnowledgeId === 0) {
       baseColumns.push({
-        title: '所属知识库',
+        title: t('documentManager.columns.knowledgeBase'),
         dataIndex: 'knowledge_name',
         key: 'knowledge_name',
         width: 150,
@@ -861,29 +832,28 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
       });
     }
 
-    // 添加其他列
     baseColumns.push(
       {
-        title: '大小',
+        title: t('documentManager.columns.size'),
         dataIndex: 'size',
         key: 'size',
         width: 100,
       },
       {
-        title: '状态',
+        title: t('documentManager.columns.status'),
         dataIndex: 'status',
         key: 'status',
         width: 120,
         render: (status, record) => {
           const statusMap = {
-            'pending': { text: '未处理', color: 'default' },
-            'processing': { text: '处理中', color: 'processing' },
-            'completed': { text: '已处理', color: 'success' },
-            'failed': { text: '错误', color: 'error' }
+            'pending': { text: t('documentManager.status.pending'), color: 'default' },
+            'processing': { text: t('documentManager.status.processing'), color: 'processing' },
+            'completed': { text: t('documentManager.status.completed'), color: 'success' },
+            'failed': { text: t('documentManager.status.failed'), color: 'error' }
           };
-          
-          const config = statusMap[status] || { text: '未处理', color: 'default' };
-          
+
+          const config = statusMap[status] || { text: t('documentManager.status.pending'), color: 'default' };
+
           if (status === 'failed' && record.error_message) {
             return (
               <Tooltip title={record.error_message}>
@@ -891,84 +861,81 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
               </Tooltip>
             );
           }
-          
+
           return <Tag color={config.color}>{config.text}</Tag>;
         },
       },
       {
-        title: '转换状态',
+        title: t('documentManager.columns.conversionStatus'),
         dataIndex: 'conversion_status',
         key: 'conversion_status',
         width: 120,
         render: (status, record) => {
           const statusMap = {
-            'not_converted': { text: '未转换', color: 'default' },
-            'converting': { text: '转换中', color: 'processing' },
-            'converted': { text: '已转换', color: 'success' },
-            'conversion_failed': { text: '转换失败', color: 'error' }
+            'not_converted': { text: t('documentManager.conversionStatus.notConverted'), color: 'default' },
+            'converting': { text: t('documentManager.conversionStatus.converting'), color: 'processing' },
+            'converted': { text: t('documentManager.conversionStatus.converted'), color: 'success' },
+            'conversion_failed': { text: t('documentManager.conversionStatus.failed'), color: 'error' }
           };
-          // 处理缺失值：如果状态为 null/undefined/空字符串，默认为 not_converted
           const actualStatus = status || 'not_converted';
-          const config = statusMap[actualStatus] || { text: '未转换', color: 'default' };
+          const config = statusMap[actualStatus] || { text: t('documentManager.conversionStatus.notConverted'), color: 'default' };
           return <Tag color={config.color}>{config.text}</Tag>;
         },
       },
       {
-        title: '分段状态',
+        title: t('documentManager.columns.chunkingStatus'),
         dataIndex: 'chunking_status',
         key: 'chunking_status',
         width: 120,
         render: (status) => {
           const statusMap = {
-            'not_chunked': { text: '未分段', color: 'default' },
-            'chunking': { text: '分段中', color: 'processing' },
-            'chunked': { text: '已分段', color: 'success' },
-            'chunking_failed': { text: '分段失败', color: 'error' }
+            'not_chunked': { text: t('documentManager.chunkingStatus.notChunked'), color: 'default' },
+            'chunking': { text: t('documentManager.chunkingStatus.chunking'), color: 'processing' },
+            'chunked': { text: t('documentManager.chunkingStatus.chunked'), color: 'success' },
+            'chunking_failed': { text: t('documentManager.chunkingStatus.failed'), color: 'error' }
           };
-          // 处理缺失值：如果状态为 null/undefined/空字符串，默认为 not_chunked
           const actualStatus = status || 'not_chunked';
-          const config = statusMap[actualStatus] || { text: '未分段', color: 'default' };
+          const config = statusMap[actualStatus] || { text: t('documentManager.chunkingStatus.notChunked'), color: 'default' };
           return <Tag color={config.color}>{config.text}</Tag>;
         },
       },
       {
-        title: '嵌入状态',
+        title: t('documentManager.columns.embeddingStatus'),
         dataIndex: 'embedding_status',
         key: 'embedding_status',
         width: 120,
         render: (status) => {
           const statusMap = {
-            'not_embedded': { text: '未嵌入', color: 'default' },
-            'embedding': { text: '嵌入中', color: 'processing' },
-            'embedded': { text: '已嵌入', color: 'success' },
-            'embedding_failed': { text: '嵌入失败', color: 'error' }
+            'not_embedded': { text: t('documentManager.embeddingStatus.notEmbedded'), color: 'default' },
+            'embedding': { text: t('documentManager.embeddingStatus.embedding'), color: 'processing' },
+            'embedded': { text: t('documentManager.embeddingStatus.embedded'), color: 'success' },
+            'embedding_failed': { text: t('documentManager.embeddingStatus.failed'), color: 'error' }
           };
-          // 处理缺失值：如果状态为 null/undefined/空字符串，默认为 not_embedded
           const actualStatus = status || 'not_embedded';
-          const config = statusMap[actualStatus] || { text: '未嵌入', color: 'default' };
+          const config = statusMap[actualStatus] || { text: t('documentManager.embeddingStatus.notEmbedded'), color: 'default' };
           return <Tag color={config.color}>{config.text}</Tag>;
         },
       },
       {
-        title: '分块数',
+        title: t('documentManager.columns.chunks'),
         dataIndex: 'chunks',
         key: 'chunks',
         width: 100,
       },
       {
-        title: 'Token数',
+        title: t('documentManager.columns.tokens'),
         dataIndex: 'tokens',
         key: 'tokens',
         width: 100,
       },
       {
-        title: '上传时间',
+        title: t('documentManager.columns.uploadTime'),
         dataIndex: 'upload_time',
         key: 'upload_time',
         render: (date) => new Date(date).toLocaleString(),
       },
       {
-        title: '操作',
+        title: t('documentManager.columns.actions'),
         key: 'action',
         width: 200,
         fixed: 'right' as const,
@@ -986,20 +953,20 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
             {
               key: 'convert',
               icon: <SyncOutlined spin={record.conversion_status === 'converting'} />,
-              label: '转换',
+              label: t('documentManager.action.convert'),
               onClick: () => handleConvert(record),
             },
             {
               key: 'chunk',
               icon: <ScissorOutlined />,
-              label: '分段',
+              label: t('documentManager.action.chunk'),
               onClick: () => handleChunk(record),
               disabled: !isConverted,
             },
             {
               key: 'embed',
               icon: <DatabaseOutlined />,
-              label: '嵌入',
+              label: t('documentManager.action.embed'),
               onClick: () => handleEmbed(record),
               disabled: !isChunked,
             },
@@ -1008,14 +975,14 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
           return (
             <Space>
               <Space.Compact>
-                <Tooltip title="一键处理（转换→分段→嵌入）">
+                <Tooltip title={t('documentManager.action.processTooltip')}>
                   <Button
                     type="primary"
                     icon={<ThunderboltOutlined />}
                     onClick={() => handleProcess(record)}
                     loading={isProcessing}
                   >
-                    处理
+                    {t('documentManager.action.process')}
                   </Button>
                 </Tooltip>
                 <Dropdown
@@ -1026,7 +993,7 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
                   <Button type="primary" icon={<DownOutlined />} />
                 </Dropdown>
               </Space.Compact>
-              
+
               {isConverted && (
                 <Dropdown
                   menu={{
@@ -1034,13 +1001,13 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
                       {
                         key: 'markdown',
                         icon: <FileMarkdownOutlined />,
-                        label: '查看Markdown',
+                        label: t('documentManager.action.viewMarkdown'),
                         onClick: () => handleViewMarkdown(record),
                       },
                       {
                         key: 'chunks',
                         icon: <ScissorOutlined />,
-                        label: '查看分段',
+                        label: t('documentManager.action.viewChunks'),
                         onClick: () => handleViewChunks(record),
                         disabled: !isChunked,
                       },
@@ -1049,7 +1016,7 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
                   trigger={['hover']}
                   placement="bottomLeft"
                 >
-                  <Tooltip title="查看文档">
+                  <Tooltip title={t('documentManager.action.viewDocument')}>
                     <Button
                       type="text"
                       onClick={(e) => {
@@ -1066,8 +1033,8 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
                   </Tooltip>
                 </Dropdown>
               )}
-              
-              <Tooltip title="删除文档">
+
+              <Tooltip title={t('documentManager.action.delete')}>
                 <Button
                   type="text"
                   danger
@@ -1103,7 +1070,7 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
       <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <Search
-            placeholder="搜索文件名"
+            placeholder={t('documentManager.search.placeholder')}
             allowClear
             onSearch={handleSearch}
             onChange={(e) => handleSearch(e.target.value)}
@@ -1114,7 +1081,7 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
             style={{ width: 120 }}
             onChange={handleFileTypeChange}
           >
-            <Option value="all">所有类型</Option>
+            <Option value="all">{t('documentManager.filter.allTypes')}</Option>
             <Option value="pdf">PDF</Option>
             <Option value="docx">Word</Option>
             <Option value="xlsx">Excel</Option>
@@ -1130,13 +1097,13 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
                   {
                     key: 'batch-process',
                     icon: <ThunderboltOutlined />,
-                    label: '批量处理',
+                    label: t('documentManager.batch.process'),
                     onClick: () => handleBatchProcess(selectedRowKeys),
                   },
                   {
                     key: 'batch-download',
                     icon: <DownloadOutlined />,
-                    label: '批量下载',
+                    label: t('documentManager.batch.download'),
                   },
                   {
                     type: 'divider' as const,
@@ -1144,7 +1111,7 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
                   {
                     key: 'batch-delete',
                     icon: <DeleteOutlined />,
-                    label: '批量删除',
+                    label: t('documentManager.batch.delete'),
                     danger: true,
                     onClick: () => handleBatchDelete(selectedRowKeys),
                   },
@@ -1153,24 +1120,24 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
               placement="bottomRight"
             >
               <Button>
-                批量操作（{selectedRowKeys.length}） <DownOutlined />
+                {t('documentManager.modal.batchOpsLabel', { count: selectedRowKeys.length })} <DownOutlined />
               </Button>
             </Dropdown>
           )}
-          <Button icon={<ReloadOutlined />} onClick={handleRefresh} title="刷新">刷新</Button>
-          <Button 
+          <Button icon={<ReloadOutlined />} onClick={handleRefresh} title={t('documentManager.button.refresh')}>{t('documentManager.button.refresh')}</Button>
+          <Button
             icon={<ThunderboltOutlined />}
             onClick={handleProcessAll}
             disabled={filteredDocuments.length === 0}
           >
-            处理全部
+            {t('documentManager.button.processAll')}
           </Button>
           <Button
             type="primary"
             icon={<UploadOutlined />}
             onClick={handleOpenUploadDialog}
           >
-            上传文件
+            {t('documentManager.button.upload')}
           </Button>
         </Space>
       </div>
@@ -1187,7 +1154,7 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
-            showTotal: (total) => `共 ${total} 个文档`,
+            showTotal: (total) => t('documentManager.pagination.total', { total }),
           }}
         />
       )}
@@ -1202,7 +1169,7 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
 
       {/* 分段查看对话框 */}
       <Modal
-        title={<span>分段查看 - {currentFile?.name || ''}</span>}
+        title={<span>{t('documentManager.modal.chunksTitle', { filename: currentFile?.name || '' })}</span>}
         open={chunksModalVisible}
         onCancel={() => {
           setChunksModalVisible(false);
@@ -1216,7 +1183,7 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
             setChunksData([]);
             setCurrentFile(null);
           }}>
-            关闭
+            {t('documentManager.modal.close')}
           </Button>
         ]}
         style={{ top: 20 }}
@@ -1230,9 +1197,9 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
               padding: '16px',
             }}>
               <div style={{ marginBottom: '16px', color: 'var(--custom-text-secondary)' }}>
-                共 {chunksData.length} 个分段
+                {t('documentManager.modal.chunksTotal', { count: chunksData.length })}
               </div>
-              <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
+              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
                 {chunksData.map((chunk, index) => (
                   <div
                     key={chunk.id || index}
@@ -1249,7 +1216,7 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
                       fontSize: '12px',
                       fontWeight: '500',
                     }}>
-                      分段 #{chunk.chunk_index !== undefined ? chunk.chunk_index + 1 : index + 1}
+                      {t('documentManager.modal.chunkIndex', { index: chunk.chunk_index !== undefined ? chunk.chunk_index + 1 : index + 1 })}
                     </div>
                     <div style={{
                       fontSize: '14px',
@@ -1270,7 +1237,7 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
               padding: '40px',
               color: 'var(--custom-text-secondary)'
             }}>
-              暂无分段数据
+              {t('documentManager.modal.noChunks')}
             </div>
           )
         }
@@ -1280,13 +1247,13 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
       <Modal
         title={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '40px' }}>
-            <span>Markdown 预览 - {currentFile?.name || ''}</span>
+            <span>{t('documentManager.modal.markdownTitle', { filename: currentFile?.name || '' })}</span>
             <Segmented
               value={markdownViewMode}
               onChange={setMarkdownViewMode}
               options={[
-                { label: '渲染视图', value: 'rendered', icon: <PreviewOutlined /> },
-                { label: '原文', value: 'source', icon: <FileTextOutlined /> }
+                { label: t('documentManager.modal.renderedView'), value: 'rendered', icon: <PreviewOutlined /> },
+                { label: t('documentManager.modal.sourceView'), value: 'source', icon: <FileTextOutlined /> }
               ]}
             />
           </div>
@@ -1299,28 +1266,28 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
         }}
         width={1000}
         footer={[
-          <Button 
+          <Button
             key="copy"
             icon={<CopyOutlined />}
             onClick={handleOpenCopyToWorkspace}
             disabled={!markdownContent || markdownLoading}
           >
-            复制到工作空间
+            {t('documentManager.copyToWorkspace.button')}
           </Button>,
-          <Button 
-            key="download" 
+          <Button
+            key="download"
             icon={<DownloadOutlined />}
             onClick={handleDownloadMarkdown}
             disabled={!markdownContent || markdownLoading}
           >
-            下载
+            {t('documentManager.modal.download')}
           </Button>,
           <Button key="close" onClick={() => {
             setMarkdownModalVisible(false);
             setMarkdownContent('');
             setCurrentFile(null);
           }}>
-            关闭
+            {t('documentManager.modal.close')}
           </Button>
         ]}
         style={{ top: 20 }}
@@ -1358,7 +1325,7 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
               padding: '40px',
               color: 'var(--custom-text-secondary)'
             }}>
-              暂无内容
+              {t('documentManager.modal.noContent')}
             </div>
           )
         }
@@ -1366,20 +1333,20 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
 
       {/* 复制到工作空间对话框 */}
       <Modal
-        title="复制到行动任务工作空间"
+        title={t('documentManager.copyToWorkspace.title')}
         open={copyToWorkspaceModalVisible}
         onCancel={() => setCopyToWorkspaceModalVisible(false)}
         onOk={handleCopyToWorkspace}
         confirmLoading={copyLoading}
-        okText="复制"
-        cancelText="取消"
+        okText={t('documentManager.copyToWorkspace.confirm')}
+        cancelText={t('documentManager.copyToWorkspace.cancel')}
       >
         <div style={{ marginBottom: 16 }}>
           <div style={{ marginBottom: 8, color: 'var(--custom-text-secondary)' }}>
-            将 Markdown 文件复制到选定行动任务的工作空间中
+            {t('documentManager.copyToWorkspace.intro')}
           </div>
           <Select
-            placeholder="请选择目标行动任务"
+            placeholder={t('documentManager.copyToWorkspace.placeholder')}
             style={{ width: '100%' }}
             value={selectedTaskId}
             onChange={setSelectedTaskId}
@@ -1388,7 +1355,7 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
           >
             {actionTasks.map((task: any) => (
               <Option key={task.id} value={task.id}>
-                {task.title || task.name || `任务 ${task.id}`}
+                {task.title || task.name || t('documentManager.copyToWorkspace.taskFallback', { id: task.id })}
               </Option>
             ))}
           </Select>

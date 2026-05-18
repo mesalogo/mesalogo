@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Card,
   Button,
@@ -112,6 +113,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
   models = [],
   globalSettings = {}
 }) => {
+  const { t } = useTranslation();
   const [newVariableName, setNewVariableName] = useState('');
   const [newVariableModalVisible, setNewVariableModalVisible] = useState(false);
   const [customVariables, setCustomVariables] = useState<string[]>(existingCustomVariables || []);
@@ -232,7 +234,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
       const vars = detail.shared_variables || detail.environment_variables || [];
       setSpaceVariables(vars);
     } catch (error) {
-      console.error('加载行动空间变量失败:', error);
+      console.error('load action-space variables failed:', error);
     } finally {
       setLoadingSpace(false);
     }
@@ -276,7 +278,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
 
     // 提示用户编辑变量配置
     if (defaultValues.length <= 1) {
-      message.info(`已添加变量 ${spaceVar.name}，请点击编辑按钮配置扫描值`);
+      message.info(t('parallelLab.design.msg.editToConfigure', { name: spaceVar.name }));
     }
   };
 
@@ -338,18 +340,16 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
 
   const handleAddCustomObjectiveVariable = () => {
     if (!newObjectiveVarName.trim()) {
-      message.warning('请输入变量名称');
+      message.warning(t('parallelLab.design.msg.varNameRequired'));
       return;
     }
     const varName = newObjectiveVarName.trim();
-    // 检查是否已存在
     if (spaceVariables.find(v => v.name === varName) || customVariables.includes(varName)) {
-      message.warning('变量名称已存在');
+      message.warning(t('parallelLab.design.msg.varNameExists'));
       return;
     }
-    // 检查是否是扫描参数
     if (variables.find(v => v.name === varName)) {
-      message.warning('该变量已作为扫描参数，不能同时作为目标变量');
+      message.warning(t('parallelLab.design.msg.scanVarConflict'));
       return;
     }
     // 添加到自定义变量列表（但不添加到扫描列表）
@@ -365,7 +365,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
     setObjectives([...objectives, newObj]);
     setNewObjectiveVarName('');
     setNewObjectiveVarModalVisible(false);
-    message.success(`已添加目标变量 "${varName}"`);
+    message.success(t('parallelLab.design.msg.targetVarAdded', { name: varName }));
   };
 
   // 添加停止条件
@@ -448,28 +448,28 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
     variables.forEach(v => {
       if (v.type === 'enumerated') {
         if (!v.values || v.values.length < 2) {
-          errors.push(`变量 "${v.name}": 枚举值数量不足，至少需要 2 个值`);
+          errors.push(t('parallelLab.design.validation.enumeratedMin', { name: v.name }));
         }
       } else if (v.type === 'stepped') {
         if (v.start === undefined || v.end === undefined || v.step === undefined) {
-          errors.push(`变量 "${v.name}": 步进配置不完整，请设置起始值、结束值和步长`);
+          errors.push(t('parallelLab.design.validation.steppedIncomplete', { name: v.name }));
         } else {
           if (v.start >= v.end) {
-            errors.push(`变量 "${v.name}": 起始值必须小于结束值`);
+            errors.push(t('parallelLab.design.validation.startLessThanEnd', { name: v.name }));
           }
           if (v.step <= 0) {
-            errors.push(`变量 "${v.name}": 步长必须为正数`);
+            errors.push(t('parallelLab.design.validation.stepPositive', { name: v.name }));
           }
         }
       } else if (v.type === 'random') {
         if (v.min === undefined || v.max === undefined || v.count === undefined) {
-          errors.push(`变量 "${v.name}": 随机配置不完整，请设置最小值、最大值和采样数`);
+          errors.push(t('parallelLab.design.validation.randomIncomplete', { name: v.name }));
         } else {
           if (v.min >= v.max) {
-            errors.push(`变量 "${v.name}": 最小值必须小于最大值`);
+            errors.push(t('parallelLab.design.validation.minLessThanMax', { name: v.name }));
           }
           if (v.count < 1) {
-            errors.push(`变量 "${v.name}": 采样数至少为 1`);
+            errors.push(t('parallelLab.design.validation.countAtLeastOne', { name: v.name }));
           }
         }
       }
@@ -540,12 +540,12 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
   // 生成实验协议（流式，前端直接调用模型）
   const handleGenerateProtocol = async () => {
     if (!selectedSpace) {
-      message.warning('请先选择行动空间');
+      message.warning(t('parallelLab.design.msg.spaceRequired'));
       return;
     }
 
     if (!globalSettings?.enableAssistantGeneration) {
-      message.warning('辅助生成功能未启用，请在系统设置中开启');
+      message.warning(t('parallelLab.design.msg.assistantDisabled'));
       return;
     }
 
@@ -559,11 +559,11 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
         const templates = await settingsAPI.getPromptTemplates();
         promptTemplate = templates.experimentProtocolGeneration;
         if (!promptTemplate) {
-          throw new Error('未获取到实验协议生成模板');
+          throw new Error(t('parallelLab.design.msg.templateMissing'));
         }
       } catch (error) {
-        console.error('获取提示词模板失败:', error);
-        message.error('获取提示词模板失败，请检查系统设置');
+        console.error('fetch prompt template failed:', error);
+        message.error(t('parallelLab.design.msg.templateFetchFailed'));
         setGeneratingProtocol(false);
         return;
       }
@@ -585,11 +585,11 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
 
       // 替换模板变量
       const generatePrompt = replaceTemplateVariables(promptTemplate, {
-        experiment_name: experimentConfig.name || '未命名实验',
+        experiment_name: experimentConfig.name || t('parallelLab.design.protocol.unnamedExperiment'),
         action_space_name: currentSpace?.name || '',
         action_space_description: currentSpace?.description || '',
-        roles: currentSpace?.variables?.join(', ') || '无',
-        topic: taskConfig.topic || '无特定主题',
+        roles: currentSpace?.variables?.join(', ') || t('parallelLab.design.protocol.noRoles'),
+        topic: taskConfig.topic || t('parallelLab.design.protocol.noTopic'),
         variables_json: JSON.stringify(variablesConfig, null, 2),
         objectives_json: JSON.stringify(objectives.map(o => ({
           variable: o.variable,
@@ -613,15 +613,15 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
         modelToUse,
         generatePrompt,
         handleStreamResponse,
-        "你是一个专业的实验协议生成助手，擅长为多智能体模拟实验设计清晰的行为协议。请直接输出Markdown格式的协议内容。",
+        t('parallelLab.design.protocol.systemPrompt'),
         { temperature: 0.7, max_tokens: 2000 }
       );
 
       setExperimentProtocol(generatedProtocol.trim());
-      message.success('实验协议生成成功');
+      message.success(t('parallelLab.design.msg.protocolGenerated'));
     } catch (error: any) {
-      console.error('生成实验协议失败:', error);
-      message.error(error.message || '生成实验协议失败');
+      console.error('generate experiment protocol failed:', error);
+      message.error(error.message || t('parallelLab.design.msg.protocolFailed'));
     } finally {
       setGeneratingProtocol(false);
     }
@@ -636,37 +636,41 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
   // 变量配置表格列
   const variableColumns = [
     {
-      title: '变量名',
+      title: t('parallelLab.design.col.varName'),
       dataIndex: 'name',
       key: 'name',
       render: (text: string) => <Text code>{text}</Text>
     },
     {
-      title: '扫描类型',
+      title: t('parallelLab.design.col.scanType'),
       dataIndex: 'type',
       key: 'type',
       render: (type: string) => (
         <Tag color={type === 'enumerated' ? 'blue' : type === 'stepped' ? 'green' : 'orange'}>
-          {type === 'enumerated' ? '枚举值' : type === 'stepped' ? '步进值' : '随机'}
+          {type === 'enumerated'
+            ? t('parallelLab.design.typeEnumerated')
+            : type === 'stepped'
+              ? t('parallelLab.design.typeStepped')
+              : t('parallelLab.design.typeRandom')}
         </Tag>
       )
     },
     {
-      title: '配置',
+      title: t('parallelLab.design.col.config'),
       key: 'config',
       render: (_: any, record: Variable) => {
         if (record.type === 'enumerated') {
           return <Text code>{JSON.stringify(record.values)}</Text>;
         } else if (record.type === 'stepped') {
-          return <Text code>{`${record.start} → ${record.end} (步长${record.step})`}</Text>;
+          return <Text code>{t('parallelLab.design.cell.steppedFormat', { start: record.start, end: record.end, step: record.step })}</Text>;
         } else if (record.type === 'random') {
-          return <Text code>{`${record.min} ~ ${record.max} (${record.count}个)`}</Text>;
+          return <Text code>{t('parallelLab.design.cell.randomFormat', { min: record.min, max: record.max, count: record.count })}</Text>;
         }
         return '-';
       }
     },
     {
-      title: '组合数',
+      title: t('parallelLab.design.col.combinations'),
       key: 'combinations',
       width: 80,
       render: (_: any, record: Variable) => {
@@ -679,7 +683,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
       }
     },
     ...(!readOnly ? [{
-      title: '操作',
+      title: t('parallelLab.design.col.actions'),
       key: 'action',
       width: 120,
       render: (_: any, record: Variable) => (
@@ -694,12 +698,12 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
   // 添加自定义变量（创建后直接添加到扫描列表）
   const handleAddCustomVariable = () => {
     if (!newVariableName.trim()) {
-      message.warning('请输入变量名称');
+      message.warning(t('parallelLab.design.msg.varNameRequired'));
       return;
     }
     const varName = newVariableName.trim();
     if (spaceVariables.find(v => v.name === varName) || customVariables.includes(varName)) {
-      message.warning('变量名称已存在');
+      message.warning(t('parallelLab.design.msg.varNameExists'));
       return;
     }
     // 添加到自定义变量列表
@@ -715,7 +719,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
     setVariables([...variables, newVar]);
     setNewVariableName('');
     setNewVariableModalVisible(false);
-    message.success(`已添加自定义变量 "${varName}"，请编辑配置扫描值`);
+    message.success(t('parallelLab.design.msg.customVarAdded', { name: varName }));
   };
 
   return (
@@ -723,12 +727,12 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
       <Form layout="vertical">
         {/* 基础配置 - 可隐藏 */}
         {!hideBasicInfo && (
-          <Card size="small" title="基础信息" style={{ marginBottom: 16 }}>
+          <Card size="small" title={t('parallelLab.design.basicInfo')} style={{ marginBottom: 16 }}>
             <Row gutter={16}>
               <Col span={8}>
-                <Form.Item label="实验名称" required>
+                <Form.Item label={t('parallelLab.design.experimentName')} required>
                   <Input
-                    placeholder="输入实验名称"
+                    placeholder={t('parallelLab.design.experimentNamePlaceholder')}
                     value={experimentConfig.name}
                     onChange={(e) => setExperimentConfig({ ...experimentConfig, name: e.target.value })}
                     disabled={readOnly}
@@ -736,9 +740,9 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item label="行动空间" required>
+                <Form.Item label={t('parallelLab.design.actionSpace')} required>
                   <Select
-                    placeholder="选择行动空间"
+                    placeholder={t('parallelLab.design.actionSpacePlaceholder')}
                     value={selectedSpace}
                     onChange={setSelectedSpace}
                     loading={loadingSpace}
@@ -752,9 +756,9 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item label="实验描述">
+                <Form.Item label={t('parallelLab.design.experimentDesc')}>
                   <Input
-                    placeholder="描述实验目的"
+                    placeholder={t('parallelLab.design.experimentDescPlaceholder')}
                     value={experimentConfig.description}
                     onChange={(e) => setExperimentConfig({ ...experimentConfig, description: e.target.value })}
                     disabled={readOnly}
@@ -768,14 +772,14 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
         {/* 实验类型选择 */}
         <Card size="small" title={
           <span>
-            实验类型
-            <Tooltip title="选择实验类型：对比实验会扫描多个参数值并行运行，普通任务只运行一次">
+            {t('parallelLab.design.experimentType')}
+            <Tooltip title={t('parallelLab.design.experimentTypeTooltip')}>
               <InfoCircleOutlined style={{ marginLeft: 4 }} />
             </Tooltip>
           </span>
         } style={{ marginBottom: 16 }}>
 
-          <Form.Item label="实验类型">
+          <Form.Item label={t('parallelLab.design.experimentType')}>
             <Select
               value={experimentType}
               onChange={(value) => setExperimentType(value)}
@@ -785,18 +789,18 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
               <Option value="comparative">
                 <Space>
                   <ExperimentOutlined />
-                  <span>对比实验</span>
+                  <span>{t('parallelLab.design.typeComparative')}</span>
                   <Text type="secondary" style={{ fontSize: 12 }}>
-                    - 扫描多个参数值，并行运行多个实例进行对比
+                    {t('parallelLab.design.typeComparativeDesc')}
                   </Text>
                 </Space>
               </Option>
               <Option value="normal">
                 <Space>
                   <ThunderboltOutlined />
-                  <span>普通任务</span>
+                  <span>{t('parallelLab.design.typeNormal')}</span>
                   <Text type="secondary" style={{ fontSize: 12 }}>
-                    - 使用指定参数运行一次任务
+                    {t('parallelLab.design.typeNormalDesc')}
                   </Text>
                 </Space>
               </Option>
@@ -805,17 +809,17 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
 
         </Card>
 
-        {/* 任务执行配置 - 移到顶部 */}
-        <Card size="small" title="任务执行配置" style={{ marginBottom: 16 }}>
+        {/* 任务执行配置 */}
+        <Card size="small" title={t('parallelLab.design.taskConfig')} style={{ marginBottom: 16 }}>
           <Row gutter={16}>
             <Col span={24}>
               <Form.Item
-                label="讨论主题"
+                label={t('parallelLab.design.discussionTopic')}
                 required
-                tooltip="智能体将围绕此主题进行讨论，请详细描述讨论的背景、目标和要求"
+                tooltip={t('parallelLab.design.discussionTopicTooltip')}
               >
                 <TextArea
-                  placeholder="请输入讨论主题，例如：讨论如何提升用户满意度，需要考虑服务质量、响应速度、价格因素等方面..."
+                  placeholder={t('parallelLab.design.discussionTopicPlaceholder')}
                   value={taskConfig.topic}
                   onChange={(e) => setTaskConfig({ ...taskConfig, topic: e.target.value })}
                   disabled={readOnly}
@@ -828,7 +832,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
           </Row>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="执行轮数" tooltip="每个任务内部讨论的轮数">
+              <Form.Item label={t('parallelLab.design.executionRounds')} tooltip={t('parallelLab.design.executionRoundsTooltip2')}>
                 <InputNumber
                   min={1}
                   max={20}
@@ -845,8 +849,8 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                   <Form.Item
                     label={
                       <span>
-                        总任务数
-                        <Tooltip title="要创建的行动任务总数">
+                        {t('parallelLab.design.totalTasks')}
+                        <Tooltip title={t('parallelLab.design.totalTasksTooltip')}>
                           <InfoCircleOutlined style={{ marginLeft: 4 }} />
                         </Tooltip>
                       </span>
@@ -866,8 +870,8 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                   <Form.Item
                     label={
                       <span>
-                        最大并发
-                        <Tooltip title="同时运行的最大任务数，其余任务排队等待。注意：并发数过高可能触发模型API限流（limit_burst_rate），建议根据API配额合理设置">
+                        {t('parallelLab.design.maxConcurrent')}
+                        <Tooltip title={t('parallelLab.design.maxConcurrentNormalTooltip')}>
                           <InfoCircleOutlined style={{ marginLeft: 4 }} />
                         </Tooltip>
                       </span>
@@ -889,8 +893,8 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                 <Form.Item
                   label={
                     <span>
-                      最大并发
-                      <Tooltip title="同时运行的最大任务数，其余任务排队等待">
+                      {t('parallelLab.design.maxConcurrent')}
+                      <Tooltip title={t('parallelLab.design.maxConcurrentComparativeTooltip')}>
                         <InfoCircleOutlined style={{ marginLeft: 4 }} />
                       </Tooltip>
                     </span>
@@ -911,8 +915,8 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
               <Form.Item
                 label={
                   <span>
-                    单任务超时
-                    <Tooltip title="每个实验任务的最大运行时间（分钟）。设置为 0 表示不限制，任务将一直运行直到自行完成或失败">
+                    {t('parallelLab.design.singleTaskTimeout')}
+                    <Tooltip title={t('parallelLab.design.singleTaskTimeoutTooltip')}>
                       <InfoCircleOutlined style={{ marginLeft: 4 }} />
                     </Tooltip>
                   </span>
@@ -925,8 +929,8 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                   onChange={(v) => setTaskConfig({ ...taskConfig, singleTaskTimeout: v ?? 60 })}
                   style={{ width: '100%' }}
                   disabled={readOnly}
-                  addonAfter="分钟"
-                  placeholder="0 表示不限制"
+                  addonAfter={t('parallelLab.design.minutes')}
+                  placeholder={t('parallelLab.design.timeoutPlaceholder')}
                 />
               </Form.Item>
             </Col>
@@ -940,9 +944,9 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
             {selectedSpace && !readOnly && (
               <Card size="small" title={
                 <span>
-                  可用变量（点击添加到扫描列表）
+                  {t('parallelLab.design.availableVariables')}
                   {customVariables.length > 0 && (
-                    <Tooltip title='标记为"新建"的变量不在当前行动空间中，启动实验时将自动在行动空间中创建这些变量'>
+                    <Tooltip title={t('parallelLab.design.customVariableTooltip')}>
                       <InfoCircleOutlined style={{ marginLeft: 4, color: '#1677ff' }} />
                     </Tooltip>
                   )}
@@ -969,7 +973,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                         color={variables.find(vv => vv.name === name) ? 'green' : 'orange'}
                         onClick={() => handleAddVariable({ name, value: 0 })}
                       >
-                        {name} <Text type="warning" style={{ fontSize: 10 }}>(新建)</Text>
+                        {name} <Text type="warning" style={{ fontSize: 10 }}>({t('parallelLab.design.newTag')})</Text>
                         {!variables.find(vv => vv.name === name) && <PlusOutlined style={{ marginLeft: 4 }} />}
                       </Tag>
                     ))}
@@ -978,7 +982,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                       style={{ cursor: 'pointer', padding: '4px 8px', borderStyle: 'dashed' }}
                       onClick={() => setNewVariableModalVisible(true)}
                     >
-                      <PlusOutlined /> 添加自定义变量
+                      <PlusOutlined /> {t('parallelLab.design.addCustomVariable')}
                     </Tag>
                   </Space>
                 </div>
@@ -988,8 +992,8 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
             {/* 参数配置 - 仅对比实验显示 */}
             <Card size="small" title={
               <span>
-                参数扫描配置
-                <Tooltip title="配置要扫描的变量及其取值范围">
+                {t('parallelLab.design.paramScanConfig')}
+                <Tooltip title={t('parallelLab.design.paramScanTooltip')}>
                   <InfoCircleOutlined style={{ marginLeft: 4 }} />
                 </Tooltip>
               </span>
@@ -1004,7 +1008,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                   style={{ marginBottom: 16 }}
                 />
               ) : (
-                <Empty description="请从上方选择要扫描的变量" style={{ margin: '16px 0' }} />
+                <Empty description={t('parallelLab.design.selectVariableToScan')} style={{ margin: '16px 0' }} />
               )}
 
               {/* 验证错误提示 */}
@@ -1013,7 +1017,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                   <Space align="start">
                     <WarningOutlined style={{ color: '#ff4d4f', marginTop: 4 }} />
                     <div>
-                      <Text strong style={{ color: '#cf1322' }}>配置验证失败</Text>
+                      <Text strong style={{ color: '#cf1322' }}>{t('parallelLab.design.validation.failed')}</Text>
                       <ul style={{ margin: 0, paddingLeft: 20, color: '#cf1322' }}>
                         {validationErrors.map((err, idx) => (
                           <li key={idx}>{err}</li>
@@ -1028,8 +1032,8 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
             {/* 优化目标 & 停止条件 */}
             <Row gutter={16} style={{ marginBottom: 16 }}>
               <Col span={12}>
-                <Card title="目标变量" size="small" extra={
-                  <Tooltip title="选择要优化的输出指标，不能与扫描参数相同">
+                <Card title={t('parallelLab.design.targetVariable')} size="small" extra={
+                  <Tooltip title={t('parallelLab.design.selectTargetTooltip')}>
                     <InfoCircleOutlined />
                   </Tooltip>
                 }>
@@ -1049,13 +1053,13 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                             onChange={(v) => setObjectives(objectives.map(o => o.key === obj.key ? { ...o, variable: v } : o))}
                             style={{ width: 160, marginRight: 8 }}
                             disabled={readOnly}
-                            placeholder="选择变量"
+                            placeholder={t('parallelLab.design.selectVariable')}
                           >
                             {optionsToShow.map(v => (
                               <Option key={v.name} value={v.name}>
                                 {v.name}
                                 {v.isCustom && (
-                                  <Tag color="orange" style={{ marginLeft: 4, fontSize: 10 }}>新建</Tag>
+                                  <Tag color="orange" style={{ marginLeft: 4, fontSize: 10 }}>{t('parallelLab.design.newTag')}</Tag>
                                 )}
                               </Option>
                             ))}
@@ -1066,13 +1070,13 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                             style={{ width: 100, marginRight: 8 }}
                             disabled={readOnly}
                           >
-                            <Option value="maximize">最大化</Option>
-                            <Option value="minimize">最小化</Option>
+                            <Option value="maximize">{t('parallelLab.design.maximize')}</Option>
+                            <Option value="minimize">{t('parallelLab.design.minimize')}</Option>
                           </Select>
                           {!readOnly && <Button size="small" danger icon={<DeleteOutlined />} onClick={() => setObjectives(objectives.filter(o => o.key !== obj.key))} />}
                         </div>
                         <Input
-                          placeholder="目标说明（可选，如：用户满意度评分）"
+                          placeholder={t('parallelLab.design.targetDescPlaceholder')}
                           value={obj.description || ''}
                           onChange={(e) => setObjectives(objectives.map(o => o.key === obj.key ? { ...o, description: e.target.value } : o))}
                           size="small"
@@ -1089,30 +1093,30 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                         onClick={handleAddObjective}
                         disabled={getAvailableObjectiveVariables().length === 0}
                       >
-                        添加目标
+                        {t('parallelLab.design.addTarget')}
                       </Button>
                       <Button
                         type="dashed"
                         icon={<PlusOutlined />}
                         onClick={() => setNewObjectiveVarModalVisible(true)}
                       >
-                        新建目标变量
+                        {t('parallelLab.design.newTargetVariable')}
                       </Button>
                     </Space>
                   )}
                   {!readOnly && getAvailableObjectiveVariables().length === 0 && objectives.length === 0 && (
                     <Text type="secondary" style={{ display: 'block', marginTop: 8 }}>
-                      所有变量都已作为扫描参数，请新建目标变量
+                      {t('parallelLab.design.allVariablesUsed')}
                     </Text>
                   )}
                 </Card>
               </Col>
               <Col span={12}>
-                <Card title="停止条件（可选）" size="small">
+                <Card title={t('parallelLab.design.stopConditions')} size="small">
                   {stopConditions.map(cond => (
                     <div key={cond.key} style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
                       <Input
-                        placeholder="如: customer_satisfaction > 0.9"
+                        placeholder={t('parallelLab.design.stopConditionPlaceholder')}
                         value={cond.expression}
                         onChange={(e) => setStopConditions(stopConditions.map(c => c.key === cond.key ? { ...c, expression: e.target.value } : c))}
                         style={{ marginRight: 8 }}
@@ -1123,7 +1127,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                   ))}
                   {!readOnly && (
                     <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddStopCondition}>
-                      添加条件
+                      {t('parallelLab.design.addCondition')}
                     </Button>
                   )}
                 </Card>
@@ -1133,8 +1137,8 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
             {/* 实验行为协议 */}
             <Card size="small" title={
               <span>
-                实验行为协议
-                <Tooltip title="行为协议告诉智能体如何根据扫描参数调整行为，以及如何评估和更新目标变量。这是确保实验科学性和可复现性的关键。">
+                {t('parallelLab.design.behaviorProtocol')}
+                <Tooltip title={t('parallelLab.design.behaviorProtocolTooltip')}>
                   <InfoCircleOutlined style={{ marginLeft: 4, color: '#1677ff' }} />
                 </Tooltip>
               </span>
@@ -1146,12 +1150,12 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                   onClick={() => setProtocolModalVisible(true)}
                   disabled={readOnly}
                 >
-                  {experimentProtocol ? '编辑协议' : '配置协议'}
+                  {experimentProtocol ? t('parallelLab.design.editProtocol') : t('parallelLab.design.configProtocol')}
                 </Button>
                 {experimentProtocol ? (
-                  <Tag color="green">已配置协议</Tag>
+                  <Tag color="green">{t('parallelLab.design.protocolConfigured')}</Tag>
                 ) : (
-                  <Text type="secondary">建议在启动实验前配置行为协议</Text>
+                  <Text type="secondary">{t('parallelLab.design.protocolSuggestion')}</Text>
                 )}
               </Space>
             </Card>
@@ -1159,7 +1163,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
             {/* 实验预览 */}
             <Card
               size="small"
-              title="实验预览"
+              title={t('parallelLab.design.experimentPreview')}
               extra={
                 !readOnly && variables.length > 0 && (
                   <Button
@@ -1167,7 +1171,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                     onClick={() => setPreviewModalVisible(true)}
                     size="small"
                   >
-                    预览参数组合
+                    {t('parallelLab.design.previewCombinations')}
                   </Button>
                 )
               }
@@ -1175,13 +1179,13 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
             >
               <Row gutter={16}>
                 <Col span={8}>
-                  <Statistic title="参数组合数" value={calculateCombinations()} />
+                  <Statistic title={t('parallelLab.design.paramCombinations')} value={calculateCombinations()} />
                 </Col>
                 <Col span={8}>
-                  <Statistic title="目标变量数" value={objectives.length} />
+                  <Statistic title={t('parallelLab.design.targetVariableCount')} value={objectives.length} />
                 </Col>
                 <Col span={8}>
-                  <Statistic title="停止条件数" value={stopConditions.length} />
+                  <Statistic title={t('parallelLab.design.stopConditionCount')} value={stopConditions.length} />
                 </Col>
               </Row>
             </Card>
@@ -1195,7 +1199,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                     loading={loading}
                     disabled={variables.length === 0}
                   >
-                    保存配置
+                    {t('parallelLab.design.saveConfig')}
                   </Button>
                   {handleStartExperiment && (
                     <Button
@@ -1205,7 +1209,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                       loading={loading}
                       disabled={variables.length === 0 || validationErrors.length > 0}
                     >
-                      启动对比实验
+                      {t('parallelLab.design.startComparativeExperiment')}
                     </Button>
                   )}
                 </Space>
@@ -1214,7 +1218,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
           </>
         )}
 
-        {/* 普通任务模式 - 简化的操作按钮 */}
+        {/* 普通任务模式 */}
         {experimentType === 'normal' && !readOnly && (
           <Form.Item style={{ marginTop: 24 }}>
             <Space>
@@ -1223,7 +1227,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                 onClick={handleSaveConfig}
                 loading={loading}
               >
-                保存配置
+                {t('parallelLab.design.saveConfig')}
               </Button>
               {handleStartExperiment && (
                 <Button
@@ -1232,7 +1236,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                   onClick={handleStartExperiment}
                   loading={loading}
                 >
-                  启动普通任务
+                  {t('parallelLab.design.startNormalTask')}
                 </Button>
               )}
             </Space>
@@ -1242,11 +1246,11 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
 
       {/* 参数组合预览弹窗 */}
       <Modal
-        title="参数组合预览"
+        title={t('parallelLab.design.previewModalTitle')}
         open={previewModalVisible}
         onCancel={() => setPreviewModalVisible(false)}
         footer={[
-          <Button key="close" onClick={() => setPreviewModalVisible(false)}>关闭</Button>
+          <Button key="close" onClick={() => setPreviewModalVisible(false)}>{t('parallelLab.design.previewClose')}</Button>
         ]}
         width={700}
       >
@@ -1257,9 +1261,9 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
           return (
             <div>
               <div style={{ marginBottom: 16 }}>
-                <Text>共 <Text strong>{combinations.length}</Text> 个参数组合</Text>
+                <Text>{t('parallelLab.design.previewTotalLabel')} <Text strong>{combinations.length}</Text></Text>
                 {combinations.length > maxShow && (
-                  <Text type="secondary">（仅显示前 {maxShow} 个）</Text>
+                  <Text type="secondary">{t('parallelLab.design.previewShowOnlyFirst', { count: maxShow })}</Text>
                 )}
               </div>
               <Table
@@ -1284,28 +1288,28 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
 
       {/* 变量编辑弹窗 */}
       <Modal
-        title="编辑变量配置"
+        title={t('parallelLab.design.editVariableTitle')}
         open={variableModalVisible}
         onOk={handleSaveVariable}
         onCancel={() => { setVariableModalVisible(false); setEditingVariable(null); }}
       >
         {editingVariable && (
           <Form layout="vertical">
-            <Form.Item label="变量名">
+            <Form.Item label={t('parallelLab.design.variableName')}>
               <Input value={editingVariable.name} disabled />
             </Form.Item>
-            <Form.Item label="扫描类型">
+            <Form.Item label={t('parallelLab.design.scanType')}>
               <Select
                 value={editingVariable.type}
                 onChange={(v) => setEditingVariable({ ...editingVariable, type: v })}
               >
-                <Option value="enumerated">枚举值</Option>
-                <Option value="stepped">步进值</Option>
-                <Option value="random">随机值</Option>
+                <Option value="enumerated">{t('parallelLab.design.typeEnumerated')}</Option>
+                <Option value="stepped">{t('parallelLab.design.typeStepped')}</Option>
+                <Option value="random">{t('parallelLab.design.typeRandom')}</Option>
               </Select>
             </Form.Item>
             {editingVariable.type === 'enumerated' && (
-              <Form.Item label="枚举值（逗号分隔）">
+              <Form.Item label={t('parallelLab.design.enumeratedValuesLabel')}>
                 <Input
                   value={editingVariable.values?.join(', ')}
                   onChange={(e) => {
@@ -1322,7 +1326,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
             {editingVariable.type === 'stepped' && (
               <Row gutter={8}>
                 <Col span={8}>
-                  <Form.Item label="起始值">
+                  <Form.Item label={t('parallelLab.design.startValue')}>
                     <InputNumber
                       value={editingVariable.start}
                       onChange={(v) => setEditingVariable({ ...editingVariable, start: v || 0 })}
@@ -1331,7 +1335,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                   </Form.Item>
                 </Col>
                 <Col span={8}>
-                  <Form.Item label="结束值">
+                  <Form.Item label={t('parallelLab.design.endValue')}>
                     <InputNumber
                       value={editingVariable.end}
                       onChange={(v) => setEditingVariable({ ...editingVariable, end: v || 0 })}
@@ -1340,7 +1344,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                   </Form.Item>
                 </Col>
                 <Col span={8}>
-                  <Form.Item label="步长">
+                  <Form.Item label={t('parallelLab.design.stepValue')}>
                     <InputNumber
                       value={editingVariable.step}
                       onChange={(v) => setEditingVariable({ ...editingVariable, step: v || 1 })}
@@ -1353,7 +1357,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
             {editingVariable.type === 'random' && (
               <Row gutter={8}>
                 <Col span={8}>
-                  <Form.Item label="最小值">
+                  <Form.Item label={t('parallelLab.design.minValue')}>
                     <InputNumber
                       value={editingVariable.min}
                       onChange={(v) => setEditingVariable({ ...editingVariable, min: v || 0 })}
@@ -1362,7 +1366,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                   </Form.Item>
                 </Col>
                 <Col span={8}>
-                  <Form.Item label="最大值">
+                  <Form.Item label={t('parallelLab.design.maxValue')}>
                     <InputNumber
                       value={editingVariable.max}
                       onChange={(v) => setEditingVariable({ ...editingVariable, max: v || 1 })}
@@ -1371,7 +1375,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
                   </Form.Item>
                 </Col>
                 <Col span={8}>
-                  <Form.Item label="采样数">
+                  <Form.Item label={t('parallelLab.design.sampleCount')}>
                     <InputNumber
                       value={editingVariable.count}
                       onChange={(v) => setEditingVariable({ ...editingVariable, count: v || 10 })}
@@ -1387,19 +1391,19 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
 
       {/* 添加自定义变量弹窗 */}
       <Modal
-        title="添加自定义变量"
+        title={t('parallelLab.design.addCustomVariableTitle')}
         open={newVariableModalVisible}
         onOk={handleAddCustomVariable}
         onCancel={() => { setNewVariableModalVisible(false); setNewVariableName(''); }}
-        okText="添加"
-        cancelText="取消"
+        okText={t('parallelLab.design.addOk')}
+        cancelText={t('parallelLab.design.addCancel')}
       >
         <Form layout="vertical">
           <Form.Item
             label={
               <span>
-                变量名称
-                <Tooltip title="自定义变量不在当前行动空间中，启动实验时将自动在行动空间中创建该变量">
+                {t('parallelLab.design.variableName')}
+                <Tooltip title={t('parallelLab.design.addCustomVariableTooltip')}>
                   <InfoCircleOutlined style={{ marginLeft: 4, color: '#1677ff' }} />
                 </Tooltip>
               </span>
@@ -1407,7 +1411,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
             required
           >
             <Input
-              placeholder="输入变量名称（如：temperature）"
+              placeholder={t('parallelLab.design.addCustomVariablePlaceholder')}
               value={newVariableName}
               onChange={(e) => setNewVariableName(e.target.value)}
               onPressEnter={handleAddCustomVariable}
@@ -1418,19 +1422,19 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
 
       {/* 添加自定义目标变量弹窗 */}
       <Modal
-        title="新建目标变量"
+        title={t('parallelLab.design.newObjectiveVarTitle')}
         open={newObjectiveVarModalVisible}
         onOk={handleAddCustomObjectiveVariable}
         onCancel={() => { setNewObjectiveVarModalVisible(false); setNewObjectiveVarName(''); }}
-        okText="添加"
-        cancelText="取消"
+        okText={t('parallelLab.design.addOk')}
+        cancelText={t('parallelLab.design.addCancel')}
       >
         <Form layout="vertical">
           <Form.Item
             label={
               <span>
-                变量名称
-                <Tooltip title="目标变量是实验要优化的输出指标，如满意度、转化率等。新建的目标变量将在实验运行时由系统记录其值。">
+                {t('parallelLab.design.variableName')}
+                <Tooltip title={t('parallelLab.design.newObjectiveVarTooltip')}>
                   <InfoCircleOutlined style={{ marginLeft: 4, color: '#1677ff' }} />
                 </Tooltip>
               </span>
@@ -1438,7 +1442,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
             required
           >
             <Input
-              placeholder="输入变量名称（如：customer_satisfaction）"
+              placeholder={t('parallelLab.design.newObjectiveVarPlaceholder')}
               value={newObjectiveVarName}
               onChange={(e) => setNewObjectiveVarName(e.target.value)}
               onPressEnter={handleAddCustomObjectiveVariable}
@@ -1451,8 +1455,8 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
       <Modal
         title={
           <span>
-            实验行为协议
-            <Tooltip title="此协议将注入到智能体的系统提示词中，指导其在实验中的行为。您可以手动编辑或使用AI生成。">
+            {t('parallelLab.design.protocolModalTitle')}
+            <Tooltip title={t('parallelLab.design.protocolModalTooltip')}>
               <InfoCircleOutlined style={{ marginLeft: 8, color: '#1677ff' }} />
             </Tooltip>
           </span>
@@ -1469,10 +1473,10 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
             loading={generatingProtocol}
             disabled={readOnly || !selectedSpace || variables.length === 0}
           >
-            AI 生成
+            {t('parallelLab.design.protocolAiGenerate')}
           </Button>,
           <Button key="ok" type="primary" onClick={() => setProtocolModalVisible(false)}>
-            确定
+            {t('parallelLab.design.protocolOk')}
           </Button>
         ]}
       >
@@ -1481,7 +1485,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
           onChange={(e) => setExperimentProtocol(e.target.value)}
           rows={20}
           disabled={readOnly}
-          placeholder="请输入实验行为协议，或点击下方「AI 生成」按钮自动生成..."
+          placeholder={t('parallelLab.design.protocolPlaceholder')}
           style={{ fontFamily: 'monospace', fontSize: 13 }}
         />
       </Modal>
