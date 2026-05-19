@@ -492,19 +492,13 @@ class SubAgentExecutor:
             # 注意：不能用 is_stream=True，因为异步流依赖 connection_manager
             # 注册（需要 task_id/conversation_id/agent_id），SubAgent 在
             # ThreadPoolExecutor 中运行时没有这些上下文，会被判断为"取消"
-            # 从 model_obj（ModelConfig 实例）透传 custom_headers / custom_body / modalities
             _model_obj = model_config.get("model_obj")
             api_response = model_client.send_request(
-                api_url=model_config["api_url"],
-                api_key=model_config["api_key"],
+                model_config=_model_obj,
                 messages=messages,
-                model=model_config["model_id"],
                 is_stream=False,
                 agent_info={},
                 max_tokens=max_tokens,
-                __custom_headers__=(getattr(_model_obj, 'custom_headers', None) or {}) if _model_obj else {},
-                __custom_body__=(getattr(_model_obj, 'custom_body', None) or {}) if _model_obj else {},
-                __modalities__=(getattr(_model_obj, 'modalities', None) or []) if _model_obj else [],
                 **model_config.get("params", {})
             )
 

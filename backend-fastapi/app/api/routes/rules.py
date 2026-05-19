@@ -1088,10 +1088,8 @@ async def test_rules(request: Request):
                     logger.info(f"开始调用LLM进行规则判断 - 规则: {rule_name}")
                     try:
                         response = model_client.send_request(
-                            api_url=model_config.base_url,
-                            api_key=model_config.api_key,
+                            model_config=model_config,
                             messages=messages,
-                            model=model_config.model_id,
                             is_stream=False,
                             temperature=model_params.get('temperature'),
                             max_tokens=model_params.get('max_tokens'),

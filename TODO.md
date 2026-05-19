@@ -289,7 +289,7 @@ async def _execute_true_parallel(task: 'Task') -> None:
 ### PR5 — `ModelClient.send_request` 签名一等公民化
 
 - **现象**：`send_request(api_url, api_key, messages, model, ...)` 接拍扁后的原始字段，每次 ModelConfig 新增字段都要在 13 个调用点重复传一次（本次新增 `custom_headers/custom_body/modalities` 就在 7 处手动写了三次）。
-- **解法**：主签名改成 `send_request(model_config: ModelConfig, messages, ...)`；一次性改完所有 13 个调用点；删旧签名（不留兼容 shim，按 AGENTS.md §3.2）。
+- **解法**：主签名改成 `send_request(model_config: ModelConfig, messages, ...)`；一次性改完所有调用点；删旧签名（不留兼容 shim，按 AGENTS.md §3.2）。
 - **测试**：
   - unit：`tests/unit/services/conversation/test_send_request_threads_modelconfig.py`，用 mock httpx 验证 `model_config` 上的每个相关字段（headers/body/timeout/modalities/...）都正确进入出站请求。
   - 既有 integration / e2e 跑通。

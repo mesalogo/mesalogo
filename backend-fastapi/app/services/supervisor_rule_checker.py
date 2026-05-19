@@ -413,24 +413,19 @@ class SupervisorRuleChecker:
             
             # 构建agent_info以传递provider信息
             agent_info = {
-                'provider': model_config.get('provider', 'unknown'),
+                'provider': getattr(model_config, 'provider', 'unknown'),
                 'name': '规则检查系统',
                 'role_name': '规则检查器'
             }
 
             # 调用模型
             response = self.model_client.send_request(
-                api_url=model_config['base_url'],
-                api_key=model_config['api_key'],
+                model_config=model_config,
                 messages=messages,
-                model=model_config['model_id'],
                 is_stream=False,
                 agent_info=agent_info,
                 temperature=0.3,  # 使用较低的温度确保一致性
                 max_tokens=1000,
-                __custom_headers__=model_config.get('custom_headers') or {},
-                __custom_body__=model_config.get('custom_body') or {},
-                __modalities__=model_config.get('modalities') or [],
             )
             
             # 解析响应
@@ -466,7 +461,7 @@ class SupervisorRuleChecker:
                 'error': str(e)
             }
     
-    def _get_model_config(self, role_id: int = None) -> Optional[Dict[str, Any]]:
+    def _get_model_config(self, role_id: int = None):
         """获取模型配置"""
         try:
             from app.models import ModelConfig, Role
@@ -505,16 +500,7 @@ class SupervisorRuleChecker:
                     logger.warning(f"监督规则检查器回退到第一个可用模型: {role_model.name}")
 
             if role_model:
-                return {
-                    'model_id': role_model.model_id,
-                    'base_url': role_model.base_url,
-                    'api_key': role_model.api_key,
-                    'provider': role_model.provider,
-                    # 透传 custom_headers / custom_body / modalities 给 send_request
-                    'custom_headers': role_model.custom_headers or {},
-                    'custom_body': role_model.custom_body or {},
-                    'modalities': role_model.modalities or [],
-                }
+                return role_model
             else:
                 logger.warning("未找到可用的模型配置")
                 return None

@@ -74,17 +74,11 @@ class OneClickGenerationService:
 
             # 调用模型，max_tokens使用模型配置，temperature固定为0.6以保证生成稳定性
             response = self.model_client.send_request(
-                api_url=default_model.base_url,
-                api_key=default_model.api_key,
+                model_config=default_model,
                 messages=messages,
-                model=default_model.model_id,
                 is_stream=False,
                 temperature=0.6,
                 max_tokens=default_model.max_output_tokens,
-                # 透传 ModelConfig 的 custom_headers / custom_body 到出站请求
-                __custom_headers__=(default_model.custom_headers or {}),
-                __custom_body__=(default_model.custom_body or {}),
-                __modalities__=(default_model.modalities or []),
             )
 
             return response

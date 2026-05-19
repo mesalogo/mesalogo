@@ -246,17 +246,15 @@ class ModelClient:
             'gpustack': self._handle_gpustack_request,
         }
 
-    def send_request(self, api_url: str, api_key: str, messages: List[Dict[str, str]],
-                    model: str, is_stream: bool = False, callback: Optional[Callable] = None,
+    def send_request(self, model_config, messages: List[Dict[str, str]],
+                    is_stream: bool = False, callback: Optional[Callable] = None,
                     agent_info: Optional[Dict[str, Any]] = None, **kwargs) -> str:
         """
         发送模型请求
 
         Args:
-            api_url: API URL
-            api_key: API密钥
+            model_config: ModelConfig对象
             messages: 消息列表
-            model: 模型名称
             is_stream: 是否使用流式响应
             callback: 回调函数，如果提供则使用流式响应
             agent_info: 智能体信息(可选)，包含角色和工具信息
@@ -266,8 +264,17 @@ class ModelClient:
             str: 模型响应内容
         """
         try:
+            api_url = model_config.base_url
+            api_key = model_config.api_key
+            model = model_config.model_id
+
             # 检测提供商类型
-            detected_provider = self._detect_provider(api_url, kwargs.get('config'), kwargs.get('provider'), model)
+            detected_provider = self._detect_provider(
+                api_url,
+                model_config,
+                kwargs.get('provider'),
+                model,
+            )
 
             # 处理图像消息（如果包含图像）
             from .vision_adapter import vision_adapter
@@ -335,12 +342,9 @@ class ModelClient:
                 }
 
             # 添加其他参数（根据提供商过滤）
-            # __custom_headers__ / __custom_body__ / __modalities__ 是预留 kwargs，
-            # 由调用方从 ModelConfig 透传过来，在下方统一合并到 headers / payload，
-            # 不允许作为模型采样参数泄漏进 payload。详见 docs/agents/model-config-custom-params.md
             excluded_keys = [
                 'agent_info', 'task_id', 'conversation_id', 'config', 'provider',
-                '__custom_headers__', '__custom_body__', '__modalities__',
+                'model_config',
             ]
 
             for key, value in kwargs.items():
@@ -372,13 +376,12 @@ class ModelClient:
                     if 'tool_choice' not in payload:
                         payload['tool_choice'] = "auto"
 
-            # 合并用户配置的 custom_headers / custom_body（来自 ModelConfig）
-            # 调用方通过预留 kwarg __custom_headers__ / __custom_body__ 透传进来。
+            # 合并用户配置的 custom_headers / custom_body（来自 ModelConfig）。
             # 类型校验交给 llm_http 模块；非 dict 输入会抛 TypeError，让上游崩出（fail loud）。
             from app.services.llm_http import merge_custom_headers, merge_custom_body
-            custom_headers = kwargs.get('__custom_headers__')
-            custom_body = kwargs.get('__custom_body__')
-            modalities = kwargs.get('__modalities__')
+            custom_headers = getattr(model_config, 'custom_headers', None) or {}
+            custom_body = getattr(model_config, 'custom_body', None) or {}
+            modalities = getattr(model_config, 'modalities', None) or []
             if custom_headers:
                 headers = merge_custom_headers(headers, custom_headers)
             if custom_body:
@@ -545,6 +548,7 @@ class ModelClient:
                     "api_url": api_url,
                     "api_key": api_key,
                     "model": model,
+                    "model_config": model_config,
                     "agent_info": agent_info,
                     # 传递系统设置，避免子函数在无Flask上下文时读取数据库
                     "stream_socket_timeout": read_timeout,
@@ -854,16 +858,11 @@ class ModelClient:
 
                 # 调用现有的send_request方法进行流式测试
                 result = self.send_request(
-                    api_url=config.base_url,
-                    api_key=config.api_key,
+                    model_config=config,
                     messages=test_messages,
-                    model=config.model_id,
                     is_stream=True,
                     callback=handle_stream_chunk,
                     agent_info=agent_info,
-                    __custom_headers__=getattr(config, 'custom_headers', None) or {},
-                    __custom_body__=getattr(config, 'custom_body', None) or {},
-                    __modalities__=getattr(config, 'modalities', None) or [],
                     **filtered_params
                 )
 
@@ -891,15 +890,10 @@ class ModelClient:
 
                 # 非流式测试
                 result = self.send_request(
-                    api_url=config.base_url,
-                    api_key=config.api_key,
+                    model_config=config,
                     messages=test_messages,
-                    model=config.model_id,
                     is_stream=False,
                     agent_info=agent_info,
-                    __custom_headers__=getattr(config, 'custom_headers', None) or {},
-                    __custom_body__=getattr(config, 'custom_body', None) or {},
-                    __modalities__=getattr(config, 'modalities', None) or [],
                     **filtered_params
                 )
 
@@ -980,16 +974,11 @@ class ModelClient:
 
             # 调用现有的send_request方法进行流式测试
             result = self.send_request(
-                api_url=config.base_url,
-                api_key=config.api_key,
+                model_config=config,
                 messages=test_messages,
-                model=config.model_id,
                 is_stream=True,
                 callback=streaming_callback,
                 agent_info=agent_info,
-                __custom_headers__=getattr(config, 'custom_headers', None) or {},
-                __custom_body__=getattr(config, 'custom_body', None) or {},
-                __modalities__=getattr(config, 'modalities', None) or [],
                 **filtered_params
             )
 

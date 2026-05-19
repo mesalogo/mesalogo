@@ -65,17 +65,6 @@
   - result_queue: 结果队列(可选)
   - response_order: 响应顺序(可选)
 
-工具函数:
-* send_model_request_stream - 向模型API发送流式请求 [已废弃，使用ModelClient.send_request代替]
-  - api_url: API地址
-  - api_key: API密钥
-  - messages: 消息列表
-  - model: 模型名称
-  - callback: 回调函数
-  - agent_info: 智能体信息(可选)
-  - **kwargs: 其他参数
-
-注意: SSE相关函数已移至 app/services/conversation/stream_handler.py
 """
 import json
 import logging
@@ -729,21 +718,14 @@ class ConversationService:
                 # 使用标准ModelClient处理内部角色
                 model_client = ModelClient()
                 api_response = model_client.send_request(
-                    api_url=role_model.base_url,
-                    api_key=role_model.api_key,
+                    model_config=role_model,
                     messages=model_messages,
-                    model=role_model.model_id,
                     is_stream=True,
                     callback=content_callback,  # 直接使用content_callback
                     agent_info=agent_info,  # 传递完整的agent_info，包含工具定义
                     task_id=task_id,  # 添加任务ID
                     conversation_id=conversation_id,  # 添加会话ID
                     send_target=send_target,  # 传递 send_target 用于区分监督者会话和任务会话
-                    # 透传 ModelConfig 的 custom_headers / custom_body / modalities；
-                    # 这些保留 kwarg 也会被 stream_handler 在工具调用后续轮自动透传。
-                    __custom_headers__=(role_model.custom_headers or {}),
-                    __custom_body__=(role_model.custom_body or {}),
-                    __modalities__=(role_model.modalities or []),
                     **role_model_params
                 )
 
@@ -969,41 +951,6 @@ class ConversationService:
 
     # extract_thinking函数已被移除，所有思考内容处理都在前端完成
 
-    @staticmethod
-    def send_model_request_stream(api_url: str, api_key: str, messages: List[Dict[str, str]],
-                                model: str, callback: Callable = None, agent_info: Dict[str, Any] = None, **kwargs) -> str:
-        """
-        发送流式模型请求 (已废弃，请使用ModelClient.send_request替代)
-
-        此方法仅作为向后兼容保留，内部已重构为使用ModelClient
-
-        Args:
-            api_url: API URL
-            api_key: API密钥
-            messages: 消息列表
-            model: 模型名称
-            callback: 回调函数，如果提供则使用流式响应
-            agent_info: 智能体信息(可选)，包含角色和工具信息
-            **kwargs: 其他参数
-
-        Returns:
-            如果是流式响应，返回首个chunk；否则返回完整响应
-        """
-        # 使用ModelClient代替直接实现
-        model_client = ModelClient()
-        is_stream = callback is not None
-
-        return model_client.send_request(
-            api_url=api_url,
-            api_key=api_key,
-            messages=messages,
-            model=model,
-            is_stream=is_stream,
-            callback=callback,
-            agent_info=agent_info,
-            **kwargs
-        )
-
     # ==== 自动讨论功能 ====
     # 自动讨论功能已移至 app/services/conversation/auto_conversation.py
 
@@ -1114,16 +1061,10 @@ class ConversationService:
                 model_client = ModelClient()
                 _internal_model = result[3]
                 api_response = model_client.send_request(
-                    api_url=_internal_model.base_url,
-                    api_key=_internal_model.api_key,
+                    model_config=_internal_model,
                     messages=result[4],
-                    model=_internal_model.model_id,
                     is_stream=False,
                     agent_info=agent_info,
-                    # 透传 ModelConfig 的 custom_headers / custom_body / modalities
-                    __custom_headers__=(_internal_model.custom_headers or {}),
-                    __custom_body__=(_internal_model.custom_body or {}),
-                    __modalities__=(_internal_model.modalities or []),
                     **result[6]
                 )
 

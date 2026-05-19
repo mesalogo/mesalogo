@@ -169,24 +169,13 @@ class SummaryService:
             # 创建 ModelClient 实例并发送请求
             model_client = ModelClient()
             model_client.send_request(
-                api_url=model_config.base_url,
-                api_key=model_config.api_key,
+                model_config=model_config,
                 messages=request_messages,
-                model=model_config.model_id,
                 is_stream=True,  # 使用流式模式
                 callback=collect_content,
                 temperature=0.7,
                 max_tokens=model_config.max_output_tokens,
                 timeout=model_config.request_timeout,
-                # 注：先前把 additional_params 整体展开到 send_request kwargs 的做法已废弃 —
-                # additional_params 仅用于本进程内的本地参数（reranker use_fp16、embedding
-                # dimensions 等），不再发送给上游 LLM。要给上游 chat API 注入自定义头/体，
-                # 请在 ModelConfig.custom_headers / custom_body 里配置（前者由
-                # ModelClient.send_request 自动合并到 headers，后者合并到 payload）。
-                # 详见 docs/agents/model-config-custom-params.md。
-                __custom_headers__=(model_config.custom_headers or {}),
-                __custom_body__=(model_config.custom_body or {}),
-                __modalities__=(model_config.modalities or []),
             )
             
             summary = ''.join(summary_parts).strip()
@@ -374,24 +363,13 @@ class SummaryService:
             
             model_client = ModelClient()
             model_client.send_request(
-                api_url=model_config.base_url,
-                api_key=model_config.api_key,
+                model_config=model_config,
                 messages=request_messages,
-                model=model_config.model_id,
                 is_stream=True,
                 callback=collect_content,
                 temperature=0.7,
                 max_tokens=model_config.max_output_tokens,
                 timeout=model_config.request_timeout,
-                # 注：先前把 additional_params 整体展开到 send_request kwargs 的做法已废弃 —
-                # additional_params 仅用于本进程内的本地参数（reranker use_fp16、embedding
-                # dimensions 等），不再发送给上游 LLM。要给上游 chat API 注入自定义头/体，
-                # 请在 ModelConfig.custom_headers / custom_body 里配置（前者由
-                # ModelClient.send_request 自动合并到 headers，后者合并到 payload）。
-                # 详见 docs/agents/model-config-custom-params.md。
-                __custom_headers__=(model_config.custom_headers or {}),
-                __custom_body__=(model_config.custom_body or {}),
-                __modalities__=(model_config.modalities or []),
             )
             
             summary = ''.join(summary_parts).strip()

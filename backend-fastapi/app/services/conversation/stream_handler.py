@@ -523,14 +523,14 @@ def call_llm_with_tool_results(original_messages: List[Dict[str, Any]],
         model_client = ModelClient()
 
         # 准备API配置
-        api_url = api_config.get("api_url")
-        api_key = api_config.get("api_key")
-        model = api_config.get("model")
+        model_config = api_config["model_config"]
+        api_url = model_config.base_url
+        model = model_config.model_id
         agent_info = api_config.get("agent_info")
 
         # 其他参数
         kwargs = {k: v for k, v in api_config.items()
-                 if k not in ["api_url", "api_key", "model", "agent_info"]}
+                 if k not in ["api_url", "api_key", "model", "model_config", "agent_info"]}
 
         if DEBUG_LLM_RESPONSE:
             logger.debug(f"[工具调用后再次调用LLM] 使用模型: {model}")
@@ -542,10 +542,8 @@ def call_llm_with_tool_results(original_messages: List[Dict[str, Any]],
 
         # 7. 发送请求并获取响应
         final_response = model_client.send_request(
-            api_url=api_url,
-            api_key=api_key,
+            model_config=model_config,
             messages=messages,
-            model=model,
             is_stream=True,  # 使用流式响应
             callback=callback,  # 使用相同的回调函数
             agent_info=agent_info,

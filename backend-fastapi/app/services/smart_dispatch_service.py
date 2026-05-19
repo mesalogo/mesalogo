@@ -251,18 +251,12 @@ class SmartDispatchService:
             # 创建 ModelClient 实例并发送请求
             model_client = ModelClient()
             model_client.send_request(
-                api_url=model_config.base_url,
-                api_key=model_config.api_key,
+                model_config=model_config,
                 messages=messages,
-                model=model_config.model_id,
                 is_stream=True,
                 callback=collect_response,
                 temperature=0,
                 max_tokens=10,
-                # 透传 ModelConfig 的 custom_headers / custom_body 到出站请求
-                __custom_headers__=(model_config.custom_headers or {}),
-                __custom_body__=(model_config.custom_body or {}),
-                __modalities__=(model_config.modalities or []),
             )
             
             # 解析响应，提取智能体ID (UUID格式)

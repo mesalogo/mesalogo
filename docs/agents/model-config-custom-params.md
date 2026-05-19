@@ -72,17 +72,11 @@ Body-specific:
 ### Chat / completion path (most calls)
 
 `app/services/conversation/model_client.py::ModelClient.send_request`
-recognises three reserved kwargs:
-
-* `__custom_headers__`
-* `__custom_body__`
-* `__modalities__`
-
-They are listed in `excluded_keys` so they cannot leak into the OpenAI /
-Anthropic payload as sampling parameters. After the standard
-provider-aware payload is built, `merge_custom_headers` /
-`merge_custom_body` run once and produce the final `headers` / `payload`
-passed to `httpx`.
+takes the `ModelConfig` object directly. After the standard
+provider-aware payload is built, it reads `model_config.custom_headers`,
+`model_config.custom_body`, and `model_config.modalities` once, then
+calls `merge_custom_headers` / `merge_custom_body` to produce the final
+`headers` / `payload` passed to `httpx`.
 
 Every business entry that creates a chat call already threads through
 `ModelClient` and *should* be passing these kwargs. The current entries
@@ -102,9 +96,8 @@ that do so are:
   methods, they pick up `custom_headers` / `custom_body` automatically.
 
 The `stream_handler.py` tool-call follow-up call does not need explicit
-plumbing: it inherits its kwargs from `api_config` dict the parent passes
-in, so as long as the parent passed `__custom_headers__` etc. they ride
-through.
+custom-param plumbing: `ModelClient.send_request` stores the original
+`ModelConfig` in `api_config`, and the follow-up call reuses that object.
 
 ### Embedding path
 
