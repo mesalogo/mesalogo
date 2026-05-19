@@ -10,6 +10,7 @@ import {
   ApiOutlined,
   BranchesOutlined,
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -33,14 +34,14 @@ interface NodeConfigPanelProps {
   onClose: () => void;
 }
 
-const nodeTypeInfo: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
-  start: { label: '开始节点', icon: <PlayCircleOutlined />, color: '#52c41a' },
-  end: { label: '结束节点', icon: <StopOutlined />, color: '#ff4d4f' },
-  agent: { label: '智能体节点', icon: <UserOutlined />, color: '#1677ff' },
-  task: { label: '任务节点', icon: <FileTextOutlined />, color: '#722ed1' },
-  knowledge: { label: '知识库节点', icon: <BookOutlined />, color: '#fa8c16' },
-  api: { label: 'API调用节点', icon: <ApiOutlined />, color: '#13c2c2' },
-  condition: { label: '条件判断节点', icon: <BranchesOutlined />, color: '#eb2f96' },
+const nodeTypeInfo: Record<string, { labelKey: string; icon: React.ReactNode; color: string }> = {
+  start: { labelKey: 'nodeConfig.type.start', icon: <PlayCircleOutlined />, color: '#52c41a' },
+  end: { labelKey: 'nodeConfig.type.end', icon: <StopOutlined />, color: '#ff4d4f' },
+  agent: { labelKey: 'nodeConfig.type.agent', icon: <UserOutlined />, color: '#1677ff' },
+  task: { labelKey: 'nodeConfig.type.task', icon: <FileTextOutlined />, color: '#722ed1' },
+  knowledge: { labelKey: 'nodeConfig.type.knowledge', icon: <BookOutlined />, color: '#fa8c16' },
+  api: { labelKey: 'nodeConfig.type.api', icon: <ApiOutlined />, color: '#13c2c2' },
+  condition: { labelKey: 'nodeConfig.type.condition', icon: <BranchesOutlined />, color: '#eb2f96' },
 };
 
 const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
@@ -50,9 +51,10 @@ const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
   onUpdate,
   onClose,
 }) => {
+  const { t } = useTranslation();
   const nodeType = node?.type || '';
   const nodeData = (node?.data || {}) as Record<string, any>;
-  const typeInfo = nodeTypeInfo[nodeType] || { label: '节点配置', icon: null, color: 'var(--custom-text-secondary)' };
+  const typeInfo = nodeTypeInfo[nodeType] || { labelKey: 'nodeConfig.title', icon: null, color: 'var(--custom-text-secondary)' };
 
   const handleChange = (field: string, value: any) => {
     if (node) {
@@ -67,14 +69,14 @@ const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
       case 'start':
         return (
           <div style={{ color: 'var(--custom-text-secondary)', textAlign: 'center', padding: 40 }}>
-            开始节点无需配置
+            {t('nodeConfig.startNoConfig')}
           </div>
         );
 
       case 'end':
         return (
           <Form layout="vertical" size="middle">
-            <Form.Item label="自动总结">
+            <Form.Item label={t('nodeConfig.autoSummary')}>
               <Switch
                 checked={nodeData.summary || false}
                 onChange={(checked) => handleChange('summary', checked)}
@@ -86,9 +88,9 @@ const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
       case 'agent':
         return (
           <Form layout="vertical" size="middle">
-            <Form.Item label="选择角色" required>
+            <Form.Item label={t('nodeConfig.pickRole')} required>
               <Select
-                placeholder="选择角色"
+                placeholder={t('nodeConfig.pickRole')}
                 value={nodeData.role_id}
                 onChange={(value) => {
                   const role = roles.find((r) => r.id === value);
@@ -105,10 +107,10 @@ const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
                 ))}
               </Select>
             </Form.Item>
-            <Form.Item label="提示词">
+            <Form.Item label={t('nodeConfig.prompt')}>
               <TextArea
                 rows={6}
-                placeholder="输入提示词，支持 {{prev_output}} 和 {{task_var.xxx}} 变量"
+                placeholder={t('nodeConfig.promptPh')}
                 value={nodeData.prompt || ''}
                 onChange={(e) => handleChange('prompt', e.target.value)}
               />
@@ -119,17 +121,17 @@ const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
       case 'task':
         return (
           <Form layout="vertical" size="middle">
-            <Form.Item label="任务指令" required>
+            <Form.Item label={t('nodeConfig.instruction')} required>
               <TextArea
                 rows={6}
-                placeholder="输入任务指令"
+                placeholder={t('nodeConfig.instructionPh')}
                 value={nodeData.instruction || ''}
                 onChange={(e) => handleChange('instruction', e.target.value)}
               />
             </Form.Item>
-            <Form.Item label="输出变量名">
+            <Form.Item label={t('nodeConfig.outputVar')}>
               <Input
-                placeholder="可选，用于后续引用"
+                placeholder={t('nodeConfig.outputVarPh')}
                 value={nodeData.output_var || ''}
                 onChange={(e) => handleChange('output_var', e.target.value)}
               />
@@ -140,9 +142,9 @@ const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
       case 'knowledge':
         return (
           <Form layout="vertical" size="middle">
-            <Form.Item label="选择知识库" required>
+            <Form.Item label={t('nodeConfig.pickKB')} required>
               <Select
-                placeholder="选择知识库"
+                placeholder={t('nodeConfig.pickKB')}
                 value={nodeData.kb_id}
                 onChange={(value) => {
                   const kb = knowledgeBases.find((k) => k.id === value);
@@ -159,15 +161,15 @@ const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
                 ))}
               </Select>
             </Form.Item>
-            <Form.Item label="查询内容">
+            <Form.Item label={t('nodeConfig.query')}>
               <TextArea
                 rows={4}
-                placeholder="输入查询内容，支持变量"
+                placeholder={t('nodeConfig.queryPh')}
                 value={nodeData.query || ''}
                 onChange={(e) => handleChange('query', e.target.value)}
               />
             </Form.Item>
-            <Form.Item label="返回数量">
+            <Form.Item label={t('nodeConfig.topK')}>
               <InputNumber
                 min={1}
                 max={20}
@@ -182,7 +184,7 @@ const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
       case 'api':
         return (
           <Form layout="vertical" size="middle">
-            <Form.Item label="请求方法">
+            <Form.Item label={t('nodeConfig.method')}>
               <Select
                 value={nodeData.method || 'GET'}
                 onChange={(value) => handleChange('method', value)}
@@ -200,7 +202,7 @@ const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
                 onChange={(e) => handleChange('url', e.target.value)}
               />
             </Form.Item>
-            <Form.Item label="请求头 (JSON)">
+            <Form.Item label={t('nodeConfig.headers')}>
               <TextArea
                 rows={3}
                 placeholder='{"Authorization": "Bearer xxx"}'
@@ -219,7 +221,7 @@ const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
                 }}
               />
             </Form.Item>
-            <Form.Item label="请求体 (JSON)">
+            <Form.Item label={t('nodeConfig.body')}>
               <TextArea
                 rows={4}
                 placeholder='{"key": "value"}'
@@ -244,36 +246,36 @@ const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
       case 'condition':
         return (
           <Form layout="vertical" size="middle">
-            <Form.Item label="条件类型">
+            <Form.Item label={t('nodeConfig.conditionType')}>
               <Select
                 value={nodeData.condition_type || 'contains'}
                 onChange={(value) => handleChange('condition_type', value)}
               >
-                <Option value="contains">包含</Option>
-                <Option value="equals">相等</Option>
-                <Option value="expression">表达式</Option>
-                <Option value="not_empty">非空</Option>
-                <Option value="regex">正则匹配</Option>
+                <Option value="contains">{t('nodeConfig.condition.contains')}</Option>
+                <Option value="equals">{t('nodeConfig.condition.equals')}</Option>
+                <Option value="expression">{t('nodeConfig.condition.expression')}</Option>
+                <Option value="not_empty">{t('nodeConfig.condition.notEmpty')}</Option>
+                <Option value="regex">{t('nodeConfig.condition.regex')}</Option>
               </Select>
             </Form.Item>
-            <Form.Item label="条件表达式" required>
+            <Form.Item label={t('nodeConfig.conditionExpr')} required>
               <TextArea
                 rows={4}
-                placeholder="例如: {{prev_output}} contains '需要审核'"
+                placeholder={t('nodeConfig.conditionExprPh')}
                 value={nodeData.condition || ''}
                 onChange={(e) => handleChange('condition', e.target.value)}
               />
             </Form.Item>
-            <Form.Item label="True 分支标签">
+            <Form.Item label={t('nodeConfig.trueLabel')}>
               <Input
-                placeholder="是"
+                placeholder={t('nodeConfig.yes')}
                 value={nodeData.true_label || ''}
                 onChange={(e) => handleChange('true_label', e.target.value)}
               />
             </Form.Item>
-            <Form.Item label="False 分支标签">
+            <Form.Item label={t('nodeConfig.falseLabel')}>
               <Input
-                placeholder="否"
+                placeholder={t('nodeConfig.no')}
                 value={nodeData.false_label || ''}
                 onChange={(e) => handleChange('false_label', e.target.value)}
               />
@@ -284,7 +286,7 @@ const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
       default:
         return (
           <div style={{ color: 'var(--custom-text-secondary)', textAlign: 'center', padding: 40 }}>
-            未知节点类型
+            {t('nodeConfig.unknownType')}
           </div>
         );
     }
@@ -295,7 +297,7 @@ const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
       title={
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ color: typeInfo.color, fontSize: 18 }}>{typeInfo.icon}</span>
-          <Text strong>{typeInfo.label}</Text>
+          <Text strong>{t(typeInfo.labelKey)}</Text>
         </div>
       }
       placement="right"
@@ -310,7 +312,7 @@ const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
       {node ? (
         renderConfigForm()
       ) : (
-        <Empty description="选择一个节点进行配置" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        <Empty description={t('nodeConfig.pickNode')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
       )}
     </Drawer>
   );
