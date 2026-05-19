@@ -34,8 +34,9 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import 'leaflet-draw';
+import { useTranslation } from 'react-i18next';
 
-// 修复Leaflet默认图标问题
+// Fix Leaflet default icon paths
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
@@ -48,6 +49,7 @@ const { TextArea } = Input;
 const { Option } = Select;
 
 const GISApp = () => {
+  const { t } = useTranslation();
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const drawControlRef = useRef(null);
@@ -60,31 +62,31 @@ const GISApp = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const tools = [
-    { key: 'pointer', name: '选择', icon: <AimOutlined />, description: '选择和移动对象' },
-    { key: 'marker', name: '标记', icon: <EnvironmentOutlined />, description: '添加地图标记点' },
-    { key: 'polygon', name: '多边形', icon: <BorderOutlined />, description: '绘制多边形区域' },
-    { key: 'polyline', name: '线条', icon: <LineChartOutlined />, description: '绘制线条路径' },
-    { key: 'circle', name: '圆形', icon: <RadiusSettingOutlined />, description: '绘制圆形区域' },
-    { key: 'rectangle', name: '矩形', icon: <BorderOutlined />, description: '绘制矩形区域' }
+    { key: 'pointer', name: t('gisApp.tool.pointer'), icon: <AimOutlined />, description: t('gisApp.tool.pointerDesc') },
+    { key: 'marker', name: t('gisApp.tool.marker'), icon: <EnvironmentOutlined />, description: t('gisApp.tool.markerDesc') },
+    { key: 'polygon', name: t('gisApp.tool.polygon'), icon: <BorderOutlined />, description: t('gisApp.tool.polygonDesc') },
+    { key: 'polyline', name: t('gisApp.tool.polyline'), icon: <LineChartOutlined />, description: t('gisApp.tool.polylineDesc') },
+    { key: 'circle', name: t('gisApp.tool.circle'), icon: <RadiusSettingOutlined />, description: t('gisApp.tool.circleDesc') },
+    { key: 'rectangle', name: t('gisApp.tool.rectangle'), icon: <BorderOutlined />, description: t('gisApp.tool.rectangleDesc') }
   ];
 
-  // 初始化地图
+  // Initialize map
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    // 创建地图实例
+    // Create map instance
     const map = L.map(mapRef.current).setView([39.9042, 116.4074], 10);
 
-    // 添加OpenStreetMap图层
+    // Add OpenStreetMap layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // 创建绘制图层组
+    // Create drawing layer group
     const drawnItems = new L.FeatureGroup();
     map.addLayer(drawnItems);
 
-    // 创建绘制控件
+    // Create drawing controls
     const drawControl = new L.Control.Draw({
       position: 'topright',
       draw: {
@@ -113,18 +115,18 @@ const GISApp = () => {
 
     map.addControl(drawControl);
 
-    // 绘制事件监听
+    // Draw event listener
     map.on(L.Draw.Event.CREATED, (event) => {
       const { layer, layerType } = event;
       drawnItems.addLayer(layer);
       addAnnotationFromLayer(layer, layerType);
     });
 
-    // 编辑事件监听
+    // Edit event listener
     map.on(L.Draw.Event.EDITED, (event) => {
       const layers = event.layers;
       layers.eachLayer((layer) => {
-        // 更新对应的标注数据
+        // Update corresponding annotation data
         setAnnotations(prev => prev.map(ann => {
           if (ann.layer === layer) {
             return {
@@ -135,16 +137,16 @@ const GISApp = () => {
           return ann;
         }));
       });
-      message.success('图形已更新');
+      message.success(t('gisApp.msg.shapeUpdated'));
     });
 
-    // 删除事件监听
+    // Delete event listener
     map.on(L.Draw.Event.DELETED, (event) => {
       const layers = event.layers;
       layers.eachLayer((layer) => {
         setAnnotations(prev => prev.filter(ann => ann.layer !== layer));
       });
-      message.success('图形已删除');
+      message.success(t('gisApp.msg.shapeDeleted'));
     });
 
     mapInstanceRef.current = map;
@@ -159,7 +161,7 @@ const GISApp = () => {
     };
   }, []);
 
-  // 获取图层数据
+  // Get layer data
   const getLayerData = (layer, type) => {
     switch (type) {
       case 'marker':
@@ -178,14 +180,14 @@ const GISApp = () => {
     }
   };
 
-  // 获取类型名称
+  // Get type label
   const getTypeName = (type) => {
     const names = {
-      marker: '标记点',
-      polygon: '多边形',
-      polyline: '线条',
-      rectangle: '矩形',
-      circle: '圆形'
+      marker: t('gisApp.type.marker'),
+      polygon: t('gisApp.type.polygon'),
+      polyline: t('gisApp.type.polyline'),
+      rectangle: t('gisApp.type.rectangle'),
+      circle: t('gisApp.type.circle')
     };
     return names[type] || type;
   };
@@ -193,18 +195,18 @@ const GISApp = () => {
   const handleToolSelect = (toolKey) => {
     setSelectedTool(toolKey);
     if (mapInstanceRef.current) {
-      // 取消当前的绘制模式
+      // Cancel current draw mode
       mapInstanceRef.current.off('click');
 
       if (toolKey === 'pointer') {
-        // 选择模式，不做特殊处理
-        message.info('已选择选择工具，可以编辑现有图形');
+        // Pointer mode
+        message.info(t('gisApp.msg.pointerSelected'));
       } else {
-        // 启用对应的绘制模式
+        // Enable corresponding draw mode
         const toolName = tools.find(t => t.key === toolKey)?.name;
-        message.info(`已选择${toolName}工具，请在地图上绘制`);
+        message.info(t('gisApp.msg.toolSelected', { tool: toolName }));
 
-        // 根据工具类型启用相应的绘制模式
+        // Enable draw mode by tool type
         switch (toolKey) {
           case 'marker':
             enableMarkerDrawing();
@@ -226,7 +228,7 @@ const GISApp = () => {
     }
   };
 
-  // 启用标记绘制
+  // Enable marker drawing
   const enableMarkerDrawing = () => {
     if (mapInstanceRef.current) {
       mapInstanceRef.current.on('click', (e) => {
@@ -236,7 +238,7 @@ const GISApp = () => {
     }
   };
 
-  // 启用多边形绘制
+  // Enable polygon drawing
   const enablePolygonDrawing = () => {
     if (mapInstanceRef.current && drawControlRef.current) {
       const drawHandler = new L.Draw.Polygon(mapInstanceRef.current, drawControlRef.current.options.draw.polygon);
@@ -244,7 +246,7 @@ const GISApp = () => {
     }
   };
 
-  // 启用线条绘制
+  // Enable polyline drawing
   const enablePolylineDrawing = () => {
     if (mapInstanceRef.current && drawControlRef.current) {
       const drawHandler = new L.Draw.Polyline(mapInstanceRef.current, drawControlRef.current.options.draw.polyline);
@@ -252,7 +254,7 @@ const GISApp = () => {
     }
   };
 
-  // 启用圆形绘制
+  // Enable circle drawing
   const enableCircleDrawing = () => {
     if (mapInstanceRef.current && drawControlRef.current) {
       const drawHandler = new L.Draw.Circle(mapInstanceRef.current, drawControlRef.current.options.draw.circle);
@@ -260,7 +262,7 @@ const GISApp = () => {
     }
   };
 
-  // 启用矩形绘制
+  // Enable rectangle drawing
   const enableRectangleDrawing = () => {
     if (mapInstanceRef.current && drawControlRef.current) {
       const drawHandler = new L.Draw.Rectangle(mapInstanceRef.current, drawControlRef.current.options.draw.rectangle);
@@ -268,19 +270,19 @@ const GISApp = () => {
     }
   };
 
-  // 从图层添加标注
+  // Add annotation from layer
   const addAnnotationFromLayer = (layer, type) => {
     const newAnnotation = {
       id: Date.now(),
       type: type,
-      name: `${getTypeName(type)}${annotations.length + 1}`,
-      description: `新建的${getTypeName(type)}`,
+      name: t('gisApp.defaultName', { type: getTypeName(type), index: annotations.length + 1 }),
+      description: t('gisApp.defaultDesc', { type: getTypeName(type) }),
       layer: layer,
       data: getLayerData(layer, type)
     };
 
     setAnnotations(prev => [...prev, newAnnotation]);
-    message.success(`已添加${getTypeName(type)}`);
+    message.success(t('gisApp.msg.added', { type: getTypeName(type) }));
   };
 
   const handleEditAnnotation = (annotation) => {
@@ -293,7 +295,7 @@ const GISApp = () => {
       drawnItemsRef.current.removeLayer(annotation.layer);
     }
     setAnnotations(prev => prev.filter(a => a.id !== annotation.id));
-    message.success('标注已删除');
+    message.success(t('gisApp.msg.annotationDeleted'));
   };
 
   const handleSaveAnnotation = (values) => {
@@ -301,7 +303,7 @@ const GISApp = () => {
       setAnnotations(prev => prev.map(a =>
         a.id === editingAnnotation.id ? { ...a, ...values } : a
       ));
-      message.success('标注已更新');
+      message.success(t('gisApp.msg.annotationUpdated'));
     }
     setModalVisible(false);
   };
@@ -320,11 +322,11 @@ const GISApp = () => {
 
   const handleSearch = () => {
     if (!searchQuery.trim()) {
-      message.warning('请输入搜索内容');
+      message.warning(t('gisApp.msg.enterSearch'));
       return;
     }
-    // 这里可以集成地理编码服务
-    message.info(`搜索功能开发中: ${searchQuery}`);
+    // Geocoding service can be integrated here
+    message.info(t('gisApp.msg.searchWip', { query: searchQuery }));
   };
 
   const handleExportData = () => {
@@ -346,7 +348,7 @@ const GISApp = () => {
     link.download = 'gis-annotations.json';
     link.click();
     URL.revokeObjectURL(url);
-    message.success('数据已导出');
+    message.success(t('gisApp.msg.exported'));
   };
 
   const getTypeColor = (type) => {
@@ -373,37 +375,37 @@ const GISApp = () => {
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* 顶部工具栏 */}
+      {/* top toolbar */}
       <Card style={{ marginBottom: 8 }}>
         <Row justify="space-between" align="middle">
           <Col>
             <Title level={4} style={{ margin: 0 }}>
               <EnvironmentOutlined style={{ marginRight: 8, color: '#1677ff' }} />
-              GIS地图操作工具
+              {t('gisApp.title')}
             </Title>
           </Col>
           <Col>
             <Space>
               <Input.Search
-                placeholder="搜索地点"
+                placeholder={t('gisApp.searchPh')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onSearch={handleSearch}
                 style={{ width: 200 }}
                
               />
-              <Button icon={<ZoomInOutlined />} onClick={handleZoomIn}>放大</Button>
-              <Button icon={<ZoomOutOutlined />} onClick={handleZoomOut}>缩小</Button>
-              <Button icon={<DownloadOutlined />} onClick={handleExportData}>导出</Button>
+              <Button icon={<ZoomInOutlined />} onClick={handleZoomIn}>{t('gisApp.zoomIn')}</Button>
+              <Button icon={<ZoomOutOutlined />} onClick={handleZoomOut}>{t('gisApp.zoomOut')}</Button>
+              <Button icon={<DownloadOutlined />} onClick={handleExportData}>{t('gisApp.export')}</Button>
             </Space>
           </Col>
         </Row>
       </Card>
 
       <Row gutter={8} style={{ flex: 1 }}>
-        {/* 左侧工具面板 */}
+        {/* left tool panel */}
         <Col span={6}>
-          <Card title="绘制工具" style={{ marginBottom: 8, height: 'fit-content' }}>
+          <Card title={t('gisApp.drawTools')} style={{ marginBottom: 8, height: 'fit-content' }}>
             <Space orientation="vertical" style={{ width: '100%' }}>
               {tools.map(tool => (
                 <Tooltip key={tool.key} title={tool.description} placement="right">
@@ -421,7 +423,7 @@ const GISApp = () => {
           </Card>
 
           <Card
-            title={`标注列表 (${annotations.length})`}
+            title={t('gisApp.annotationList', { count: annotations.length })}
            
             style={{ height: 'calc(100vh - 250px)' }}
             bodyStyle={{ padding: '8px', height: 'calc(100% - 57px)', overflow: 'auto' }}
@@ -440,10 +442,10 @@ const GISApp = () => {
                         onClick={() => handleEditAnnotation(annotation)}
                       />,
                       <Popconfirm
-                        title="确定删除这个标注吗？"
+                        title={t('gisApp.confirmDelete')}
                         onConfirm={() => handleDeleteAnnotation(annotation)}
-                        okText="确定"
-                        cancelText="取消"
+                        okText={t('gisApp.ok')}
+                        cancelText={t('gisApp.cancel')}
                       >
                         <Button
                           type="text"
@@ -476,21 +478,21 @@ const GISApp = () => {
             ) : (
               <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--custom-text-secondary)' }}>
                 <EnvironmentOutlined style={{ fontSize: '24px', marginBottom: 8 }} />
-                <div>暂无标注</div>
-                <div style={{ fontSize: '12px' }}>在地图上绘制图形来添加标注</div>
+                <div>{t('gisApp.emptyAnnotations')}</div>
+                <div style={{ fontSize: '12px' }}>{t('gisApp.emptyHint')}</div>
               </div>
             )}
           </Card>
         </Col>
 
-        {/* 右侧地图区域 */}
+        {/* right map area */}
         <Col span={18}>
           <Card
             title={
               <Space>
-                <span>地图视图</span>
+                <span>{t('gisApp.mapView')}</span>
                 <Tag color="blue">
-                  当前工具: {tools.find(t => t.key === selectedTool)?.name}
+                  {t('gisApp.currentTool', { tool: tools.find(t => t.key === selectedTool)?.name })}
                 </Tag>
               </Space>
             }
@@ -513,9 +515,9 @@ const GISApp = () => {
         </Col>
       </Row>
 
-      {/* 标注编辑Modal */}
+      {/* annotation edit modal */}
       <Modal
-        title="编辑标注信息"
+        title={t('gisApp.editAnnotation')}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         onOk={() => {
@@ -529,31 +531,31 @@ const GISApp = () => {
             });
           }
         }}
-        okText="保存"
-        cancelText="取消"
+        okText={t('gisApp.save')}
+        cancelText={t('gisApp.cancel')}
       >
         <Space orientation="vertical" style={{ width: '100%' }}>
           <div>
-            <Text>名称:</Text>
+            <Text>{t('gisApp.nameLabel')}</Text>
             <Input
               id="annotation-name"
-              placeholder="输入标注名称"
+              placeholder={t('gisApp.namePh')}
               defaultValue={editingAnnotation?.name}
               style={{ marginTop: 4 }}
             />
           </div>
           <div>
-            <Text>类型:</Text>
+            <Text>{t('gisApp.typeLabel')}</Text>
             <Tag color={getTypeColor(editingAnnotation?.type)} style={{ marginTop: 4 }}>
               {getTypeName(editingAnnotation?.type)}
             </Tag>
           </div>
           <div>
-            <Text>描述:</Text>
+            <Text>{t('gisApp.descLabel')}</Text>
             <TextArea
               id="annotation-desc"
               rows={3}
-              placeholder="输入标注描述"
+              placeholder={t('gisApp.descPh')}
               defaultValue={editingAnnotation?.description}
               style={{ marginTop: 4 }}
             />
