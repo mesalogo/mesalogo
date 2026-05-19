@@ -1,120 +1,120 @@
 import api from './axios';
 
 /**
- * 行动空间相关API服务
+ * Action-space API service
  */
 export const actionSpaceAPI = {
-  // 获取所有行动空间
+  // Fetch all action spaces
   getAll: async (filters: any = {}) => {
     try {
-      // 构建查询参数
+      // Build query params
       const params = new URLSearchParams();
       if (filters.name) {
         params.append('name', filters.name);
       }
 
-      // 处理标签过滤
+      // Handle tag filters
       if (filters.tagIds && filters.tagIds.length > 0) {
         filters.tagIds.forEach((tagId: any) => {
           params.append('tag_ids', tagId);
         });
       }
 
-      // 添加查询参数到请求URL
+      // Append query params to request URL
       const queryString = params.toString();
       const url = queryString ? `/action-spaces?${queryString}` : '/action-spaces';
 
-      // 请求API
+      // Request API
       const response = await api.get(url);
       const spaces = response.data.action_spaces || [];
 
-      // 确保每个行动空间都有tags字段并且格式正确
+      // Ensure every action space has a valid tags field
       return spaces.map(space => ({
         ...space,
         tags: Array.isArray(space.tags) ? space.tags : []
       }));
     } catch (error) {
-      console.error('获取行动空间失败:', error);
-      return []; // 返回空数组，不使用模拟数据
+      console.error('fetch action spaces failed:', error);
+      return []; // Return an empty array instead of mock data
     }
   },
 
-  // 获取所有标签
+  // Fetch all tags
   getAllTags: async () => {
     try {
       const response = await api.get('/tags');
       return response.data || [];
     } catch (error) {
-      console.error('获取标签失败:', error);
+      console.error('fetch tags failed:', error);
       return [];
     }
   },
 
-  // 创建标签
+  // Create tag
   createTag: async (tagData) => {
     try {
       const response = await api.post('/tags', tagData);
       return response.data;
     } catch (error) {
-      console.error('创建标签失败:', error);
+      console.error('create tag failed:', error);
       throw error;
     }
   },
 
-  // 更新标签
+  // Update tag
   updateTag: async (tagId, tagData) => {
     try {
       const response = await api.put(`/tags/${tagId}`, tagData);
       return response.data;
     } catch (error) {
-      console.error(`更新标签${tagId}失败:`, error);
+      console.error(`update tag ${tagId} failed:`, error);
       throw error;
     }
   },
 
-  // 删除标签
+  // Delete tag
   deleteTag: async (tagId) => {
     try {
       const response = await api.delete(`/tags/${tagId}`);
       return response.data;
     } catch (error) {
-      console.error(`删除标签${tagId}失败:`, error);
+      console.error(`delete tag ${tagId} failed:`, error);
       throw error;
     }
   },
 
-  // 为行动空间添加标签
+  // Add tag to action space
   addTag: async (actionSpaceId, tagId) => {
     try {
       const response = await api.post(`/action-spaces/${actionSpaceId}/tags`, { tag_id: tagId });
       return response.data;
     } catch (error) {
-      console.error(`为行动空间${actionSpaceId}添加标签${tagId}失败:`, error);
+      console.error(`add tag ${tagId} to action space ${actionSpaceId} failed:`, error);
       throw error;
     }
   },
 
-  // 从行动空间移除标签
+  // Remove tag from action space
   removeTag: async (actionSpaceId, tagId) => {
     try {
       const response = await api.delete(`/action-spaces/${actionSpaceId}/tags/${tagId}`);
       return response.data;
     } catch (error) {
-      console.error(`从行动空间${actionSpaceId}移除标签${tagId}失败:`, error);
+      console.error(`remove tag ${tagId} from action space ${actionSpaceId} failed:`, error);
       throw error;
     }
   },
 
-  // 获取单个行动空间
+  // Fetch single action space
   getById: async (id) => {
     try {
       const response = await api.get(`/action-spaces/${id}`);
 
-      // 确保规则集有唯一的ID
+      // Ensure rule sets have unique IDs
       if (response.data && response.data.rule_sets) {
         response.data.rule_sets = response.data.rule_sets.map((rs, index) => {
           if (!rs.id) {
-            rs.id = `rs-${id}-${index}`; // 确保规则集有唯一ID
+            rs.id = `rs-${id}-${index}`; // Ensure rule set has a unique ID
           }
           return rs;
         });
@@ -122,16 +122,16 @@ export const actionSpaceAPI = {
 
       return response.data;
     } catch (error) {
-      console.error(`获取行动空间${id}失败:`, error);
+      console.error(`fetch action space ${id} failed:`, error);
       return null;
     }
   },
 
-  // 获取行动空间详情（包含环境变量信息）
+  // Fetch action-space detail, including env variables
   getDetail: async (id) => {
     const response = await api.get(`/action-spaces/${id}/detail`);
 
-    // 确保环境变量字段存在
+    // Ensure env variables field exists
     if (!response.data.environment_variables) {
       response.data.environment_variables = [];
     }
@@ -139,102 +139,102 @@ export const actionSpaceAPI = {
     return response.data;
   },
 
-  // 获取行动空间关联的角色
+  // Fetch roles linked to action space
   getRoles: async (actionSpaceId) => {
     try {
       const response = await api.get(`/action-spaces/${actionSpaceId}/roles`);
       return response.data.roles || [];
     } catch (error) {
-      console.error(`获取行动空间${actionSpaceId}关联角色失败:`, error);
+      console.error(`fetch roles for action space ${actionSpaceId} failed:`, error);
       return [];
     }
   },
 
-  // 获取所有行动空间的内部环境变量（仅内部变量）
+  // Fetch internal env variables for all action spaces
   getAllEnvironmentVariables: async () => {
     try {
-      console.log('正在请求所有行动空间环境变量...');
+      console.log('requesting all action-space env variables...');
       const response = await api.get('/action-spaces/environment-variables/all');
-      console.log('API响应:', response.data);
+      console.log('API response:', response.data);
 
-      // 确保返回的数据是数组格式
+      // Ensure returned data is an array
       const variables = response.data?.variables || response.data || [];
       if (!Array.isArray(variables)) {
-        console.warn('API返回的环境变量数据不是数组格式:', variables);
+        console.warn('API returned non-array env variable data:', variables);
         return [];
       }
 
-      console.log(`成功获取${variables.length}个环境变量`);
+      console.log(`fetched ${variables.length} env variables`);
       return variables;
     } catch (error) {
-      console.error('获取所有行动空间环境变量失败:', error);
-      console.error('错误详情:', error.response?.data || error.message);
+      console.error('fetch all action-space env variables failed:', error);
+      console.error('error detail:', error.response?.data || error.message);
       return [];
     }
   },
 
-  // 外部环境变量相关API
-  // 获取所有外部环境变量
+  // External env variable APIs
+  // Fetch all external env variables
   getAllExternalVariables: async () => {
     try {
       const response = await api.get('/external-variables');
       return response.data || [];
     } catch (error) {
-      console.error('获取外部环境变量失败:', error);
+      console.error('fetch external env variables failed:', error);
       return [];
     }
   },
 
-  // 创建外部环境变量
+  // Create external env variable
   createExternalVariable: async (data) => {
     try {
       const response = await api.post('/external-variables', data);
       return response.data;
     } catch (error) {
-      console.error('创建外部环境变量失败:', error);
+      console.error('create external env variable failed:', error);
       throw error;
     }
   },
 
-  // 更新外部环境变量
+  // Update external env variable
   updateExternalVariable: async (id, data) => {
     try {
       const response = await api.put(`/external-variables/${id}`, data);
       return response.data;
     } catch (error) {
-      console.error('更新外部环境变量失败:', error);
+      console.error('update external env variable failed:', error);
       throw error;
     }
   },
 
-  // 删除外部环境变量
+  // Delete external env variable
   deleteExternalVariable: async (id) => {
     try {
       await api.delete(`/external-variables/${id}`);
     } catch (error) {
-      console.error('删除外部环境变量失败:', error);
+      console.error('delete external env variable failed:', error);
       throw error;
     }
   },
 
-  // 手动同步外部环境变量
+  // Manually sync external env variable
   syncExternalVariable: async (id) => {
     try {
       const response = await api.post(`/external-variables/${id}/sync`);
       return response.data;
     } catch (error) {
-      console.error('同步外部环境变量失败:', error);
+      console.error('sync external env variable failed:', error);
       throw error;
     }
   },
 
-  // 获取行动空间的环境变量（包括传统环境变量和共享环境变量）
+  // Fetch action-space env variables, including traditional and shared variables
   getEnvironmentVariables: async (actionSpaceId) => {
     try {
       const response = await api.get(`/action-spaces/${actionSpaceId}/environment-variables`);
       return response.data;
     } catch (error) {
-      console.error(`获取行动空间${actionSpaceId}环境变量失败:`, error);
+      console.error(`fetch env variables for action space ${actionSpaceId} failed:`, error);
       return {
         traditional_variables: [],
         shared_variables: []
@@ -242,122 +242,122 @@ export const actionSpaceAPI = {
     }
   },
 
-  // 创建环境变量
+  // Create env variable
   createEnvironmentVariable: async (actionSpaceId, variableData) => {
     const response = await api.post(`/action-spaces/${actionSpaceId}/environment-variables`, variableData);
     return response.data;
   },
 
-  // 添加行动空间环境变量（别名，为了兼容性）
+  // Add action-space env variable alias for compatibility
   addSpaceEnvVar: async (actionSpaceId, variableData) => {
     return actionSpaceAPI.createEnvironmentVariable(actionSpaceId, variableData);
   },
 
-  // 更新环境变量
+  // Update env variable
   updateEnvironmentVariable: async (actionSpaceId, variableId, variableData) => {
     const response = await api.put(`/action-spaces/${actionSpaceId}/environment-variables/${variableId}`, variableData);
     return response.data;
   },
 
-  // 更新行动空间环境变量（别名，为了兼容性）
+  // Update action-space env variable alias for compatibility
   updateSpaceEnvVar: async (actionSpaceId, variableId, variableData) => {
     return actionSpaceAPI.updateEnvironmentVariable(actionSpaceId, variableId, variableData);
   },
 
-  // 删除环境变量
+  // Delete env variable
   deleteEnvironmentVariable: async (actionSpaceId, variableId) => {
     const response = await api.delete(`/action-spaces/${actionSpaceId}/environment-variables/${variableId}`);
     return response.data;
   },
 
-  // 删除行动空间环境变量（别名，为了兼容性）
+  // Delete action-space env variable alias for compatibility
   deleteSpaceEnvVar: async (actionSpaceId, variableId) => {
     return actionSpaceAPI.deleteEnvironmentVariable(actionSpaceId, variableId);
   },
 
-  // 添加角色变量
+  // Add role variable
   addRoleEnvVar: async (actionSpaceId, roleId, variableData) => {
     const response = await api.post(`/action-spaces/${actionSpaceId}/roles/${roleId}/environment-variables`, variableData);
     return response.data;
   },
 
-  // 更新角色变量
+  // Update role variable
   updateRoleEnvVar: async (actionSpaceId, roleId, variableId, variableData) => {
     const response = await api.put(`/action-spaces/${actionSpaceId}/roles/${roleId}/environment-variables/${variableId}`, variableData);
     return response.data;
   },
 
-  // 删除角色变量
+  // Delete role variable
   deleteRoleEnvVar: async (actionSpaceId, roleId, variableId) => {
     const response = await api.delete(`/action-spaces/${actionSpaceId}/roles/${roleId}/environment-variables/${variableId}`);
     return response.data;
   },
 
-  // 创建行动空间
+  // Create action space
   create: async (actionSpaceData) => {
     try {
-      console.log('发送创建行动空间请求:', actionSpaceData);
+      console.log('send create action-space request:', actionSpaceData);
       const response = await api.post('/action-spaces', actionSpaceData);
       return response.data;
     } catch (error) {
-      console.error('创建行动空间失败:', error);
-      console.error('错误详情:', error.response?.data || error.message);
-      throw error; // 直接抛出错误，不使用模拟数据
+      console.error('create action space failed:', error);
+      console.error('error detail:', error.response?.data || error.message);
+      throw error; // Throw directly instead of using mock data
     }
   },
 
-  // 更新行动空间
+  // Update action space
   update: async (id, actionSpaceData) => {
     try {
       const response = await api.put(`/action-spaces/${id}`, actionSpaceData);
       return response.data;
     } catch (error) {
-      console.error(`更新行动空间${id}失败:`, error);
-      throw error; // 直接抛出错误，不使用模拟数据
+      console.error(`update action space ${id} failed:`, error);
+      throw error; // Throw directly instead of using mock data
     }
   },
 
-  // 删除行动空间
+  // Delete action space
   delete: async (id) => {
     try {
       const response = await api.delete(`/action-spaces/${id}`);
       return response.data;
     } catch (error) {
-      console.error(`删除行动空间${id}失败:`, error);
-      throw error; // 直接抛出错误，不使用模拟数据
+      console.error(`delete action space ${id} failed:`, error);
+      throw error; // Throw directly instead of using mock data
     }
   },
 
-  // 获取行动空间预设模板
+  // Fetch action-space preset templates
   getTemplates: async () => {
     try {
       const response = await api.get('/action-spaces/templates');
       return response.data.templates || [];
     } catch (error) {
-      console.error('获取行动空间模板失败:', error);
-      return []; // 返回空数组，不使用模拟数据
+      console.error('fetch action-space templates failed:', error);
+      return []; // Return an empty array instead of mock data
     }
   },
 
-  // 从模板创建行动空间
+  // Create action space from template
   createFromTemplate: async (templateId, customData = {}) => {
     try {
       const response = await api.post(`/action-spaces/from-template/${templateId}`, customData);
       return response.data;
     } catch (error) {
-      console.error(`从模板创建行动空间失败:`, error);
-      throw error; // 直接抛出错误，不使用模拟数据
+      console.error(`create action space from template failed:`, error);
+      throw error; // Throw directly instead of using mock data
     }
   },
 
-  // 获取行动空间的统计数据
+  // Fetch action-space stats
   getStats: async (id) => {
     try {
       const response = await api.get(`/action-spaces/${id}/stats`);
       return response.data;
     } catch (error) {
-      console.error(`获取行动空间统计数据失败:`, error);
-      // 返回空数据
+      console.error(`fetch action-space stats failed:`, error);
+      // Return empty data
       return {
         session_count: 0,
         rule_set_count: 0,
@@ -368,36 +368,36 @@ export const actionSpaceAPI = {
     }
   },
 
-  // 获取规则集
+  // Fetch rule sets
   getRuleSets: async (actionSpaceId, cachedSpaces = null) => {
     try {
       let response;
       let ruleSets = [];
 
       if (actionSpaceId && actionSpaceId !== 'default') {
-        // 如果有指定行动空间ID，直接使用行动空间规则集API
-        console.log(`请求特定行动空间(${actionSpaceId})的规则集`);
+        // Use action-space rule-set API when an action-space ID is provided
+        console.log(`request rule sets for action space (${actionSpaceId})`);
         try {
           response = await api.get(`/action-spaces/${actionSpaceId}/rule-sets`);
-          console.log('使用行动空间规则集API成功:', response.data);
+          console.log('action-space rule-set API succeeded:', response.data);
           ruleSets = response.data.rule_sets || [];
 
-          // 不再为每个规则集单独获取规则，使用统计API代替
+          // Do not fetch rules per rule set; use stats API instead
         } catch (spaceApiError) {
-          console.error('使用行动空间规则集API失败:', spaceApiError);
-          throw spaceApiError; // 继续抛出错误，进入后续的错误处理
+          console.error('action-space rule-set API failed:', spaceApiError);
+          throw spaceApiError; // Rethrow for downstream error handling
         }
       } else {
-        // 如果没有指定行动空间ID，使用缓存的行动空间数据或获取新数据
+        // Use cached action-space data or fetch new data when no action-space ID is provided
         if (cachedSpaces && Array.isArray(cachedSpaces) && cachedSpaces.length > 0) {
-          console.log('使用缓存的行动空间数据提取规则集，跳过API请求');
+          console.log('extracting rule sets from cached action spaces; skipping API request');
           const spaces = cachedSpaces;
 
-          // 从行动空间中提取规则集
+          // Extract rule sets from action spaces
           const extractedRuleSets = [];
           for (const space of spaces) {
             if (space.rule_sets && Array.isArray(space.rule_sets)) {
-              // 为每个规则集添加所属行动空间信息
+              // Attach owning action-space info to each rule set
               const ruleSetsWithSpace = space.rule_sets.map(rs => ({
                 ...rs,
                 action_space_id: space.id,
@@ -407,24 +407,24 @@ export const actionSpaceAPI = {
             }
           }
 
-          console.log(`从${spaces.length}个缓存行动空间中提取了${extractedRuleSets.length}个规则集`);
+          console.log(`extracted ${extractedRuleSets.length} rule sets from ${spaces.length} cached action spaces`);
           ruleSets = extractedRuleSets;
 
-          // 不再为每个规则集单独获取规则，只在需要时获取
+          // Do not fetch rules per rule set; fetch only when needed
         } else {
-          // 如果没有缓存的行动空间数据，请求新数据
-          console.log('未指定行动空间ID，从所有行动空间提取规则集');
+          // Fetch new data when no cached action-space data exists
+          console.log('no action-space ID provided; extracting rule sets from all action spaces');
           try {
             const spacesResponse = await api.get('/action-spaces');
             const spaces = spacesResponse.data.action_spaces || [];
 
-            console.log(`找到${spaces.length}个行动空间，提取规则集`);
+            console.log(`found ${spaces.length} action spaces; extracting rule sets`);
 
-            // 从所有行动空间中提取规则集
+            // Extract rule sets from all action spaces
             const extractedRuleSets = [];
             for (const space of spaces) {
               if (space.rule_sets && Array.isArray(space.rule_sets)) {
-                // 为每个规则集添加所属行动空间信息
+                // Attach owning action-space info to each rule set
                 const ruleSetsWithSpace = space.rule_sets.map(rs => ({
                   ...rs,
                   action_space_id: space.id,
@@ -434,99 +434,99 @@ export const actionSpaceAPI = {
               }
             }
 
-            console.log(`从行动空间中提取了${extractedRuleSets.length}个规则集`);
+            console.log(`extracted ${extractedRuleSets.length} rule sets from action spaces`);
             ruleSets = extractedRuleSets;
 
-            // 不再为每个规则集单独获取规则，只在需要时获取
+            // Do not fetch rules per rule set; fetch only when needed
           } catch (spacesError) {
-            console.error('获取所有行动空间失败:', spacesError);
-            throw spacesError; // 继续抛出错误，进入后续的错误处理
+            console.error('fetch all action spaces failed:', spacesError);
+            throw spacesError; // Rethrow for downstream error handling
           }
         }
       }
 
-      // 确保规则集有唯一的ID
+      // Ensure rule sets have unique IDs
       ruleSets = ruleSets.map((rs, index) => {
         if (!rs.id) {
-          rs.id = `rs-${actionSpaceId || 'default'}-${index}`; // 确保规则集有唯一ID
+          rs.id = `rs-${actionSpaceId || 'default'}-${index}`; // Ensure rule set has a unique ID
         }
         return rs;
       });
 
-      // 去重处理，避免重复显示同名规则集
+      // Deduplicate to avoid showing same-named rule sets repeatedly
       const uniqueRuleSets = [];
       const ruleSetIds = new Set();
 
       for (const ruleSet of ruleSets) {
-        // 使用规则集ID作为唯一标识
+        // Use rule-set ID as unique identifier
         if (!ruleSetIds.has(ruleSet.id)) {
           ruleSetIds.add(ruleSet.id);
           uniqueRuleSets.push(ruleSet);
         }
       }
 
-      console.log(`规则集去重后: ${uniqueRuleSets.length}个（原${ruleSets.length}个）`);
+      console.log(`rule sets after dedupe: ${uniqueRuleSets.length} (original ${ruleSets.length})`);
       return uniqueRuleSets;
     } catch (error) {
-      console.error('获取规则集失败:', error);
-      return []; // 发生错误时返回空数组
+      console.error('fetch rule sets failed:', error);
+      return []; // Return empty array on error
     }
   },
 
-  // 获取规则集统计信息（包括规则数量和关联行动空间）
+  // Fetch rule-set stats, including rule count and linked action spaces
   async getRuleSetsStats(actionSpaceId) {
     try {
       if (!actionSpaceId || actionSpaceId === 'default') {
-        console.log('未提供有效的行动空间ID，一次性获取所有规则集信息');
+        console.log('no valid action-space ID provided; fetching all rule-set info in one request');
 
-        // 直接请求一个专门用于获取所有规则集统计信息的API
+        // Request dedicated API for all rule-set stats directly
         const response = await api.get('/rule-sets/all-stats');
-        console.log('获取所有规则集统计信息成功:', response.data);
+        console.log('fetch all rule-set stats succeeded:', response.data);
 
         return response.data.rule_sets || [];
       }
 
-      console.log(`请求行动空间(${actionSpaceId})的规则集统计信息`);
+      console.log(`request rule-set stats for action space (${actionSpaceId})`);
       const response = await api.get(`/action-spaces/${actionSpaceId}/rule-sets/stats`);
-      console.log('获取规则集统计信息成功:', response.data);
+      console.log('fetch rule-set stats succeeded:', response.data);
 
       return response.data.rule_sets || [];
     } catch (error) {
-      console.error(`获取规则集统计信息失败:`, error);
-      console.error('错误详情:', error.response || error.request || error.message);
+      console.error(`fetch rule-set stats failed:`, error);
+      console.error('error detail:', error.response || error.request || error.message);
       return [];
     }
   },
 
-  // 获取单个规则集
+  // Fetch single rule set
   getRuleSet: async (ruleSetId) => {
     try {
       const response = await api.get(`/rule-sets/${ruleSetId}`);
       return response.data;
     } catch (error) {
-      console.error(`获取规则集${ruleSetId}失败:`, error);
+      console.error(`fetch rule set ${ruleSetId} failed:`, error);
       return null;
     }
   },
 
-  // 创建规则集
+  // Create rule set
   createRuleSet: async (ruleSetData) => {
     try {
-      // 如果有行动空间ID，使用行动空间的规则集API
+      // Use action-space rule-set API when action-space ID is present
       if (ruleSetData.action_space_id) {
         const response = await api.post(`/action-spaces/${ruleSetData.action_space_id}/rule-sets`, {
           name: ruleSetData.name,
           description: ruleSetData.description,
           rule_ids: ruleSetData.rule_ids || [],
           rule_names: ruleSetData.rule_names || [],
-          rules: ruleSetData.rules || [], // 兼容旧版的规则名称列表
+          rules: ruleSetData.rules || [], // Compatible with legacy rule-name list
           conditions: ruleSetData.conditions || [],
           actions: ruleSetData.actions || [],
           settings: ruleSetData.settings || {}
         });
         return response.data;
       } else {
-        // 创建独立的规则集
+        // Create standalone rule set
         const response = await api.post('/rule-sets', {
           name: ruleSetData.name,
           description: ruleSetData.description,
@@ -541,12 +541,12 @@ export const actionSpaceAPI = {
         return response.data;
       }
     } catch (error) {
-      console.error(`创建规则集失败:`, error);
+      console.error(`create rule set failed:`, error);
       throw error;
     }
   },
 
-  // 更新规则集
+  // Update rule set
   updateRuleSet: async (ruleSetId, ruleSetData) => {
     try {
       const updateData: any = {
@@ -557,47 +557,47 @@ export const actionSpaceAPI = {
         settings: ruleSetData.settings || {}
       };
 
-      // 如果有规则ID列表，添加到更新数据中
+      // Add rule IDs to update data when present
       if (ruleSetData.rule_ids && Array.isArray(ruleSetData.rule_ids)) {
         updateData.rule_ids = ruleSetData.rule_ids;
       }
 
-      // 如果有规则优先级映射，添加到更新数据中
+      // Add rule priority map to update data when present
       if (ruleSetData.rule_priorities && typeof ruleSetData.rule_priorities === 'object') {
         updateData.rule_priorities = ruleSetData.rule_priorities;
       }
 
-      // 如果有行动空间ID列表，添加到更新数据中
+      // Add action-space IDs to update data when present
       if (ruleSetData.action_space_ids && Array.isArray(ruleSetData.action_space_ids)) {
         updateData.action_space_ids = ruleSetData.action_space_ids;
       }
 
-      // 如果有行动空间ID，使用行动空间的规则集API
+      // Use action-space rule-set API when action-space ID is present
       if (ruleSetData.action_space_id) {
         const response = await api.put(`/action-spaces/${ruleSetData.action_space_id}/rule-sets/${ruleSetId}`, updateData);
         return response.data;
       } else {
-        // 否则使用通用规则集API
+        // Otherwise use generic rule-set API
         const response = await api.put(`/rule-sets/${ruleSetId}`, updateData);
         return response.data;
       }
     } catch (error) {
-      console.error(`更新规则集失败:`, error);
+      console.error(`update rule set failed:`, error);
       throw error;
     }
   },
 
-  // 删除规则集
+  // Delete rule set
   deleteRuleSet: async (ruleSetId) => {
     try {
-      // 尝试使用规则集API删除
+      // Try deleting via rule-set API
       try {
         const response = await api.delete(`/rule-sets/${ruleSetId}`);
         return response.data;
       } catch (directError) {
-        console.warn(`直接删除规则集失败，尝试从行动空间中删除:`, directError);
+        console.warn(`direct rule-set deletion failed; trying action-space deletion:`, directError);
 
-        // 尝试查找规则集所属的行动空间
+        // Try locating the action space that owns the rule set
         const allSpaces = await api.get('/action-spaces');
         const spaces = allSpaces.data.action_spaces || [];
 
@@ -605,167 +605,167 @@ export const actionSpaceAPI = {
           if (space.rule_sets && Array.isArray(space.rule_sets)) {
             const matchingRuleSet = space.rule_sets.find(rs => rs.id === ruleSetId);
             if (matchingRuleSet) {
-              // 找到了所属行动空间，使用行动空间规则集API
-              console.log(`找到规则集所属行动空间:${space.id}`);
+              // Found owning action space; use action-space rule-set API
+              console.log(`found owning action space for rule set: ${space.id}`);
               const response = await api.delete(`/action-spaces/${space.id}/rule-sets/${ruleSetId}`);
               return response.data;
             }
           }
         }
 
-        // 如果找不到所属行动空间，重新抛出错误
+        // Rethrow if owning action space cannot be found
         throw directError;
       }
     } catch (error) {
-      console.error(`删除规则集失败:`, error);
+      console.error(`delete rule set failed:`, error);
       throw error;
     }
   },
 
-  // 创建规则
+  // Create rule
   createRule: async (ruleData) => {
     try {
-      // 确保有规则类型
+      // Ensure rule type exists
       if (!ruleData.type) {
-        ruleData.type = 'llm'; // 默认为自然语言规则
+        ruleData.type = 'llm'; // Default to natural-language rule
       }
 
-      // 保存规则集ID
+      // Save rule-set ID
       const ruleSetId = ruleData.rule_set_id;
 
-      // 移除rule_set_id, API不需要这个字段
+      // Remove rule_set_id because API does not need it
       const { rule_set_id, ...ruleDataWithoutSetId } = ruleData;
 
-      // 先创建规则
+      // Create rule first
       const createResponse = await api.post('/rules', ruleDataWithoutSetId);
-      console.log('规则创建成功:', createResponse.data);
+      console.log('rule created successfully:', createResponse.data);
 
-      // 获取新创建的规则ID
+      // Get newly-created rule ID
       const newRuleId = createResponse.data.id;
 
-      // 如果有规则集ID，将规则添加到规则集
+      // Add rule to rule set when rule-set ID exists
       if (ruleSetId) {
-        // 添加规则到规则集
+        // Add rule to rule set
         const addToSetResponse = await api.post(`/rule-sets/${ruleSetId}/rules`, {
           rule_id: newRuleId,
-          priority: 0 // 默认优先级
+          priority: 0 // Default priority
         });
-        console.log('规则添加到规则集成功:', addToSetResponse.data);
+        console.log('rule added to rule set successfully:', addToSetResponse.data);
       }
 
       return createResponse.data;
     } catch (error) {
-      console.error(`创建规则失败:`, error);
+      console.error(`create rule failed:`, error);
       throw error;
     }
   },
 
-  // 更新规则
+  // Update rule
   updateRule: async (ruleId, ruleData) => {
     try {
-      // 确保有规则类型
+      // Ensure rule type exists
       if (!ruleData.type) {
-        ruleData.type = 'llm'; // 默认为自然语言规则
+        ruleData.type = 'llm'; // Default to natural-language rule
       }
 
-      // 保存规则集ID
+      // Save rule-set ID
       const ruleSetId = ruleData.rule_set_id;
 
-      // 移除rule_set_id, 更新规则API不需要这个字段
+      // Remove rule_set_id because update rule API does not need this field
       const { rule_set_id, ...ruleDataWithoutSetId } = ruleData;
 
-      // 添加详细日志输出
-      console.log('正在更新规则:', ruleId);
-      console.log('规则类型:', ruleDataWithoutSetId.type);
-      console.log('规则数据:', JSON.stringify(ruleDataWithoutSetId, null, 2));
+      // Add detailed log output
+      console.log('updating rule:', ruleId);
+      console.log('rule type:', ruleDataWithoutSetId.type);
+      console.log('rule data:', JSON.stringify(ruleDataWithoutSetId, null, 2));
 
-      // 确保逻辑规则的解释器信息被正确传递
+      // Ensure logic-rule interpreter info is passed correctly
       if (ruleDataWithoutSetId.type === 'logic' && ruleDataWithoutSetId.interpreter) {
-        console.log('逻辑规则解释器:', ruleDataWithoutSetId.interpreter);
+        console.log('logic-rule interpreter:', ruleDataWithoutSetId.interpreter);
 
-        // 确保settings字段存在
+        // Ensure settings field exists
         if (!ruleDataWithoutSetId.settings) {
           ruleDataWithoutSetId.settings = {};
         }
 
-        // 将interpreter也保存到settings中，确保后端能正确处理
+        // Save interpreter to settings as well so backend can process it correctly
         ruleDataWithoutSetId.settings.interpreter = ruleDataWithoutSetId.interpreter;
       }
 
-      // 发送更新请求
+      // Send update request
       const updateResponse = await api.put(`/rules/${ruleId}`, ruleDataWithoutSetId);
-      console.log('规则更新成功:', updateResponse.data);
+      console.log('rule updated successfully:', updateResponse.data);
 
-      // 如果有规则集ID，确保规则和规则集的关联
+      // Ensure rule and rule-set association when rule-set ID exists
       if (ruleSetId) {
         try {
-          // 获取规则详情，查看当前关联的规则集
+          // Fetch rule detail to inspect current linked rule sets
           const ruleResponse = await api.get(`/rules/${ruleId}`);
           const currentRuleSets = ruleResponse.data.rule_sets || [];
 
-          // 检查规则是否已关联到指定规则集
+          // Check whether rule is already linked to the specified rule set
           const isAlreadyAssociated = currentRuleSets.some(rs =>
             String(rs.id) === String(ruleSetId)
           );
 
-          // 如果未关联，则添加关联
+          // Add link if missing
           if (!isAlreadyAssociated) {
             const addToSetResponse = await api.post(`/rule-sets/${ruleSetId}/rules`, {
               rule_id: ruleId,
-              priority: 0 // 默认优先级
+              priority: 0 // Default priority
             });
-            console.log('规则添加到新规则集成功:', addToSetResponse.data);
+            console.log('rule added to new rule set successfully:', addToSetResponse.data);
           }
         } catch (associationError) {
-          console.warn('检查或更新规则集关联失败:', associationError);
-          // 继续执行，不影响主流程
+          console.warn('check or update rule-set association failed:', associationError);
+          // Continue without affecting main flow
         }
       }
 
       return updateResponse.data;
     } catch (error) {
-      console.error(`更新规则失败:`, error);
+      console.error(`update rule failed:`, error);
       throw error;
     }
   },
 
-  // 删除规则
+  // Delete rule
   deleteRule: async (ruleId, ruleSetId) => {
     try {
-      // 如果提供了规则集ID，表示仅从规则集中移除规则，而不是完全删除规则
+      // If rule-set ID is provided, remove the rule from the rule set instead of fully deleting it
       if (ruleSetId) {
         try {
-          console.log(`从规则集${ruleSetId}中移除规则${ruleId}`);
+          console.log(`removing rule ${ruleId} from rule set ${ruleSetId}`);
           const response = await api.delete(`/rule-sets/${ruleSetId}/rules/${ruleId}`);
-          console.log('规则已从规则集移除:', response.data);
+          console.log('rule removed from rule set:', response.data);
           return response.data;
         } catch (removeError) {
-          console.error(`从规则集移除规则失败:`, removeError);
+          console.error(`remove rule from rule set failed:`, removeError);
 
-          // 如果是404错误（规则未添加到规则集），则继续尝试删除规则
+          // If this is 404 (rule not in rule set), continue trying direct deletion
           if (removeError.response && removeError.response.status === 404) {
-            console.warn('规则可能未添加到规则集，尝试直接删除规则');
+            console.warn('rule may not be in rule set; trying direct deletion');
           } else {
-            throw removeError; // 其他错误直接抛出
+            throw removeError; // Rethrow other errors directly
           }
         }
       }
 
-      // 直接删除规则
-      console.log(`删除规则${ruleId}`);
+      // Delete rule directly
+      console.log(`Delete rule${ruleId}`);
       const response = await api.delete(`/rules/${ruleId}`);
-      console.log('规则已完全删除:', response.data);
+      console.log('rule fully deleted:', response.data);
       return response.data;
     } catch (error) {
-      console.error(`删除规则失败:`, error);
+      console.error(`delete rule failed:`, error);
       throw error;
     }
   },
 
-  // 测试规则
+  // Test rules
   testRules: async (rules, testContext, roleId = null, variables = {}) => {
     try {
-      // 准备请求数据，包含完整的规则内容
+      // Prepare request data with full rule content
       const requestData: any = {
         rules: rules.map((rule: any) => ({
           id: rule.id,
@@ -777,123 +777,101 @@ export const actionSpaceAPI = {
         context: testContext
       };
 
-      // 如果提供了角色ID，添加到请求中
+      // Add role ID to request when provided
       if (roleId) {
         requestData.role_id = roleId;
       }
 
-      // 如果提供了变量，添加到请求中
+      // Add variables to request when provided
       if (variables && Object.keys(variables).length > 0) {
         requestData.variables = variables;
       }
 
-      console.log('发送规则测试请求:', requestData);
+      console.log('send rule-test request:', requestData);
 
-      // 调用API执行规则测试
-      // 注意：如果后端API尚未实现，则返回模拟数据
+      // Call API to run rule test
+      // Note: no mock fallback; backend API is required
       try {
         const response = await api.post('/rules/test', requestData);
-        console.log('规则测试成功:', response.data);
+        console.log('rule test succeeded:', response.data);
         return response.data;
       } catch (apiError) {
-        console.warn('规则测试API可能未实现，使用模拟数据:', apiError);
-
-        // 返回模拟测试结果
-        const mockResults = {
-          success: true,
-          timestamp: new Date().toISOString(),
-          results: rules.map(rule => ({
-            rule_id: rule.id,
-            rule_name: rule.name,
-            rule_type: rule.type,
-            passed: Math.random() > 0.3, // 随机模拟通过/失败
-            message: Math.random() > 0.3 ?
-              '规则测试通过' :
-              '规则测试失败：条件不满足',
-            details: rule.type === 'llm' ?
-              `大模型评估：从${roleId ? '指定角色' : '默认'}视角评估，测试场景符合规则描述的条件` :
-              '逻辑评估：条件执行结果为true'
-          }))
-        };
-
-        // 模拟延迟
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        return mockResults;
+        console.warn('rule-test API failed:', apiError);
+        throw apiError;
       }
     } catch (error) {
-      console.error('规则测试失败:', error);
+      console.error('rule test failed:', error);
       throw error;
     }
   },
 
-  // 获取联合空间列表
+  // Fetch joint spaces
   getJointSpaces: async () => {
     try {
       const response = await api.get('/joint-spaces');
       return response.data.joint_spaces || [];
     } catch (error) {
-      console.error(`获取联合空间失败:`, error);
+      console.error(`fetch joint spaces failed:`, error);
       return [];
     }
   },
 
-  // 创建联合空间关系
+  // Create joint-space relationship
   createJointSpace: async (relationshipData) => {
     try {
       const response = await api.post('/joint-spaces', relationshipData);
       return response.data;
     } catch (error) {
-      console.error(`创建联合空间关系失败:`, error);
-      throw error; // 直接抛出错误，不使用模拟数据
+      console.error(`create joint-space relationship failed:`, error);
+      throw error; // Throw directly instead of using mock data
     }
   },
 
-  // 更新联合空间关系
+  // Update joint-space relationship
   updateJointSpace: async (id, relationshipData) => {
     try {
       const response = await api.put(`/joint-spaces/${id}`, relationshipData);
       return response.data;
     } catch (error) {
-      console.error(`更新联合空间关系失败:`, error);
-      throw error; // 直接抛出错误，不使用模拟数据
+      console.error(`update joint-space relationship failed:`, error);
+      throw error; // Throw directly instead of using mock data
     }
   },
 
-  // 删除联合空间关系
+  // Delete joint-space relationship
   deleteJointSpace: async (id) => {
     try {
       const response = await api.delete(`/joint-spaces/${id}`);
       return response.data;
     } catch (error) {
-      console.error(`删除联合空间关系失败:`, error);
-      throw error; // 直接抛出错误，不使用模拟数据
+      console.error(`delete joint-space relationship failed:`, error);
+      throw error; // Throw directly instead of using mock data
     }
   },
 
-  // 测试API连接
+  // Test API connection
   testAPI: async () => {
     try {
-      // 测试行动空间API
+      // Test action-space API
       const response = await api.get('/action-spaces');
       return {
         success: true,
-        message: '行动空间API连接正常',
+        message: 'Action-space API connection OK',
         data: response.data
       };
     } catch (error) {
       return {
         success: false,
-        message: `行动空间API连接失败: ${error.message}`,
+        message: `Action-space API connection failed: ${error.message}`,
         error: error
       };
     }
   },
 
-  // 获取所有规则
+  // Fetch all rules
   getAllRules: async (filters: any = {}) => {
     try {
-      // 构建查询参数
+      // Build query params
       const params = new URLSearchParams();
       if (filters.category) {
         params.append('category', filters.category);
@@ -905,28 +883,28 @@ export const actionSpaceAPI = {
         params.append('type', filters.type);
       }
 
-      // 添加查询参数到请求URL
+      // Append query params to request URL
       const queryString = params.toString();
       const url = queryString ? `/rules?${queryString}` : '/rules';
 
-      console.log('获取所有规则，请求URL:', url);
+      console.log('fetch all rules, request URL:', url);
       const response = await api.get(url);
-      console.log('获取所有规则成功:', response.data);
+      console.log('fetch all rules succeeded:', response.data);
 
       return response.data.rules || [];
     } catch (error) {
-      console.error('获取所有规则失败:', error);
-      console.error('错误详情:', error.response || error.request || error.message);
-      return []; // 返回空数组，不使用模拟数据
+      console.error('fetch all rules failed:', error);
+      console.error('error detail:', error.response || error.request || error.message);
+      return []; // Return an empty array instead of mock data
     }
   },
 
-  // 获取所有环境变量（内部+外部）- 用于需要分类显示的场景
+  // Fetch all env variables (internal + external) for classified display
   getAllEnvironmentVariablesByType: async () => {
     try {
-      console.log('获取所有环境变量...');
+      console.log('fetching all env variables...');
 
-      // 并行获取内部和外部环境变量
+      // Fetch internal and external env variables in parallel
       const [internalResponse, externalResponse] = await Promise.all([
         api.get('/environment-variables/internal'),
         api.get('/external-variables')
@@ -935,7 +913,7 @@ export const actionSpaceAPI = {
       const internalVars = internalResponse.data || [];
       const externalVars = externalResponse.data || [];
 
-      console.log('获取环境变量成功:', {
+      console.log('fetch env variables succeeded:', {
         internal: internalVars.length,
         external: externalVars.length
       });
@@ -945,9 +923,9 @@ export const actionSpaceAPI = {
         external: externalVars
       };
     } catch (error) {
-      console.error('获取环境变量失败:', error);
+      console.error('fetch env variables failed:', error);
 
-      // 返回空数据而不是抛出错误
+      // Return empty data instead of throwing
       return {
         internal: [],
         external: []
@@ -955,9 +933,9 @@ export const actionSpaceAPI = {
     }
   },
 
-  // 创建角色
+  // Create role
   createRole: async (actionSpaceId, roleData) => {
-    // 如果传入的是roleId而不是完整的角色数据
+    // If roleId is passed instead of full role data
     if (typeof roleData === 'number' || (typeof roleData === 'string' && !isNaN(parseInt(roleData)))) {
       const response = await api.post(`/action-spaces/${actionSpaceId}/roles`, {
         role_id: typeof roleData === 'number' ? roleData : parseInt(roleData as string)
@@ -965,7 +943,7 @@ export const actionSpaceAPI = {
       return response.data;
     }
 
-    // 如果传入的是角色ID对象
+    // If a role ID object is passed
     if (roleData.roleId) {
       const response = await api.post(`/action-spaces/${actionSpaceId}/roles`, {
         role_id: roleData.roleId,
@@ -975,83 +953,83 @@ export const actionSpaceAPI = {
       return response.data;
     }
 
-    // 直接关联已有的角色ID
-    throw new Error('缺少有效的角色ID');
+    // Link existing role ID directly
+    throw new Error('Missing valid role ID');
   },
 
-  // 更新角色
+  // Update role
   updateRole: async (actionSpaceId, roleId, roleData) => {
     try {
       const response = await api.put(`/action-spaces/${actionSpaceId}/roles/${roleId}`, roleData);
       return response.data;
     } catch (error) {
-      console.error(`更新行动空间${actionSpaceId}的角色${roleId}失败:`, error);
-      throw error; // 直接抛出错误
+      console.error(`update role ${roleId} in action space ${actionSpaceId} failed:`, error);
+      throw error; // Throw directly
     }
   },
 
-  // 删除角色
+  // Delete role
   deleteRole: async (actionSpaceId, roleId) => {
     try {
       const response = await api.delete(`/action-spaces/${actionSpaceId}/roles/${roleId}`);
       return response.data;
     } catch (error) {
-      console.error(`删除行动空间${actionSpaceId}的角色${roleId}失败:`, error);
-      throw error; // 直接抛出错误
+      console.error(`delete role ${roleId} from action space ${actionSpaceId} failed:`, error);
+      throw error; // Throw directly
     }
   },
 
-  // 添加角色到行动空间
+  // Add role to action space
   addRole: async (actionSpaceId, roleData) => {
     try {
       const response = await api.post(`/action-spaces/${actionSpaceId}/roles`, roleData);
       return response.data;
     } catch (error) {
-      console.error(`向行动空间${actionSpaceId}添加角色失败:`, error);
-      throw error; // 直接抛出错误
+      console.error(`add role to action space ${actionSpaceId} failed:`, error);
+      throw error; // Throw directly
     }
   },
 
-  // 测试逻辑规则
+  // Test logic rule
   testLogicRule: async (rule, context) => {
     // ... existing code ...
   },
 
-  // 获取行动空间规则集的规则列表
+  // Fetch action-space rule-set rules
   getRuleSetRules: async (actionSpaceId, ruleSetId) => {
     try {
       const response = await api.get(`/action-spaces/${actionSpaceId}/rule-sets/${ruleSetId}/rules`);
       return response.data.rules || [];
     } catch (error) {
-      console.error(`获取规则集${ruleSetId}的规则失败:`, error);
+      console.error(`fetch rules for rule set ${ruleSetId} failed:`, error);
       throw error;
     }
   },
 
-  // 关联规则集
+  // Link rule set
   associateRuleSet: async (actionSpaceId, ruleSetId) => {
     try {
-      // 使用正确的关联API
+      // Use correct association API
       const response = await api.post(`/action-spaces/${actionSpaceId}/rule-sets/${ruleSetId}/associate`, {});
       return response.data;
     } catch (error) {
-      console.error(`关联规则集${ruleSetId}失败:`, error);
+      console.error(`link rule set ${ruleSetId} failed:`, error);
       throw error;
     }
   },
 
-  // 获取规则集详情（包括关联的规则）
+  // Fetch rule-set detail, including linked rules
   getRuleSetDetail: async (ruleSetId) => {
     try {
       const response = await api.get(`/rule-sets/${ruleSetId}`);
       return response.data;
     } catch (error) {
-      console.error(`获取规则集${ruleSetId}详情失败:`, error);
+      console.error(`fetch rule set ${ruleSetId} detail failed:`, error);
       throw error;
     }
   },
 
-  // 添加规则到规则集
+  // Add rule to rule set
   addRuleToRuleSet: async (ruleSetId, ruleId, priority = 0) => {
     try {
       const response = await api.post(`/rule-sets/${ruleSetId}/rules`, {
@@ -1060,73 +1038,73 @@ export const actionSpaceAPI = {
       });
       return response.data;
     } catch (error) {
-      console.error(`添加规则${ruleId}到规则集${ruleSetId}失败:`, error);
+      console.error(`add rule ${ruleId} to rule set ${ruleSetId} failed:`, error);
       throw error;
     }
   },
 
-  // 从规则集移除规则
+  // Remove rule from rule set
   removeRuleFromRuleSet: async (ruleSetId, ruleId) => {
     try {
       const response = await api.delete(`/rule-sets/${ruleSetId}/rules/${ruleId}`);
       return response.data;
     } catch (error) {
-      console.error(`从规则集${ruleSetId}移除规则${ruleId}失败:`, error);
+      console.error(`remove rule ${ruleId} from rule set ${ruleSetId} failed:`, error);
       throw error;
     }
   },
 
-  // 解除规则集关联
+  // Unlink rule set
   disassociateRuleSet: async (actionSpaceId, ruleSetId) => {
     try {
       const response = await api.delete(`/action-spaces/${actionSpaceId}/rule-sets/${ruleSetId}`);
       return response.data;
     } catch (error) {
-      console.error(`解除规则集${ruleSetId}关联失败:`, error);
+      console.error(`unlink rule set ${ruleSetId} failed:`, error);
       throw error;
     }
   },
 
-  // 获取行动空间的监督者
+  // Fetch action-space supervisors
   getObservers: async (actionSpaceId) => {
     try {
       const response = await api.get(`/action-spaces/${actionSpaceId}/observers`);
       return response.data;
     } catch (error) {
-      console.error(`获取行动空间${actionSpaceId}的监督者失败:`, error);
+      console.error(`fetch supervisors for action space ${actionSpaceId} failed:`, error);
       return { observers: [] };
     }
   },
 
-  // 添加监督者到行动空间
+  // Add supervisor to action space
   addObserver: async (actionSpaceId, observerData) => {
     try {
       const response = await api.post(`/action-spaces/${actionSpaceId}/observers`, observerData);
       return response.data;
     } catch (error) {
-      console.error(`向行动空间${actionSpaceId}添加监督者失败:`, error);
+      console.error(`add supervisor to action space ${actionSpaceId} failed:`, error);
       throw error;
     }
   },
 
-  // 更新行动空间中的监督者
+  // Update supervisor in action space
   updateObserver: async (actionSpaceId, roleId, observerData) => {
     try {
       const response = await api.put(`/action-spaces/${actionSpaceId}/observers/${roleId}`, observerData);
       return response.data;
     } catch (error) {
-      console.error(`更新行动空间${actionSpaceId}的监督者${roleId}失败:`, error);
+      console.error(`update supervisor ${roleId} in action space ${actionSpaceId} failed:`, error);
       throw error;
     }
   },
 
-  // 从行动空间中删除监督者
+  // Delete supervisor from action space
   deleteObserver: async (actionSpaceId, roleId) => {
     try {
       const response = await api.delete(`/action-spaces/${actionSpaceId}/observers/${roleId}`);
       return response.data;
     } catch (error) {
-      console.error(`从行动空间${actionSpaceId}中删除监督者${roleId}失败:`, error);
+      console.error(`delete supervisor ${roleId} from action space ${actionSpaceId} failed:`, error);
       throw error;
     }
   }
