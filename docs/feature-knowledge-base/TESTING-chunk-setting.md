@@ -250,4 +250,4 @@ mysql -u root -p your_database < db_migrations/20251022_create_chunk_configs_tab
 
 参考代码位置：
 - 文档处理：`app/services/document_processor.py`
-- 向量嵌入：`app/services/vector_db/embedding_service.py`
+- 向量嵌入：`app/services/embedding/embedding_service.py`

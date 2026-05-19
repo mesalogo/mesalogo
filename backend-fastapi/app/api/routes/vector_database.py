@@ -142,7 +142,7 @@ def _validate_config(provider: str, config: Dict[str, Any], result: VectorDBTest
     """Level 1: 配置验证"""
     try:
         # 检查嵌入模型
-        from app.services.vector_db_tidb.embedding_service import embedding_service
+        from app.services.embedding import embedding_service
         default_model = embedding_service.get_default_embedding_model()
         if not default_model:
             result.set_config_validation(False, "未配置默认嵌入模型，请先在模型配置中设置默认嵌入模型")

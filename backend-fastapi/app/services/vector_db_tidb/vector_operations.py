@@ -16,7 +16,7 @@ from .models import (
 )
 from .tidb_connection import tidb_connection_manager
 from .table_manager import vector_table_manager
-from .embedding_service import embedding_service
+from app.services.embedding import embedding_service
 
 logger = logging.getLogger(__name__)
 

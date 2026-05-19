@@ -9,7 +9,7 @@ Design notes:
 
 * There is no separate "client factory" class. The two existing outbound
   sites are ``app.services.conversation.model_client.ModelClient`` (chat
-  completion) and ``app.services.vector_db_tidb.embedding_service`` (raw
+  completion) and ``app.services.embedding`` (raw
   ``requests.post`` to ``/embeddings``). Both call into these helpers
   rather than reimplementing the merge logic.
 

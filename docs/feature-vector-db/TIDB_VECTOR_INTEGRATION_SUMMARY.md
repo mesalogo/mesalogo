@@ -13,7 +13,7 @@
 - **表管理模块** (`table_manager.py`): 提供向量表的创建、删除和管理功能
 
 ### 2. 嵌入模型集成 ✅
-- **嵌入服务** (`embedding_service.py`): 集成现有的嵌入模型配置
+- **嵌入服务** (`app/services/embedding/embedding_service.py`): 集成现有的嵌入模型配置
 - **多模型支持**: 支持SentenceTransformer和API模型（如OpenAI）
 - **批量处理**: 提供高效的批量向量生成功能
 - **模型缓存**: 实现模型缓存机制提升性能
@@ -112,19 +112,23 @@ export TIDB_DATABASE_URL="mysql://user:password@host:port/database"
 
 ### 基础使用
 ```python
-from app.services.vector_db_tidb import vector_db
+from app.services.vector_db_tidb.tidb_vector_service import tidb_vector_service
 
 # 初始化服务
-vector_db.initialize(connection_string)
+tidb_vector_service.initialize(connection_string)
 
 # 创建知识库
-vector_db.create_knowledge_base("my_kb", dimension=1024)
+tidb_vector_service.create_knowledge_base("my_kb", dimension=1024)
 
 # 添加文档
-vector_db.add_documents("my_kb", ["文档内容..."])
+tidb_vector_service.add_documents("my_kb", ["文档内容..."])
 
 # 搜索
-results = vector_db.search("my_kb", "查询内容", top_k=5)
+success, results, info = tidb_vector_service.search_knowledge(
+    "my_kb",
+    "查询内容",
+    top_k=5,
+)
 ```
 
 ### 高级功能

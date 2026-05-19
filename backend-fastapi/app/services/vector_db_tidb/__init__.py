@@ -18,6 +18,6 @@ Import the matching submodule for what you need:
 
     from app.services.vector_db_tidb.tidb_config import tidb_config_manager
     from app.services.vector_db_tidb.tidb_vector_service import tidb_vector_service
-    from app.services.vector_db_tidb.embedding_service import embedding_service
+    from app.services.embedding import embedding_service
     from app.services.vector_db_tidb.models import VectorDistanceMetric, VectorDataType
 """

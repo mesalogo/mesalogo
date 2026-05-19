@@ -190,7 +190,7 @@ class BuiltinVectorAdapter(VectorDBAdapter):
         """搜索知识库"""
         try:
             from pymilvus import Collection
-            from app.services.vector_db_tidb.embedding_service import embedding_service
+            from app.services.embedding import embedding_service
             
             if not self._connect():
                 return False, "无法连接到 Milvus", {}

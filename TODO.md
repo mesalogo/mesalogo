@@ -250,10 +250,10 @@ async def _execute_true_parallel(task: 'Task') -> None:
 ### PR2 — `embedding_service.py` 包归位（路径错位）
 
 - **现象**：通用 embedding 服务住在 `app/services/vector_db_tidb/`，被 7 处反向 import（含 `vector_db_milvus.py`）。它和 TiDB 没有耦合。
-- **解法**：移到 `app/services/embedding/embedding_service.py`，与 `vector_db_*` 并列；同时合并 `app/utils/embedding.py`（重名/职责重叠）。
+- **解法**：移到 `app/services/embedding/embedding_service.py`，与 `vector_db_*` 并列；删除空的 `app/utils/embedding.py`（0 行占位文件，无可合并实现）。
 - **不留 compat shim**（AGENTS.md §3.2）：一次性改完 7 处 import。
 - **测试**：
-  - `tests/contract/imports/test_embedding_import_path.py`：断言 `from app.services.embedding import embedding_service` 工作，且全代码库不再有 `from app.services.vector_db_tidb.embedding_service` 残留（ripgrep 断言）。
+  - `tests/contract/imports/test_embedding_import_path.py`：断言 `from app.services.embedding import embedding_service` 工作，且 backend Python 源码不再有旧的 `app.services.vector_db_tidb.embedding_service` 残留（ripgrep 断言）。
   - 既有 knowledge_base 路径的 integration 测试跑通。
 
 ### PR3 — embedding HTTP 调用 async 化（违反 backend AGENTS §3.1）
@@ -293,6 +293,42 @@ async def _execute_true_parallel(task: 'Task') -> None:
 - **测试**：
   - unit：`tests/unit/services/conversation/test_send_request_threads_modelconfig.py`，用 mock httpx 验证 `model_config` 上的每个相关字段（headers/body/timeout/modalities/...）都正确进入出站请求。
   - 既有 integration / e2e 跑通。
+
+### PR6 — vector_db 文档旧入口清理（文档漂移）
+
+- **现象**：部分旧文档仍示例 `from app.services.vector_db_tidb import vector_db / initialize_vector_db / vector_db_service`，但 `app/services/vector_db_tidb/__init__.py` 已明确禁止 package-root re-export。
+- **解法**：把文档示例改成真实 submodule / service API；不要为了文档恢复旧入口。
+- **测试**：
+  - grep 断言 docs 中不再出现 `from app.services.vector_db_tidb import vector_db` / `initialize_vector_db` / `vector_db_service` 这类旧入口示例。
+
+### PR7 — 删除空占位模块 `action_task/rule_engine.py`
+
+- **现象**：`backend-fastapi/app/services/action_task/rule_engine.py` 是 0 行空文件，当前无 import 引用；与本次删除 `app/utils/embedding.py` 属于同类空占位历史债。
+- **解法**：确认全仓无引用后删除；不新建替代 shim。
+- **测试**：
+  - grep 断言无 `rule_engine` import / path 引用。
+  - `python3 -c "import main"` 或相关 route/module compile 检查。
+
+### PR8 — scheduler 旧 API adapter 去 shim（高风险，需单独做）
+
+- **现象**：`app/services/scheduler/__init__.py` 和 `task_adapter.py` 明确写着“兼容旧API”，多处仍从 package root import `start_task/stop_task/pause_task/resume_task/get_task_status`。
+- **解法**：调用点改为直接使用 `TaskScheduler` / 明确 submodule API；删除旧 adapter re-export。必须逐条验证自主任务 stop / pause / resume / SSE done 语义。
+- **测试**：
+  - 覆盖 `conversations.py` start/stop/pause/resume 路径。
+  - 回归历史 BUG：stop 必须清 Redis queue、`scheduler.triggers`、SSE stream，并向前端发 `done`。
+
+### PR9 — vector_db 默认实现命名/抽象统一（需设计）
+
+- **现象**：知识库路径大量从 `app.services.vector_db_milvus` import `get_vector_db_service`，语义上像“默认 vector DB service”，但模块名绑定 Milvus；TiDB / Milvus 抽象边界不统一。
+- **解法**：先写设计，再决定是否引入中立 `app/services/vector_db/` 包或显式 provider registry；不保留旧 import shim，需全量改调用点。
+- **测试**：
+  - knowledge base vectorize / search / delete 路径。
+  - Milvus adapter 和 TiDB route 的 import contract。
+
+### Epic — Flask-SQLAlchemy 兼容层退场（长期项）
+
+- **现象**：FastAPI 后端仍通过 `app/extensions.py` 提供 Flask-SQLAlchemy 兼容 `db`，大量代码依赖 `db.Model` / `Model.query` / `db.session`。
+- **处理原则**：这是跨 models、services、routes 的大迁移，不作为普通小 PR 顺手做。需要先设计 SQLAlchemy 2.0 session / repository 边界，再分批迁移。
 
 ---
 

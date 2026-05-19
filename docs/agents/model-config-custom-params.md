@@ -26,7 +26,7 @@ values* and never put them on the wire:
 
 * `app/services/knowledge_base/reranker_service.py` — `use_fp16`, `batch_size`
   feed `FlagReranker(...)`.
-* `app/services/vector_db_tidb/embedding_service.py` —
+* `app/services/embedding/embedding_service.py` —
   `additional_params['dimensions']` is also copied into the embedding HTTP
   body (legacy, kept for back-compat); new writers should put it in
   `custom_body` instead.
@@ -108,7 +108,7 @@ through.
 
 ### Embedding path
 
-`app/services/vector_db_tidb/embedding_service.py` calls
+`app/services/embedding/embedding_service.py` calls
 `requests.post(...)` directly (not through `ModelClient`). Both the
 OpenAI-compatible branch (`_generate_embeddings_openai_api`) and the
 Ollama branch call the same `merge_custom_headers` / `merge_custom_body`

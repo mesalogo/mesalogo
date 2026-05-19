@@ -11,7 +11,7 @@ from datetime import datetime
 from .tidb_config import tidb_config_manager, TiDBConfig
 from .tidb_connection import tidb_connection_manager
 from .table_manager import vector_table_manager
-from .embedding_service import embedding_service
+from app.services.embedding import embedding_service
 from .vector_operations import vector_operations
 from .models import (
     VectorRecord, VectorSearchResult, VectorCollection, 

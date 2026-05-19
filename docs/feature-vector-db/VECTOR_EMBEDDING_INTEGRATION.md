@@ -87,7 +87,7 @@ if not default_model:
 ### 1. 嵌入模型服务集成
 
 ```python
-from app.services.vector_db_tidb.embedding_service import embedding_service
+from app.services.embedding import embedding_service
 
 # 获取默认嵌入模型
 default_model = embedding_service.get_default_embedding_model()

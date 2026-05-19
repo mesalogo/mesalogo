@@ -30,9 +30,11 @@ app/services/vector_db/
 ├── tidb_connection.py       # 数据库连接管理
 ├── tidb_vector_service.py   # 统一服务接口
 ├── table_manager.py         # 向量表管理
-├── embedding_service.py     # 嵌入模型服务
 ├── vector_operations.py     # 向量操作核心功能
 └── models.py               # 数据模型定义
+
+app/services/embedding/
+└── embedding_service.py     # 通用嵌入模型服务
 ```
 
 ### 核心组件
@@ -47,7 +49,7 @@ app/services/vector_db/
 - 支持连接池和会话管理
 - 提供向量客户端创建功能
 
-#### 3. 嵌入服务 (embedding_service.py)
+#### 3. 嵌入服务 (`app/services/embedding/embedding_service.py`)
 - `EmbeddingService`: 嵌入模型服务
 - 支持SentenceTransformer和API模型
 - 提供批量向量生成功能
@@ -68,11 +70,11 @@ pip install tidb-vector[client]==0.0.9 pymysql==1.1.1 sentence-transformers==3.3
 ### 2. 基础配置
 
 ```python
-from app.services.vector_db_tidb import initialize_vector_db, vector_db
+from app.services.vector_db_tidb.tidb_vector_service import tidb_vector_service
 
 # 初始化向量数据库服务
 connection_string = "mysql://user:password@host:port/database"
-success, message = initialize_vector_db(connection_string)
+success, message = tidb_vector_service.initialize(connection_string)
 
 if success:
     print("向量数据库初始化成功")
@@ -84,7 +86,7 @@ else:
 
 ```python
 # 创建知识库
-success, message, info = vector_db.create_knowledge_base(
+success, message, info = tidb_vector_service.create_knowledge_base(
     name="my_knowledge_base",
     dimension=1024,
     description="我的知识库"
@@ -140,7 +142,7 @@ if success:
 ### 1. 自定义嵌入模型
 
 ```python
-from app.services.vector_db_tidb.embedding_service import embedding_service
+from app.services.embedding import embedding_service
 
 # 使用指定的嵌入模型
 success, embeddings, meta_info = embedding_service.generate_embeddings(

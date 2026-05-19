@@ -160,7 +160,7 @@ class VectorProcessor:
                         model_config=None) -> Tuple[bool, List[Dict[str, Any]], Dict[str, Any]]:
         """对文本块进行向量化"""
         try:
-            from app.services.vector_db_tidb.embedding_service import embedding_service
+            from app.services.embedding import embedding_service
             
             # 提取文本
             texts = [chunk['text'] for chunk in chunks]
