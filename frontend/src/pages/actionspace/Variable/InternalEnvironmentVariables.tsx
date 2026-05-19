@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Typography, Card, Button, Table, Form, Input, Modal, Select, Space, Empty, Tag, message, Tooltip } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
 const InternalEnvironmentVariables = () => {
+  const { t } = useTranslation();
   const [variables, setVariables] = useState([]);
   const [actionSpaces, setActionSpaces] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -15,7 +17,7 @@ const InternalEnvironmentVariables = () => {
   const [editingVariable, setEditingVariable] = useState(null);
   const [form] = Form.useForm();
 
-  // 获取所有行动空间和其环境变量
+  // Fetch all action spaces and env variables
   useEffect(() => {
     fetchAllVariables();
   }, []);
@@ -23,28 +25,26 @@ const InternalEnvironmentVariables = () => {
   const fetchAllVariables = async () => {
     setLoading(true);
     try {
-      // 并行获取行动空间列表和内部环境变量
+      // Fetch action spaces and internal env variables in parallel
       const [spaces, internalVariables] = await Promise.all([
         actionSpaceAPI.getAll(),
-        actionSpaceAPI.getAllEnvironmentVariables() // 这个方法现在专门返回内部环境变量数组
+        actionSpaceAPI.getAllEnvironmentVariables()
       ]);
 
-      console.log('获取到的行动空间数据:', spaces);
-      console.log('获取到的内部环境变量数据:', internalVariables);
+      console.log('fetched action spaces:', spaces);
+      console.log('fetched internal env variables:', internalVariables);
 
       setActionSpaces(spaces);
 
-      // 确保internalVariables是数组
       if (Array.isArray(internalVariables)) {
         setVariables(internalVariables);
       } else {
-        console.warn('内部环境变量数据不是数组格式:', internalVariables);
+        console.warn('internal env variables are not an array:', internalVariables);
         setVariables([]);
       }
     } catch (error) {
-      console.error('获取内部环境变量失败:', error);
-      message.error('获取内部环境变量失败');
-      // 确保在错误情况下设置空数组
+      console.error('fetch internal env variables failed:', error);
+      message.error(t('internalEnvVar.msg.fetchFailed'));
       setVariables([]);
     } finally {
       setLoading(false);
@@ -79,7 +79,6 @@ const InternalEnvironmentVariables = () => {
       const values = await form.validateFields();
 
       if (editingVariable) {
-        // 更新现有变量
         await actionSpaceAPI.updateEnvironmentVariable(
           values.action_space_id,
           editingVariable.id,
@@ -90,9 +89,8 @@ const InternalEnvironmentVariables = () => {
             value: values.value
           }
         );
-        message.success('内部环境变量更新成功');
+        message.success(t('internalEnvVar.msg.updateSuccess'));
       } else {
-        // 创建新变量
         await actionSpaceAPI.createEnvironmentVariable(
           values.action_space_id,
           {
@@ -102,45 +100,45 @@ const InternalEnvironmentVariables = () => {
             value: values.value
           }
         );
-        message.success('内部环境变量创建成功');
+        message.success(t('internalEnvVar.msg.createSuccess'));
       }
 
       setIsModalVisible(false);
       setEditingVariable(null);
-      fetchAllVariables(); // 重新获取数据
+      fetchAllVariables();
     } catch (error) {
-      console.error('操作内部环境变量失败:', error);
-      message.error('操作失败，请重试');
+      console.error('operate internal env variable failed:', error);
+      message.error(t('internalEnvVar.msg.opFailed'));
     }
   };
 
   const handleDeleteVariable = async (variable) => {
     try {
       await actionSpaceAPI.deleteEnvironmentVariable(variable.action_space_id, variable.id);
-      message.success('内部环境变量删除成功');
-      fetchAllVariables(); // 重新获取数据
+      message.success(t('internalEnvVar.msg.deleteSuccess'));
+      fetchAllVariables();
     } catch (error) {
-      console.error('删除内部环境变量失败:', error);
-      message.error('删除失败，请重试');
+      console.error('delete internal env variable failed:', error);
+      message.error(t('internalEnvVar.msg.deleteFailed'));
     }
   };
 
   const columns = [
     {
-      title: '变量名',
+      title: t('internalEnvVar.col.name'),
       dataIndex: 'name',
       key: 'name',
       width: 150,
       render: (name) => <code>{name}</code>
     },
     {
-      title: '标签',
+      title: t('internalEnvVar.col.label'),
       dataIndex: 'label',
       key: 'label',
       width: 120,
     },
     {
-      title: '所属行动空间',
+      title: t('internalEnvVar.col.actionSpace'),
       dataIndex: 'action_space_name',
       key: 'action_space_name',
       width: 140,
@@ -149,7 +147,7 @@ const InternalEnvironmentVariables = () => {
       )
     },
     {
-      title: '默认值',
+      title: t('internalEnvVar.col.defaultValue'),
       dataIndex: 'value',
       key: 'value',
       width: 150,
@@ -161,21 +159,21 @@ const InternalEnvironmentVariables = () => {
       ) : '-'
     },
     {
-      title: '类型',
+      title: t('internalEnvVar.col.type'),
       dataIndex: 'type',
       key: 'type',
       width: 80,
-      render: () => <Tag color="default">文本</Tag>
+      render: () => <Tag color="default">{t('internalEnvVar.type.text')}</Tag>
     },
     {
-      title: '创建时间',
+      title: t('internalEnvVar.col.createdAt'),
       dataIndex: 'created_at',
       key: 'created_at',
       width: 150,
       render: (time) => time ? new Date(time).toLocaleDateString() : '-'
     },
     {
-      title: '操作',
+      title: t('internalEnvVar.col.action'),
       key: 'action',
       width: 120,
       fixed: 'right' as const,
@@ -203,24 +201,24 @@ const InternalEnvironmentVariables = () => {
     <div>
       <div style={{ marginBottom: 16 }}>
         <Text type="secondary">
-          内部环境变量可直接在行动空间页面中选择绑定，用于未来在行动任务中实例化
+          {t('internalEnvVar.desc')}
         </Text>
       </div>
 
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <Text strong>共 {variables.length} 个内部环境变量</Text>
+          <Text strong>{t('internalEnvVar.total', { count: variables.length })}</Text>
         </div>
         <Space>
           <Button icon={<ReloadOutlined />} onClick={fetchAllVariables}>
-            刷新
+            {t('internalEnvVar.refresh')}
           </Button>
           <Button
             type="primary"
             icon={<PlusOutlined />}
             onClick={handleCreateVariable}
           >
-            添加变量
+            {t('internalEnvVar.add')}
           </Button>
         </Space>
       </div>
@@ -235,21 +233,21 @@ const InternalEnvironmentVariables = () => {
           pageSize: 10,
           showSizeChanger: true,
           showQuickJumper: true,
-          showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`
+          showTotal: (total, range) => t('internalEnvVar.paginationRange', { from: range[0], to: range[1], total })
         }}
         locale={{
           emptyText: variables.length === 0 && !loading ? (
             <Empty
-              description="暂无内部环境变量"
+              description={t('internalEnvVar.empty')}
               image={Empty.PRESENTED_IMAGE_SIMPLE}
             />
           ) : undefined
         }}
       />
 
-      {/* 添加/编辑变量对话框 */}
+      {/* add/edit modal */}
       <Modal
-        title={`${editingVariable ? '编辑' : '添加'}内部环境变量`}
+        title={editingVariable ? t('internalEnvVar.editTitle') : t('internalEnvVar.addTitle')}
         visible={isModalVisible}
         onCancel={handleModalCancel}
         onOk={handleModalSubmit}
@@ -262,10 +260,10 @@ const InternalEnvironmentVariables = () => {
         >
           <Form.Item
             name="action_space_id"
-            label="所属行动空间"
-            rules={[{ required: true, message: '请选择行动空间' }]}
+            label={t('internalEnvVar.col.actionSpace')}
+            rules={[{ required: true, message: t('internalEnvVar.form.actionSpaceReq') }]}
           >
-            <Select placeholder="选择行动空间" disabled={!!editingVariable}>
+            <Select placeholder={t('internalEnvVar.form.actionSpacePh')} disabled={!!editingVariable}>
               {actionSpaces.map(space => (
                 <Option key={space.id} value={space.id}>
                   {space.name}
@@ -276,37 +274,37 @@ const InternalEnvironmentVariables = () => {
 
           <Form.Item
             name="name"
-            label="变量名"
+            label={t('internalEnvVar.col.name')}
             rules={[
-              { required: true, message: '请输入变量名' },
-              { pattern: /^[a-zA-Z][a-zA-Z0-9_]*$/, message: '变量名必须以字母开头，只能包含字母、数字和下划线' }
+              { required: true, message: t('internalEnvVar.form.nameReq') },
+              { pattern: /^[a-zA-Z][a-zA-Z0-9_]*$/, message: t('internalEnvVar.form.namePattern') }
             ]}
           >
-            <Input placeholder="输入变量名，如: market_price" />
+            <Input placeholder={t('internalEnvVar.form.namePh')} />
           </Form.Item>
 
           <Form.Item
             name="label"
-            label="显示标签"
-            rules={[{ required: true, message: '请输入显示标签' }]}
+            label={t('internalEnvVar.form.displayLabel')}
+            rules={[{ required: true, message: t('internalEnvVar.form.labelReq') }]}
           >
-            <Input placeholder="输入显示标签，如: 市场价格" />
+            <Input placeholder={t('internalEnvVar.form.labelPh')} />
           </Form.Item>
 
           <Form.Item
             name="description"
-            label="描述"
-            extra="可选，描述该变量的用途和含义"
+            label={t('internalEnvVar.col.description')}
+            extra={t('internalEnvVar.form.descriptionExtra')}
           >
-            <TextArea rows={2} placeholder="描述该变量的用途和含义（可选）" />
+            <TextArea rows={2} placeholder={t('internalEnvVar.form.descriptionPh')} />
           </Form.Item>
 
           <Form.Item
             name="value"
-            label="默认值"
-            rules={[{ required: true, message: '请输入默认值' }]}
+            label={t('internalEnvVar.col.defaultValue')}
+            rules={[{ required: true, message: t('internalEnvVar.form.valueReq') }]}
           >
-            <Input placeholder="输入默认值" />
+            <Input placeholder={t('internalEnvVar.form.valuePh')} />
           </Form.Item>
         </Form>
       </Modal>

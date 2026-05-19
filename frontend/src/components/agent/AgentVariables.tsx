@@ -9,11 +9,13 @@ import {
   EditOutlined, DeleteOutlined, EyeOutlined
 } from '@ant-design/icons';
 import api from '../../services/api/axios';
+import { useTranslation } from 'react-i18next';
 
 const { Option } = Select;
 const { TextArea } = Input;
 
 const AgentVariables = ({ agentId }) => {
+  const { t } = useTranslation();
   const [variables, setVariables] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -23,7 +25,7 @@ const AgentVariables = ({ agentId }) => {
   const [form] = Form.useForm();
   const [isEditing, setIsEditing] = useState(false);
 
-  // 获取代理变量
+  // Fetch agent variables
   const fetchVariables = async () => {
     if (!agentId) return;
 
@@ -32,14 +34,14 @@ const AgentVariables = ({ agentId }) => {
       const response = await api.get(`/agents/${agentId}/variables`);
       setVariables(response.data.variables || []);
     } catch (error) {
-      console.error('获取代理变量失败:', error);
-      message.error('获取代理变量失败');
+      console.error('fetch agent variables failed:', error);
+      message.error(t('agentVariables.msg.fetchFailed'));
     } finally {
       setLoading(false);
     }
   };
 
-  // 获取变量历史
+  // Fetch variable history
   const fetchVariableHistory = async (name) => {
     if (!agentId || !name) return;
 
@@ -47,57 +49,57 @@ const AgentVariables = ({ agentId }) => {
       const response = await api.get(`/agents/${agentId}/variables/${name}/history`);
       setVariableHistory(response.data.history || []);
     } catch (error) {
-      console.error('获取变量历史失败:', error);
-      message.error('获取变量历史失败');
+      console.error('fetch variable history failed:', error);
+      message.error(t('agentVariables.msg.fetchHistoryFailed'));
     }
   };
 
-  // 创建变量
+  // Create variable
   const createVariable = async (values) => {
     try {
       await api.post(`/agents/${agentId}/variables`, values);
-      message.success('变量创建成功');
+      message.success(t('agentVariables.msg.createSuccess'));
       setModalVisible(false);
       fetchVariables();
     } catch (error) {
-      console.error('创建变量失败:', error);
-      message.error(`创建变量失败: ${error.response?.data?.error || error.message}`);
+      console.error('create variable failed:', error);
+      message.error(t('agentVariables.msg.createFailedWithDetail', { detail: error.response?.data?.error || error.message }));
     }
   };
 
-  // 更新变量
+  // Update variable
   const updateVariable = async (name, values) => {
     try {
       await api.put(`/agents/${agentId}/variables/${name}`, values);
-      message.success('变量更新成功');
+      message.success(t('agentVariables.msg.updateSuccess'));
       setModalVisible(false);
       fetchVariables();
     } catch (error) {
-      console.error('更新变量失败:', error);
-      message.error(`更新变量失败: ${error.response?.data?.error || error.message}`);
+      console.error('update variable failed:', error);
+      message.error(t('agentVariables.msg.updateFailedWithDetail', { detail: error.response?.data?.error || error.message }));
     }
   };
 
-  // 删除变量
+  // Delete variable
   const deleteVariable = async (name) => {
     try {
       await api.delete(`/agents/${agentId}/variables/${name}`);
-      message.success('变量删除成功');
+      message.success(t('agentVariables.msg.deleteSuccess'));
       fetchVariables();
     } catch (error) {
-      console.error('删除变量失败:', error);
-      message.error(`删除变量失败: ${error.response?.data?.error || error.message}`);
+      console.error('delete variable failed:', error);
+      message.error(t('agentVariables.msg.deleteFailedWithDetail', { detail: error.response?.data?.error || error.message }));
     }
   };
 
-  // 初始化获取变量
+  // Initial fetch
   useEffect(() => {
     if (agentId) {
       fetchVariables();
     }
   }, [agentId]);
 
-  // 打开创建模态框
+  // Open create modal
   const handleCreate = () => {
     setIsEditing(false);
     setCurrentVariable(null);
@@ -105,7 +107,7 @@ const AgentVariables = ({ agentId }) => {
     setModalVisible(true);
   };
 
-  // 打开编辑模态框
+  // Open edit modal
   const handleEdit = (variable) => {
     setIsEditing(true);
     setCurrentVariable(variable);
@@ -118,25 +120,25 @@ const AgentVariables = ({ agentId }) => {
     setModalVisible(true);
   };
 
-  // 查看历史记录
+  // View history
   const handleViewHistory = (variable) => {
     setCurrentVariable(variable);
     fetchVariableHistory(variable.name);
     setHistoryModalVisible(true);
   };
 
-  // 确认删除
+  // Confirm delete
   const handleDelete = (name) => {
     deleteVariable(name);
   };
 
-  // 模态框提交
+  // Submit modal
   const handleModalSubmit = () => {
     form.validateFields().then(values => {
       if (isEditing && currentVariable) {
         updateVariable(currentVariable.name, { value: values.value });
       } else {
-        // 只发送必要的字段，类型固定为text
+        // Only submit required fields; type is fixed to text
         const submitData = {
           name: values.name,
           value: values.value,
@@ -146,29 +148,29 @@ const AgentVariables = ({ agentId }) => {
         createVariable(submitData);
       }
     }).catch(info => {
-      console.log('表单验证失败:', info);
+      console.log('form validation failed:', info);
     });
   };
 
-  // 表格列配置
+  // Table columns
   const columns = [
     {
-      title: '变量名',
+      title: t('agentVariables.col.name'),
       dataIndex: 'name',
       key: 'name',
     },
     {
-      title: '类型',
+      title: t('agentVariables.col.type'),
       dataIndex: 'type',
       key: 'type',
       render: (type) => (
         <Tag color="default">
-          文本
+          {t('agentVariables.type.text')}
         </Tag>
       )
     },
     {
-      title: '值',
+      title: t('agentVariables.col.value'),
       dataIndex: 'value',
       key: 'value',
       render: (value) => {
@@ -181,23 +183,23 @@ const AgentVariables = ({ agentId }) => {
       }
     },
     {
-      title: '公开性',
+      title: t('agentVariables.col.visibility'),
       dataIndex: 'is_public',
       key: 'is_public',
       render: (isPublic) => (
         <Tag color={isPublic ? 'green' : 'red'}>
-          {isPublic ? '公开' : '私有'}
+          {isPublic ? t('agentVariables.public') : t('agentVariables.private')}
         </Tag>
       )
     },
     {
-      title: '更新时间',
+      title: t('agentVariables.col.updatedAt'),
       dataIndex: 'updated_at',
       key: 'updated_at',
       render: (time) => new Date(time).toLocaleString()
     },
     {
-      title: '操作',
+      title: t('agentVariables.col.action'),
       key: 'action',
       render: (_, record) => (
         <Space>
@@ -207,7 +209,7 @@ const AgentVariables = ({ agentId }) => {
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
           >
-            编辑
+            {t('agentVariables.edit')}
           </Button>
           <Button
             type="text"
@@ -215,13 +217,13 @@ const AgentVariables = ({ agentId }) => {
             icon={<LineChartOutlined />}
             onClick={() => handleViewHistory(record)}
           >
-            历史
+            {t('agentVariables.history')}
           </Button>
           <Popconfirm
-            title="确定删除此变量?"
+            title={t('agentVariables.confirmDelete')}
             onConfirm={() => handleDelete(record.name)}
-            okText="是"
-            cancelText="否"
+            okText={t('agentVariables.yes')}
+            cancelText={t('agentVariables.no')}
           >
             <Button
               type="text"
@@ -229,7 +231,7 @@ const AgentVariables = ({ agentId }) => {
              
               icon={<DeleteOutlined />}
             >
-              删除
+              {t('agentVariables.delete')}
             </Button>
           </Popconfirm>
         </Space>
@@ -240,14 +242,14 @@ const AgentVariables = ({ agentId }) => {
   return (
     <div>
       <Card
-        title="代理变量"
+        title={t('agentVariables.title')}
         extra={
           <Button
             type="primary"
             icon={<PlusOutlined />}
             onClick={handleCreate}
           >
-            添加变量
+            {t('agentVariables.add')}
           </Button>
         }
       >
@@ -263,13 +265,13 @@ const AgentVariables = ({ agentId }) => {
             pagination={false}
           />
         ) : (
-          <Empty description="暂无变量数据" />
+          <Empty description={t('agentVariables.empty')} />
         )}
       </Card>
 
-      {/* 创建/编辑变量模态框 */}
+      {/* create/edit modal */}
       <Modal
-        title={isEditing ? '编辑变量' : '创建变量'}
+        title={isEditing ? t('agentVariables.editTitle') : t('agentVariables.createTitle')}
         visible={modalVisible}
         onCancel={() => setModalVisible(false)}
         onOk={handleModalSubmit}
@@ -281,51 +283,51 @@ const AgentVariables = ({ agentId }) => {
         >
           <Form.Item
             name="name"
-            label="变量名"
+            label={t('agentVariables.col.name')}
             rules={[
-              { required: true, message: '请输入变量名' },
-              { pattern: /^[a-zA-Z][a-zA-Z0-9_]*$/, message: '变量名必须以字母开头，只能包含字母、数字和下划线' }
+              { required: true, message: t('agentVariables.form.nameReq') },
+              { pattern: /^[a-zA-Z][a-zA-Z0-9_]*$/, message: t('agentVariables.form.namePattern') }
             ]}
           >
-            <Input placeholder="输入变量名" disabled={isEditing} />
+            <Input placeholder={t('agentVariables.form.namePh')} disabled={isEditing} />
           </Form.Item>
 
           <Form.Item
             name="type"
-            label="变量类型"
+            label={t('agentVariables.form.type')}
             initialValue="text"
           >
-            <Input value="文本" disabled />
+            <Input value={t('agentVariables.type.text')} disabled />
           </Form.Item>
 
           <Form.Item
             name="value"
-            label="变量值"
-            rules={[{ required: true, message: '请输入变量值' }]}
+            label={t('agentVariables.form.value')}
+            rules={[{ required: true, message: t('agentVariables.form.valueReq') }]}
           >
-            <TextArea rows={3} placeholder="输入文本值" />
+            <TextArea rows={3} placeholder={t('agentVariables.form.valuePh')} />
           </Form.Item>
 
           <Form.Item
             name="is_public"
-            label="是否公开"
+            label={t('agentVariables.form.isPublic')}
             valuePropName="checked"
             initialValue={true}
-            tooltip="公开变量可被其他代理查看，私有变量仅自身可见"
+            tooltip={t('agentVariables.form.isPublicTooltip')}
           >
-            <Switch checkedChildren="公开" unCheckedChildren="私有" />
+            <Switch checkedChildren={t('agentVariables.public')} unCheckedChildren={t('agentVariables.private')} />
           </Form.Item>
         </Form>
       </Modal>
 
-      {/* 变量历史记录模态框 */}
+      {/* history modal */}
       <Modal
-        title={`变量历史记录: ${currentVariable?.name}`}
+        title={t('agentVariables.historyTitle', { name: currentVariable?.name })}
         visible={historyModalVisible}
         onCancel={() => setHistoryModalVisible(false)}
         footer={[
           <Button key="close" onClick={() => setHistoryModalVisible(false)}>
-            关闭
+            {t('agentVariables.close')}
           </Button>
         ]}
         width={700}
@@ -339,12 +341,12 @@ const AgentVariables = ({ agentId }) => {
             }))}
             columns={[
               {
-                title: '时间',
+                title: t('agentVariables.col.time'),
                 dataIndex: 'timestamp',
                 key: 'timestamp',
               },
               {
-                title: '值',
+                title: t('agentVariables.col.value'),
                 dataIndex: 'value',
                 key: 'value',
                 render: (value) => {
@@ -355,7 +357,7 @@ const AgentVariables = ({ agentId }) => {
             pagination={false}
           />
         ) : (
-          <Empty description="暂无历史记录" />
+          <Empty description={t('agentVariables.emptyHistory')} />
         )}
       </Modal>
     </div>

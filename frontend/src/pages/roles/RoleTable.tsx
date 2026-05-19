@@ -79,9 +79,9 @@ const RoleTable = ({
 
   const handleDelete = (role) => {
     confirm({
-      title: '确认删除',
+      title: t('roleTable.confirm.deleteTitle'),
       icon: <ExclamationCircleOutlined />,
-      content: `确定要删除角色 "${role.name}" 吗？`,
+      content: t('roleTable.confirm.deleteContent', { name: role.name }),
       onOk: () => onDelete(role.id),
     });
   };
@@ -114,7 +114,7 @@ const RoleTable = ({
 
   const columns = [
     {
-      title: '名称',
+      title: t('roleTable.col.name'),
       dataIndex: 'name',
       key: 'name',
       width: 180,
@@ -127,45 +127,45 @@ const RoleTable = ({
       ),
     },
     {
-      title: '类型',
+      title: t('roleTable.col.type'),
       dataIndex: 'source',
       key: 'source',
       width: 100,
       render: (type) => {
         const typeColors = { 'internal': 'blue', 'external': 'green' };
-        const typeLabels = { 'internal': '内部', 'external': '外部' };
-        return <Tag color={typeColors[type] || 'blue'}>{typeLabels[type] || type || '内部'}</Tag>;
+        const typeLabels = { 'internal': t('roleTable.type.internal'), 'external': t('roleTable.type.external') };
+        return <Tag color={typeColors[type] || 'blue'}>{typeLabels[type] || type || t('roleTable.type.internal')}</Tag>;
       },
     },
     {
-      title: '来源',
+      title: t('roleTable.col.source'),
       dataIndex: 'created_by',
       key: 'resource_source',
       width: 120,
       render: (created_by, record) => {
         if (!created_by) {
           return (
-            <Tooltip title="系统资源，所有用户可见可用">
-              <Tag icon={<GlobalOutlined />} color="blue">系统</Tag>
+            <Tooltip title={t('roleTable.tip.system')}>
+              <Tag icon={<GlobalOutlined />} color="blue">{t('roleTable.source.system')}</Tag>
             </Tooltip>
           );
         }
         if (record.is_shared) {
           return (
-            <Tooltip title="用户共享资源，所有用户可见可用">
-              <Tag icon={<TeamOutlined />} color="green">共享</Tag>
+            <Tooltip title={t('roleTable.tip.shared')}>
+              <Tag icon={<TeamOutlined />} color="green">{t('roleTable.source.shared')}</Tag>
             </Tooltip>
           );
         }
         return (
-          <Tooltip title="私有资源，仅创建者可见">
-            <Tag icon={<LockOutlined />} color="orange">私有</Tag>
+          <Tooltip title={t('roleTable.tip.private')}>
+            <Tag icon={<LockOutlined />} color="orange">{t('roleTable.source.private')}</Tag>
           </Tooltip>
         );
       },
     },
     {
-      title: '使用的模型',
+      title: t('roleTable.col.model'),
       dataIndex: 'model',
       key: 'model',
       width: 260,
@@ -184,7 +184,7 @@ const RoleTable = ({
             'dify': 'Dify',
             'fastgpt': 'FastGPT',
             'coze': 'Coze',
-            'custom': '自定义'
+            'custom': t('roleTable.platform.custom')
           };
           const label = platformLabels[platformType] || platformType;
           return (
@@ -198,7 +198,7 @@ const RoleTable = ({
 
         if (model === null || model === undefined || model === '') {
           const defaultModel = models.find(m => m.is_default_text) || models.find(m => m.is_default);
-          const label = `默认文本生成 ${defaultModel ? `(${defaultModel.name})` : ''}`;
+          const label = t('roleTable.defaultTextModel', { name: defaultModel?.name || '' });
           return (
             <Tooltip title={label}>
               <Tag color={getModelBadge(defaultModel?.model_id)} style={{ maxWidth: 220, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -209,7 +209,7 @@ const RoleTable = ({
         }
 
         const modelConfig = models.find(m => m.id.toString() === model?.toString());
-        const label = record.model_name || modelConfig?.name || '默认';
+        const label = record.model_name || modelConfig?.name || t('roleTable.default');
         return (
           <Tooltip title={label}>
             <Tag color={getModelBadge(modelConfig?.model_id)} style={{ maxWidth: 220, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -220,21 +220,21 @@ const RoleTable = ({
       },
     },
     {
-      title: '系统提示词',
+      title: t('roleTable.col.systemPrompt'),
       dataIndex: 'systemPrompt',
       key: 'systemPrompt',
       width: 200,
       ellipsis: { showTitle: false },
       render: (_, record) => (
-        <Tooltip placement="topLeft" title={record.system_prompt || '无提示词'}>
+        <Tooltip placement="topLeft" title={record.system_prompt || t('roleTable.noPrompt')}>
           <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {record.system_prompt ? record.system_prompt.substring(0, 50) + (record.system_prompt.length > 50 ? '...' : '') : '无提示词'}
+            {record.system_prompt ? record.system_prompt.substring(0, 50) + (record.system_prompt.length > 50 ? '...' : '') : t('roleTable.noPrompt')}
           </div>
         </Tooltip>
       ),
     },
     {
-      title: '描述',
+      title: t('roleTable.col.description'),
       dataIndex: 'description',
       key: 'description',
       width: 200,
@@ -248,14 +248,14 @@ const RoleTable = ({
       ),
     },
     {
-      title: '绑定能力',
+      title: t('roleTable.col.capabilities'),
       dataIndex: 'capabilities',
       key: 'capabilities',
       width: 200,
       render: (capabilities) => {
         const capabilitiesArray = Array.isArray(capabilities) ? capabilities : [];
         if (capabilitiesArray.length === 0) {
-          return <Text type="secondary">无</Text>;
+          return <Text type="secondary">{t('roleTable.none')}</Text>;
         }
 
         const displayCapabilities = capabilitiesArray.slice(0, 2);
@@ -288,7 +288,7 @@ const RoleTable = ({
       },
     },
     {
-      title: '绑定知识库',
+      title: t('roleTable.col.knowledges'),
       dataIndex: 'allKnowledges',
       key: 'knowledges',
       width: 200,
@@ -301,7 +301,7 @@ const RoleTable = ({
         const externalCount = externalKnowledges.length;
 
         if (totalKnowledges.length === 0) {
-          return <Text type="secondary">无</Text>;
+          return <Text type="secondary">{t('roleTable.none')}</Text>;
         }
 
         const displayKnowledges = totalKnowledges.slice(0, 2);
@@ -312,12 +312,12 @@ const RoleTable = ({
             <div style={{ marginBottom: 4 }}>
               {internalCount > 0 && (
                 <Tag color="blue" style={{ fontSize: '12px' }}>
-                  内部: {internalCount}
+                  {t('roleTable.kb.internalCount', { count: internalCount })}
                 </Tag>
               )}
               {externalCount > 0 && (
                 <Tag color="green" style={{ fontSize: '12px' }}>
-                  外部: {externalCount}
+                  {t('roleTable.kb.externalCount', { count: externalCount })}
                 </Tag>
               )}
             </div>
@@ -352,14 +352,14 @@ const RoleTable = ({
       },
     },
     {
-      title: '绑定技能',
+      title: t('roleTable.col.skills'),
       dataIndex: 'skills',
       key: 'skills',
       width: 200,
       render: (skills) => {
         const skillsArray = Array.isArray(skills) ? skills : [];
         if (skillsArray.length === 0) {
-          return <Text type="secondary">无</Text>;
+          return <Text type="secondary">{t('roleTable.none')}</Text>;
         }
 
         const displaySkills = skillsArray.slice(0, 2);
@@ -392,13 +392,13 @@ const RoleTable = ({
       },
     },
     {
-      title: '操作',
+      title: t('roleTable.col.action'),
       key: 'action',
       width: 150,
       fixed: 'right' as const,
       render: (_, record) => (
         <Space>
-          <Tooltip title="编辑角色">
+          <Tooltip title={t('roleTable.action.edit')}>
             <Button
               type="text"
               icon={<EditOutlined />}
@@ -406,7 +406,7 @@ const RoleTable = ({
               style={{ color: '#1677ff' }}
             />
           </Tooltip>
-          <Tooltip title="删除角色">
+          <Tooltip title={t('roleTable.action.delete')}>
             <Button
               type="text"
               danger
@@ -429,19 +429,19 @@ const RoleTable = ({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <RobotOutlined style={{ marginRight: 8, color: '#1677ff' }} />
-            <span>角色列表</span>
+            <span>{t('roleTable.title')}</span>
           </div>
           <Space>
             <Segmented
               value={viewMode}
               onChange={handleViewModeChange}
               options={[
-                { label: '表格', value: 'table', icon: <TableOutlined /> },
-                { label: '卡片', value: 'card', icon: <AppstoreOutlined /> }
+                { label: t('roleTable.view.table'), value: 'table', icon: <TableOutlined /> },
+                { label: t('roleTable.view.card'), value: 'card', icon: <AppstoreOutlined /> }
               ]}
             />
             <Select
-              placeholder="按行动空间过滤"
+              placeholder={t('roleTable.filter.actionSpace')}
               allowClear
               value={actionSpaceFilter || undefined}
               onChange={handleActionSpaceFilterChange}
@@ -455,7 +455,7 @@ const RoleTable = ({
               ))}
             </Select>
             <Input.Search
-              placeholder="搜索角色名称、描述或提示词..."
+              placeholder={t('roleTable.searchPlaceholder')}
               allowClear
               value={searchText}
               onChange={(e) => handleSearch(e.target.value)}
@@ -467,7 +467,7 @@ const RoleTable = ({
               icon={<ReloadOutlined />}
               onClick={handleRefresh}
               loading={loading}
-              title="刷新数据"
+              title={t('roleTable.refresh')}
             />
           </Space>
         </div>
@@ -498,8 +498,7 @@ const RoleTable = ({
                 total={filteredRoles.length}
                 pageSizeOptions={[12, 24, 48, 96]}
                 showTotal={(total, range) => {
-                  const searchInfo = searchText ? ` (搜索结果)` : '';
-                  return `共 ${total} 个角色${searchInfo}，显示第 ${range[0]}-${range[1]} 条`;
+                  return t('roleTable.paginationTotal', { total, from: range[0], to: range[1], searchInfo: searchText ? t('roleTable.searchResultSuffix') : '' });
                 }}
                 showSizeChanger
                 showQuickJumper
@@ -533,8 +532,7 @@ const RoleTable = ({
             defaultPageSize: 10,
             pageSizeOptions: [10, 50, 100],
             showTotal: (total, range) => {
-              const searchInfo = searchText ? ` (搜索结果)` : '';
-              return `共 ${total} 个角色${searchInfo}，显示第 ${range[0]}-${range[1]} 条`;
+              return t('roleTable.paginationTotal', { total, from: range[0], to: range[1], searchInfo: searchText ? t('roleTable.searchResultSuffix') : '' });
             },
             showSizeChanger: true,
             showQuickJumper: true,
