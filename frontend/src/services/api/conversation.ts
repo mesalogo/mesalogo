@@ -13,8 +13,8 @@ interface ConversationAPI {
 }
 
 /**
- * 会话API服务
- * 提供与智能体会话相关的API函数
+ * Conversation API service
+ * API functions for agent conversations
  */
 const conversationAPI: ConversationAPI = {
   _activeTaskId: null,
@@ -22,44 +22,44 @@ const conversationAPI: ConversationAPI = {
   _activeStreamControllers: new Map(),
   
   /**
-   * 获取会话的活跃计划
-   * @param {string} conversationId 会话ID
-   * @returns {Promise<Object|null>} 活跃计划，如果没有则返回 null
+   * Fetch active plan for a conversation
+   * @param {string} conversationId conversation ID
+   * @returns {Promise<Object|null>} active plan, or null when absent
    */
   getActivePlan: async (conversationId: string) => {
     try {
       const response = await api.get(`/conversations/${conversationId}/plans/active`);
-      // 后端现在会返回 null 而不是 404，直接返回响应数据
+      // Backend now returns null instead of 404; return response data directly
       return response.data;
     } catch (error) {
-      // 记录错误
-      console.error('获取活跃计划失败:', error);
+      // Log error
+      console.error('fetch active plan failed:', error);
       return null;
     }
   },
 
   /**
-   * 获取会话的所有计划
-   * @param {string} conversationId 会话ID
-   * @returns {Promise<Array>} 计划列表
+   * Fetch all plans for a conversation
+   * @param {string} conversationId conversation ID
+   * @returns {Promise<Array>} plan list
    */
   getPlans: async (conversationId) => {
     try {
       const response = await api.get(`/conversations/${conversationId}/plans`);
       return response.data || [];
     } catch (error) {
-      console.error('获取计划列表失败:', error);
+      console.error('fetch plan list failed:', error);
       throw error;
     }
   },
 
   /**
-   * 更新计划项状态
-   * @param {string} conversationId 会话ID
-   * @param {string} planId 计划ID
-   * @param {string} itemId 计划项ID
-   * @param {Object} updates 更新数据
-   * @returns {Promise<Object>} 更新后的计划项
+   * Update plan-item status
+   * @param {string} conversationId conversation ID
+   * @param {string} planId plan ID
+   * @param {string} itemId plan item ID
+   * @param {Object} updates updates
+   * @returns {Promise<Object>} updated plan item
    */
   updatePlanItem: async (conversationId, planId, itemId, updates) => {
     try {
@@ -69,115 +69,115 @@ const conversationAPI: ConversationAPI = {
       );
       return response.data;
     } catch (error) {
-      console.error('更新计划项失败:', error);
+      console.error('update plan item failed:', error);
       throw error;
     }
   },
 
-  // 获取API基础URL（从api实例或环境变量）
+  // Get API base URL from api instance or environment
   _getBaseUrl: () => {
-    // 从api导入的baseURL中移除'/api'，因为我们的端点已经包含了它
+    // Remove '/api' from imported api baseURL because endpoints already include it
     const apiBaseUrl = api.defaults.baseURL;
     if (apiBaseUrl) {
-      // 移除末尾的'/api'如果存在
+      // Remove trailing '/api' when present
       const baseUrlWithoutApi = apiBaseUrl.endsWith('/api')
         ? apiBaseUrl.substring(0, apiBaseUrl.length - 4)
         : apiBaseUrl;
       return baseUrlWithoutApi;
     }
-    // 回退到环境变量
+    // Fall back to environment variable
     return process.env.REACT_APP_API_URL || '';
   },
 
   /**
-   * 获取行动任务的所有会话
-   * @param {string} taskId 行动任务ID
-   * @returns {Promise<Array>} 会话列表
+   * Fetch all conversations for an action task
+   * @param {string} taskId action task ID
+   * @returns {Promise<Array>} conversation list
    */
   getConversations: async (taskId) => {
     try {
       const response = await api.get(`/action-tasks/${taskId}/conversations`);
       return response.data.conversations || [];
     } catch (error) {
-      console.error('获取会话列表失败:', error);
+      console.error('fetch conversation list failed:', error);
       throw error;
     }
   },
 
   /**
-   * 获取特定会话详情
-   * @param {string} taskId 行动任务ID
-   * @param {string} conversationId 会话ID
-   * @returns {Promise<Object>} 会话详情
+   * Fetch specific conversation detail
+   * @param {string} taskId action task ID
+   * @param {string} conversationId conversation ID
+   * @returns {Promise<Object>} conversation detail
    */
   getConversationById: async (taskId, conversationId) => {
     try {
       const response = await api.get(`/action-tasks/${taskId}/conversations/${conversationId}`);
       return response.data;
     } catch (error) {
-      console.error('获取会话详情失败:', error);
+      console.error('fetch conversation detail failed:', error);
       throw error;
     }
   },
 
   /**
-   * 创建子任务
-   * @param {string} taskId 行动任务ID
-   * @param {Object} data 会话数据
-   * @returns {Promise<Object>} 创建的会话信息
+   * Create subtask conversation
+   * @param {string} taskId action task ID
+   * @param {Object} data conversation data
+   * @returns {Promise<Object>} created conversation info
    */
   createConversation: async (taskId, data) => {
     try {
       const response = await api.post(`/action-tasks/${taskId}/conversations`, data);
       return response.data;
     } catch (error) {
-      console.error('创建会话失败:', error);
+      console.error('create conversation failed:', error);
       throw error;
     }
   },
 
   /**
-   * 获取特定会话的消息历史
-   * @param {string} taskId 行动任务ID
-   * @param {string} conversationId 会话ID
-   * @returns {Promise<Array>} 消息历史数组
+   * Fetch message history for specific conversation
+   * @param {string} taskId action task ID
+   * @param {string} conversationId conversation ID
+   * @returns {Promise<Array>} message history array
    */
   getConversationMessages: async (taskId, conversationId) => {
     try {
       const response = await api.get(`/action-tasks/${taskId}/conversations/${conversationId}/messages`);
       return response.data.messages || [];
     } catch (error) {
-      console.error('获取会话消息历史失败:', error);
+      console.error('fetch conversation message history failed:', error);
       throw error;
     }
   },
 
   /**
-   * 发送消息到特定会话 (仅支持流式模式)
-   * @param {string} taskId 行动任务ID
-   * @param {string} conversationId 会话ID
-   * @param {object} messageData 消息数据对象
-   * @param {string} messageData.content 消息内容
-   * @param {string} [messageData.target_agent_id] 目标智能体ID（可选）
-   * @param {boolean} [stream=true] 是否使用流式响应 (必须为true)
-   * @param {function} onStreamCallback 流式响应回调函数，格式为(content, meta) => {}
-   * @returns {Promise<object>} 发送结果
+   * Send message to specific conversation (streaming only)
+   * @param {string} taskId action task ID
+   * @param {string} conversationId conversation ID
+   * @param {object} messageData message data object
+   * @param {string} messageData.content message content
+   * @param {string} [messageData.target_agent_id] target agent ID (optional)
+   * @param {boolean} [stream=true] whether to use streaming response (must be true)
+   * @param {function} onStreamCallback streaming response callback, shape: (content, meta) => {}
+   * @returns {Promise<object>} send result
    */
   sendConversationMessage: async (taskId, conversationId, messageData, stream = true, onStreamCallback) => {
     try {
-      console.log(`发送会话消息: 任务ID=${taskId}, 会话ID=${conversationId}, 流式=${stream}`, messageData);
+      console.log(`send conversation message: taskId=${taskId}, conversationId=${conversationId}, stream=${stream}`, messageData);
 
-      // 仅支持流式响应模式
+      // Streaming response mode only
       if (stream && onStreamCallback) {
-        // 构建API端点，添加stream=1参数，使用统一的方法获取基础URL
+        // Build API endpoint with stream=1 and unified base URL
         const baseUrl = conversationAPI._getBaseUrl();
         const endpoint = `${baseUrl}/api/action-tasks/${taskId}/conversations/${conversationId}/messages?stream=1`;
-        console.log('流式请求端点:', endpoint);
+        console.log('stream request endpoint:', endpoint);
 
-        // 通知连接已开始建立
+        // Notify connection is starting
         onStreamCallback(null, { connectionStatus: 'connecting' });
 
-        // 使用fetch发送请求
+        // Send request with fetch
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
@@ -186,23 +186,23 @@ const conversationAPI: ConversationAPI = {
           body: JSON.stringify(messageData),
         });
 
-        // 检查响应状态
+        // Check response status
         if (!response.ok) {
           const errorText = await response.text();
-          throw new Error(`API 错误 (${response.status}): ${errorText}`);
+          throw new Error(`API error (${response.status}): ${errorText}`);
         }
 
-        // 获取响应正文作为流
+        // Read response body as stream
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
 
-        // 通知连接已建立
+        // Notify connection established
         onStreamCallback(null, { connectionStatus: 'connected' });
 
         let responseObj = {};
         let buffer = '';
 
-        // 读取流
+        // Read stream
         while (true) {
           const { done, value } = await reader.read();
 
@@ -210,73 +210,73 @@ const conversationAPI: ConversationAPI = {
             break;
           }
 
-          // 解码二进制数据为文本
+          // Decode binary data to text
           const chunk = decoder.decode(value, { stream: true });
           buffer += chunk;
 
-          // 按行分割，处理完整的SSE消息
+          // Split by line and handle complete SSE messages
           let lines = buffer.split('\n');
 
-          // 保留最后一行（可能不完整）到buffer
+          // Keep last possibly-incomplete line in buffer
           buffer = lines.pop() || '';
 
-          // 处理完整的行
+          // Handle complete lines
           for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
 
-            // 跳过空行和注释行
+            // Skip empty and comment lines
             if (!line || line.startsWith(':')) {
               continue;
             }
 
-            // 处理SSE行
+            // Handle SSE line
             if (line.startsWith('data: ')) {
-              const data = line.substring(6); // 移除 "data: " 前缀
+              const data = line.substring(6); // Remove "data: " prefix
 
-              // 如果数据为空，可能是流结束信号
+              // Empty data may indicate stream end
               if (!data.trim()) {
-                console.log('接收到空数据，可能是流结束信号');
+                console.log('received empty data, may be stream end signal');
                 continue;
               }
 
-              // 检查是否是HTML注释分隔符
-              if (data.includes('<!-- LLM开始处理工具调用结果 -->') ||
-                  data.includes('<!-- LLM处理工具调用结果结束 -->')) {
-                console.log('检测到工具调用处理分隔符:', data);
-                // 直接将HTML注释作为内容传递给回调，用于前端分隔显示
+              // Check whether this is an HTML comment separator
+              if (data.includes('<!-- LLM starts processing tool-call results -->') ||
+                  data.includes('<!-- LLM finishes processing tool-call results -->')) {
+                console.log('detected tool-call processing separator:', data);
+                // Pass HTML comment directly as callback content for frontend separation display
                 onStreamCallback(data, null);
                 continue;
               }
 
-              // 尝试解析JSON
+              // Try parsing JSON
               try {
                 const parsed = JSON.parse(data);
-                console.log('解析后的流式消息:', parsed);
+                console.log('parsed streaming message:', parsed);
 
-                // 分支1: 内容事件 - 包含content字段的普通内容
+                // Branch 1: content event with content field
                 if (parsed.content !== undefined && !parsed.type && !parsed.connectionStatus) {
                   onStreamCallback(parsed.content, null);
                   continue;
                 }
 
-                // 分支2: 如果是字符串类型
+                // Branch 2: string type
                 if (typeof parsed === 'string') {
                   onStreamCallback(parsed, null);
                   continue;
                 }
 
-                // 分支3: 有connectionStatus字段的事件 (连接状态更新)
+                // Branch 3: event with connectionStatus field
                 if (parsed.connectionStatus) {
                   onStreamCallback(null, parsed);
                   continue;
                 }
 
-                // 分支4: 有type字段的事件 (如思考事件、工具调用、处理通知等)
+                // Branch 4: event with type field (thinking/tool calls/notifications)
                 if (parsed.type) {
-                  // 对特定类型进行额外处理
+                  // Extra handling for specific types
                   if (parsed.type === 'processingToolResults' && parsed.meta) {
-                    console.log('工具调用结果处理中:', parsed.meta);
-                    // 将meta数据传递给回调
+                    console.log('processing tool-call results:', parsed.meta);
+                    // Pass meta data to callback
                     onStreamCallback(null, {
                       type: 'processingToolResults',
                       ...parsed.meta
@@ -284,10 +284,10 @@ const conversationAPI: ConversationAPI = {
                     continue;
                   }
 
-                  // 处理工具结果状态变化
+                  // Handle tool-result status changes
                   if (parsed.type === 'toolResultsProcessing' && parsed.meta) {
-                    console.log('工具结果处理状态变化:', parsed.meta);
-                    // 将meta数据传递给回调
+                    console.log('tool-result processing status changed:', parsed.meta);
+                    // Pass meta data to callback
                     onStreamCallback(null, {
                       type: 'toolResultsProcessing',
                       ...parsed.meta
@@ -295,81 +295,81 @@ const conversationAPI: ConversationAPI = {
                     continue;
                   }
 
-                  // 传递所有其他类型事件
+                  // Pass all other typed events
                   onStreamCallback(null, parsed);
                   continue;
                 }
 
-                // 分支5: 其他情况，尝试作为内容传递
-                console.log('未识别的JSON格式，作为内容传递:', parsed);
+                // Branch 5: otherwise try passing as content
+                console.log('unrecognized JSON shape; passing as content:', parsed);
                 onStreamCallback(data, null);
 
               } catch (error) {
-                // 如果JSON解析失败，将数据作为纯文本内容处理
-                console.log('JSON解析失败，将数据作为纯文本处理:', data);
+                // If JSON parsing fails, handle data as plain text content
+                console.log('JSON parse failed; handling as plain text:', data);
                 onStreamCallback(data, null);
               }
             }
           }
         }
 
-        // 处理流结束
-        console.log('流读取完成');
+        // Handle stream end
+        console.log('stream read complete');
         return responseObj;
       }
 
-      // 如果没有提供流式回调，抛出错误
-      throw new Error('sendConversationMessage 必须使用流式模式，请提供 stream=true 和 onStreamCallback 参数');
+      // Throw when streaming callback is not provided
+      throw new Error('sendConversationMessage requires streaming mode; provide stream=true and onStreamCallback');
     } catch (error) {
-      // 如果是用户中断的错误，使用警告级别而不是错误级别
-      if (error.name === 'AbortError' || error.message.includes('用户中断')) {
-        console.warn('流式请求被用户中断:', error);
+      // Use warn instead of error for user-initiated aborts
+      if (error.name === 'AbortError' || error.message.includes('user abort')) {
+        console.warn('stream request aborted by user:', error);
       } else {
-        console.error('发送消息到会话失败:', error);
+        console.error('send message to conversation failed:', error);
       }
-      throw error; // 直接抛出错误，让调用方处理
+      throw error; // Throw directly for caller handling
     }
   },
 
   /**
-   * 获取特定任务的消息历史
-   * @param {string} taskId 任务ID
-   * @returns {Promise<Array>} 消息历史数组
+   * Fetch message history for specific task
+   * @param {string} taskId task ID
+   * @returns {Promise<Array>} message history array
    */
   getMessages: async (taskId) => {
     try {
-      // 尝试获取任务的第一个会话
+      // Try fetching the task's first conversation
       try {
         const conversations = await conversationAPI.getConversations(taskId);
         if (conversations && conversations.length > 0) {
-          // 使用第一个会话的消息
+          // Use messages from first conversation
           const conversationMessages = await conversationAPI.getConversationMessages(taskId, conversations[0].id);
           return conversationMessages;
         }
       } catch (err) {
-        console.warn('获取会话消息失败，尝试获取任务消息:', err);
+        console.warn('fetch conversation messages failed; trying task messages:', err);
       }
 
-      // 降级处理：尝试直接获取任务消息（旧API，将来会废弃）
+      // Fallback: fetch task messages directly (legacy API, deprecated in future)
       const response = await api.get(`/action-tasks/${taskId}/messages`);
-      console.warn('警告：直接从任务获取消息的API将会被废弃，请迁移到基于会话的API');
+      console.warn('Warning: task-level message API will be deprecated; migrate to conversation-based API');
       return response.data.messages || [];
     } catch (error) {
-      console.error('获取消息历史失败:', error);
+      console.error('fetch message history failed:', error);
       throw error;
     }
   },
 
   /**
-   * 轮询获取新消息
-   * @param {string} taskId 任务ID
-   * @param {string} [conversationId] 会话ID（可选）
-   * @param {string} lastMessageId 最后一条消息的ID
-   * @returns {Promise<Array>} 新消息数组
+   * Poll new messages
+   * @param {string} taskId task ID
+   * @param {string} [conversationId] conversation ID (optional)
+   * @param {string} lastMessageId last message ID
+   * @returns {Promise<Array>} new message array
    */
   pollNewMessages: async (taskId, conversationId, lastMessageId) => {
     try {
-      // 优先使用指定的会话ID
+      // Prefer specified conversation ID
       if (conversationId) {
         const response = await api.get(`/action-tasks/${taskId}/conversations/${conversationId}/messages/new`, {
           params: { last_message_id: lastMessageId }
@@ -377,7 +377,7 @@ const conversationAPI: ConversationAPI = {
         return response.data.messages || [];
       }
 
-      // 否则尝试获取默认会话
+      // Otherwise try default conversation
       const conversations = await conversationAPI.getConversations(taskId);
       if (conversations && conversations.length > 0) {
         const response = await api.get(`/action-tasks/${taskId}/conversations/${conversations[0].id}/messages/new`, {
@@ -386,103 +386,103 @@ const conversationAPI: ConversationAPI = {
         return response.data.messages || [];
       }
 
-      // 降级处理：使用任务消息API
-      console.warn('警告：直接从任务轮询消息的API将会被废弃，请迁移到基于会话的API');
+      // Fallback: use task messages API
+      console.warn('Warning: task-level polling API will be deprecated; migrate to conversation-based API');
       const response = await api.get(`/action-tasks/${taskId}/messages/new`, {
         params: { last_message_id: lastMessageId }
       });
       return response.data.messages || [];
     } catch (error) {
-      console.error('轮询消息失败:', error);
+      console.error('poll messages failed:', error);
       throw error;
     }
   },
 
   /**
-   * 获取会话的元数据
-   * @param {string} taskId 任务ID
-   * @returns {Promise<object>} 会话元数据
+   * Fetch conversation metadata
+   * @param {string} taskId task ID
+   * @returns {Promise<object>} conversation metadata
    */
   getConversationMetadata: async (taskId) => {
     try {
       const response = await api.get(`/action-tasks/${taskId}`);
       return response.data;
     } catch (error) {
-      console.error('获取会话元数据失败:', error);
+      console.error('fetch conversation metadata failed:', error);
       throw error;
     }
   },
 
   /**
-   * 发送消息到会话（流式API版本）
-   * @param {string} taskId 行动任务ID
-   * @param {string} conversationId 会话ID
-   * @param {object} messageData 消息数据
-   * @param {function} onStreamCallback 流式回调函数，格式为(content, meta) => {}
-   * @returns {Promise<object>} 发送结果
+   * Send message to conversation (streaming API version)
+   * @param {string} taskId action task ID
+   * @param {string} conversationId conversation ID
+   * @param {object} messageData message data
+   * @param {function} onStreamCallback streaming callback, shape: (content, meta) => {}
+   * @returns {Promise<object>} send result
    */
   sendConversationMessageStream: async (taskId, conversationId, messageData, onStreamCallback) => {
-    // 根据 send_target 生成唯一的 controller key，避免监督者会话和任务会话冲突
+    // Generate unique controller key from send_target to avoid supervisor/task conversation conflicts
     const sendTarget = messageData.send_target || 'task';
     const controllerKey = `${conversationId}:${sendTarget}`;
     
     try {
-      console.log(`流式发送消息: 任务ID=${taskId}, 会话ID=${conversationId}, sendTarget=${sendTarget}`, messageData);
+      console.log(`stream send message: taskId=${taskId}, conversationId=${conversationId}, sendTarget=${sendTarget}`, messageData);
 
-      // 记录当前活动的会话信息，用于取消流式输出
+      // Record active conversation info for stream cancellation
       conversationAPI._activeTaskId = taskId;
       conversationAPI._activeConversationId = conversationId;
 
-      // 如果该会话有正在进行的流式请求，先取消它
+      // Cancel existing stream request for this conversation first
       const existingController = conversationAPI._activeStreamControllers.get(controllerKey);
       if (existingController) {
-        console.log(`取消该会话之前的流式请求 (${sendTarget})`);
+        console.log(`cancel previous stream request for this conversation (${sendTarget})`);
         try {
           existingController.abort();
         } catch (e) {
-          console.error('取消之前的流式请求失败:', e);
+          console.error('failed to cancel previous stream request:', e);
         }
       }
 
-      // 创建新的AbortController实例
+      // Create new AbortController instance
       const controller = new AbortController();
       conversationAPI._activeStreamControllers.set(controllerKey, controller);
 
-      // 构建API端点，添加stream=1参数，使用统一的方法获取基础URL
+      // Build API endpoint with stream=1 and unified base URL
       const baseUrl = conversationAPI._getBaseUrl();
       const endpoint = `${baseUrl}/api/action-tasks/${taskId}/conversations/${conversationId}/messages?stream=1`;
-      console.log('流式请求端点:', endpoint);
+      console.log('stream request endpoint:', endpoint);
 
-      // 通知连接已开始建立
+      // Notify connection is starting
       onStreamCallback(null, { connectionStatus: 'connecting' });
 
-      // 使用fetch发送请求
+      // Send request with fetch
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(messageData),
-        signal: controller.signal // 使用AbortController的信号
+        signal: controller.signal // Use AbortController signal
       });
 
-      // 检查响应状态
+      // Check response status
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`API 错误 (${response.status}): ${errorText}`);
+        throw new Error(`API error (${response.status}): ${errorText}`);
       }
 
-      // 获取响应正文作为流
+      // Read response body as stream
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
 
-      // 通知连接已建立
+      // Notify connection established
       onStreamCallback(null, { connectionStatus: 'connected' });
 
       let responseObj = {};
       let buffer = '';
 
-      // 读取流
+      // Read stream
       while (true) {
         try {
           const { done, value } = await reader.read();
@@ -491,67 +491,67 @@ const conversationAPI: ConversationAPI = {
             break;
           }
 
-          // 解码二进制数据为文本
+          // Decode binary data to text
           const chunk = decoder.decode(value, { stream: true });
           buffer += chunk;
 
-          // 按行分割，处理完整的SSE消息
+          // Split by line and handle complete SSE messages
           let lines = buffer.split('\n');
 
-          // 保留最后一行（可能不完整）到buffer
+          // Keep last possibly-incomplete line in buffer
           buffer = lines.pop() || '';
 
-          // 处理完整的行
+          // Handle complete lines
           for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
 
-            // 跳过空行和注释行
+            // Skip empty and comment lines
             if (!line || line.startsWith(':')) {
               continue;
             }
 
-            // 处理SSE行
+            // Handle SSE line
             if (line.startsWith('data: ')) {
-              const data = line.substring(6); // 移除 "data: " 前缀
+              const data = line.substring(6); // Remove "data: " prefix
 
-              // 如果数据为空，可能是流结束信号
+              // Empty data may indicate stream end
               if (!data.trim()) {
-                console.log('接收到空数据，可能是流结束信号');
+                console.log('received empty data, may be stream end signal');
                 continue;
               }
 
-              // 不再需要处理HTML注释分隔符
-              // 前端可以通过消息类型识别工具调用和结果处理的状态
+              // No longer need to handle HTML comment separators
+              // Frontend can identify tool-call/result-processing status by message type
 
-              // 尝试解析JSON
+              // Try parsing JSON
               try {
                 const parsed = JSON.parse(data);
-                console.log('解析后的流式消息:', parsed);
+                console.log('parsed streaming message:', parsed);
 
-                // 分支1: 内容事件 - 包含content字段的普通内容
+                // Branch 1: content event with content field
                 if (parsed.content !== undefined && !parsed.type && !parsed.connectionStatus) {
                   onStreamCallback(parsed.content, null);
                   continue;
                 }
 
-                // 分支2: 如果是字符串类型
+                // Branch 2: string type
                 if (typeof parsed === 'string') {
                   onStreamCallback(parsed, null);
                   continue;
                 }
 
-                // 分支3: 有connectionStatus字段的事件 (连接状态更新)
+                // Branch 3: event with connectionStatus field
                 if (parsed.connectionStatus) {
                   onStreamCallback(null, parsed);
                   continue;
                 }
 
-                // 分支4: 有type字段的事件 (如思考事件、工具调用、处理通知等)
+                // Branch 4: event with type field (thinking/tool calls/notifications)
                 if (parsed.type) {
-                  // 对特定类型进行额外处理
+                  // Extra handling for specific types
                   if (parsed.type === 'processingToolResults' && parsed.meta) {
-                    console.log('工具调用结果处理中:', parsed.meta);
-                    // 将meta数据传递给回调
+                    console.log('processing tool-call results:', parsed.meta);
+                    // Pass meta data to callback
                     onStreamCallback(null, {
                       type: 'processingToolResults',
                       ...parsed.meta
@@ -559,10 +559,10 @@ const conversationAPI: ConversationAPI = {
                     continue;
                   }
 
-                  // 处理工具结果状态变化
+                  // Handle tool-result status changes
                   if (parsed.type === 'toolResultsProcessing' && parsed.meta) {
-                    console.log('工具结果处理状态变化:', parsed.meta);
-                    // 将meta数据传递给回调
+                    console.log('tool-result processing status changed:', parsed.meta);
+                    // Pass meta data to callback
                     onStreamCallback(null, {
                       type: 'toolResultsProcessing',
                       ...parsed.meta
@@ -570,435 +570,435 @@ const conversationAPI: ConversationAPI = {
                     continue;
                   }
 
-                  // 传递所有其他类型事件
+                  // Pass all other typed events
                   onStreamCallback(null, parsed);
                   continue;
                 }
 
-                // 分支5: 其他情况，尝试作为内容传递
-                console.log('未识别的JSON格式，作为内容传递:', parsed);
+                // Branch 5: otherwise try passing as content
+                console.log('unrecognized JSON shape; passing as content:', parsed);
                 onStreamCallback(data, null);
 
               } catch (error) {
-                // 如果JSON解析失败，将数据作为纯文本内容处理
-                console.log('JSON解析失败，将数据作为纯文本处理:', data);
+                // If JSON parsing fails, handle data as plain text content
+                console.log('JSON parse failed; handling as plain text:', data);
                 onStreamCallback(data, null);
               }
             }
           }
         } catch (error) {
-          // 检查是否是由于中止信号导致的错误
+          // Check whether error was caused by abort signal
           if (error.name === 'AbortError') {
-            console.log('流式请求被中止');
-            // 通知回调流已被取消
+            console.log('stream request aborted');
+            // Notify callback that stream was cancelled
             onStreamCallback(null, {
               connectionStatus: 'error',
-              error: '流式请求被用户中断'
+              error: 'stream request aborted by user'
             });
             break;
           }
 
-          // 其他错误
-          console.error('读取流时出错:', error);
+          // Other errors
+          console.error('error while reading stream:', error);
           onStreamCallback(null, {
             connectionStatus: 'error',
-            error: `读取流时出错: ${error.message}`
+            error: `error while reading stream: ${error.message}`
           });
           break;
         }
       }
 
-      // 清除控制器引用（使用 controllerKey）
+      // Clear controller reference using controllerKey
       if (conversationAPI._activeStreamControllers.get(controllerKey) === controller) {
         conversationAPI._activeStreamControllers.delete(controllerKey);
       }
 
-      // 处理流结束
-      console.log('流读取完成');
+      // Handle stream end
+      console.log('stream read complete');
       return responseObj;
     } catch (error) {
-      // 检查是否是由于中止信号导致的错误
+      // Check whether error was caused by abort signal
       if (error.name === 'AbortError') {
-        console.log('流式请求被中止');
-        // 不显示错误消息，因为可能是切换会话导致的正常中断
+        console.log('stream request aborted');
+        // Do not show error because this may be a normal interruption when switching conversations
       } else {
-        console.error('发送流式消息到会话失败:', error);
+        console.error('send streaming message to conversation failed:', error);
         onStreamCallback(null, {
           connectionStatus: 'error',
           error: error.message
         });
       }
 
-      // 清除控制器引用（使用 controllerKey）
+      // Clear controller reference using controllerKey
       conversationAPI._activeStreamControllers.delete(controllerKey);
 
-      throw error; // 直接抛出错误，让调用方处理
+      throw error; // Throw directly for caller handling
     }
   },
 
   /**
-   * 取消当前正在进行的流式响应
-   * @param {string} [agentId] 智能体ID，如果提供则只取消该智能体的流式任务
-   * @returns {Promise<boolean>} 是否成功取消
+   * Cancel current streaming response
+   * @param {string} [agentId] agent ID; if provided, only cancel that agent's streaming task
+   * @returns {Promise<boolean>} whether cancellation succeeded
    */
   cancelStreamingResponse: async (agentId) => {
     return new Promise((resolve) => {
       try {
-        // 存储当前活动的会话信息
+        // Store current active conversation info
         const activeTaskId = conversationAPI._activeTaskId;
         const activeConversationId = conversationAPI._activeConversationId;
 
-        // 如果只是取消特定智能体，不要中止整个SSE连接
-        // 只有在取消整个会话时才中止连接
+        // If canceling only a specific agent, do not abort entire SSE connection
+        // Abort connection only when canceling entire conversation
         if (!agentId && activeConversationId) {
           const controller = conversationAPI._activeStreamControllers.get(activeConversationId);
           if (controller) {
-            console.log('取消整个会话，中止前端流式请求');
+            console.log('cancel entire conversation; abort frontend stream request');
             try {
               controller.abort();
               conversationAPI._activeStreamControllers.delete(activeConversationId);
             } catch (e) {
-              console.error('中止前端流式请求失败:', e);
+              console.error('failed to abort frontend stream request:', e);
             }
           }
         } else if (agentId) {
-          console.log(`取消特定智能体 ${agentId}，保持SSE连接以接收后续智能体信息`);
+          console.log(`cancel specific agent ${agentId}; keep SSE connection for subsequent agent info`);
         }
 
-        // 如果有活动的会话，调用后端API取消流式输出
+        // Call backend API to cancel streaming output if active conversation exists
         if (activeTaskId && activeConversationId) {
-          // 准备请求数据
+          // Prepare request data
           const requestData = agentId ? { agent_id: agentId } : {};
 
-          // 调用后端API取消流式输出
+          // Call backend API to cancel streaming output
           api.post(`/action-tasks/${activeTaskId}/conversations/${activeConversationId}/cancel-stream`, requestData)
             .then(response => {
-              console.log('后端取消流式输出结果:', response.data);
-              // 无论后端返回什么，都认为取消成功，避免前端卡住
+              console.log('backend cancel stream result:', response.data);
+              // Treat cancellation as success regardless of backend response to avoid stuck frontend
               resolve(true);
             })
             .catch(error => {
-              console.error('后端取消流式输出错误:', error);
-              // 即使API调用失败，也认为取消成功
+              console.error('backend cancel stream error:', error);
+              // Treat cancellation as success even if API call fails
               resolve(true);
             });
         } else {
-          console.log('没有活动的会话信息，无法取消流式输出');
-          // 即使没有活动会话，也返回成功，避免前端卡住
+          console.log('no active conversation info; cannot cancel streaming output');
+          // Return success even with no active conversation to avoid stuck frontend
           resolve(true);
         }
       } catch (error) {
-        console.error('取消流式响应出错:', error);
-        // 即使出现异常，也返回成功，避免前端卡住
+        console.error('cancel streaming response failed:', error);
+        // Return success even on exception to avoid stuck frontend
         resolve(true);
       }
     });
   },
 
   /**
-   * 启动自动讨论（流式API版本）
-   * @param {string} taskId 行动任务ID
-   * @param {string} conversationId 会话ID
-   * @param {object} discussionOptions 讨论选项
-   * @param {number} discussionOptions.rounds 讨论轮数
-   * @param {string} [discussionOptions.topic] 讨论主题
-   * @param {boolean} [discussionOptions.summarize] 是否进行总结
-   * @param {number} [discussionOptions.summarizerAgentId] 指定进行总结的智能体ID（可选，默认使用第一个智能体）
-   * @param {function} onStreamCallback 流式响应回调函数，格式为(content, meta) => {}
-   * @returns {Promise<object>} 讨论结果
+   * Start auto discussion (streaming API version)
+   * @param {string} taskId action task ID
+   * @param {string} conversationId conversation ID
+   * @param {object} discussionOptions discussion options
+   * @param {number} discussionOptions.rounds discussion rounds
+   * @param {string} [discussionOptions.topic] discussion topic
+   * @param {boolean} [discussionOptions.summarize] whether to summarize
+   * @param {number} [discussionOptions.summarizerAgentId] summarizer agent ID (optional; defaults to first agent)
+   * @param {function} onStreamCallback streaming response callback, shape: (content, meta) => {}
+   * @returns {Promise<object>} discussion result
    */
   startAutoDiscussion: async (taskId, conversationId, discussionOptions, onStreamCallback) => {
     try {
-      console.log(`启动自动讨论: 任务ID=${taskId}, 会话ID=${conversationId}`, discussionOptions);
+      console.log(`start auto discussion: taskId=${taskId}, conversationId=${conversationId}`, discussionOptions);
 
-      // 记录当前活动的会话信息，用于取消流式输出
+      // Record active conversation info for stream cancellation
       conversationAPI._activeTaskId = taskId;
       conversationAPI._activeConversationId = conversationId;
 
-      // 如果该会话有正在进行的流式请求，先取消它
+      // Cancel existing stream request for this conversation first
       const existingController = conversationAPI._activeStreamControllers.get(conversationId);
       if (existingController) {
-        console.log('取消该会话之前的流式请求');
+        console.log('cancel previous stream request for this conversation');
         try {
           existingController.abort();
         } catch (e) {
-          console.error('取消之前的流式请求失败:', e);
+          console.error('failed to cancel previous stream request:', e);
         }
       }
 
-      // 创建新的AbortController实例
+      // Create new AbortController instance
       const controller = new AbortController();
       conversationAPI._activeStreamControllers.set(conversationId, controller);
 
-      // 构建API端点，添加stream=1参数，使用统一的方法获取基础URL
+      // Build API endpoint with stream=1 and unified base URL
       const baseUrl = conversationAPI._getBaseUrl();
       const endpoint = `${baseUrl}/api/action-tasks/${taskId}/conversations/${conversationId}/auto-discussion?stream=1`;
-      console.log('自动讨论流式请求端点:', endpoint);
+      console.log('auto-discussion stream endpoint:', endpoint);
 
-      // 通知连接已开始建立
+      // Notify connection is starting
       onStreamCallback(null, { connectionStatus: 'connecting' });
 
-      // 使用fetch发送请求
+      // Send request with fetch
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(discussionOptions),
-        signal: controller.signal // 使用AbortController的信号
+        signal: controller.signal // Use AbortController signal
       });
 
-      // 检查响应状态
+      // Check response status
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`API 错误 (${response.status}): ${errorText}`);
+        throw new Error(`API error (${response.status}): ${errorText}`);
       }
 
-      // 获取响应正文作为流
+      // Read response body as stream
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
 
-      // 通知连接已建立
+      // Notify connection established
       onStreamCallback(null, { connectionStatus: 'connected' });
 
       let responseObj = {};
       let buffer = '';
 
-      // 读取流
+      // Read stream
       while (true) {
         try {
-          // 读取下一块数据
+          // Read next chunk
           const { done, value } = await reader.read();
 
-          // 如果流结束，退出循环
+          // Exit loop when stream ends
           if (done) {
-            console.log('自动讨论流已结束');
+            console.log('auto-discussion stream ended');
             break;
           }
 
-          // 将二进制数据解码为文本
+          // Decode binary data to text
           const chunk = decoder.decode(value, { stream: true });
-          console.log('收到自动讨论数据块:', chunk.length, '字节');
+          console.log('received auto-discussion chunk:', chunk.length, 'bytes');
 
-          // 添加到缓冲区
+          // Append to buffer
           buffer += chunk;
 
-          // 按行拆分缓冲区
+          // Split buffer by line
           const lines = buffer.split('\n');
 
-          // 如果只有一行且没有完整的行，则继续读取
+          // If there is only one incomplete line, continue reading
           if (lines.length === 1 && !buffer.endsWith('\n')) {
             continue;
           }
 
-          // 保留最后一个不完整的行用于下一次拼接
+          // Keep last incomplete line for next append
           buffer = lines.pop() || '';
 
-          // 处理完整的行
+          // Handle complete lines
           for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
 
-            // 跳过空行和注释行
+            // Skip empty and comment lines
             if (!line || line.startsWith(':')) {
               continue;
             }
 
-            console.log('自动讨论处理行:', line.substring(0, 50) + (line.length > 50 ? '...' : ''));
+            console.log('auto-discussion process line:', line.substring(0, 50) + (line.length > 50 ? '...' : ''));
 
-            // 处理SSE行
+            // Handle SSE line
             if (line.startsWith('data: ')) {
-              const data = line.substring(6); // 移除 "data: " 前缀
+              const data = line.substring(6); // Remove "data: " prefix
 
-              // 如果数据为空，可能是流结束信号
+              // Empty data may indicate stream end
               if (!data.trim()) {
-                console.log('接收到空数据，可能是流结束信号');
+                console.log('received empty data, may be stream end signal');
                 continue;
               }
 
-              // 不再需要处理HTML注释分隔符
-              // 前端可以通过消息类型识别工具调用和结果处理的状态
+              // No longer need to handle HTML comment separators
+              // Frontend can identify tool-call/result-processing status by message type
 
-              // 尝试解析JSON
+              // Try parsing JSON
               try {
                 const parsed = JSON.parse(data);
-                console.log('自动讨论JSON解析结果:', typeof parsed, parsed ?
-                  (typeof parsed === 'object' ? Object.keys(parsed) : '非对象') : '空值');
+                console.log('auto-discussion JSON parse result:', typeof parsed, parsed ?
+                  (typeof parsed === 'object' ? Object.keys(parsed) : 'non-object') : 'empty value');
 
-                // 特殊处理可能导致"done"状态未被正确处理的情况
+                // Special handling for cases where done status may not be processed correctly
                 if (parsed.connectionStatus === 'done') {
-                  console.log('自动讨论完成状态信号已收到:', parsed);
+                  console.log('auto-discussion done status signal received:', parsed);
 
-                  // 确保回调接收到完成状态
+                  // Ensure callback receives done status
                   onStreamCallback(null, {
                     connectionStatus: 'done',
-                    message: parsed.message || '自动讨论已完成',
-                    ...(parsed) // 保留原有字段
+                    message: parsed.message || 'Auto discussion completed',
+                    ...(parsed) // Keep original fields
                   });
 
-                  // 清除活动的控制器
-                  console.log('自动讨论正常完成，清除活动控制器');
+                  // Clear active controller
+                  console.log('auto discussion completed normally; clearing active controller');
                   conversationAPI._activeStreamControllers.delete(conversationId);
 
-                  // 跳过后续处理
+                  // Skip following processing
                   continue;
                 }
 
-                // 特殊处理connectionStatus字段（可能直接在根对象上）
+                // Special handling for connectionStatus field, possibly on root object
                 if (parsed.connectionStatus) {
-                  console.log('自动讨论直接收到连接状态:', parsed.connectionStatus);
-                  onStreamCallback(null, parsed); // 传递整个对象作为meta
+                  console.log('auto discussion received direct connection status:', parsed.connectionStatus);
+                  onStreamCallback(null, parsed); // Pass whole object as meta
 
-                  // 如果是完成事件，清除控制器引用
+                  // Clear controller reference if this is a done event
                   if (parsed.connectionStatus === 'done' || parsed.connectionStatus === 'error') {
-                    console.log(`自动讨论${parsed.connectionStatus === 'done' ? '正常完成' : '出错结束'}`);
+                    console.log(`auto discussion ${parsed.connectionStatus === 'done' ? 'completed normally' : 'ended with error'}`);
                     conversationAPI._activeStreamControllers.delete(conversationId);
                   }
                 }
-                // 正常处理content和meta
+                // Process content and meta normally
                 else {
-                  // 调用回调函数，传递content和meta
+                  // Call callback with content and meta
                   onStreamCallback(parsed.content, parsed.meta);
 
-                  // 处理连接状态
+                  // Handle connection status
                   if (parsed.meta && parsed.meta.connectionStatus) {
-                    console.log('自动讨论收到连接状态:', parsed.meta.connectionStatus);
-                    // 如果是完成事件，清除控制器引用
+                    console.log('auto discussion received connection status:', parsed.meta.connectionStatus);
+                    // Clear controller reference if this is a done event
                     if (parsed.meta.connectionStatus === 'done' || parsed.meta.connectionStatus === 'error') {
-                      console.log(`自动讨论${parsed.meta.connectionStatus === 'done' ? '正常完成' : '出错结束'}`);
+                      console.log(`auto discussion ${parsed.meta.connectionStatus === 'done' ? 'completed normally' : 'ended with error'}`);
                       conversationAPI._activeStreamControllers.delete(conversationId);
                     }
                   }
                 }
 
               } catch (error) {
-                // 如果JSON解析失败，将数据作为纯文本内容处理
-                console.error('自动讨论JSON解析失败:', error, '原始数据:', data);
+                // If JSON parsing fails, handle data as plain text content
+                console.error('auto-discussion JSON parse failed:', error, 'raw data:', data);
                 onStreamCallback(data, null);
               }
             }
           }
         } catch (error) {
-          // 检查是否是由于中止信号导致的错误
+          // Check whether error was caused by abort signal
           if (error.name === 'AbortError') {
-            console.log('自动讨论流式请求被中止');
-            // 不显示错误消息，因为可能是切换会话导致的正常中断
+            console.log('auto-discussion stream request aborted');
+            // Do not show error because this may be a normal interruption when switching conversations
             break;
           }
 
-          // 其他错误
-          console.error('自动讨论读取流时出错:', error);
+          // Other errors
+          console.error('auto-discussion stream read failed:', error);
           onStreamCallback(null, {
             connectionStatus: 'error',
-            error: `读取流时出错: ${error.message}`
+            error: `error while reading stream: ${error.message}`
           });
           break;
         }
       }
 
-      // 清除控制器引用
+      // Clear controller reference
       if (conversationAPI._activeStreamControllers.get(conversationId) === controller) {
         conversationAPI._activeStreamControllers.delete(conversationId);
       }
 
-      // 处理流结束
-      console.log('自动讨论流读取完成');
+      // Handle stream end
+      console.log('auto-discussion stream read complete');
       return responseObj;
     } catch (error) {
-      // 检查是否是由于中止信号导致的错误
+      // Check whether error was caused by abort signal
       if (error.name === 'AbortError') {
-        console.log('自动讨论流式请求被中止');
-        // 不显示错误消息，因为可能是切换会话导致的正常中断
+        console.log('auto-discussion stream request aborted');
+        // Do not show error because this may be a normal interruption when switching conversations
       } else {
-        console.error('自动讨论流式请求失败:', error);
+        console.error('auto-discussion stream request failed:', error);
         onStreamCallback(null, {
           connectionStatus: 'error',
           error: error.message
         });
       }
 
-      // 清除控制器引用
+      // Clear controller reference
       conversationAPI._activeStreamControllers.delete(conversationId);
 
-      throw error; // 直接抛出错误，让调用方处理
+      throw error; // Throw directly for caller handling
     }
   },
 
   /**
-   * 获取行动任务的所有自主任务记录
-   * @param {string} taskId 行动任务ID
-   * @returns {Promise<object>} 自主任务记录列表
+   * Fetch all autonomous-task records for action task
+   * @param {string} taskId action task ID
+   * @returns {Promise<object>} autonomous-task record list
    */
   getActionTaskAutonomousTasks: async (taskId) => {
     try {
-      console.log(`获取行动任务自主任务记录: 任务ID=${taskId}`);
+      console.log(`fetch action-task autonomous records: taskId=${taskId}`);
       const response = await api.get(`/action-tasks/${taskId}/autonomous-tasks`);
-      console.log('获取行动任务自主任务记录成功:', response.data);
+      console.log('fetch action-task autonomous records succeeded:', response.data);
       return response.data;
     } catch (error) {
-      console.error('获取行动任务自主任务记录失败:', error);
+      console.error('fetch action-task autonomous records failed:', error);
       throw error;
     }
   },
 
   /**
-   * 获取会话的自主任务记录（保持兼容性）
-   * @param {string} taskId 行动任务ID
-   * @param {string} conversationId 会话ID
-   * @returns {Promise<object>} 自主任务记录列表
+   * Fetch conversation autonomous records (compatibility)
+   * @param {string} taskId action task ID
+   * @param {string} conversationId conversation ID
+   * @returns {Promise<object>} autonomous-task record list
    */
   getAutonomousTasks: async (taskId, conversationId) => {
     try {
-      console.log(`获取自主任务记录: 任务ID=${taskId}, 会话ID=${conversationId}`);
+      console.log(`fetch autonomous records: taskId=${taskId}, conversationId=${conversationId}`);
       const response = await api.get(`/action-tasks/${taskId}/conversations/${conversationId}/autonomous-tasks`);
-      console.log('获取自主任务记录成功:', response.data);
+      console.log('fetch autonomous records succeeded:', response.data);
       return response.data;
     } catch (error) {
-      console.error('获取自主任务记录失败:', error);
+      console.error('fetch autonomous records failed:', error);
       throw error;
     }
   },
 
   /**
-   * 停止自主任务
-   * @param {string} taskId 行动任务ID
-   * @param {string} conversationId 会话ID
-   * @param {string} autonomousTaskId 自主任务ID
-   * @returns {Promise<object>} 停止结果
+   * Stop autonomous task
+   * @param {string} taskId action task ID
+   * @param {string} conversationId conversation ID
+   * @param {string} autonomousTaskId autonomous task ID
+   * @returns {Promise<object>} stop result
    */
   stopAutonomousTask: async (taskId, conversationId, autonomousTaskId) => {
     try {
-      console.log(`停止自主任务: 任务ID=${taskId}, 会话ID=${conversationId}, 自主任务ID=${autonomousTaskId}`);
+      console.log(`Stop autonomous task: task ID=${taskId}, conversation ID=${conversationId}, autonomous task ID=${autonomousTaskId}`);
       const response = await api.post(`/action-tasks/${taskId}/conversations/${conversationId}/autonomous-tasks/${autonomousTaskId}/stop`);
-      console.log('停止自主任务成功:', response.data);
+      console.log('stop autonomous task succeeded:', response.data);
       return response.data;
     } catch (error) {
-      console.error('停止自主任务失败:', error);
+      console.error('stop autonomous task failed:', error);
       throw error;
     }
   },
 
   /**
-   * 启动变量触发会话
-   * @param {string} taskId 行动任务ID
-   * @param {string} conversationId 会话ID
-   * @param {object} config 变量触发配置
-   * @param {string} config.topic 讨论主题
-   * @param {Array} config.triggerConditions 触发条件数组
-   * @param {string} config.conditionLogic 条件逻辑 ('and' | 'or')
-   * @param {number} config.checkInterval 检查间隔（秒）
-   * @param {number} config.maxTriggers 最大触发次数
-   * @param {number} config.maxRuntime 最大运行时间（分钟）
-   * @param {function} onStreamCallback 流式响应回调函数
-   * @returns {Promise<object>} 启动结果
+   * Start variable-trigger conversation
+   * @param {string} taskId action task ID
+   * @param {string} conversationId conversation ID
+   * @param {object} config variable trigger config
+   * @param {string} config.topic discussion topic
+   * @param {Array} config.triggerConditions trigger condition array
+   * @param {string} config.conditionLogic condition logic ('and' | 'or')
+   * @param {number} config.checkInterval check interval (seconds)
+   * @param {number} config.maxTriggers max trigger count
+   * @param {number} config.maxRuntime max runtime (minutes)
+   * @param {function} onStreamCallback streaming response callback
+   * @returns {Promise<object>} start result
    */
   startVariableTriggerConversation: async (taskId, conversationId, config, onStreamCallback) => {
     try {
-      console.log(`启动变量触发会话: 任务ID=${taskId}, 会话ID=${conversationId}`, config);
+      console.log(`Start variable-trigger conversation: task ID=${taskId}, conversation ID=${conversationId}`, config);
 
-      // 构建变量触发选项，复用startAutoDiscussion的结构
+      // Build variable-trigger options reusing startAutoDiscussion shape
       const variableTriggerOptions = {
         isVariableTrigger: true,
-        topic: config.topic || '请基于各自角色和知识，响应变量变化进行行动',
+        topic: config.topic || 'Respond to variable changes based on each role and knowledge',
         triggerConditions: config.triggerConditions || [],
         triggerConditionLogic: config.conditionLogic || 'or',
         checkInterval: config.checkInterval || 5,
@@ -1008,7 +1008,7 @@ const conversationAPI: ConversationAPI = {
         plannerAgentId: config.planner_agent_id || null
       };
 
-      // 复用现有的startAutoDiscussion方法，保持一致性
+      // Reuse existing startAutoDiscussion method for consistency
       return await conversationAPI.startAutoDiscussion(
         taskId,
         conversationId,
@@ -1017,98 +1017,98 @@ const conversationAPI: ConversationAPI = {
       );
 
     } catch (error) {
-      console.error('启动变量触发会话失败:', error);
+      console.error('start variable-trigger conversation failed:', error);
       throw error;
     }
   },
 
   /**
-   * 总结会话上下文（自动总结功能）
-   * @param {string} taskId 行动任务ID
-   * @param {string} conversationId 会话ID
-   * @returns {Promise<object>} 总结结果
+   * Summarize conversation context (auto-summary)
+   * @param {string} taskId action task ID
+   * @param {string} conversationId conversation ID
+   * @returns {Promise<object>} summary result
    */
   summarizeContext: async (taskId: string, conversationId: string) => {
     try {
-      console.log(`总结会话上下文: 任务ID=${taskId}, 会话ID=${conversationId}`);
+      console.log(`summarize conversation context: taskId=${taskId}, conversationId=${conversationId}`);
       const response = await api.post(`/action-tasks/${taskId}/conversations/${conversationId}/summarize-context`);
-      console.log('总结会话上下文成功:', response.data);
+      console.log('summarize conversation context succeeded:', response.data);
       return response.data;
     } catch (error) {
-      console.error('总结会话上下文失败:', error);
+      console.error('summarize conversation context failed:', error);
       throw error;
     }
   },
 
   /**
-   * 启动自主调度会话
-   * @param {string} taskId 行动任务ID
-   * @param {string} conversationId 会话ID
-   * @param {object} config 自主调度配置
-   * @param {string} config.topic 任务主题
-   * @param {string} config.plannerAgentId 计划智能体ID（可选）
-   * @param {number} config.maxRounds 最大轮数
-   * @param {number} config.timeoutMinutes 超时时间（分钟）
-   * @param {function} onStreamCallback 流式响应回调函数
-   * @returns {Promise<object>} 启动结果
+   * Start autonomous-scheduling conversation
+   * @param {string} taskId action task ID
+   * @param {string} conversationId conversation ID
+   * @param {object} config autonomous scheduling config
+   * @param {string} config.topic task topic
+   * @param {string} config.plannerAgentId planner agent ID (optional)
+   * @param {number} config.maxRounds max rounds
+   * @param {number} config.timeoutMinutes timeout (minutes)
+   * @param {function} onStreamCallback streaming response callback
+   * @returns {Promise<object>} start result
    */
   startAutonomousScheduling: async (taskId, conversationId, config, onStreamCallback) => {
     try {
-      console.log(`启动自主调度会话: 任务ID=${taskId}, 会话ID=${conversationId}`, config);
+      console.log(`Start autonomous-scheduling conversation: task ID=${taskId}, conversation ID=${conversationId}`, config);
 
-      // 构建自主调度选项
+      // Build autonomous-scheduling options
       const autonomousSchedulingOptions = {
-        topic: config.topic || '请基于各自角色和知识，进行自主调度协作',
+        topic: config.topic || 'Collaborate with autonomous scheduling based on each role and knowledge',
         plannerAgentId: config.plannerAgentId || null,
         enablePlanning: config.enablePlanning || false,
         maxRounds: config.maxRounds || 50,
         timeoutMinutes: config.timeoutMinutes || 60,
-        stream: true  // 始终使用流式模式
+        stream: true  // Always use streaming mode
       };
 
-      // 如果该会话有正在进行的流式请求，先取消它
+      // Cancel existing stream request for this conversation first
       const existingController = conversationAPI._activeStreamControllers.get(conversationId);
       if (existingController) {
-        console.log('取消该会话之前的流式请求');
+        console.log('cancel previous stream request for this conversation');
         try {
           existingController.abort();
         } catch (e) {
-          console.error('取消之前的流式请求失败:', e);
+          console.error('failed to cancel previous stream request:', e);
         }
       }
 
-      // 创建新的AbortController实例
+      // Create new AbortController instance
       const controller = new AbortController();
       conversationAPI._activeStreamControllers.set(conversationId, controller);
 
-      // 构建API端点，添加stream=1参数，使用统一的方法获取基础URL
+      // Build API endpoint with stream=1 and unified base URL
       const baseUrl = conversationAPI._getBaseUrl();
       const endpoint = `${baseUrl}/api/action-tasks/${taskId}/conversations/${conversationId}/autonomous-scheduling`;
-      console.log('自主调度流式请求端点:', endpoint);
+      console.log('autonomous-scheduling stream endpoint:', endpoint);
 
-      // 通知连接已开始建立
+      // Notify connection is starting
       onStreamCallback(null, { connectionStatus: 'connecting' });
 
-      // 使用fetch发送请求
+      // Send request with fetch
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(autonomousSchedulingOptions),
-        signal: controller.signal // 使用AbortController的信号
+        signal: controller.signal // Use AbortController signal
       });
 
-      // 检查响应状态
+      // Check response status
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`API 错误 (${response.status}): ${errorText}`);
+        throw new Error(`API error (${response.status}): ${errorText}`);
       }
 
-      // 通知连接已建立
+      // Notify connection established
       onStreamCallback(null, { connectionStatus: 'connected' });
 
-      // 读取流式响应
+      // Read streaming response
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let responseObj = { status: 'success' };
@@ -1118,25 +1118,25 @@ const conversationAPI: ConversationAPI = {
           const { done, value } = await reader.read();
 
           if (done) {
-            console.log('自主调度流读取完成');
+            console.log('autonomous-scheduling stream read complete');
             break;
           }
 
-          // 解码数据
+          // Decode data
           const chunk = decoder.decode(value, { stream: true });
           const lines = chunk.split('\n');
 
           for (const line of lines) {
             if (line.trim() === '') continue;
 
-            // 处理SSE格式的数据
+            // Handle SSE-formatted data
             if (line.startsWith('data: ')) {
-              const data = line.slice(6); // 移除 'data: ' 前缀
+              const data = line.slice(6); // Remove 'data: ' prefix
 
               if (data === '[DONE]') {
-                console.log('自主调度流结束标记');
+                console.log('autonomous-scheduling stream end marker');
                 onStreamCallback(null, { connectionStatus: 'done' });
-                // 清除活动控制器引用，防止后续状态异常
+                // Clear active controller reference to prevent later abnormal state
                 if (conversationAPI._activeStreamControllers.get(conversationId) === controller) {
                   conversationAPI._activeStreamControllers.delete(conversationId);
                 }
@@ -1145,9 +1145,9 @@ const conversationAPI: ConversationAPI = {
 
               try {
                 const parsedData = JSON.parse(data);
-                console.log('自主调度解析的数据:', parsedData);
+                console.log('autonomous-scheduling parsed data:', parsedData);
 
-                // 调用回调函数处理数据
+                // Call callback to process data
                 if (parsedData.content !== undefined || parsedData.meta) {
                   onStreamCallback(parsedData.content, parsedData.meta);
                 } else {
@@ -1155,8 +1155,8 @@ const conversationAPI: ConversationAPI = {
                 }
 
               } catch (error) {
-                // 如果JSON解析失败，将数据作为纯文本内容处理
-                console.log('JSON解析失败，将数据作为纯文本处理:', data);
+                // If JSON parsing fails, handle data as plain text content
+                console.log('JSON parse failed; handling as plain text:', data);
                 onStreamCallback(data, null);
               }
             }
@@ -1166,12 +1166,12 @@ const conversationAPI: ConversationAPI = {
         reader.releaseLock();
       }
 
-      // 处理流结束
-      console.log('自主调度流读取完成');
+      // Handle stream end
+      console.log('autonomous-scheduling stream read complete');
       return responseObj;
 
     } catch (error) {
-      console.error('启动自主调度会话失败:', error);
+      console.error('start autonomous-scheduling conversation failed:', error);
       throw error;
     }
   },
