@@ -1427,7 +1427,7 @@ class MCPServerManager:
                         "input": params,
                         "id": str(uuid.uuid4())
                     }
-                    return handle_request(request_data)
+                    return await handle_request(request_data)
                 elif server_id == 'planner-server':
                     from app.mcp_servers.planner_server import handle_request
                     request_data = {

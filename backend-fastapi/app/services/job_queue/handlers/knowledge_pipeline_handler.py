@@ -5,6 +5,7 @@
 """
 
 import logging
+import asyncio
 from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
@@ -263,7 +264,7 @@ def handle_process_file_pipeline(job_id: str, params: Dict[str, Any], context: D
         # 直接调用向量化服务（避免Job状态检查）
         from app.services.knowledge_base.knowledge_vectorizer import KnowledgeVectorizer
         vectorizer = KnowledgeVectorizer()
-        success, embed_result = vectorizer.vectorize_file(knowledge_id, file_path)
+        success, embed_result = asyncio.run(vectorizer.vectorize_file(knowledge_id, file_path))
         
         if not success:
             error_msg = embed_result.get('error', '向量化失败')

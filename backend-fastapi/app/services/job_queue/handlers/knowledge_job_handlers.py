@@ -3,6 +3,7 @@
 """
 
 import logging
+import asyncio
 import os
 from typing import Dict, Any
 
@@ -211,7 +212,7 @@ def handle_vectorize_file(job_id: str, params: Dict[str, Any], context: Dict[str
     
     try:
         # 调用现有的向量化方法
-        success, result = vectorizer.vectorize_file(knowledge_id, file_path)
+        success, result = asyncio.run(vectorizer.vectorize_file(knowledge_id, file_path))
         
         if not success:
             error_msg = result.get('error', '向量化失败')
@@ -403,7 +404,7 @@ def handle_embed_file(job_id: str, params: Dict[str, Any], context: Dict[str, An
         
         # 调用实际的向量化逻辑
         vectorizer = KnowledgeVectorizer()
-        success, result = vectorizer.vectorize_file(knowledge_id, file_path)
+        success, result = asyncio.run(vectorizer.vectorize_file(knowledge_id, file_path))
         
         if not success:
             error_msg = result.get('error', '向量嵌入失败')

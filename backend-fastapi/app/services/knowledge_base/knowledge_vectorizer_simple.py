@@ -16,7 +16,7 @@ from app.services.vector_db_milvus import get_vector_db_service, get_collection_
 logger = logging.getLogger(__name__)
 
 
-def vectorize_file(knowledge_id: str, file_path: str, embedding_record_id: str) -> Tuple[bool, Dict[str, Any]]:
+async def vectorize_file(knowledge_id: str, file_path: str, embedding_record_id: str) -> Tuple[bool, Dict[str, Any]]:
     """
     对文件的分段进行向量化
     
@@ -66,7 +66,7 @@ def vectorize_file(knowledge_id: str, file_path: str, embedding_record_id: str) 
         texts = [chunk.content for chunk in chunks]
         
         # 5. 生成向量
-        success, embeddings, meta_info = embedding_service.generate_embeddings(texts)
+        success, embeddings, meta_info = await embedding_service.generate_embeddings(texts)
         
         if not success:
             return False, {'error': '生成向量失败', 'details': embeddings}

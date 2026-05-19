@@ -26,7 +26,7 @@ class KnowledgeVectorizer:
             self._vector_db_service = get_vector_db_service()
         return self._vector_db_service
     
-    def vectorize_file(self, knowledge_id: str, file_path: str) -> Tuple[bool, Dict[str, Any]]:
+    async def vectorize_file(self, knowledge_id: str, file_path: str) -> Tuple[bool, Dict[str, Any]]:
         """
         对指定文件的分段进行向量化
         
@@ -60,7 +60,7 @@ class KnowledgeVectorizer:
             texts = [chunk.content for chunk in chunks]
             
             # 4. 调用嵌入服务生成向量
-            success, embeddings, meta_info = self.embedding_service.generate_embeddings(texts)
+            success, embeddings, meta_info = await self.embedding_service.generate_embeddings(texts)
             
             if not success:
                 return False, {
@@ -132,7 +132,7 @@ class KnowledgeVectorizer:
             traceback.print_exc()
             return False, {'error': f'向量化失败: {str(e)}'}
     
-    def vectorize_knowledge_base(self, knowledge_id: str) -> Tuple[bool, Dict[str, Any]]:
+    async def vectorize_knowledge_base(self, knowledge_id: str) -> Tuple[bool, Dict[str, Any]]:
         """
         对整个知识库的所有文件进行向量化
         
@@ -161,7 +161,7 @@ class KnowledgeVectorizer:
             failed_files = []
             
             for file_path in file_paths:
-                success, result = self.vectorize_file(knowledge_id, file_path)
+                success, result = await self.vectorize_file(knowledge_id, file_path)
                 
                 if success:
                     successful_files.append({

@@ -91,7 +91,7 @@ class TiDBVectorService:
             self.logger.error(error_msg)
             return False, error_msg, {}
     
-    def add_documents(
+    async def add_documents(
         self,
         knowledge_base: str,
         documents: List[str],
@@ -108,7 +108,7 @@ class TiDBVectorService:
                 return False, "文档列表不能为空", {}
             
             # 批量插入文档和向量
-            success, message, info = vector_operations.batch_insert_with_embeddings(
+            success, message, info = await vector_operations.batch_insert_with_embeddings(
                 table_name=knowledge_base,
                 texts=documents,
                 metadatas=metadatas,
@@ -124,7 +124,7 @@ class TiDBVectorService:
             self.logger.error(error_msg)
             return False, error_msg, {}
     
-    def search_knowledge(
+    async def search_knowledge(
         self,
         knowledge_base: str,
         query: str,
@@ -141,7 +141,7 @@ class TiDBVectorService:
                 return False, "查询内容不能为空", {}
             
             # 执行语义搜索
-            success, results, info = vector_operations.semantic_search(
+            success, results, info = await vector_operations.semantic_search(
                 table_name=knowledge_base,
                 query_text=query,
                 limit=top_k,

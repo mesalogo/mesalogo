@@ -26,7 +26,7 @@ class KnowledgeQueryService:
     """统一知识库查询服务"""
     
     @staticmethod
-    def query_knowledge_for_role(
+    async def query_knowledge_for_role(
         role_id: str, 
         query_text: str, 
         query_params: Optional[Dict[str, Any]] = None
@@ -74,7 +74,7 @@ class KnowledgeQueryService:
                 }
             
             # 1. 查询内部知识库
-            internal_results, internal_kb_count = KnowledgeQueryService._query_internal_knowledges(
+            internal_results, internal_kb_count = await KnowledgeQueryService._query_internal_knowledges(
                 role_id, query_text, score_threshold, knowledge_id
             )
             
@@ -130,7 +130,7 @@ class KnowledgeQueryService:
             }
     
     @staticmethod
-    def _query_internal_knowledges(
+    async def _query_internal_knowledges(
         role_id: str,
         query_text: str,
         score_threshold: float = 0.0,
@@ -171,7 +171,7 @@ class KnowledgeQueryService:
                 if vector_db_service.is_available():
                     for binding, knowledge in vector_knowledges:
                         try:
-                            results = KnowledgeQueryService._search_single_knowledge(
+                            results = await KnowledgeQueryService._search_single_knowledge(
                                 knowledge, query_text, score_threshold, vector_db_service
                             )
                             all_results.extend(results)
@@ -197,7 +197,7 @@ class KnowledgeQueryService:
             return [], 0
     
     @staticmethod
-    def _search_single_knowledge(
+    async def _search_single_knowledge(
         knowledge: Knowledge,
         query_text: str,
         score_threshold: float,
@@ -216,7 +216,7 @@ class KnowledgeQueryService:
         # 1. 向量检索
         if search_mode in ['vector', 'hybrid']:
             kb_collection_name = get_collection_name(knowledge.id)
-            success, search_results, _ = vector_db_service.search(
+            success, search_results, _ = await vector_db_service.search(
                 kb_collection_name, query_text, top_k
             )
             

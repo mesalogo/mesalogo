@@ -92,7 +92,7 @@ async def mcp_knowledge_base(request: Request):
             })
 
         # 处理请求
-        response = handle_kb_request(request_data)
+        response = await handle_kb_request(request_data)
 
         return response
 

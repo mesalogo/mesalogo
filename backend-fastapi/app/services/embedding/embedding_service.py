@@ -7,8 +7,9 @@
 import logging
 import time
 import json
+import asyncio
+import httpx
 from typing import List, Dict, Any, Optional, Union, Tuple
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 try:
     from sentence_transformers import SentenceTransformer
@@ -118,7 +119,7 @@ class EmbeddingService:
             self.logger.error(error_msg)
             return False, error_msg
     
-    def _generate_embeddings_with_api(
+    async def _generate_embeddings_with_api(
         self,
         texts: List[str],
         model_config: ModelConfig
@@ -129,24 +130,23 @@ class EmbeddingService:
             provider = model_config.provider.lower()
             
             if provider == 'ollama':
-                return self._generate_embeddings_ollama_api(texts, model_config)
+                return await self._generate_embeddings_ollama_api(texts, model_config)
             else:
                 # 默认使用OpenAI兼容格式（大多数提供商都兼容）
-                return self._generate_embeddings_openai_api(texts, model_config)
+                return await self._generate_embeddings_openai_api(texts, model_config)
 
         except Exception as e:
             error_msg = f"API生成嵌入向量失败: {str(e)}"
             self.logger.error(error_msg)
             return False, error_msg
     
-    def _generate_embeddings_openai_api(
+    async def _generate_embeddings_openai_api(
         self, 
         texts: List[str], 
         model_config: ModelConfig
     ) -> Tuple[bool, Union[List[List[float]], str]]:
         """使用OpenAI API生成嵌入向量"""
         try:
-            import requests
             from app.services.llm_http import (
                 merge_custom_headers,
                 merge_custom_body,
@@ -172,45 +172,45 @@ class EmbeddingService:
             all_embeddings = []
 
             # 分批处理
-            for i in range(0, len(texts), batch_size):
-                batch_texts = texts[i:i + batch_size]
+            async with httpx.AsyncClient(timeout=model_config.request_timeout or 30) as client:
+                for i in range(0, len(texts), batch_size):
+                    batch_texts = texts[i:i + batch_size]
 
-                base_body = {
-                    'input': batch_texts,
-                    'model': model_config.model_id
-                }
+                    base_body = {
+                        'input': batch_texts,
+                        'model': model_config.model_id
+                    }
 
-                # 本地参数：additional_params['dimensions']（保留向后兼容；
-                # 新写入应放到 custom_body 里）
-                additional_params = model_config.additional_params or {}
-                if 'dimensions' in additional_params:
-                    base_body['dimensions'] = additional_params['dimensions']
+                    # 本地参数：additional_params['dimensions']（保留向后兼容；
+                    # 新写入应放到 custom_body 里）
+                    additional_params = model_config.additional_params or {}
+                    if 'dimensions' in additional_params:
+                        base_body['dimensions'] = additional_params['dimensions']
 
-                # 合并 ModelConfig.custom_body（如 encoding_format 等）
-                data = merge_custom_body(
-                    base_body,
-                    getattr(model_config, 'custom_body', None) or {},
-                    modalities=getattr(model_config, 'modalities', None),
-                )
+                    # 合并 ModelConfig.custom_body（如 encoding_format 等）
+                    data = merge_custom_body(
+                        base_body,
+                        getattr(model_config, 'custom_body', None) or {},
+                        modalities=getattr(model_config, 'modalities', None),
+                    )
 
-                # 发送请求
-                response = requests.post(
-                    url,
-                    headers=headers,
-                    json=data,
-                    timeout=model_config.request_timeout or 30
-                )
-                
-                if response.status_code != 200:
-                    error_detail = f"API请求失败: {response.status_code} - {response.text}"
-                    self.logger.error(error_detail)
-                    return False, error_detail
-                
-                # 解析响应
-                result = response.json()
-                
-                for item in result.get('data', []):
-                    all_embeddings.append(item.get('embedding', []))
+                    # 发送请求
+                    response = await client.post(
+                        url,
+                        headers=headers,
+                        json=data,
+                    )
+                    
+                    if response.status_code != 200:
+                        error_detail = f"API请求失败: {response.status_code} - {response.text}"
+                        self.logger.error(error_detail)
+                        return False, error_detail
+                    
+                    # 解析响应
+                    result = response.json()
+                    
+                    for item in result.get('data', []):
+                        all_embeddings.append(item.get('embedding', []))
             
             if len(all_embeddings) != len(texts):
                 return False, f"返回的嵌入向量数量不匹配: 期望{len(texts)}, 实际{len(all_embeddings)}"
@@ -222,15 +222,13 @@ class EmbeddingService:
             self.logger.error(error_msg)
             return False, error_msg
 
-    def _generate_embeddings_ollama_api(
+    async def _generate_embeddings_ollama_api(
         self,
         texts: List[str],
         model_config: ModelConfig
     ) -> Tuple[bool, Union[List[List[float]], str]]:
         """使用Ollama API生成嵌入向量"""
         try:
-            import requests
-
             # 构建Ollama API URL
             base_url = model_config.base_url.rstrip('/')
 
@@ -255,74 +253,74 @@ class EmbeddingService:
                 merge_custom_body,
             )
 
-            # Ollama API通常一次处理一个文本，所以我们逐个处理
-            for text in texts:
-                # 基础请求体
-                base_body = {
-                    'model': model_config.model_id,
-                    'input': text
-                }
-                data = merge_custom_body(
-                    base_body,
-                    getattr(model_config, 'custom_body', None) or {},
-                    modalities=getattr(model_config, 'modalities', None),
-                )
+            async with httpx.AsyncClient(timeout=model_config.request_timeout or 30) as client:
+                # Ollama API通常一次处理一个文本，所以我们逐个处理
+                for text in texts:
+                    # 基础请求体
+                    base_body = {
+                        'model': model_config.model_id,
+                        'input': text
+                    }
+                    data = merge_custom_body(
+                        base_body,
+                        getattr(model_config, 'custom_body', None) or {},
+                        modalities=getattr(model_config, 'modalities', None),
+                    )
 
-                # 基础请求头
-                base_headers = {
-                    'Content-Type': 'application/json'
-                }
+                    # 基础请求头
+                    base_headers = {
+                        'Content-Type': 'application/json'
+                    }
 
-                # 如果有API密钥，添加到请求头
-                if model_config.api_key:
-                    base_headers['Authorization'] = f'Bearer {model_config.api_key}'
+                    # 如果有API密钥，添加到请求头
+                    if model_config.api_key:
+                        base_headers['Authorization'] = f'Bearer {model_config.api_key}'
 
-                headers = merge_custom_headers(
-                    base_headers,
-                    getattr(model_config, 'custom_headers', None) or {},
-                )
+                    headers = merge_custom_headers(
+                        base_headers,
+                        getattr(model_config, 'custom_headers', None) or {},
+                    )
 
-                # 发送请求
-                response = requests.post(
-                    url,
-                    headers=headers,
-                    json=data,
-                    timeout=model_config.request_timeout or 30
-                )
+                    # 发送请求
+                    response = await client.post(
+                        url,
+                        headers=headers,
+                        json=data,
+                    )
 
-                if response.status_code != 200:
-                    error_msg = f"Ollama API请求失败: HTTP {response.status_code}"
+                    if response.status_code != 200:
+                        error_msg = f"Ollama API请求失败: HTTP {response.status_code}"
+                        try:
+                            error_detail = response.json()
+                            if 'error' in error_detail:
+                                error_msg += f" - {error_detail['error']}"
+                        except Exception:
+                            error_msg += f" - {response.text}"
+
+                        self.logger.error(error_msg)
+                        return False, error_msg
+
+                    # 解析响应
                     try:
-                        error_detail = response.json()
-                        if 'error' in error_detail:
-                            error_msg += f" - {error_detail['error']}"
-                    except:
-                        error_msg += f" - {response.text}"
+                        result = response.json()
 
-                    self.logger.error(error_msg)
-                    return False, error_msg
-
-                # 解析响应
-                try:
-                    result = response.json()
-
-                    # Ollama API返回格式: {"embeddings": [vector]}
-                    if 'embeddings' in result:
-                        embeddings = result['embeddings']
-                        if isinstance(embeddings, list) and len(embeddings) > 0:
-                            # 取第一个嵌入向量
-                            embedding = embeddings[0]
-                            if isinstance(embedding, list):
-                                all_embeddings.append(embedding)
+                        # Ollama API返回格式: {"embeddings": [vector]}
+                        if 'embeddings' in result:
+                            embeddings = result['embeddings']
+                            if isinstance(embeddings, list) and len(embeddings) > 0:
+                                # 取第一个嵌入向量
+                                embedding = embeddings[0]
+                                if isinstance(embedding, list):
+                                    all_embeddings.append(embedding)
+                                else:
+                                    return False, f"Ollama API返回的嵌入向量格式不正确: {type(embedding)}"
                             else:
-                                return False, f"Ollama API返回的嵌入向量格式不正确: {type(embedding)}"
+                                return False, "Ollama API返回的嵌入向量为空"
                         else:
-                            return False, "Ollama API返回的嵌入向量为空"
-                    else:
-                        return False, f"Ollama API响应中缺少embeddings字段: {result}"
+                            return False, f"Ollama API响应中缺少embeddings字段: {result}"
 
-                except json.JSONDecodeError as e:
-                    return False, f"Ollama API响应JSON解析失败: {str(e)}"
+                    except json.JSONDecodeError as e:
+                        return False, f"Ollama API响应JSON解析失败: {str(e)}"
 
             if len(all_embeddings) != len(texts):
                 return False, f"嵌入向量数量不匹配: 期望{len(texts)}, 实际{len(all_embeddings)}"
@@ -330,7 +328,7 @@ class EmbeddingService:
             self.logger.debug(f"Ollama API成功生成{len(all_embeddings)}个嵌入向量")
             return True, all_embeddings
 
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             error_msg = f"Ollama API网络请求失败: {str(e)}"
             self.logger.error(error_msg)
             return False, error_msg
@@ -339,7 +337,7 @@ class EmbeddingService:
             self.logger.error(error_msg)
             return False, error_msg
     
-    def generate_embeddings(
+    async def generate_embeddings(
         self, 
         texts: Union[str, List[str]], 
         model_config: Optional[ModelConfig] = None
@@ -375,10 +373,14 @@ class EmbeddingService:
             # 根据提供商选择生成方法
             if model_config.provider.lower() == 'builtin':
                 # 内置模型，使用SentenceTransformer
-                success, result = self._generate_embeddings_with_sentence_transformer(texts, model_config)
+                success, result = await asyncio.to_thread(
+                    self._generate_embeddings_with_sentence_transformer,
+                    texts,
+                    model_config,
+                )
             else:
                 # 外部API模型
-                success, result = self._generate_embeddings_with_api(texts, model_config)
+                success, result = await self._generate_embeddings_with_api(texts, model_config)
             
             processing_time = time.time() - start_time
             
@@ -406,7 +408,7 @@ class EmbeddingService:
             self.logger.error(error_msg)
             return False, error_msg, {}
     
-    def generate_single_embedding(
+    async def generate_single_embedding(
         self, 
         text: str, 
         model_config: Optional[ModelConfig] = None
@@ -421,14 +423,14 @@ class EmbeddingService:
         Returns:
             (成功标志, 嵌入向量或错误信息, 元信息)
         """
-        success, result, meta_info = self.generate_embeddings([text], model_config)
+        success, result, meta_info = await self.generate_embeddings([text], model_config)
         
         if success and result:
             return True, result[0], meta_info
         else:
             return success, result, meta_info
     
-    def batch_generate_embeddings(
+    async def batch_generate_embeddings(
         self, 
         texts: List[str], 
         model_config: Optional[ModelConfig] = None,
@@ -466,23 +468,28 @@ class EmbeddingService:
             all_embeddings = []
             failed_batches = []
             
-            # 并行处理批次
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                future_to_batch = {
-                    executor.submit(self.generate_embeddings, batch, model_config): i 
-                    for i, batch in enumerate(batches)
-                }
-                
-                for future in as_completed(future_to_batch):
-                    batch_idx = future_to_batch[future]
+            semaphore = asyncio.Semaphore(max_workers)
+
+            async def _generate_batch(batch_idx: int, batch: List[str]):
+                async with semaphore:
                     try:
-                        success, result, _ = future.result()
-                        if success:
-                            all_embeddings.extend(result)
-                        else:
-                            failed_batches.append((batch_idx, result))
+                        success, result, _ = await self.generate_embeddings(batch, model_config)
+                        return batch_idx, success, result
                     except Exception as e:
-                        failed_batches.append((batch_idx, str(e)))
+                        return batch_idx, False, str(e)
+
+            batch_results = await asyncio.gather(
+                *[
+                    _generate_batch(i, batch)
+                    for i, batch in enumerate(batches)
+                ]
+            )
+
+            for batch_idx, success, result in sorted(batch_results, key=lambda item: item[0]):
+                if success:
+                    all_embeddings.extend(result)
+                else:
+                    failed_batches.append((batch_idx, result))
             
             processing_time = time.time() - start_time
             

@@ -113,7 +113,7 @@ class VectorDBTestResult:
         return self.success, self.message, self.info
 
 
-def test_vector_db_unified(provider: str, config: Dict[str, Any]) -> Tuple[bool, str, Dict[str, Any]]:
+async def test_vector_db_unified(provider: str, config: Dict[str, Any]) -> Tuple[bool, str, Dict[str, Any]]:
     """统一的向量数据库测试入口"""
     result = VectorDBTestResult(provider)
 
@@ -127,7 +127,7 @@ def test_vector_db_unified(provider: str, config: Dict[str, Any]) -> Tuple[bool,
             return result.to_tuple()
 
         # Level 3: 向量操作测试
-        _test_vector_operations(provider, config, result)
+        await _test_vector_operations(provider, config, result)
 
         return result.to_tuple()
 
@@ -216,7 +216,7 @@ class VectorDBTestOperations:
         """清理测试容器 - 子类实现"""
         raise NotImplementedError
 
-    def run_standard_test(self, result: VectorDBTestResult):
+    async def run_standard_test(self, result: VectorDBTestResult):
         """运行标准化的向量操作测试流程"""
         try:
 
@@ -227,7 +227,7 @@ class VectorDBTestOperations:
 
             # 步骤1: 生成测试向量
             logger.info(f"步骤1: 生成测试向量...")
-            embed_success, embeddings, embed_info = embedding_service.generate_embeddings(
+            embed_success, embeddings, embed_info = await embedding_service.generate_embeddings(
                 [self.test_text], default_model
             )
 
@@ -319,7 +319,7 @@ class VectorDBTestOperations:
             result.set_vector_operations(False, f"向量操作测试异常: {str(e)}")
 
 
-def _test_vector_operations(provider: str, config: Dict[str, Any], result: VectorDBTestResult):
+async def _test_vector_operations(provider: str, config: Dict[str, Any], result: VectorDBTestResult):
     """Level 3: 向量操作测试 - 使用统一的测试流程"""
     try:
         # 根据提供商创建对应的测试操作实例
@@ -336,7 +336,7 @@ def _test_vector_operations(provider: str, config: Dict[str, Any], result: Vecto
             return
 
         # 运行标准化测试流程
-        test_ops.run_standard_test(result)
+        await test_ops.run_standard_test(result)
 
     except Exception as e:
         result.set_vector_operations(False, f"向量操作测试异常: {str(e)}")
@@ -763,9 +763,9 @@ def _test_tidb_connection(config: Dict[str, Any], result: VectorDBTestResult) ->
 # 旧的TiDB测试函数已被统一的TiDBTestOperations类替代
 
 
-def test_tidb_connection(config: Dict[str, Any]) -> Tuple[bool, str, Dict[str, Any]]:
+async def test_tidb_connection(config: Dict[str, Any]) -> Tuple[bool, str, Dict[str, Any]]:
     """保持向后兼容的TiDB测试接口"""
-    return test_vector_db_unified('tidb', config)
+    return await test_vector_db_unified('tidb', config)
 
 def _test_milvus_connection(config: Dict[str, Any], result: VectorDBTestResult) -> bool:
     """Milvus连接测试"""
@@ -825,9 +825,9 @@ def _test_milvus_connection(config: Dict[str, Any], result: VectorDBTestResult) 
 # 旧的Milvus测试函数已被统一的MilvusTestOperations类替代
 
 
-def test_milvus_connection(config: Dict[str, Any]) -> Tuple[bool, str, Dict[str, Any]]:
+async def test_milvus_connection(config: Dict[str, Any]) -> Tuple[bool, str, Dict[str, Any]]:
     """保持向后兼容的Milvus测试接口"""
-    return test_vector_db_unified('milvus', config)
+    return await test_vector_db_unified('milvus', config)
 
 def test_aliyun_connection(config: Dict[str, Any]) -> Tuple[bool, str, Dict[str, Any]]:
     """测试阿里云DashVector连接"""
@@ -928,7 +928,7 @@ async def test_connection(request: Request):
         start_time = time.time()
         
         # 使用统一的测试接口
-        success, message, info = test_vector_db_unified(provider, config)
+        success, message, info = await test_vector_db_unified(provider, config)
         
         end_time = time.time()
         response_time = (end_time - start_time) * 1000  # 转换为毫秒
@@ -1456,7 +1456,7 @@ async def generate_embeddings(request: Request):
             model_config = None  # 使用默认模型
 
         # 生成嵌入向量
-        success, result, meta_info = embedding_service.generate_embeddings(texts, model_config)
+        success, result, meta_info = await embedding_service.generate_embeddings(texts, model_config)
 
         response_data = {
             'success': success,
@@ -1511,7 +1511,7 @@ async def test_embedding_model(request: Request):
                 })
 
         # 测试生成嵌入向量
-        success, result, meta_info = embedding_service.generate_single_embedding(test_text, model_config)
+        success, result, meta_info = await embedding_service.generate_single_embedding(test_text, model_config)
 
         response_data = {
             'success': success,
@@ -1691,7 +1691,7 @@ async def semantic_search(table_name, request: Request):
             }, status_code=400)
 
         # 执行语义搜索
-        success, results, info = vector_operations.semantic_search(
+        success, results, info = await vector_operations.semantic_search(
             table_name=table_name,
             query_text=query_text,
             limit=limit,

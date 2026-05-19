@@ -156,7 +156,7 @@ class VectorProcessor:
     def __init__(self):
         pass
     
-    def vectorize_chunks(self, chunks: List[Dict[str, Any]], 
+    async def vectorize_chunks(self, chunks: List[Dict[str, Any]], 
                         model_config=None) -> Tuple[bool, List[Dict[str, Any]], Dict[str, Any]]:
         """对文本块进行向量化"""
         try:
@@ -166,7 +166,7 @@ class VectorProcessor:
             texts = [chunk['text'] for chunk in chunks]
             
             # 生成向量
-            success, embeddings, meta_info = embedding_service.generate_embeddings(texts, model_config)
+            success, embeddings, meta_info = await embedding_service.generate_embeddings(texts, model_config)
             
             if not success:
                 return False, [], {'error': embeddings}
@@ -192,7 +192,7 @@ class KnowledgeBaseProcessor:
         self.doc_processor = DocumentProcessor()
         self.vector_processor = VectorProcessor()
     
-    def process_file_for_knowledge_base(self, knowledge_id: int, file_path: str, 
+    async def process_file_for_knowledge_base(self, knowledge_id: int, file_path: str, 
                                       chunk_size: int = 1000, overlap: int = 200) -> Tuple[bool, Dict[str, Any]]:
         """为知识库处理文件"""
         try:
@@ -202,7 +202,7 @@ class KnowledgeBaseProcessor:
                 return False, doc_result
             
             # 2. 向量化处理
-            success, vectorized_chunks, vector_info = self.vector_processor.vectorize_chunks(doc_result['chunks'])
+            success, vectorized_chunks, vector_info = await self.vector_processor.vectorize_chunks(doc_result['chunks'])
             if not success:
                 return False, {'error': '向量化处理失败', 'details': vector_info}
             

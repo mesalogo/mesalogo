@@ -10,6 +10,7 @@
 """
 
 import asyncio
+import inspect
 import json
 import logging
 import sys
@@ -174,7 +175,7 @@ def list_knowledge_bases(agent_id: int) -> Dict[str, Any]:
         }
 
 @mcp.tool()
-def query_knowledge(
+async def query_knowledge(
     agent_id: int,
     query: str,
     knowledge_id: Optional[str] = None
@@ -239,7 +240,7 @@ def query_knowledge(
         
         # 使用统一知识库查询服务（会同时查询内部和外部知识库）
         # 返回结果数 = 所有知识库的 top_k 之和
-        result = KnowledgeQueryService.query_knowledge_for_role(
+        result = await KnowledgeQueryService.query_knowledge_for_role(
             role_id, query, query_params
         )
         
@@ -286,7 +287,7 @@ def query_knowledge(
             }
         }
 
-def handle_request(request_data: Dict) -> Dict:
+async def handle_request(request_data: Dict) -> Dict:
     """
     处理MCP工具调用请求（为了与MCPServerManager兼容）
 
@@ -325,8 +326,9 @@ def handle_request(request_data: Dict) -> Dict:
                 "error": f"未找到工具: {tool_name}"
             }
 
-        # 直接同步调用工具函数（内部全是同步 ORM 操作）
         result = tool_function(**tool_input)
+        if inspect.isawaitable(result):
+            result = await result
 
         return {
             "type": "tool_result",

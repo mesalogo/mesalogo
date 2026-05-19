@@ -363,7 +363,7 @@ class VectorOperations:
             return False, error_msg, {}
 
 
-    def batch_insert_with_embeddings(
+    async def batch_insert_with_embeddings(
         self,
         table_name: str,
         texts: List[str],
@@ -380,7 +380,7 @@ class VectorOperations:
             start_time = time.time()
 
             # 生成嵌入向量
-            success, embeddings, embed_info = embedding_service.generate_embeddings(
+            success, embeddings, embed_info = await embedding_service.generate_embeddings(
                 texts,
                 embedding_service.get_embedding_model_by_id(model_config_id) if model_config_id else None
             )
@@ -429,7 +429,7 @@ class VectorOperations:
             self.logger.error(error_msg)
             return False, error_msg, {}
 
-    def semantic_search(
+    async def semantic_search(
         self,
         table_name: str,
         query_text: str,
@@ -446,7 +446,7 @@ class VectorOperations:
             start_time = time.time()
 
             # 生成查询向量
-            success, query_vector, embed_info = embedding_service.generate_single_embedding(
+            success, query_vector, embed_info = await embedding_service.generate_single_embedding(
                 query_text,
                 embedding_service.get_embedding_model_by_id(model_config_id) if model_config_id else None
             )

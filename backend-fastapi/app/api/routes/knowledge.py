@@ -2025,7 +2025,7 @@ from .knowledge_utils import get_knowledge_base_path
 # 创建Blueprint
 
 @router.post('/knowledges/{knowledge_id}/vectorize')
-def vectorize_knowledge(knowledge_id, current_user=Depends(get_current_user)):
+async def vectorize_knowledge(knowledge_id, current_user=Depends(get_current_user)):
     """对知识库进行向量化处理"""
     try:
         # 获取当前用户
@@ -2059,7 +2059,7 @@ def vectorize_knowledge(knowledge_id, current_user=Depends(get_current_user)):
             file_path = os.path.join(files_path, filename)
             if os.path.isfile(file_path):
                 try:
-                    success, result = knowledge_processor.process_file_for_knowledge_base(
+                    success, result = await knowledge_processor.process_file_for_knowledge_base(
                         knowledge_id, file_path
                     )
 
@@ -2814,7 +2814,7 @@ async def search_knowledge(knowledge_id, request: Request):
         
         if vector_db_service.is_available():
             # 使用混合检索服务（top_k从知识库配置中读取）
-            search_results = KnowledgeQueryService._search_single_knowledge(
+            search_results = await KnowledgeQueryService._search_single_knowledge(
                 knowledge, query, score_threshold, vector_db_service
             )
             

@@ -31,7 +31,7 @@ class VectorDBAdapter(ABC):
         pass
     
     @abstractmethod
-    def search(self, knowledge_base: str, query: str, top_k: int = 5, 
+    async def search(self, knowledge_base: str, query: str, top_k: int = 5, 
               filters: Optional[Dict[str, Any]] = None) -> Tuple[bool, Union[List[Dict[str, Any]], str], Dict[str, Any]]:
         """搜索知识库"""
         pass
@@ -185,7 +185,7 @@ class BuiltinVectorAdapter(VectorDBAdapter):
             traceback.print_exc()
             return False, f"插入向量失败: {str(e)}", {}
     
-    def search(self, knowledge_base: str, query: str, top_k: int = 5,
+    async def search(self, knowledge_base: str, query: str, top_k: int = 5,
               filters: Optional[Dict[str, Any]] = None) -> Tuple[bool, Union[List[Dict[str, Any]], str], Dict[str, Any]]:
         """搜索知识库"""
         try:
@@ -200,7 +200,7 @@ class BuiltinVectorAdapter(VectorDBAdapter):
             
             # 为查询生成向量
             self.logger.info(f"为查询生成向量: {query[:50]}...")
-            success, query_embeddings, _ = embedding_service.generate_embeddings([query])
+            success, query_embeddings, _ = await embedding_service.generate_embeddings([query])
             if not success:
                 return False, f"生成查询向量失败: {query_embeddings}", {}
             
@@ -414,12 +414,12 @@ class VectorDBService:
             return False, "向量数据库服务不可用", {}
         return self._adapter.insert_vectors(knowledge_base, embeddings, metadatas)
     
-    def search(self, knowledge_base: str, query: str, top_k: int = 5, 
+    async def search(self, knowledge_base: str, query: str, top_k: int = 5, 
               filters: Optional[Dict[str, Any]] = None) -> Tuple[bool, Union[List[Dict[str, Any]], str], Dict[str, Any]]:
         """搜索知识库"""
         if not self._adapter:
             return False, "向量数据库服务不可用", {}
-        return self._adapter.search(knowledge_base, query, top_k, filters)
+        return await self._adapter.search(knowledge_base, query, top_k, filters)
     
     def delete_documents(self, knowledge_base: str, document_ids: List[str]) -> Tuple[bool, str, Dict[str, Any]]:
         """删除文档"""
