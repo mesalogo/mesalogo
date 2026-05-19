@@ -31,14 +31,14 @@ import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import capabilityAPI from '../../../services/api/capability';
 import SubAgentResultCard from './SubAgentResultCard';
-// 导入对话样式
+// Import conversation styles
 import '../css/conversation.css';
-// 导入 Markdown 渲染器样式
+// Import Markdown renderer styles
 import '../css/markdown-renderer.css';
 
 const { Text, Paragraph } = Typography;
 
-// 模块级缓存：避免每个 ConversationExtraction 实例都发起 API 请求
+// Module-level cache to avoid API requests from every ConversationExtraction instance
 let _capabilityToolsCache: any = null;
 let _capabilityToolsFetchPromise: Promise<any> | null = null;
 
@@ -49,12 +49,12 @@ async function getCapabilityToolsCached() {
     .then(response => {
       _capabilityToolsCache = response || {};
       _capabilityToolsFetchPromise = null;
-      // 5分钟后过期，允许刷新
+      // Expire after 5 minutes to allow refresh
       setTimeout(() => { _capabilityToolsCache = null; }, 5 * 60 * 1000);
       return _capabilityToolsCache;
     })
     .catch(error => {
-      console.error('获取能力工具关联关系失败:', error);
+      console.error('fetch capability-tool mapping failed:', error);
       _capabilityToolsFetchPromise = null;
       return {};
     });
@@ -63,25 +63,25 @@ async function getCapabilityToolsCached() {
 
 
 /**
- * 解析思考标签内容，保留原始位置信息
- * @param {string} text 消息内容
- * @returns {Object} 解析后的段落数组，包含普通文本和思考内容
+ * Parse thinking tags while preserving original positions
+ * @param {string} text Message content
+ * @returns {Object} Parsed segment array containing text and thinking content
  */
 const parseThinking = (text) => {
   if (!text) return { segments: [] };
 
   try {
-    // 定义思考标记的正则表达式
+    // Define thinking-tag regular expressions
     const thinkingPatterns = [
       { pattern: /<think>([\s\S]*?)<\/think>/g, type: 'think' },
       { pattern: /<thinking>([\s\S]*?)<\/thinking>/g, type: 'thinking' },
       { pattern: /<observing>([\s\S]*?)<\/observing>/g, type: 'observing' }
     ];
 
-    // 存储所有匹配的标签及其位置
+    // Store all matched tags and their positions
     const matches = [];
 
-    // 查找所有思考标签及其位置
+    // Find all thinking tags and positions
     thinkingPatterns.forEach(({ pattern, type }) => {
       let match;
       while ((match = pattern.exec(text)) !== null) {
@@ -96,19 +96,19 @@ const parseThinking = (text) => {
       }
     });
 
-    // 检查是否有未闭合的思考标签（流式状态下可能出现）
+    // Check unclosed thinking tags that may appear during streaming
     thinkingPatterns.forEach(({ type }) => {
-      // 修改正则表达式，匹配未闭合的标签
+      // Match unclosed tags
       const unclosedPattern = new RegExp(`<${type}>([\\\s\\\S]*?)(?=<\\/${type}>|$)`, 'g');
       let match;
 
       while ((match = unclosedPattern.exec(text)) !== null) {
-        // 检查是否已经有完整标签匹配了这部分内容
+        // Check whether this range was already matched by a complete tag
         const isAlreadyMatched = matches.some(m =>
           m.startPos <= match.index && m.endPos >= match.index + match[0].length
         );
 
-        // 如果没有被完整标签匹配，且不是空内容，则添加为思考内容
+        // If not matched by a complete tag and non-empty, add as thinking content
         if (!isAlreadyMatched && match[1].trim()) {
           matches.push({
             type: 'thinking',
@@ -123,22 +123,22 @@ const parseThinking = (text) => {
       }
     });
 
-    // 如果没有找到思考标签，直接返回原文本
+    // If no thinking tags are found, return original text
     if (matches.length === 0) {
       return {
         segments: [{ type: 'text', content: text }]
       };
     }
 
-    // 按照位置排序匹配结果
+    // Sort matches by position
     matches.sort((a, b) => a.startPos - b.startPos);
 
-    // 构建段落数组，保留原始顺序
+    // Build segments while preserving original order
     const segments = [];
     let currentPos = 0;
 
     matches.forEach(match => {
-      // 添加匹配前的文本
+      // Add text before match
       if (match.startPos > currentPos) {
         const textBefore = text.substring(currentPos, match.startPos);
         if (textBefore.trim()) {
@@ -149,7 +149,7 @@ const parseThinking = (text) => {
         }
       }
 
-      // 添加思考内容
+      // Add thinking content
       segments.push({
         type: 'thinking',
         subtype: match.subtype,
@@ -157,11 +157,11 @@ const parseThinking = (text) => {
         isUnclosed: match.isUnclosed
       });
 
-      // 更新当前位置
+      // Update current position
       currentPos = match.endPos;
     });
 
-    // 添加最后一个匹配后的文本
+    // Add text after the final match
     if (currentPos < text.length) {
       const textAfter = text.substring(currentPos);
       if (textAfter.trim()) {
@@ -174,8 +174,8 @@ const parseThinking = (text) => {
 
     return { segments };
   } catch (error) {
-    console.error('思考内容解析失败:', error);
-    // 发生错误时，将所有内容作为普通文本返回
+    console.error('thinking content parsing failed:', error);
+    // On error, return everything as plain text
     return {
       segments: [{ type: 'text', content: text }]
     };
@@ -183,7 +183,7 @@ const parseThinking = (text) => {
 };
 
 /**
- * HTML转义函数，防止XSS攻击
+ * HTML escape helper to prevent XSS
  */
 const escapeHtml = (text: string): string => {
   const map: Record<string, string> = {
@@ -197,8 +197,8 @@ const escapeHtml = (text: string): string => {
 };
 
 /**
- * Mermaid图表渲染组件 - 使用iframe隔离渲染
- * 类似GitHub的viewscreen-mermaid实现方式
+ * Mermaid diagram renderer using iframe isolation
+ * Similar to GitHub viewscreen-mermaid implementation
  */
 const MermaidRenderer = ({ chart }: { chart: string }) => {
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
@@ -209,49 +209,49 @@ const MermaidRenderer = ({ chart }: { chart: string }) => {
   const [lastRenderedChart, setLastRenderedChart] = React.useState('');
   const { message } = App.useApp();
   
-  // 为每个实例生成唯一ID，用于区分不同的mermaid渲染器
+  // Generate a unique ID per instance to distinguish mermaid renderers
   const [instanceId] = React.useState(() => `mermaid-${Math.random().toString(36).substring(2, 10)}`);
 
-  // 检查图表内容是否看起来完整
+  // Check whether chart content looks complete
   const isChartComplete = React.useCallback((chartContent: string) => {
     if (!chartContent || chartContent.trim() === '') return false;
 
     const trimmed = chartContent.trim();
 
-    // 检查是否有基本的mermaid语法结构
+    // Check basic mermaid syntax structure
     const hasValidStart = /^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gitgraph|pie|gantt|mindmap|timeline|quadrantChart|requirement|c4Context|xychart|block|sankey|packet|architecture)/i.test(trimmed);
 
     if (!hasValidStart) return false;
 
-    // 检查是否有未闭合的引号（只检查双引号，因为单引号在mermaid中不常用）
+    // Check unclosed quotes (double quotes only; single quotes are uncommon in mermaid)
     const doubleQuotes = (trimmed.match(/"/g) || []).length;
     
-    // 检查方括号是否配对
+    // Check square bracket balance
     const openBrackets = (trimmed.match(/\[/g) || []).length;
     const closeBrackets = (trimmed.match(/\]/g) || []).length;
     
-    // 检查圆括号是否配对
+    // Check parenthesis balance
     const openParens = (trimmed.match(/\(/g) || []).length;
     const closeParens = (trimmed.match(/\)/g) || []).length;
     
-    // 检查花括号是否配对
+    // Check brace balance
     const openBraces = (trimmed.match(/\{/g) || []).length;
     const closeBraces = (trimmed.match(/\}/g) || []).length;
 
-    // 基本的平衡检查 - 放宽条件，只要不是明显不完整就认为完整
+    // Basic balance check, permissive unless obviously incomplete
     const isBalanced = (doubleQuotes % 2 === 0) &&
                       (openBrackets >= closeBrackets - 1 && openBrackets <= closeBrackets + 1) &&
                       (openParens >= closeParens - 1 && openParens <= closeParens + 1) &&
                       (openBraces >= closeBraces - 1 && openBraces <= closeBraces + 1);
 
-    // 如果内容超过一定长度且有换行，认为可能是完整的
+    // If content is long enough and has line breaks, it may be complete
     const hasMultipleLines = trimmed.includes('\n');
     const isLongEnough = trimmed.length > 20;
 
     return isBalanced || (hasMultipleLines && isLongEnough);
   }, []);
 
-  // 导出SVG功能
+  // Export SVG
   const handleExportSVG = React.useCallback(() => {
     if (!svg) return;
     
@@ -264,26 +264,26 @@ const MermaidRenderer = ({ chart }: { chart: string }) => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    message.success('SVG导出成功');
+    message.success('SVG exported');
   }, [svg, message]);
 
-  // 复制代码功能
+  // Copy code
   const handleCopyCode = React.useCallback(() => {
     if (!chart) return;
     
     navigator.clipboard.writeText(chart).then(() => {
-      message.success('Mermaid代码已复制到剪贴板');
+      message.success('Mermaid code copied to clipboard');
     }).catch(() => {
-      message.error('复制失败');
+      message.error('Copy failed');
     });
   }, [chart, message]);
 
-  // 查看代码状态
+  // Code-view state
   const [showCode, setShowCode] = React.useState(false);
 
-  // 生成iframe内容的HTML - 包含实例ID用于消息识别
+  // Generate iframe HTML with instance ID for message matching
   const generateIframeContent = React.useCallback((chartCode: string, id: string) => {
-    // 使用转义后的图表代码
+    // Use escaped chart code
     const escapedChart = escapeHtml(chartCode);
     
     return `
@@ -347,7 +347,7 @@ const MermaidRenderer = ({ chart }: { chart: string }) => {
         const element = document.querySelector('.mermaid');
         const code = element.textContent;
         
-        // 解码HTML实体
+        // Decode HTML entities
         const textarea = document.createElement('textarea');
         textarea.innerHTML = code;
         const decodedCode = textarea.value;
@@ -355,7 +355,7 @@ const MermaidRenderer = ({ chart }: { chart: string }) => {
         const { svg } = await mermaid.render('mermaid-svg', decodedCode);
         element.innerHTML = svg;
         
-        // 发送渲染成功消息和SVG内容，包含实例ID
+        // Send render-success message and SVG payload with instance ID
         const height = document.body.scrollHeight;
         window.parent.postMessage({ 
           type: 'mermaid-rendered',
@@ -365,7 +365,7 @@ const MermaidRenderer = ({ chart }: { chart: string }) => {
         }, '*');
       } catch (err) {
         const container = document.getElementById('container');
-        container.innerHTML = '<div class="error">' + (err.message || '渲染失败') + '</div>';
+        container.innerHTML = '<div class="error">' + (err.message || 'Render failed') + '</div>';
         window.parent.postMessage({ 
           type: 'mermaid-error',
           instanceId: INSTANCE_ID,
@@ -381,16 +381,16 @@ const MermaidRenderer = ({ chart }: { chart: string }) => {
 </html>`;
   }, []);
 
-  // iframe 的 srcdoc 内容
+  // iframe srcdoc content
   const [srcdoc, setSrcdoc] = React.useState<string>('');
   
-  // 是否已经成功渲染过（用于防止闪烁）
+  // Whether render has succeeded, used to prevent flicker
   const [hasRendered, setHasRendered] = React.useState(false);
 
-  // 监听iframe消息 - 只处理属于当前实例的消息
+  // Listen for iframe messages from this instance only
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      // 只处理属于当前实例的消息
+      // Only handle messages for this instance
       if (event.data?.instanceId !== instanceId) return;
       
       if (event.data?.type === 'mermaid-rendered') {
@@ -409,17 +409,17 @@ const MermaidRenderer = ({ chart }: { chart: string }) => {
     return () => window.removeEventListener('message', handleMessage);
   }, [instanceId]);
 
-  // 渲染图表到iframe - 内容变化时渲染，让mermaid自己处理错误
+  // Render chart to iframe on content changes; let mermaid handle errors
   useEffect(() => {
     if (!chart) return;
     
-    // 如果内容与上次渲染的内容相同，跳过渲染
+    // Skip if content matches the last rendered chart
     if (chart === lastRenderedChart) return;
 
-    // 清除错误状态
+    // Clear error state
     setError(null);
 
-    // 添加防抖，避免流式输出时频繁渲染
+    // Debounce to avoid frequent renders during streaming
     const debounceTimer = setTimeout(() => {
       const htmlContent = generateIframeContent(chart, instanceId);
       setSrcdoc(htmlContent);
@@ -429,7 +429,7 @@ const MermaidRenderer = ({ chart }: { chart: string }) => {
     return () => clearTimeout(debounceTimer);
   }, [chart, lastRenderedChart, generateIframeContent, instanceId]);
 
-  // 处理点击事件
+  // Handle click event
   const handleClick = React.useCallback(() => {
     if (svg) {
       setIsModalVisible(true);
@@ -449,7 +449,7 @@ const MermaidRenderer = ({ chart }: { chart: string }) => {
           position: 'relative',
           cursor: svg ? 'pointer' : 'default'
         }}
-        title={svg ? "点击查看大图" : undefined}
+        title={svg ? "Click to view larger image" : undefined}
       >
         <iframe
           ref={iframeRef}
@@ -467,7 +467,7 @@ const MermaidRenderer = ({ chart }: { chart: string }) => {
         />
       </div>
       
-      {/* 放大查看Modal */}
+      {/* zoom modal */}
       <Modal
         open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
@@ -477,7 +477,7 @@ const MermaidRenderer = ({ chart }: { chart: string }) => {
         style={{ maxWidth: '1200px' }}
       >
         {showCode ? (
-          /* 代码视图 - 不使用缩放 */
+          /* code view without zoom */
           <>
             <div style={{
               position: 'absolute',
@@ -491,10 +491,10 @@ const MermaidRenderer = ({ chart }: { chart: string }) => {
               borderRadius: '4px',
               boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
             }}>
-              <Tooltip title="查看图表">
+              <Tooltip title="View diagram">
                 <Button icon={<CodeOutlined />} onClick={() => setShowCode(false)} />
               </Tooltip>
-              <Tooltip title="复制代码">
+              <Tooltip title="Copy code">
                 <Button icon={<CopyOutlined />} onClick={handleCopyCode} />
               </Tooltip>
             </div>
@@ -515,7 +515,7 @@ const MermaidRenderer = ({ chart }: { chart: string }) => {
             </div>
           </>
         ) : (
-          /* 图表视图 - 使用缩放 */
+          /* diagram view with zoom */
           <TransformWrapper
             initialScale={1}
             minScale={0.5}
@@ -536,22 +536,22 @@ const MermaidRenderer = ({ chart }: { chart: string }) => {
                   borderRadius: '4px',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
                 }}>
-                  <Tooltip title="放大">
+                  <Tooltip title="Zoom in">
                     <Button icon={<ZoomInOutlined />} onClick={() => zoomIn()} />
                   </Tooltip>
-                  <Tooltip title="缩小">
+                  <Tooltip title="Zoom out">
                     <Button icon={<ZoomOutOutlined />} onClick={() => zoomOut()} />
                   </Tooltip>
-                  <Tooltip title="重置">
+                  <Tooltip title="Reset">
                     <Button icon={<UndoOutlined />} onClick={() => resetTransform()} />
                   </Tooltip>
-                  <Tooltip title="查看代码">
+                  <Tooltip title="View code">
                     <Button icon={<CodeOutlined />} onClick={() => setShowCode(true)} />
                   </Tooltip>
-                  <Tooltip title="复制代码">
+                  <Tooltip title="Copy code">
                     <Button icon={<CopyOutlined />} onClick={handleCopyCode} />
                   </Tooltip>
-                  <Tooltip title="导出SVG">
+                  <Tooltip title="Export SVG">
                     <Button icon={<DownloadOutlined />} onClick={handleExportSVG} />
                   </Tooltip>
                 </div>
@@ -580,29 +580,29 @@ const MermaidRenderer = ({ chart }: { chart: string }) => {
 };
 
 /**
- * 通用Markdown渲染组件
- * 用于统一渲染Markdown内容，支持代码高亮、数学公式、mermaid图表等
- * @param {Object} props - 组件属性
- * @param {string} props.content - Markdown内容
- * @param {boolean} props.showLineNumbers - 是否显示代码行号，默认为true
- * @returns {JSX.Element} 渲染后的Markdown内容
+ * Generic Markdown renderer component
+ * Uniformly renders Markdown with syntax highlighting, math, mermaid, and more
+ * @param {Object} props - Component props
+ * @param {string} props.content - Markdown content
+ * @param {boolean} props.showLineNumbers - Whether to show line numbers, defaults to true
+ * @returns {JSX.Element} Rendered Markdown content
  */
 export const MarkdownRenderer = ({ content, showLineNumbers = true }) => {
-  // 使用useMemo检测并处理LaTeX公式，防止流式输出时重复渲染
+  // Use useMemo to detect and handle LaTeX formulas to avoid repeated streaming renders
   const { processedContent, hasIncompleteMath } = React.useMemo(() => {
     if (!content) return { processedContent: '', hasIncompleteMath: false };
     
-    // 统计LaTeX分隔符是否配对
+    // Count LaTeX delimiter pairs
     const dollarSigns = (content.match(/\$/g) || []).length;
     const doubleDollarSigns = (content.match(/\$\$/g) || []).length;
     
-    // 计算单个$符号的数量（排除$$）
+    // Count single dollar signs excluding $$
     const singleDollarCount = dollarSigns - doubleDollarSigns * 2;
     
-    // 如果单个$符号数量为奇数，说明有未闭合的行内公式
+    // Odd single-dollar count indicates an unclosed inline formula
     const hasIncompleteMath = singleDollarCount % 2 !== 0;
     
-    // 如果有不完整的公式，临时禁用LaTeX渲染，显示原始文本
+    // If formula is incomplete, temporarily disable LaTeX rendering and show raw text
     return { 
       processedContent: content,
       hasIncompleteMath 
@@ -620,24 +620,24 @@ export const MarkdownRenderer = ({ content, showLineNumbers = true }) => {
           code({node, inline, className, children, ...props}: any) {
             const match = /language-(\w+)/.exec(className || '');
 
-            // 处理行内代码
+            // Handle inline code
             if (inline) {
               return <code className={className} {...props}>{children}</code>;
             }
 
-            // 获取代码内容
+            // Get code content
             const codeContent = String(children).replace(/\n$/, '');
 
-            // 处理mermaid图表
+            // Handle mermaid diagrams
             if (match && match[1] === 'mermaid') {
-              // 直接渲染mermaid图表，不进行语法验证
+              // Render mermaid directly without syntax validation
               const trimmedCode = codeContent.trim();
 
-              // 直接使用MermaidRenderer渲染，让它内部处理错误
+              // Use MermaidRenderer directly and let it handle errors
               return <MermaidRenderer chart={trimmedCode} />;
             }
 
-            // 处理普通代码块
+            // Handle regular code blocks
             return match ? (
               <SyntaxHighlighter
                 style={oneDark}
@@ -663,22 +663,22 @@ export const MarkdownRenderer = ({ content, showLineNumbers = true }) => {
 };
 
 /**
- * 渲染思考内容的组件
+ * Renderer for thinking content
  */
 export const ThinkingContentRenderer = ({ thinkingContent, isUnclosed }) => {
-  // 确保thinkingContent存在且为字符串
+  // Ensure thinkingContent exists and is a string
   if (!thinkingContent || typeof thinkingContent !== 'string' || thinkingContent.trim() === '') {
     return null;
   }
 
-  // 移除标签并清理内容
+  // Remove tags and clean content
   const cleanedContent = thinkingContent
     .replace(/<\/?think>/g, '')
     .replace(/<\/?thinking>/g, '')
     .replace(/<\/?observing>/g, '')
     .trim();
 
-  // 如果清理后内容为空，不渲染
+  // Do not render if cleaned content is empty
   if (!cleanedContent) {
     return null;
   }
@@ -688,14 +688,14 @@ export const ThinkingContentRenderer = ({ thinkingContent, isUnclosed }) => {
       <Collapse
         ghost
        
-        defaultActiveKey={isUnclosed ? ['1'] : []} // 如果是未闭合的标签（流式状态），默认展开
+        defaultActiveKey={isUnclosed ? ['1'] : []} // expand by default for unclosed tags during streaming
         items={[
           {
             key: '1',
             label: (
               <Text type="secondary">
                 <BulbOutlined style={{ marginRight: '5px' }} />
-                查看思考过程 {isUnclosed && <Tag color="grey">思考中</Tag>}
+                View thinking process {isUnclosed && <Tag color="grey">Thinking</Tag>}
               </Text>
             ),
             children: (
@@ -721,9 +721,9 @@ export const ThinkingContentRenderer = ({ thinkingContent, isUnclosed }) => {
 };
 
 /**
- * 内容渲染组件
- * 用于解析和展示会话中的各种内容，包括普通文本、工具调用和思考内容
- * 作为所有消息内容渲染的中心组件
+ * Content rendering component
+ * Parses and displays conversation content, including text, tool calls, and thinking content
+ * Central component for rendering all message content
  */
 function ConversationExtraction({
   content,
@@ -732,7 +732,7 @@ function ConversationExtraction({
   message = null,
   task = null
 }: any) {
-  // 能力-工具映射数据（使用模块级缓存，避免每个实例重复请求）
+  // Capability-tool mapping data, using module cache to avoid repeated requests
   const [capabilityToolsMap, setCapabilityToolsMap] = useState(_capabilityToolsCache || {});
 
   useEffect(() => {
@@ -745,17 +745,17 @@ function ConversationExtraction({
     return () => { cancelled = true; };
   }, []);
 
-  // 处理消息内容
+  // Process message content
   const { displayContent, thinkingContent, imageContent } = useMemo(() => {
-    // 如果提供了完整的message对象，优先从message中提取内容
+    // Prefer extracting content from the full message object if provided
     let rawContent = message ? message.content : content;
     let thinkingContent = message ? message.thinking : messageThinking;
     let displayContent = '';
     let imageContent = [];
 
-    // 处理多模态内容
+    // Process multimodal content
     if (Array.isArray(rawContent)) {
-      // 多模态消息：提取文本和图像
+      // Multimodal message: extract text and images
       rawContent.forEach(item => {
         if (item.type === 'text') {
           displayContent += item.text || '';
@@ -764,11 +764,11 @@ function ConversationExtraction({
         }
       });
     } else {
-      // 纯文本消息
+      // Plain text message
       displayContent = rawContent || '';
     }
 
-    // 如果有单独的thinking字段，确保格式正确
+    // Normalize separate thinking field if present
     if (thinkingContent && typeof thinkingContent === 'string' &&
         !thinkingContent.includes('<think>') &&
         !thinkingContent.includes('<thinking>') &&
@@ -783,17 +783,17 @@ function ConversationExtraction({
     };
   }, [content, messageThinking, message]);
 
-  // 使用新的解析器处理思考内容和工具调用
+  // Use new parser for thinking content and tool calls
 
-  // 解析工具调用和结果，并保留原始位置信息
+  // Parse tool calls and results while preserving original positions
   const parseToolCalls = (text) => {
     if (!text) return { segments: [] };
 
-    // 存储工具调用ID与索引的映射，用于关联调用和结果
+    // Map tool-call IDs to indexes to associate calls with results
     const toolCallIdMap = {};
 
     try {
-      // 查找所有可能的JSON对象
+      // Find all possible JSON objects
       const jsonSegments = [];
       let currentText = '';
       let currentPos = 0;
@@ -801,7 +801,7 @@ function ConversationExtraction({
       while (currentPos < text.length) {
         const startPos = text.indexOf('{"content":', currentPos);
 
-        // 如果找不到更多的JSON对象，将剩余文本作为普通内容添加
+        // If no more JSON objects are found, append remaining text as plain content
         if (startPos === -1) {
           if (currentPos < text.length) {
             currentText += text.substring(currentPos);
@@ -809,12 +809,12 @@ function ConversationExtraction({
           break;
         }
 
-        // 将JSON前的文本作为普通内容添加
+        // Add text before JSON as plain content
         if (startPos > currentPos) {
           currentText += text.substring(currentPos, startPos);
         }
 
-        // 查找匹配的JSON结束位置
+        // Find matching JSON end position
         let endPos = startPos;
         let braceCount = 0;
         let inString = false;
@@ -850,32 +850,32 @@ function ConversationExtraction({
           }
         }
 
-        // 如果找到完整的JSON
+        // If complete JSON is found
         if (endPos > startPos) {
           const jsonStr = text.substring(startPos, endPos);
 
           try {
-            // 尝试解析JSON，如果失败则作为普通文本处理
+            // Try to parse JSON; if it fails, treat as plain text
             let jsonObj;
             try {
               jsonObj = JSON.parse(jsonStr);
             } catch (parseError) {
-              // 记录警告而不是错误，避免控制台出现大量错误信息
-              console.warn('JSON解析失败:', parseError);
-              // 将JSON字符串作为普通文本添加
+              // Log warning instead of error to avoid noisy console output
+              console.warn('JSON parse failed:', parseError);
+              // Add JSON string as plain text
               currentText += jsonStr;
               currentPos = endPos;
               continue;
             }
 
-            // 检查是否为空白内容的JSON，如果是则跳过
+            // Skip JSON with blank content
             if (jsonObj.content && jsonObj.content.trim() === "" && !jsonObj.meta) {
-              // 跳过空白内容的JSON
+              // Skip blank-content JSON
               currentPos = endPos;
               continue;
             }
 
-            // 如果当前累积的文本不为空，添加为文本段
+            // Add accumulated text as a text segment if non-empty
             if (currentText.trim() !== '') {
               jsonSegments.push({
                 type: 'text',
@@ -884,14 +884,14 @@ function ConversationExtraction({
               currentText = '';
             }
 
-            // 解析工具调用
+            // Parse tool call
             if (jsonObj.meta) {
-              // 处理工具调用动作 - ToolCallAction
+              // Handle tool call action - ToolCallAction
               if (jsonObj.meta.ToolCallAction) {
                 const actionData = jsonObj.meta.ToolCallAction;
                 const toolCallId = jsonObj.meta.toolCallId || '';
 
-                // 创建工具调用对象
+                // Create tool call object
                 const toolCall = {
                   type: 'toolCall',
                   subtype: 'action',
@@ -899,98 +899,98 @@ function ConversationExtraction({
                   arguments: actionData.Arguments,
                   toolCallId: toolCallId,
                   result: null,
-                  // 存储原始JSON对象
+                  // Store raw JSON object
                   rawJson: jsonObj
                 };
 
-                // 记录到段落集合中
+                // Add to segment collection
                 const index = jsonSegments.length;
                 jsonSegments.push(toolCall);
 
-                // 记录工具调用ID映射
+                // Record tool-call ID mapping
                 if (toolCallId) {
                   toolCallIdMap[toolCallId] = index;
                 }
               }
-              // 处理工具调用结果 - ToolCallResult 或 role:tool 格式
+              // Handle tool call result - ToolCallResult or role:tool format
               else if (jsonObj.meta.ToolCallResult || (jsonObj.meta.type === 'toolResult' && jsonObj.meta.role === 'tool')) {
-                // 支持两种格式：旧的ToolCallResult格式和新的role:tool格式
+                // Support legacy ToolCallResult and new role:tool formats
                 let resultContent, toolName, toolCallId, status, toolParameter;
 
                 if (jsonObj.meta.ToolCallResult) {
-                  // 旧格式
+                  // Legacy format
                   resultContent = jsonObj.meta.ToolCallResult;
                   toolName = jsonObj.meta.toolName || '';
                   toolCallId = jsonObj.meta.toolCallId || '';
                   status = jsonObj.meta.status || 'success';
                   toolParameter = jsonObj.meta.toolParameter || '{}';
                 } else {
-                  // 新的role:tool格式
+                  // New role:tool format
                   resultContent = jsonObj.meta.content;
                   toolName = jsonObj.meta.tool_name || '';
                   toolCallId = jsonObj.meta.tool_call_id || '';
-                  status = jsonObj.meta.status || 'success'; // 读取status字段，默认成功状态
+                  status = jsonObj.meta.status || 'success'; // read status field, default to success
                   toolParameter = jsonObj.meta.tool_parameter || '{}';
                 }
 
-                // 创建结果对象
+                // Create result object
                 const resultObj = {
                   content: resultContent,
                   toolName: toolName,
                   status: status,
-                  // 存储原始JSON对象
+                  // Store raw JSON object
                   rawJson: jsonObj
                 };
 
-                // 如果有对应的工具调用，将结果添加到该工具调用中
+                // Attach result to matching tool call if present
                 if (toolCallId && toolCallIdMap[toolCallId] !== undefined) {
                   const index = toolCallIdMap[toolCallId];
                   jsonSegments[index].result = resultObj;
-                  jsonSegments[index].status = status; // 更新状态到对应的工具调用中
+                  jsonSegments[index].status = status; // update corresponding tool-call status
                 } else {
-                  // 如果没有找到对应的工具调用，创建一个新的工具调用对象并添加到段落集合
-                  // 标记为自动创建的，以便在渲染时可以区别处理
-                  // 使用toolParameter作为arguments
+                  // If no matching tool call is found, create and add a new tool call object
+                  // Mark as auto-created so rendering can distinguish it
+                  // Use toolParameter as arguments
                   let toolArguments = {};
                   try {
-                    // 尝试解析工具参数
+                    // Try to parse tool parameters
                     if (typeof toolParameter === 'string') {
-                      // 如果是字符串，尝试解析JSON
+                      // If it is a string, try parsing JSON
                       if (toolParameter.trim() === '' || toolParameter === '{}') {
-                        // 空字符串或空对象，使用默认空对象
+                        // Empty string or object uses default empty object
                         toolArguments = {};
                       } else {
-                        // 尝试解析JSON字符串
+                        // Try parsing JSON string
                         toolArguments = JSON.parse(toolParameter);
                       }
                     } else if (typeof toolParameter === 'object' && toolParameter !== null) {
-                      // 如果已经是对象，直接使用
+                      // Use directly if already an object
                       toolArguments = toolParameter;
                     } else {
-                      // 其他情况使用空对象
+                      // Use empty object otherwise
                       toolArguments = {};
                     }
                   } catch (e) {
-                    // 解析失败时，不输出详细的参数内容到控制台，避免泄露敏感信息
-                    console.warn('工具参数解析失败:', e.message);
+                    // On parse failure, avoid logging full parameters to prevent leaking sensitive info
+                    console.warn('tool parameter parsing failed:', e.message);
 
-                    // 对于解析失败的情况，尝试更智能的处理
+                    // Try smarter handling for parse failures
                     if (typeof toolParameter === 'string') {
-                      // 如果是字符串但不是有效JSON，可能是已经序列化的参数
-                      // 尝试将其作为单个参数值处理
+                      // A non-JSON string may be serialized parameters
+                      // Try treating it as a single parameter value
                       try {
-                        // 检查是否是双重编码的JSON字符串
+                        // Check for double-encoded JSON string
                         const unescaped = toolParameter.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
                         toolArguments = JSON.parse(unescaped);
                       } catch (secondError) {
-                        // 如果仍然失败，将原始字符串作为value参数
+                        // If it still fails, store original string as value
                         toolArguments = {
                           value: toolParameter,
-                          _parse_note: "原始参数无法解析为JSON，已作为字符串值处理"
+                          _parse_note: "Original parameter could not be parsed as JSON and was handled as a string value"
                         };
                       }
                     } else {
-                      // 其他类型的参数
+                      // Other parameter types
                       toolArguments = {
                         raw_parameter: toolParameter,
                         parse_error: e.message
@@ -1004,15 +1004,15 @@ function ConversationExtraction({
                     function: toolName || 'unknown',
                     arguments: toolArguments,
                     toolCallId: toolCallId,
-                    status: status, // 设置工具调用状态
+                    status: status, // set tool-call status
                     result: resultObj,
-                    isAutoCreated: true // 标记为自动创建的工具调用
+                    isAutoCreated: true // mark as auto-created tool call
                   });
                 }
               }
-              // 处理其他类型的元数据 (如果需要)
+              // Handle other metadata types if needed
               else if (jsonObj.content) {
-                // 如果有常规内容，添加为文本段
+                // Add regular content as a text segment if present
                 if (jsonObj.content.trim() !== '') {
                   jsonSegments.push({
                     type: 'text',
@@ -1021,7 +1021,7 @@ function ConversationExtraction({
                 }
               }
             } else if (jsonObj.content) {
-              // 如果只有常规内容，添加为文本段
+              // Add regular-only content as a text segment
               if (jsonObj.content.trim() !== '') {
                 jsonSegments.push({
                   type: 'text',
@@ -1030,20 +1030,20 @@ function ConversationExtraction({
               }
             }
           } catch (e) {
-            console.error('JSON解析失败:', e);
-            // 如果解析失败，将该JSON字符串作为普通文本添加
+            console.error('JSON parse failed:', e);
+            // If parsing fails, add JSON string as plain text
             currentText += jsonStr;
           }
 
           currentPos = endPos;
         } else {
-          // 如果无法找到完整的JSON，将剩余文本作为普通内容添加
+          // If complete JSON cannot be found, append remaining text as plain content
           currentText += text.substring(currentPos);
           break;
         }
       }
 
-      // 处理最后可能剩余的文本
+      // Handle possible remaining text
       if (currentText.trim() !== '') {
         jsonSegments.push({
           type: 'text',
@@ -1051,7 +1051,7 @@ function ConversationExtraction({
         });
       }
 
-      // 合并相邻的文本段，避免出现多个分散的文本块
+      // Merge adjacent text segments to avoid fragmented text blocks
       const mergedSegments = [];
       let currentTextSegment = null;
 
@@ -1069,30 +1069,30 @@ function ConversationExtraction({
         }
       }
 
-      // 移除所有HTML注释
+      // Remove all HTML comments
       mergedSegments.forEach(segment => {
         if (segment.type === 'text') {
-          // 移除所有HTML注释
+          // Remove all HTML comments
           segment.content = segment.content.replace(/<!-- .*? -->/g, '').trim();
         }
       });
 
-      // 过滤掉空文本段
+      // Filter empty text segments
       return {
         segments: mergedSegments.filter(segment =>
           segment.type !== 'text' || segment.content.trim() !== ''
         )
       };
     } catch (error) {
-      console.error('工具调用解析失败:', error);
-      // 发生错误时，将所有内容作为普通文本返回
+      console.error('tool call parsing failed:', error);
+      // On error, return everything as plain text
       return {
         segments: [{ type: 'text', content: text }]
       };
     }
   };
 
-  // 获取工具图标
+  // Get tool icon
   const getToolIcon = (toolName) => {
     const toolIcons = {
       'sequentialthinking': <ThunderboltOutlined />,
@@ -1109,15 +1109,15 @@ function ConversationExtraction({
     return toolIcons[toolName] || toolIcons.default;
   };
 
-  // 获取工具所属的能力标签
+  // Get capability tags for a tool
   const getToolCapabilityTags = (toolName) => {
     const capabilityColors = ['blue', 'cyan', 'green', 'orange', 'purple', 'magenta', 'geekblue'];
     const capabilitiesSet = new Set();
 
-    // 遍历能力-工具映射，查找包含当前工具的能力
+    // Traverse capability-tool mapping to find capabilities containing this tool
     Object.entries(capabilityToolsMap).forEach(([capabilityName, serversData]) => {
       if (serversData && typeof serversData === 'object') {
-        // 遍历所有服务器类型，检查是否包含该工具
+        // Traverse all server types and check whether they contain this tool
         const hasToolInAnyServer = Object.values(serversData).some(
           toolsList => Array.isArray(toolsList) && toolsList.includes(toolName)
         );
@@ -1127,7 +1127,7 @@ function ConversationExtraction({
       }
     });
 
-    // 如果找到能力，返回标签
+    // Return tags if capabilities are found
     if (capabilitiesSet.size > 0) {
       return Array.from(capabilitiesSet).map((capName, index) => (
         <Tag 
@@ -1140,24 +1140,24 @@ function ConversationExtraction({
       ));
     }
 
-    // 如果没有找到能力，返回默认标签
-    return <Tag color="default">工具调用</Tag>;
+    // Return default tag if no capability is found
+    return <Tag color="default">Tool Call</Tag>;
   };
 
-  // 渲染文本内容
+  // Render text content
   const renderTextContent = (segment, index) => {
     if (segment.type === 'text') {
-      // 不再尝试自动检测和修复代码块外的Mermaid内容
-      // 只渲染Markdown内容，由Markdown组件中的代码块处理器处理完整的mermaid标签
+      // No longer auto-detect or repair mermaid content outside code blocks
+      // Render Markdown only; code block handler processes complete mermaid tags
 
       return (
         <div key={`text-${index}`} className="text-content" style={{
           marginBottom: '12px',
-          width: '100%', // 确保文本内容宽度与父容器一致
-          maxWidth: '100%', // 确保不超过父容器宽度
-          overflowX: 'auto', // 添加水平滚动以防内容溢出
-          wordBreak: 'break-word', // 确保长单词可以换行
-          overflowWrap: 'break-word' // 确保长单词可以换行
+          width: '100%', // ensure text content width matches parent
+          maxWidth: '100%', // ensure it does not exceed parent width
+          overflowX: 'auto', // add horizontal scroll for overflow
+          wordBreak: 'break-word', // allow long words to wrap
+          overflowWrap: 'break-word' // allow long words to wrap
         }}>
           <MarkdownRenderer content={segment.content} />
         </div>
@@ -1166,7 +1166,7 @@ function ConversationExtraction({
     return null;
   };
 
-  // 渲染思考内容段落
+  // Render thinking segments
   const renderThinkingSegment = (segment, index) => {
     if (segment.type === 'thinking') {
       return <ThinkingContentRenderer
@@ -1178,15 +1178,15 @@ function ConversationExtraction({
     return null;
   };
 
-  // SubAgent 工具名称集合
+  // SubAgent tool-name set
   const SUBAGENT_TOOL_NAMES = new Set(['invoke_agent', 'invoke_agents', 'list_available_agents']);
 
-  // 渲染工具调用卡片
+  // Render tool call card
   const renderToolCallCard = (toolCall, index) => {
-    // 只处理toolCall类型的段落
+    // Handle only toolCall segments
     if (toolCall.type === 'toolCall' && toolCall.subtype === 'action') {
 
-      // 🔗 SubAgent 工具特殊渲染
+      // Special rendering for SubAgent tools
       if (SUBAGENT_TOOL_NAMES.has(toolCall.function)) {
         return (
           <div key={`subagent-${index}`} style={{ marginBottom: '12px' }}>
@@ -1200,21 +1200,21 @@ function ConversationExtraction({
         );
       }
 
-      // 检查是否有结果
+      // Check whether result exists
       const hasResult = toolCall.result !== null;
 
-      // 获取状态标签
-      let statusTag = <Tag color="processing">处理中...</Tag>;
+      // Get status tag
+      let statusTag = <Tag color="processing">Processing...</Tag>;
 
       if (hasResult) {
-        // 只使用status字段判断结果状态
+        // Determine result state using status field only
         const status = toolCall.result.status || 'success';
         if (status === 'error') {
-          statusTag = <Tag icon={<CloseCircleOutlined />} color="error">失败</Tag>;
+          statusTag = <Tag icon={<CloseCircleOutlined />} color="error">Failed</Tag>;
         } else if (status === 'warning') {
-          statusTag = <Tag icon={<WarningOutlined />} color="warning">警告</Tag>;
+          statusTag = <Tag icon={<WarningOutlined />} color="warning">Warning</Tag>;
         } else {
-          statusTag = <Tag icon={<CheckCircleOutlined />} color="success">成功</Tag>;
+          statusTag = <Tag icon={<CheckCircleOutlined />} color="success">Success</Tag>;
         }
       }
 
@@ -1222,7 +1222,7 @@ function ConversationExtraction({
         <div key={`tool-${index}`} style={{ marginBottom: '12px' }}>
           <Collapse
             expandIcon={({ isActive }) => isActive ? <DownOutlined /> : <RightOutlined />}
-            defaultActiveKey={[]} // 默认闭合
+            defaultActiveKey={[]} // closed by default
            
             items={[
               {
@@ -1237,7 +1237,7 @@ function ConversationExtraction({
                 ),
                 children: hasResult ? (
                   <div style={{ maxHeight: '300px', overflow: 'auto' }}>
-                    {/* 显示完整的ToolCallResult内容 */}
+                    {/* show full ToolCallResult content */}
                     {toolCall.result.rawJson ? (
                       <ReactJson
                         src={toolCall.result.rawJson}
@@ -1256,7 +1256,7 @@ function ConversationExtraction({
                       ) : (
                         (() => {
                           try {
-                            // 尝试解析JSON，如果失败则显示原始字符串
+                            // Try parsing JSON; if it fails, show raw string
                             return (
                               <ReactJson
                                 src={toolCall.result.content}
@@ -1266,8 +1266,8 @@ function ConversationExtraction({
                               />
                             );
                           } catch (e) {
-                            console.warn('工具调用结果JSON解析失败:', e);
-                            // 解析失败时显示警告和原始内容
+                            console.warn('tool call result JSON parsing failed:', e);
+                            // Show warning and raw content on parse failure
                             return (
                               <div>
                                 <div style={{
@@ -1278,7 +1278,7 @@ function ConversationExtraction({
                                   color: '#874d00',
                                   marginBottom: '10px'
                                 }}>
-                                  <p>JSON解析警告: {e.message}</p>
+                                  <p>JSON parse warning: {e.message}</p>
                                 </div>
                                 <pre style={{
                                   maxHeight: '150px',
@@ -1299,7 +1299,7 @@ function ConversationExtraction({
                     )}
                   </div>
                 ) : (
-                  <div>暂无结果</div>
+                  <div>No result</div>
                 )
               }
             ]}
@@ -1310,38 +1310,38 @@ function ConversationExtraction({
     return null;
   };
 
-  // 解析内容
-  // 先解析思考内容
+  // Parse content
+  // Parse thinking content first
   const { segments: thinkingSegments } = parseThinking(displayContent || '');
 
-  // 对每个文本段落解析工具调用
+  // Parse tool calls in each text segment
   const allSegments = [];
 
   thinkingSegments.forEach(segment => {
     if (segment.type === 'text') {
-      // 对文本段落解析工具调用
+      // Parse tool calls in text segment
       const { segments: toolSegments } = parseToolCalls(segment.content);
       allSegments.push(...toolSegments);
     } else {
-      // 保留思考内容段落
+      // Preserve thinking segments
       allSegments.push(segment);
     }
   });
 
-  // 如果没有任何段落 (内容为空)
+  // If no segments exist, content is empty
   if (allSegments.length === 0) {
     return null;
   }
 
-  // 检查是否有工具调用 - 通过解析后的段落判断
+  // Check parsed segments for tool calls
   const hasToolCall = allSegments.some(segment => segment.type === 'toolCall');
 
-  // 如果只有一个文本段落，且没有工具调用，且指定只处理工具调用，则返回null
+  // If only text exists and tool-call-only mode is enabled, return null
   if (isToolCallOnly && !hasToolCall) {
     return null;
   }
 
-  // 渲染图像内容
+  // Render image content
   const renderImageContent = () => {
     if (!imageContent || imageContent.length === 0) return null;
 
@@ -1358,7 +1358,7 @@ function ConversationExtraction({
             const mediaType = source.media_type || 'image/jpeg';
             const data = source.data || '';
 
-            // 构建完整的data URI
+            // Build full data URI
             const imageUrl = data.startsWith('data:')
               ? data
               : `data:${mediaType};base64,${data}`;
@@ -1373,7 +1373,7 @@ function ConversationExtraction({
               }}>
                 <img
                   src={imageUrl}
-                  alt={`上传的图片 ${index + 1}`}
+                  alt={`Uploaded image ${index + 1}`}
                   style={{
                     width: '100%',
                     height: 'auto',
@@ -1393,7 +1393,7 @@ function ConversationExtraction({
                   color: 'var(--custom-text-secondary)',
                   fontSize: '12px'
                 }}>
-                  图片加载失败
+                  Image failed to load
                 </div>
               </div>
             );
@@ -1403,10 +1403,10 @@ function ConversationExtraction({
     );
   };
 
-  // 渲染组件 - 包含思考内容和段落内容
+  // Render component with thinking and segment content
   return (
     <div className="conversation-extraction">
-      {/* 渲染单独的思考内容（如果存在） */}
+      {/* render standalone thinking content if present */}
       {thinkingContent && typeof thinkingContent === 'string' && thinkingContent.trim() !== '' && (
         <ThinkingContentRenderer
           thinkingContent={thinkingContent}
@@ -1418,10 +1418,10 @@ function ConversationExtraction({
         />
       )}
 
-      {/* 渲染图像内容 */}
+      {/* render image content */}
       {renderImageContent()}
 
-      {/* 渲染所有段落，包括普通文本、思考内容和工具调用 */}
+      {/* render all segments including text, thinking content, and tool calls */}
       {allSegments.map((segment, index) => {
         if (segment.type === 'text') {
           return renderTextContent(segment, index);

@@ -67,11 +67,11 @@ import OneClickModal from '../../components/OneClickGeneration/OneClickModal';
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
-// 不再使用 TabPane，改用 items 属性
+// TabPane is no longer used; use the items prop instead
 
 const ActionTaskOverview = () => {
   const { t } = useTranslation();
-  // 使用 App 上下文中的 message
+  // Use message from App context
   const { message } = App.useApp();
   const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
@@ -89,14 +89,14 @@ const ActionTaskOverview = () => {
   const [viewMode, setViewMode] = useState('card');
   const [selectedTasks, setSelectedTasks] = useState([]);
 
-  // 发布相关状态
+  // publish state
   const [publishModalVisible, setPublishModalVisible] = useState(false);
   const [currentPublishTask, setCurrentPublishTask] = useState(null);
 
-  // 一键创建相关状态
+  // one-click creation state
   const [oneClickModalVisible, setOneClickModalVisible] = useState(false);
 
-  // 辅助生成相关状态
+  // assistant generation state
   const [assistantGenerating, setAssistantGenerating] = useState(false);
   const [globalSettings, setGlobalSettings] = useState({
     enableAssistantGeneration: true,
@@ -104,7 +104,7 @@ const ActionTaskOverview = () => {
   });
   const [modelConfigs, setModelConfigs] = useState([]);
 
-  // 获取全局设置
+  // Fetch global settings
   const fetchGlobalSettings = async () => {
     try {
       const settings = await settingsAPI.getSettings();
@@ -113,62 +113,62 @@ const ActionTaskOverview = () => {
         assistantGenerationModel: settings.assistantGenerationModel || 'default'
       });
     } catch (error) {
-      console.error('获取全局设置失败:', error);
+      console.error('fetch global settings failed:', error);
     }
   };
 
-  // 获取模型配置
+  // Fetch model configs
   const fetchModelConfigs = async () => {
     try {
       const configs = await modelConfigAPI.getAll();
       setModelConfigs(configs);
     } catch (error) {
-      console.error('获取模型配置失败:', error);
+      console.error('fetch model configs failed:', error);
     }
   };
 
-  // 移除筛选菜单定义
+  // filter menu removed
 
   useEffect(() => {
-    // 初始加载时只获取一次数据
+    // Fetch data once on initial load
     const initialDataFetch = async () => {
-      setLoading(true); // 设置全局加载状态
+      setLoading(true); // set global loading state
 
       try {
-        // 获取行动空间列表
+        // Fetch action space list
         let allActionSpaces = [];
         try {
           const actionSpacesResponse = await actionSpaceAPI.getAll();
           if (actionSpacesResponse && Array.isArray(actionSpacesResponse)) {
             allActionSpaces = actionSpacesResponse;
             setActionSpaces(allActionSpaces);
-            console.log('获取行动空间列表成功', allActionSpaces.length, '个行动空间');
+            console.log('action space list loaded', allActionSpaces.length, 'action spaces');
 
-            // 从行动空间中提取规则集
+            // Extract rule sets from action spaces
             try {
               const extractedRuleSets = await actionSpaceAPI.getRuleSets(null, allActionSpaces);
               setRuleSets(extractedRuleSets);
             } catch (ruleSetsError) {
-              console.error('提取规则集失败:', ruleSetsError);
+              console.error('extract rule sets failed:', ruleSetsError);
             }
           }
         } catch (spaceError) {
-          console.error('获取行动空间列表失败:', spaceError);
+          console.error('fetch action space list failed:', spaceError);
         }
 
-        // 获取任务数据
+        // Fetch task data
         let apiTasks = [];
         try {
           const response = await actionTaskAPI.getAll();
           if (response && Array.isArray(response) && response.length > 0) {
             apiTasks = response.map(task => {
-              // 查找对应的行动空间名称
+              // Find matching action space name
               let actionSpaceName = task.action_space_name;
               if (!actionSpaceName && task.action_space_id) {
                 const matchedSpace = allActionSpaces.find(space => space.id === task.action_space_id);
-                actionSpaceName = matchedSpace?.name || '未知行动空间';
+                actionSpaceName = matchedSpace?.name || t('actionTask.unknownSpace');
               } else if (!actionSpaceName) {
-                actionSpaceName = '未分配行动空间';
+                actionSpaceName = t('actionTask.unassignedSpace');
               }
               return {
                 ...task,
@@ -176,14 +176,14 @@ const ActionTaskOverview = () => {
                 is_api: true
               };
             });
-            console.log('成功加载API行动任务数据', apiTasks.length, '条记录');
+            console.log('API action task data loaded', apiTasks.length, 'records');
           }
         } catch (apiError) {
-          console.error('获取API行动任务失败:', apiError);
+          console.error('fetch API action tasks failed:', apiError);
           message.warning(t('actionTask.loadFailed'));
         }
 
-        // 设置任务数据
+        // Set task data
         setTasks(apiTasks);
 
         if (apiTasks.length > 0) {
@@ -192,7 +192,7 @@ const ActionTaskOverview = () => {
           message.info(t('actionTask.noTaskData'));
         }
       } catch (error) {
-        console.error('数据加载失败:', error);
+        console.error('data loading failed:', error);
         message.error(t('actionTask.dataLoadFailed') + ': ' + error.message);
         setTasks([]);
       } finally {
@@ -205,88 +205,88 @@ const ActionTaskOverview = () => {
     fetchModelConfigs();
   }, []);
 
-  // 刷新任务列表（如果需要重新加载数据）
+  // Refresh task list if data needs reloading
   const refreshTasks = async () => {
-    // 实现刷新逻辑，如果需要的话
-    message.info('刷新任务列表功能尚未实现');
+    // Implement refresh logic if needed
+    message.info(t('actionTask.refreshNotImplemented'));
   };
 
-  // 加载智能体和行动空间数据
+  // Load agent and action space data
   const loadResources = async () => {
     setLoadingResources(true);
     try {
-      // 获取所有角色列表
+      // Fetch all roles
       const rolesData = await roleAPI.getAll();
       setAgents(rolesData);
 
-      // 获取行动空间列表
+      // Fetch action space list
       const actionSpacesData = await actionSpaceAPI.getAll();
       setActionSpaces(actionSpacesData);
     } catch (error) {
       message.error(t('actionTask.loadResourcesFailed'));
-      console.error('加载资源失败:', error);
+      console.error('load resources failed:', error);
     } finally {
       setLoadingResources(false);
     }
   };
 
-  // 打开创建任务的模态框
+  // Open create-task modal
   const showCreateModal = () => {
     setModalVisible(true);
-    // 重置表单
+    // Reset form
     form.resetFields();
-    // 加载必要资源
+    // Load required resources
     loadResources();
   };
 
-  // 创建新任务
+  // Create new task
   const handleCreateTask = async (values) => {
     setCreateLoading(true);
     try {
-      // 不再需要手动创建智能体，后端会自动从行动空间角色创建参与智能体，从监督者角色创建监督者agent
-      // 这里不再需要从角色创建智能体的代码，后端会自动处理
+      // Manual agent creation is no longer needed; backend creates participants and supervisors from action-space roles
+      // Role-to-agent creation is handled by the backend
 
-      // 保留一个空的agentIds数组，以便与旧版本兼容
+      // Keep an empty agentIds array for legacy compatibility
       const agentIds = [];
 
-      // 获取选择的规则集ID（可能是多个）
+      // Get selected rule set IDs
       const ruleSetIds = values.rule_set_id || [];
 
-      // 使用第一个规则集作为主规则集，或者如果没有选择规则集则为空
+      // Use the first rule set as primary, or null if none selected
       const primaryRuleSetId = ruleSetIds.length > 0 ? ruleSetIds[0] : null;
 
-      // 构建请求数据
+      // Build request payload
       const taskData = {
         title: values.title,
         description: values.description || '',
-        mode: 'sequential', // 默认使用顺序模式
+        mode: 'sequential', // default to sequential mode
         action_space_id: values.action_space_id,
-        rule_set_id: primaryRuleSetId, // 主规则集
-        additional_rule_set_ids: ruleSetIds.slice(1), // 额外的规则集
-        agent_ids: agentIds  // 添加智能体ID列表
+        rule_set_id: primaryRuleSetId, // primary rule set
+        additional_rule_set_ids: ruleSetIds.slice(1), // additional rule sets
+        agent_ids: agentIds  // add agent ID list
       };
 
-      console.log('创建行动任务数据:', taskData);
+      console.log('create action task payload:', taskData);
 
-      // 调用API创建任务
+      // Call API to create task
       const response = await actionTaskAPI.create(taskData);
 
-      // 添加到列表中
+      // Add to list
       if (response && response.id) {
         message.success(t('actionTask.createSuccess'));
         setModalVisible(false);
 
-        // 查找行动空间名称
+        // Find action space name
         const actionSpace = actionSpaces.find(space => space.id === values.action_space_id);
         const actionSpaceName = actionSpace ? actionSpace.name : t('actionTask.unknownSpace');
 
-        // 构建新任务对象，确保与API返回格式一致
+        // Build new task object aligned with API format
         const newTask = {
           id: response.id,
           title: response.title,
           description: values.description || '',
           status: 'active',
-          mode: 'sequential', // 默认使用顺序模式
+          mode: 'sequential', // default to sequential mode
           rule_set_id: primaryRuleSetId,
           action_space_id: values.action_space_id,
           action_space_name: actionSpaceName,
@@ -297,42 +297,42 @@ const ActionTaskOverview = () => {
           conversation_count: response.conversation_count || 0,
           autonomous_task_count: response.autonomous_task_count || 0,
           supervisor_count: 1,
-          // 使用API返回的环境变量或从任务详情API获取
+          // Use API-returned environment variables or fetch them from task details
           environment_variables: response.environment_variables || [],
           rule_triggers: [],
-          is_api: true,  // 标记为API数据
-          agent_ids: agentIds  // 添加智能体ID列表
+          is_api: true,  // mark as API data
+          agent_ids: agentIds  // add agent ID list
         };
 
-        // 将新任务添加到列表开头
+        // Prepend the newly created task
         setTasks(prev => [newTask, ...prev]);
 
-        console.log('添加新创建的任务到列表:', newTask);
+        console.log('added newly created task to list:', newTask);
 
-        // 跳转到任务详情页
+        // Navigate to task details
         setTimeout(() => {
           navigate(`/action-tasks/detail/${response.id}`);
         }, 500);
       }
     } catch (error: any) {
-      // 检查是否是配额超限错误
+      // Check quota errors
       if (error.response?.status === 403 && error.response?.data?.quota) {
-        message.error(`配额超限：${error.response.data.message || '您的计划已达到行动任务数量上限'}`);
+        message.error(t('actionTask.quotaExceeded', { message: error.response.data.message || t('actionTask.quotaDefault') }));
       } else {
         message.error(`${t('actionTask.createFailed')}: ${error.message || t('message.tryAgainLater')}`);
       }
-      console.error('创建行动任务失败:', error);
+      console.error('create action task failed:', error);
     } finally {
       setCreateLoading(false);
     }
   };
 
-  // 过滤任务数据
+  // Filter task data
   const getFilteredTasks = () => {
-    // 先过滤掉并行实验创建的任务
+    // Filter out tasks cloned from parallel experiments first
     let filteredTasks = tasks.filter(task => !task.is_experiment_clone);
     
-    // 再根据搜索文本过滤任务
+    // Then filter by search text
     if (searchText) {
       filteredTasks = filteredTasks.filter(task =>
         task.title.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -341,20 +341,20 @@ const ActionTaskOverview = () => {
       );
     }
 
-    // 按创建时间降序排序，最新的排在前面
+    // Sort by created time descending
     return filteredTasks.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   };
 
-  // 辅助生成任务描述
+  // Generate task description with assistant
   const handleAssistantGenerate = async () => {
     try {
-      // 检查是否启用了辅助生成
+      // Check whether assistant generation is enabled
       if (!globalSettings.enableAssistantGeneration) {
         message.warning(t('actionTask.assistantNotEnabled'));
         return;
       }
 
-      // 获取当前表单的任务名称和行动空间
+      // Get task name and action space from the form
       const values = form.getFieldsValue(['title', 'action_space_id']);
 
       if (!values.title) {
@@ -369,52 +369,52 @@ const ActionTaskOverview = () => {
 
       setAssistantGenerating(true);
 
-      // 获取行动空间详细信息
+      // Get action space details
       const actionSpace = actionSpaces.find(space => space.id === values.action_space_id);
       if (!actionSpace) {
         message.error(t('actionTask.spaceNotFound'));
         return;
       }
 
-      // 获取行动空间内的角色信息
+      // Get roles in the action space
       let roles = [];
       if (selectedActionSpace && selectedActionSpace.roles && selectedActionSpace.roles.length > 0) {
         roles = selectedActionSpace.roles;
       }
 
-      // 获取系统设置的提示词模板
+      // Get prompt template from system settings
       let promptTemplate;
       try {
         const templates = await settingsAPI.getPromptTemplates();
         promptTemplate = templates.actionTaskDescription;
         if (!promptTemplate) {
-          throw new Error('未获取到任务描述生成模板');
+          throw new Error(t('actionTask.templateNotFound'));
         }
       } catch (error) {
-        console.error('获取提示词模板失败:', error);
+        console.error('fetch prompt template failed:', error);
         message.error(t('actionTask.templateFailed'));
         setAssistantGenerating(false);
         return;
       }
 
-      // 使用模板变量替换功能
+      // Replace template variables
       const generatePrompt = replaceTemplateVariables(promptTemplate, {
         title: values.title,
         action_space_name: actionSpace.name,
-        action_space_description: actionSpace.description || '无描述',
+        action_space_description: actionSpace.description || t('taskCard.noDescription'),
         roles: formatRolesForTemplate(roles)
       });
 
-      // 确定使用的模型
+      // Determine model to use
       const modelToUse = await getAssistantGenerationModelId(modelConfigs, globalSettings.assistantGenerationModel);
 
-      // 调用模型API生成描述
+      // Call model API to generate description
       let generatedDescription = '';
       const handleStreamResponse = (chunk) => {
-        // 过滤掉null、undefined和空字符串
+        // Filter null, undefined, and empty chunks
         if (chunk && chunk !== 'null' && chunk !== 'undefined' && typeof chunk === 'string') {
           generatedDescription += chunk;
-          // 实时更新表单中的任务描述字段
+          // Update task description field in real time
           form.setFieldsValue({
             description: generatedDescription
           });
@@ -425,14 +425,14 @@ const ActionTaskOverview = () => {
         modelToUse,
         generatePrompt,
         handleStreamResponse,
-        "你是一个专业的任务规划专家，擅长根据行动空间信息和任务名称生成详细的任务描述。",
+        "You are a professional task planner who generates detailed task descriptions from action-space information and task names.",
         {
           temperature: 0.7,
           max_tokens: 1000
         }
       );
 
-      // 最终清理生成的内容，移除可能的null字符串
+      // Clean generated content and remove possible null strings
       const cleanedDescription = generatedDescription
         .replace(/null/g, '')
         .replace(/undefined/g, '')
@@ -444,42 +444,42 @@ const ActionTaskOverview = () => {
 
       message.success(t('actionTask.assistantGenerateDesc'));
     } catch (error) {
-      console.error('辅助生成失败:', error);
+      console.error('assistant generation failed:', error);
       message.error(`${t('actionTask.assistantFailed')}: ${error.message || t('message.unknownError')}`);
     } finally {
       setAssistantGenerating(false);
     }
   };
 
-  // 处理行动空间变更
+  // Handle action space changes
   const handleActionSpaceChange = async (spaceId) => {
     if (!spaceId) {
       setSelectedActionSpace(null);
-      // 清空规则集选择
+      // Clear rule set selection
       form.setFieldsValue({ rule_set_id: [] });
       return;
     }
 
     try {
-      // 获取行动空间详情
+      // Get action space details
       const spaceDetail = await actionSpaceAPI.getDetail(spaceId);
       setSelectedActionSpace(spaceDetail);
 
-      // 筛选该行动空间的规则集
+      // Filter rule sets for this action space
       const spaceRuleSets = ruleSets.filter(rs => rs.action_space_id === spaceId);
 
-      // 如果找到了规则集，自动选中它们
+      // Auto-select rule sets if found
       if (spaceRuleSets.length > 0) {
         const ruleSetIds = spaceRuleSets.map(rs => rs.id);
         form.setFieldsValue({ rule_set_id: ruleSetIds });
-        console.log(`自动选择行动空间 ${spaceId} 的 ${ruleSetIds.length} 个规则集`);
+        console.log(`auto-selected ${ruleSetIds.length} rule sets for action space ${spaceId}`);
       } else {
-        // 如果没有找到规则集，清空选择
+        // Clear selection if no rule set was found
         form.setFieldsValue({ rule_set_id: [] });
-        console.log(`行动空间 ${spaceId} 没有关联的规则集`);
+        console.log(`action space ${spaceId} has no associated rule sets`);
       }
     } catch (error) {
-      console.error('获取行动空间详情失败:', error);
+      console.error('fetch action space details failed:', error);
       setSelectedActionSpace({
         id: spaceId,
         environment_variables: [],
@@ -489,7 +489,7 @@ const ActionTaskOverview = () => {
     }
   };
 
-  // 网格展示卡片统一样式
+  // Shared grid card style
   const gridCardStyle = {
     height: '100%',
     minHeight: '300px',
@@ -505,7 +505,7 @@ const ActionTaskOverview = () => {
     flexDirection: 'column' as const
   };
 
-  // 渲染任务卡片
+  // Render task cards
   const renderTaskCards = (filteredTasks = getFilteredTasks()) => {
     return (
       <Row gutter={[16, 16]}>
@@ -520,7 +520,7 @@ const ActionTaskOverview = () => {
                 <Tooltip title={t('taskCard.viewDetails')}>
                   <EyeOutlined key="view" style={{ color: '#1677ff' }} onClick={() => navigate(`/action-tasks/detail/${task.id}`)} />
                 </Tooltip>,
-                <Tooltip title="发布">
+                <Tooltip title={t('taskCard.publish')}>
                   <ShareAltOutlined key="publish" style={{ color: '#52c41a' }} onClick={(e) => handlePublishTask(task, e)} />
                 </Tooltip>,
                 <Tooltip title={t('taskCard.archiveTask')}>
@@ -532,7 +532,7 @@ const ActionTaskOverview = () => {
               ]}
             >
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', cursor: 'pointer' }} onClick={() => navigate(`/action-tasks/detail/${task.id}`)}>
-                {/* 标题和状态水平对齐 */}
+                {/* align title and status horizontally */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
                   <Title level={5} ellipsis={{ rows: 2 }} style={{ marginTop: 0, marginBottom: 0, flex: 1, marginRight: 8 }}>
                     {task.title}
@@ -554,7 +554,7 @@ const ActionTaskOverview = () => {
                   {task.description || t('taskCard.noDescription')}
                 </Paragraph>
 
-                {/* 关键信息区域 - 使用 marginTop: 'auto' 推到底部 */}
+                {/* key info area; marginTop auto pushes it to the bottom */}
                 <div className="task-info-section" style={{ marginTop: 'auto' }}>
                   <Divider />
                   <Space orientation="vertical" style={{ width: '100%' }} className="info-content">
@@ -617,7 +617,7 @@ const ActionTaskOverview = () => {
           </Col>
         ))}
 
-        {/* 添加新任务卡片 */}
+        {/* add new task card */}
         <Col xs={24} sm={12} md={8} lg={6}>
           <Card
             hoverable
@@ -647,7 +647,7 @@ const ActionTaskOverview = () => {
     );
   };
 
-  // 表格列定义
+  // Table column definitions
   const columns = [
     {
       title: t('actionTask.name'),
@@ -665,38 +665,38 @@ const ActionTaskOverview = () => {
       key: 'action_space_name',
     },
     {
-      title: '来源',
+      title: t('actionTask.source'),
       dataIndex: 'user_id',
       key: 'resource_source',
       width: 100,
       render: (user_id, record) => {
-        // 系统资源：user_id 为 null
+        // system resource: user_id is null
         if (!user_id) {
           return (
-            <Tooltip title="系统资源，所有用户可见可用">
+            <Tooltip title={t('actionTask.source.systemTip')}>
               <Tag icon={<GlobalOutlined />} color="blue">
-                系统
+                {t('actionTask.source.system')}
               </Tag>
             </Tooltip>
           );
         }
 
-        // 用户共享资源：user_id 有值且 is_shared 为 true
+        // shared user resource: user_id exists and is_shared is true
         if (record.is_shared) {
           return (
-            <Tooltip title="用户共享资源，所有用户可见可用">
+            <Tooltip title={t('actionTask.source.sharedTip')}>
               <Tag icon={<TeamOutlined />} color="green">
-                共享
+                {t('actionTask.source.shared')}
               </Tag>
             </Tooltip>
           );
         }
 
-        // 私有资源：user_id 有值且 is_shared 为 false
+        // private resource: user_id exists and is_shared is false
         return (
-          <Tooltip title="私有资源，仅创建者可见">
+          <Tooltip title={t('actionTask.source.privateTip')}>
             <Tag icon={<LockOutlined />} color="orange">
-              私有
+              {t('actionTask.source.private')}
             </Tag>
           </Tooltip>
         );
@@ -794,10 +794,10 @@ const ActionTaskOverview = () => {
 
 
 
-  // 归档任务
+  // Archive task
   const handleTerminateTask = (taskId) => {
     message.success(t('actionTask.archived', { taskId }));
-    // 更新状态
+    // Update status
     setTasks(prevTasks =>
       prevTasks.map(task =>
         task.id === taskId ? { ...task, status: 'terminated' } : task
@@ -805,14 +805,14 @@ const ActionTaskOverview = () => {
     );
   };
 
-  // 删除任务
+  // Delete task
   const handleDeleteTask = (taskId, event) => {
-    // 阻止事件冒泡，避免触发卡片的点击事件
+    // Stop event propagation to avoid triggering card click
     if (event) {
       event.stopPropagation();
     }
 
-    // 确认对话框
+    // Confirmation dialog
     Modal.confirm({
       title: t('actionTask.confirmDelete'),
       icon: <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />,
@@ -835,36 +835,36 @@ const ActionTaskOverview = () => {
       cancelText: t('button.cancel'),
       onOk: async () => {
         try {
-          // 调用API删除任务及其所有关联数据，启用强制清理
+          // Delete task and related data via API with force cleanup enabled
           const result = await actionTaskAPI.delete(taskId, true, true);
 
-          // 从列表中移除该任务
+          // Remove task from list
           setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
 
-          // 显示详细的删除结果消息
+          // Show detailed delete result
           if (result.stopped_autonomous_tasks > 0) {
             message.success(t('actionTask.deleteSuccessWithActions', { count: result.stopped_autonomous_tasks }));
           } else {
             message.success(t('actionTask.deleteSuccess'));
           }
         } catch (error) {
-          console.error('删除任务失败:', error);
+          console.error('delete task failed:', error);
           message.error(`${t('actionTask.deleteFailed')}: ${error.message || t('message.unknownError')}`);
         }
       }
     });
   };
 
-  // 处理发布任务
+  // Handle task publishing
   const handlePublishTask = (task, e) => {
     if (e) {
-      e.stopPropagation(); // 阻止事件冒泡，避免触发卡片点击
+      e.stopPropagation(); // stop propagation to avoid card click
     }
     setCurrentPublishTask(task);
     setPublishModalVisible(true);
   };
 
-  // 渲染创建任务的表单
+  // Render create-task form
   const renderCreateForm = () => {
     return (
       <Form
@@ -900,12 +900,12 @@ const ActionTaskOverview = () => {
 
         <Form.Item
           name="rule_set_id"
-          label="规则集"
-          rules={[{ required: true, message: '请至少选择一个规则集' }]}
+          label={t('actionTask.ruleSet')}
+          rules={[{ required: true, message: t('actionTask.ruleSetRequired') }]}
         >
           <Select
             mode="multiple"
-            placeholder="请选择规则集"
+            placeholder={t('actionTask.selectRuleSet')}
             loading={loadingRuleSets}
             style={{ width: '100%' }}
           >
@@ -951,12 +951,12 @@ const ActionTaskOverview = () => {
         <Form.Item
           name="is_shared"
           valuePropName="checked"
-          tooltip="勾选后，该行动任务将对所有用户可见可用（但只有创建者可编辑）"
+          tooltip={t('actionTask.shareTooltip')}
         >
           <Checkbox>
             <Space>
               <TeamOutlined />
-              共享给所有用户
+              {t('actionTask.shareAll')}
             </Space>
           </Checkbox>
         </Form.Item>
@@ -1014,7 +1014,7 @@ const ActionTaskOverview = () => {
 
       {loading ? (
           <div>
-            {/* 标签栏骨架屏 */}
+            {/* tab bar skeleton */}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
               <Space>
                 <Skeleton.Button active style={{ width: 80 }} />
@@ -1024,7 +1024,7 @@ const ActionTaskOverview = () => {
               <Skeleton.Button active style={{ width: 120 }} />
             </div>
 
-            {/* 任务卡片骨架屏 */}
+            {/* task card skeleton */}
             <Row gutter={[16, 16]}>
               {[1, 2, 3, 4, 5, 6].map(item => (
                 <Col xs={24} sm={12} md={8} lg={6} key={item}>
@@ -1107,7 +1107,7 @@ const ActionTaskOverview = () => {
       />
       )}
 
-      {/* 创建任务模态框 */}
+      {/* create task modal */}
       <Modal
         title={t('actionTask.createNewTask')}
         open={modalVisible}
@@ -1118,7 +1118,7 @@ const ActionTaskOverview = () => {
         {renderCreateForm()}
       </Modal>
 
-      {/* 发布任务模态框 */}
+      {/* publish task modal */}
       {currentPublishTask && (
         <PublishModal
           visible={publishModalVisible}
@@ -1130,13 +1130,13 @@ const ActionTaskOverview = () => {
         />
       )}
 
-      {/* 一键创建模态框 */}
+      {/* one-click creation modal */}
       <OneClickModal
         visible={oneClickModalVisible}
         onCancel={() => setOneClickModalVisible(false)}
         onSuccess={(data) => {
           setOneClickModalVisible(false);
-          // 刷新任务列表或跳转到新任务
+          // Refresh task list or navigate to the new task
           if (data?.task?.id) {
             navigate(`/action-tasks/detail/${data.task.id}`);
           } else {

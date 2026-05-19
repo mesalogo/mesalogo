@@ -11,42 +11,43 @@ const { Text } = Typography;
 const { TextArea } = Input;
 
 const ActionTaskSupervisor = ({ task, onTaskMessagesRefresh, onSupervisorIntervention }) => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
-  // 监督会话相关状态
+  // supervisor conversation state
   const [supervisorMessages, setSupervisorMessages] = useState([]);
   const [userMessage, setUserMessage] = useState('');
   const [submittingMessage, setSubmittingMessage] = useState(false);
 
-  // 监督者流式输出相关状态
+  // supervisor streaming output state
   const [supervisorResponse, setSupervisorResponse] = useState('');
   const [isReceivingResponse, setIsReceivingResponse] = useState(false);
 
-  // 监督者选择和发送目标状态
+  // supervisor selection and target state
   const [selectedSupervisor, setSelectedSupervisor] = useState(null);
   const [sendTarget, setSendTarget] = useState('supervisor'); // 'supervisor' | 'task_intervention'
 
-  // 监督者智能体列表状态
+  // supervisor agent list state
   const [supervisorAgents, setSupervisorAgents] = useState([]);
   const [loadingSupervisors, setLoadingSupervisors] = useState(false);
 
-  // 获取监督者智能体列表
+  // get supervisor agent list
   const getSupervisorAgents = () => {
     return supervisorAgents;
   };
 
-  // 从API加载监督者智能体
+  // load supervisor agents from API
   const loadSupervisorAgents = async () => {
     if (!task?.id) return;
 
     setLoadingSupervisors(true);
     try {
-      console.log('🔄 开始加载监督者智能体，任务ID:', task.id);
+      console.log('loading supervisor agents, task ID:', task.id);
       const agents = await actionTaskAPI.getSupervisorAgents(task.id);
-      console.log('✅ 监督者智能体加载成功:', agents);
+      console.log('supervisor agents loaded:', agents);
 
-      // 验证每个智能体的数据完整性
+      // validate agent payload completeness
       agents.forEach((agent, index) => {
-        console.log(`监督者 ${index + 1}:`, {
+        console.log(`supervisor ${index + 1}:`, {
           id: agent.id,
           name: agent.name,
           role_name: agent.role_name,
@@ -54,26 +55,26 @@ const ActionTaskSupervisor = ({ task, onTaskMessagesRefresh, onSupervisorInterve
         });
 
         if (!agent.role_name) {
-          console.warn(`⚠️ 监督者 ${agent.name} (ID: ${agent.id}) 缺少 role_name 字段`);
+          console.warn(`supervisor ${agent.name} (ID: ${agent.id}) missing role_name field`);
         }
       });
 
       setSupervisorAgents(agents);
 
-      // 自动选择第一个监督者
+      // auto-select first supervisor
       if (agents.length > 0 && !selectedSupervisor) {
         setSelectedSupervisor(agents[0].id);
-        console.log('🎯 自动选择监督者:', agents[0].id);
+        console.log('auto-selected supervisor:', agents[0].id);
       }
     } catch (error) {
-      console.error('❌ 加载监督者智能体失败:', error);
-      message.error('加载监督者智能体失败');
+      console.error('load supervisor agents failed:', error);
+      message.error(t('taskSupervisor.msg.loadAgentsFailed'));
     } finally {
       setLoadingSupervisors(false);
     }
   };
 
-  // 加载监督者消息
+  // load supervisor messages
   const loadSupervisorMessages = async () => {
     if (!task?.id || !task?.conversation_id) return;
 
@@ -86,33 +87,33 @@ const ActionTaskSupervisor = ({ task, onTaskMessagesRefresh, onSupervisorInterve
       );
       setSupervisorMessages(messages);
     } catch (error) {
-      console.error('加载监督者消息失败:', error);
-      message.error('加载监督者消息失败');
+      console.error('load supervisor messages failed:', error);
+      message.error(t('taskSupervisor.msg.loadMessagesFailed'));
     }
   };
 
-  // 初始化时获取监督会话数据
+  // fetch supervisor data on init
   useEffect(() => {
-    console.log('ActionTaskSupervisor组件接收到任务数据:', task);
+    console.log('ActionTaskSupervisor received task data:', task);
     if (task?.id) {
       loadSupervisorAgents();
     }
   }, [task?.id]);
 
-  // 当监督者智能体加载完成后，加载消息
+  // load messages after supervisor agents are loaded
   useEffect(() => {
     if (supervisorAgents.length > 0 && task?.conversation_id) {
       loadSupervisorMessages();
     }
   }, [supervisorAgents, task?.conversation_id]);
 
-  // 发送用户消息到监督会话
+  // send user message to supervisor conversation
   const sendUserMessage = async () => {
     if (!userMessage.trim() || !selectedSupervisor || !task?.conversation_id) return;
 
     const selectedAgent = getSupervisorAgents().find(agent => agent.id === selectedSupervisor);
     if (!selectedAgent) {
-      message.error('请选择一个监督者');
+      message.error(t('taskSupervisor.msg.pickSupervisor'));
       return;
     }
 
@@ -121,66 +122,66 @@ const ActionTaskSupervisor = ({ task, onTaskMessagesRefresh, onSupervisorInterve
     setSupervisorResponse('');
 
     try {
-      const targetText = sendTarget === 'supervisor' ? '监督会话' : '任务会话';
+      const targetText = sendTarget === 'supervisor' ? t('taskSupervisor.target.supervisor') : t('taskSupervisor.target.task');
 
-      // 构建消息数据
+      // build message data
       const messageData = {
         content: userMessage,
         target_agent_id: selectedSupervisor,
         send_target: sendTarget
       };
 
-      // 如果是发送到任务会话（干预），委托给任务会话组件处理
+      // delegate task-session intervention to task conversation component
       if (sendTarget === 'task_intervention' && onSupervisorIntervention) {
-        console.log('监督者干预：委托给任务会话组件处理');
+        console.log('supervisor intervention delegated to task conversation component');
 
-        // 委托给任务会话组件处理（这会通过流式API保存用户消息和智能体回复）
+        // Delegate handling (stores user message and agent reply via streaming API)
         await onSupervisorIntervention(messageData);
 
-        // 清空输入
+        // clear input
         setUserMessage('');
-        message.success(`消息已发送到${targetText}`);
+        message.success(t('taskSupervisor.msg.sentTo', { target: targetText }));
 
-        // 重新加载监督者消息（获取包含meta字段的完整数据库记录）
+        // reload supervisor messages with full meta fields
         setTimeout(async () => {
           await loadSupervisorMessages();
-        }, 1500); // 增加延迟确保数据库操作完成
+        }, 1500);
         return;
       }
 
-      // 普通监督会话消息，使用监督者组件自己的流式处理
+      // regular supervisor-session message handled by this component
       await conversationAPI.sendConversationMessageStream(
         task.id,
         task.conversation_id,
         messageData,
         (content, meta) => {
           if (content !== null) {
-            // 接收到内容，追加到监督者回复中
+            // append received content to supervisor response
             setSupervisorResponse(prev => prev + content);
           } else if (meta) {
-            // 处理元数据
+            // handle metadata
             if (meta.connectionStatus === 'connecting') {
-              console.log('正在连接监督者...');
+              console.log('connecting to supervisor...');
             } else if (meta.connectionStatus === 'connected') {
-              console.log('已连接到监督者');
+              console.log('connected to supervisor');
             } else if (meta.connectionStatus === 'error') {
-              console.error('监督者连接错误:', meta.error);
-              message.error('监督者连接失败: ' + meta.error);
+              console.error('supervisor connection error:', meta.error);
+              message.error(t('taskSupervisor.msg.connectionFailed', { error: meta.error }));
             }
           }
         }
       );
 
-      // 清空输入
+      // clear input
       setUserMessage('');
-      message.success(`消息已发送到${targetText}`);
+      message.success(t('taskSupervisor.msg.sentTo', { target: targetText }));
 
-      // 重新加载监督者消息
+      // reload supervisor messages
       await loadSupervisorMessages();
 
     } catch (error) {
-      console.error('发送监督者消息失败:', error);
-      message.error('发送消息失败: ' + (error.message || '未知错误'));
+      console.error('send supervisor message failed:', error);
+      message.error(t('taskSupervisor.msg.sendFailed', { error: error.message || t('taskSupervisor.unknownError') }));
     } finally {
       setSubmittingMessage(false);
       setIsReceivingResponse(false);
@@ -189,7 +190,7 @@ const ActionTaskSupervisor = ({ task, onTaskMessagesRefresh, onSupervisorInterve
 
   return (
     <>
-      {/* CSS样式 */}
+      {/* CSS styles */}
       <style>
         {`
           @keyframes blink {
@@ -199,12 +200,12 @@ const ActionTaskSupervisor = ({ task, onTaskMessagesRefresh, onSupervisorInterve
         `}
       </style>
 
-      {/* 与监督者交互卡片 */}
+      {/* supervisor interaction */}
       <Card
-        title="与监督者交互"
+        title={t('taskSupervisor.interactionTitle')}
         style={{ marginBottom: 16 }}
       >
-        {/* 监督者输出对话框 */}
+        {/* supervisor output */}
         <div
           style={{
             minHeight: '120px',
@@ -219,10 +220,10 @@ const ActionTaskSupervisor = ({ task, onTaskMessagesRefresh, onSupervisorInterve
         >
           <div style={{ marginBottom: 8 }}>
             <Text type="secondary" style={{ fontSize: '12px' }}>
-              监督者响应：
+              {t('taskSupervisor.responseLabel')}
               {isReceivingResponse && (
                 <span style={{ marginLeft: 8, color: '#1677ff' }}>
-                  正在输入...
+                  {t('taskSupervisor.typing')}
                 </span>
               )}
             </Text>
@@ -249,29 +250,29 @@ const ActionTaskSupervisor = ({ task, onTaskMessagesRefresh, onSupervisorInterve
               </div>
             ) : (
               <Text type="secondary" style={{ fontSize: '13px', fontStyle: 'italic' }}>
-                {isReceivingResponse ? '监督者正在思考...' : '等待监督者响应...'}
+                {isReceivingResponse ? t('taskSupervisor.thinking') : t('taskSupervisor.waiting')}
               </Text>
             )}
           </div>
         </div>
 
-        {/* 用户输入区域 */}
+        {/* user input */}
         <TextArea
           rows={3}
           value={userMessage}
           onChange={e => setUserMessage(e.target.value)}
-          placeholder="向监督者询问或发送消息..."
+          placeholder={t('taskSupervisor.inputPh')}
         />
 
-        {/* 监督者选择 */}
+        {/* supervisor selection */}
         <div style={{ marginTop: 12, display: 'flex', alignItems: 'center' }}>
           <Text type="secondary" style={{ fontSize: '12px', marginRight: 8, whiteSpace: 'nowrap' }}>
-            监督者列表：
+            {t('taskSupervisor.supervisorList')}
           </Text>
           <Select
             value={selectedSupervisor}
             onChange={setSelectedSupervisor}
-            placeholder={loadingSupervisors ? "加载监督者..." : "选择监督者"}
+            placeholder={loadingSupervisors ? t('taskSupervisor.loadingSupervisors') : t('taskSupervisor.pickSupervisor')}
             style={{ flex: 1, minWidth: 200 }}
            
             showSearch
@@ -280,11 +281,11 @@ const ActionTaskSupervisor = ({ task, onTaskMessagesRefresh, onSupervisorInterve
             notFoundContent={
               loadingSupervisors ? (
                 <div style={{ textAlign: 'center', padding: '8px 0' }}>
-                  <Text type="secondary">加载中...</Text>
+                  <Text type="secondary">{t('taskSupervisor.loading')}</Text>
                 </div>
               ) : (
                 <Empty
-                  description="暂无监督者智能体"
+                  description={t('taskSupervisor.emptySupervisors')}
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                   style={{ margin: '8px 0' }}
                 />
@@ -306,7 +307,7 @@ const ActionTaskSupervisor = ({ task, onTaskMessagesRefresh, onSupervisorInterve
                     {agent.role_name ? `${agent.name} [${agent.role_name}]` : agent.name}
                   </span>
                   <Space size={4}>
-                    <Tooltip title="触发规则数量">
+                    <Tooltip title={t('taskSupervisor.ruleTriggerCount')}>
                       <Badge
                         count={agent.rule_triggers_count || 0}
                         style={{ backgroundColor: '#faad14' }}
@@ -320,46 +321,46 @@ const ActionTaskSupervisor = ({ task, onTaskMessagesRefresh, onSupervisorInterve
           </Select>
         </div>
 
-        {/* 发送目标选择和发送按钮 */}
+        {/* target selection and send button */}
         <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
-          {/* 发送目标选择 */}
+          {/* send target */}
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <Text type="secondary" style={{ fontSize: '12px', marginRight: 8, whiteSpace: 'nowrap' }}>
-              发送目标：
+              {t('taskSupervisor.sendTarget')}
             </Text>
             <Radio.Group
               value={sendTarget}
               onChange={e => setSendTarget(e.target.value)}
              
             >
-              <Radio value="supervisor">监督会话</Radio>
-              <Radio value="task_intervention">任务会话</Radio>
+              <Radio value="supervisor">{t('taskSupervisor.target.supervisor')}</Radio>
+              <Radio value="task_intervention">{t('taskSupervisor.target.task')}</Radio>
             </Radio.Group>
           </div>
 
-          {/* 发送按钮 */}
+          {/* send button */}
           <Button
             type="primary"
             onClick={sendUserMessage}
             loading={submittingMessage}
             disabled={!userMessage.trim() || !selectedSupervisor}
           >
-            发送消息
+            {t('taskSupervisor.send')}
           </Button>
         </div>
       </Card>
 
-      {/* 监督会话历史记录 */}
+      {/* supervisor conversation history */}
       <Card
-        title="监督会话记录"
+        title={t('taskSupervisor.historyTitle')}
         style={{ marginBottom: 16 }}
       >
         {supervisorMessages.length === 0 ? (
           <div>
-            <Empty description="暂无监督会话记录" />
+            <Empty description={t('taskSupervisor.emptyHistory')} />
             <div style={{ textAlign: 'center', marginTop: 8 }}>
               <Text type="secondary" style={{ fontSize: '12px' }}>
-                历史会话记录将在这里显示
+                {t('taskSupervisor.historyHint')}
               </Text>
             </div>
           </div>
@@ -370,27 +371,26 @@ const ActionTaskSupervisor = ({ task, onTaskMessagesRefresh, onSupervisorInterve
               const isHuman = message.role === 'human';
               const isSupervisor = message.role === 'supervisor';
 
-              // 获取发送者信息
-              let senderName = '未知';
+              // get sender info
+              let senderName = t('taskSupervisor.unknown');
               let senderAvatar = null;
 
-              // 检查是否是干预消息
+              // check intervention message
               const isIntervention = message.meta && message.meta.type === 'info';
 
               if (isHuman) {
-                // 检查是否是发送给监督者的消息
+                // message sent to supervisor
                 if (message.agent_id) {
                   const targetAgent = supervisorAgents.find(a => a.id === message.agent_id);
                   if (targetAgent) {
-                    // 显示用户 → 监督者名称[角色][ID]格式，如果是干预消息则添加标识
-                    const interventionTag = isIntervention ? '[干预]' : '';
-                    senderName = `用户 → ${targetAgent.name}[${targetAgent.role_name || '监督者'}][ID: ${targetAgent.id}]${interventionTag}`;
+                    const interventionTag = isIntervention ? t('taskSupervisor.interventionTag') : '';
+                    senderName = `${t('taskSupervisor.user')} → ${targetAgent.name}[${targetAgent.role_name || t('taskSupervisor.supervisor')}][ID: ${targetAgent.id}]${interventionTag}`;
                   } else {
-                    const interventionTag = isIntervention ? '[干预]' : '';
-                    senderName = `用户 → 监督者${interventionTag}`;
+                    const interventionTag = isIntervention ? t('taskSupervisor.interventionTag') : '';
+                    senderName = `${t('taskSupervisor.user')} → ${t('taskSupervisor.supervisor')}${interventionTag}`;
                   }
                 } else {
-                  senderName = '用户';
+                  senderName = t('taskSupervisor.user');
                 }
                 senderAvatar = (
                   <Avatar
@@ -402,9 +402,8 @@ const ActionTaskSupervisor = ({ task, onTaskMessagesRefresh, onSupervisorInterve
               } else if (isSupervisor && message.agent_id) {
                 const agent = supervisorAgents.find(a => a.id === message.agent_id);
                 if (agent) {
-                  // 显示监督者名称[角色][ID]格式，如果是干预消息则添加标识
-                  const interventionTag = isIntervention ? '[干预]' : '';
-                  senderName = `${agent.name}[${agent.role_name || '监督者'}][ID: ${agent.id}]${interventionTag}`;
+                  const interventionTag = isIntervention ? t('taskSupervisor.interventionTag') : '';
+                  senderName = `${agent.name}[${agent.role_name || t('taskSupervisor.supervisor')}][ID: ${agent.id}]${interventionTag}`;
                   senderAvatar = (
                     <Avatar
                       icon={<EyeOutlined style={{ color: '#ffffff' }} />}
@@ -431,14 +430,14 @@ const ActionTaskSupervisor = ({ task, onTaskMessagesRefresh, onSupervisorInterve
                       </Text>
                       {isSupervisor && (
                         <Badge
-                          count="监督者"
+                          count={t('taskSupervisor.supervisor')}
                           style={{ backgroundColor: '#52c41a', marginLeft: 8 }}
                          
                         />
                       )}
                       {isIntervention && (
                         <Badge
-                          count="干预"
+                          count={t('taskSupervisor.intervention')}
                           style={{ backgroundColor: '#ff7875', marginLeft: 8 }}
                          
                         />
