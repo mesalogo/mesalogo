@@ -78,22 +78,74 @@ open http://localhost:3000
 
 ---
 
-## 🕰️ 早早下注,持续演进
+## 🗝️ 关键特性
 
-我们是一支小团队,过去几年悄悄在多智能体 / LLM 设计的几个方向上下了注。
+精选 —— 完整设计文档在 [`docs/feature-*`](./docs/) 下。状态:**`[x]`** 已稳定 · **`[~]`** MVP/Beta · **`[ ]`** 设计/规划中。带 **`*`** 的条目尚未做代码级核实。
 
-我们**不主张"首创"**。我们有的是一摞 [`docs/feature-*/`](./docs/) 下的设计文档 —— 它们记录了我们用自己的方式探索这些方向的轨迹,远早于第一次公开发布。如果这些方向后来出现在更大实验室的发布或产品里,我们觉得那是一个好信号:我们在倾听同一个时代的声音。
+### 🧱 平台底盘
 
-| 我们探索的方向 | 反映的业界思路时间窗口 | 我们的设计文档 |
-|---|---|---|
-| Supervisor + 规则沙箱作为多 Agent 运行的**安全边界** | "Harness Engineering"(Hashimoto, 2026) | [`feature-supervisor-workflow/`](./docs/feature-supervisor-workflow/) · `backend-fastapi/app/services/supervisor_*.py` · `rule_sandbox.py` |
-| **SubAgent 嵌套** + 跨行动空间显式声明 | Claude SubAgents(2025) | [`feature-subagent/`](./docs/feature-subagent/) · [`feature-odm/`](./docs/feature-odm/) |
-| **MCP 作为 server manager**(不只是 client)—— 注册、隔离、MCP→API 网关 | MCP 标准(2024-11+),广义 server 工具链(2025) | [`feature-mcp2apimcp/`](./docs/feature-mcp2apimcp/) · [`feature-mcp-server-isolation/`](./docs/feature-mcp-server-isolation/) · [`feature-mcpcontrol/`](./docs/feature-mcpcontrol/) |
-| **时态知识图记忆** + 矛盾检测(`valid_from` / `valid_to`、`fact_check`) | Mem0 / Zep 时态记忆(2025) | [`feature-mempalace-v0.51/`](./docs/feature-mempalace-v0.51/) · [`feature-memory/`](./docs/feature-memory/) |
-| **多 Agent 可视化 DAG 编排** + 跨空间变量传播 | LangGraph Studio、OpenAI Swarm(2024-Q4+) | [`feature-workflow-graph/`](./docs/feature-workflow-graph/) |
-| **并行实验室** —— 对 Agent 群体做参数扫描 | ABM 老思想,被重新应用到 LLM Agent | [`feature-parallellab/`](./docs/feature-parallellab/) |
+- **[x] 行动空间(Action Space)—— 一等"世界"抽象** · 角色、规则、变量、监督者、MCP 工具全部活在一个空间*内部*,而非扁平列表。[`feature-action-space/`](./docs/feature-action-space/)
+- **[x] 角色 ↔ 智能体:模板 / 实例分离** · 一个"批评者"模板可以同时在 N 个空间里跑成 N 个独立 Agent,各有自己的状态、记忆、工具权限。* [`feature-role-management/`](./docs/feature-role-management/)
+- **[x] 变量系统 —— 模板 / 实例 / 跨空间传播** · 不只是 prompt 变量,而是行动空间之间的状态通道。* [`feature-variables/`](./docs/feature-variables/)
+- **[x] 多租户 + RBAC + 项目空间** · 所有资源带 `created_by` / `is_shared`,企业级开箱即用。* [`feature-multi-tenancy/`](./docs/feature-multi-tenancy/)
+- **[x] UUID 原生资源标识** · 所有核心资源用 UUID,跨实例迁移友好。* [`feature-uuid/`](./docs/feature-uuid/)
 
-这不是"我们是第一个"的声明。这是一张我们押过的注的地图 —— docs 是凭据。
+### 🎭 多智能体交互
+
+- **[ ] 基于人类社会组织架构构建高级交互模式** · 面向更具协商性 / 制度感的多 Agent 动态,设计中。
+- **[x] Supervisor + 双引擎规则沙箱** · 自然语言规则 + 程序逻辑规则,监督者实时干预。[`feature-supervisor-workflow/`](./docs/feature-supervisor-workflow/) · `backend-fastapi/app/services/supervisor_*.py` · `rule_sandbox.py`
+- **[x] Observer 多档干预策略** · `round_based` 触发 × `passive`/active 干预模式,决定监督者*何时*、*以多强力度*介入。* `ObserverManagement.tsx`
+- **[x] Smart Dispatch —— 自动路由到最合适的智能体** · 用户消息进来时根据内容自动选最佳 Agent 响应,不需要 `@` 指定。热路径带 LRU 缓存,针对 26 万行的会话-智能体关系表做了优化。`app/services/smart_dispatch_service.py` · `core/model_cache.py`
+- **[~] 跨空间编排 (`cross_space`)** · SubAgent 跨空间必须显式声明,监督者拦截非法跨越。* [`feature-subagent/`](./docs/feature-subagent/) · [`feature-workflow-graph/`](./docs/feature-workflow-graph/)
+- **[x] 资源关系图可视化** · 在 UI 上看 `ActionSpace ↔ Role ↔ Agent ↔ Rule ↔ Variable` 的实时网。* [`feature-ui-resource-graph/`](./docs/feature-ui-resource-graph/)
+- **[ ] Heartbeat —— ABM tick 驱动的"活着的"Agent** · 每个 Agent 有自己的心跳节拍,即使没人对话也会 `observe → reflect/plan → act`。ActionSpace 关闭 ⇒ 该空间心跳停。灵感来自 Mesa `step()` / NetLogo `tick` / 斯坦福 Generative Agents。[`feature-heartbeat/`](./docs/feature-heartbeat/) (PLAN + policies + stop-the-world)
+- **[ ] 真正并行的多智能体执行** · 每个 Agent 独立 SSE 流 + 独立队列,告别共享流交错。`TODO.md#7`
+
+### 🪆 SubAgent / 智能体即工具
+
+- **[~] SubAgent 嵌套调用(通过 MCP)** · `invoke_agent` / `invoke_agents` / `list_available_agents` 暴露为 MCP 工具;Phase 1 MVP 已落地。* [`feature-subagent/`](./docs/feature-subagent/)
+- **[x] SubAgent 沙箱** · executor / context_builder / security 三层独立。* [`feature-subagent/`](./docs/feature-subagent/)
+- **[~] ODM —— 智能体结构化协议约束** · 给 SubAgent 加 IDL 风格的输入 / 输出契约。* [`feature-odm/`](./docs/feature-odm/)
+
+### 🔌 MCP 生态(不只是 MCP 客户端)
+
+- **[x] MCP Server Manager** · 全生命周期:注册 / 启动 / 停止 / 健康检查 / 隔离。不是"我们能调 MCP 工具",而是"我们*运营* MCP 服务"。`backend-fastapi/app/services/mcp_server_manager.py`(73 KB)
+- **[x] MCP 服务隔离** · 不同空间的 MCP 实例互不串扰。* [`feature-mcp-server-isolation/`](./docs/feature-mcp-server-isolation/)
+- **[~] MCP → API 网关 (`mcp2apimcp`)** · 把任何 MCP 服务暴露成标准 HTTP API,反向接入老系统。* [`feature-mcp2apimcp/`](./docs/feature-mcp2apimcp/)
+
+### 🎯 编排与自主任务
+
+- **[ ] Workflow Graph —— 可视化 DAG 编辑器** · 基于 ReactFlow;节点类型:agent / condition / parallel / loop。[`feature-workflow-graph/`](./docs/feature-workflow-graph/)
+- **[x] Planner —— 结构化计划** · `create_plan` / `update_plan_item` / `get_plan` 作为 MCP 工具 + 前端 `PlannerPanel` + 实时 SSE 更新。* [`feature-planner/`](./docs/feature-planner/)
+- **[x] 自主任务 —— 三种触发模式** · 时间触发、变量触发、自主调度。* [`feature-autonomous/`](./docs/feature-autonomous/)
+- **[~] 并行实验室(Parallel Experiment Lab)** · 对 LLM Agent 群体跑参数扫描 —— ABM 思想被重新应用。* `backend-fastapi/app/services/parallel_experiment_service.py`(74 KB) · [`feature-parallellab/`](./docs/feature-parallellab/)
+- **[~] Job Queue / Task Manager** · Redis + 线程池 + 注册式 handler 模式。* [`feature-job-queue/`](./docs/feature-job-queue/)
+
+### 🧬 记忆与知识
+
+- **[ ] MemoryPalace v0.51 —— 时态知识图记忆** · `(subject, predicate, object, valid_from, valid_to)` 三元组;内置 `kg_verify` + 离线 `fact_check()`;5 层 `Realm → Wing → Hall → Room → Drawer`。脱离外部 Graphiti 依赖,全本地、全 async。[`feature-mempalace-v0.51/`](./docs/feature-mempalace-v0.51/)
+- **[~] 记忆分区(global / agent / conversation)** · 严格隔离 + 跨分区策略。* [`feature-memory/PLAN-memory-partition.md`](./docs/feature-memory/PLAN-memory-partition.md)
+- **[~] Graphiti 风格社区检测** · 自动从记忆图谱里挖社区。* [`feature-memory/PLAN-COMMUNITIES-GRAPH.md`](./docs/feature-memory/PLAN-COMMUNITIES-GRAPH.md)
+- **[~] LightRAG + Milvus + BM25 混合检索** · 知识图谱 × 向量 × 全文,三路并发。* [`feature-knowledge-base/lightrag-PLAN.md`](./docs/feature-knowledge-base/lightrag-PLAN.md) · [`feature-vector-db/`](./docs/feature-vector-db/)
+- **[x] 文档解析管线** · PDF / Word / Excel 入库前预处理。* [`feature-document-parser/`](./docs/feature-document-parser/)
+- **[x] 生产级上下文工程** · summary 服务下一轮前剥离 `tool_call` 参数,长会话自动摘要。绝大多数框架都炸过这个坑,我们已付过学费。* [`feature-auto-summarize/`](./docs/feature-auto-summarize/) · TODO "已完成 > 上下文消息优化"
+
+### 🏪 实体应用与外部生态
+
+- **[~] 实体应用市场(Applization)** · NetLogo / GIS / RPA / RPG / VSCode 等作为一等应用挂载到行动空间。* [`feature-applization/`](./docs/feature-applization/) · [`feature-market/`](./docs/feature-market/)
+- **[x] NetLogo 桥接** · ABM 物理 × LLM 认知双向通信,经由 `third_party/Galapagos`。*
+- **[ ] Mesa Python 集成** · 与 NetLogo 并存。`TODO.md` Phase 4。
+- **[x] OpenAI 兼容 API + Python SDK** · 行动空间 / agent / 知识库都可被外部调用。* [`feature-openai-export/`](./docs/feature-openai-export/) · API Key 管理 + 速率限制 + OpenAPI 文档(TODO ✅)
+- **[x] 外部角色导入 —— Coze & FastGPT** · 一行配置从第三方平台拉智能体。* [`feature-role-management/PLAN-role-coze.md`](./docs/feature-role-management/PLAN-role-coze.md) · [`feature-role-management/PLAN-role-fastgpt.md`](./docs/feature-role-management/PLAN-role-fastgpt.md)
+- **[x] 多模态图像输入。*** [`feature-image-input/`](./docs/feature-image-input/)
+
+### 🛠️ 工程与文化
+
+- **[x] 全 async 后端** · FastAPI + SQLAlchemy 2.0 + httpx;请求路径上无阻塞 I/O(AGENTS.md 红线)。
+- **[x] SSE 流式 + 中止 + 保活** · 长会话保活;流中途可取消。* [`feature-stream-cancel/`](./docs/feature-stream-cancel/) · [`feature-keep-alive-conversation/`](./docs/feature-keep-alive-conversation/)
+- **[x] 三袋制 `ModelConfig`** · `custom_headers` / `custom_body` / `additional_params` 严格分离,经 `app/services/llm_http` 合并。* [`docs/agents/model-config-custom-params.md`](./docs/agents/model-config-custom-params.md)
+- **[x] 严格的 i18n 治理** · 按功能划分 namespace;CI 校验中英 key 一致(`node frontend/scripts/check-i18n-keys.js`);前端源码零硬编码中文。* [`feature-multi-lang/`](./docs/feature-multi-lang/) · [`docs/agents/i18n.md`](./docs/agents/i18n.md)
+- **[x] AGENTS.md driven 工程文化** · 给 AI 编码助手的"入职手册";每条红线都能追溯到 [`docs/agents/failures/`](./docs/agents/failures/) 里一次真实事故;发布契约在 [`docs/agents/release-flow.md`](./docs/agents/release-flow.md)。开源圈很少见 —— 它本身就是一项特性。
 
 ---
 

@@ -136,6 +136,7 @@ Before writing or changing code, read the matching doc as needed (all under `doc
 | **Adding/editing frontend user-visible strings** | `docs/agents/i18n.md` (namespace layout + `t()` rules; never hard-code CJK) |
 | **Writing or modifying any test** | `tests/AGENTS.md` (30-second decision tree) |
 | **Adding/editing model custom params (headers/body) or touching `ModelConfig.{custom_headers,custom_body,additional_params}`** | `docs/agents/model-config-custom-params.md` (three-bag split + `app/services/llm_http` merge helpers) |
+| **Pushing to `github mesalogo/mesalogo` or `origin/public` (any public-facing publication)** | `docs/agents/release-flow.md` (which ref is source of truth, fast-forward order, force-with-lease policy) |
 | Deployment / Docker / performance | `abm-docker/README.md` + `docs/feature-parallellab/PLAN-5000-concurrency.md` |
 
 If no matching doc exists → **create one** (even just a "placeholder" line), then write your decision into it. This is the Harness "living docs" principle.
@@ -152,6 +153,7 @@ These have **really happened in TODO.md**. Do not repeat them.
 4. **Context explosion**: the summary service must strip `tool_call` args before the next round (see "Completed > summarized-context optimization" in TODO.md). Do not reintroduce raw `tool_call` payloads in new features.
 5. **Undeclared cross-action-space invocation**: SubAgent calls across action spaces must explicitly set `cross_space=True`, otherwise the supervisor blocks them. The error often *looks* like "tool unavailable" but the real cause is here.
 6. **First `public`-branch push leaked secrets** (`docs/agents/failures/2026-05-13-public-branch-secret-leak.md`): pushing without secret-scan via `git push mesalogo public:main` published real OAuth secrets from `backend-deprecated/config.conf`, MySQL credentials, and `PLAY_HTTP_SECRET_KEY` from `docker-compose.galapagos.yml`. Rotating the leaked credentials afterwards is the only real remediation.
+7. **Disjoint history between `github/main` and `origin/public`** (2026-05-20): without a written-down "source of truth" rule, local `public` accumulated an independent 3-commit chain while `github/main` was 29 commits ahead via a different sync path. A naive `git push github public:main --force` would have wiped 29 legitimate commits (i18n, vector-db, model-client refactor). Contract: **`github/main` is the source of truth; local `public` is a publication staging area aligned to it; mirror to `origin/public` last with `--force-with-lease`.** Full flow in `docs/agents/release-flow.md`. Always check `git merge-base github/main public` is non-empty before any release push.
 
 Every new incident → write `docs/agents/failures/YYYY-MM-short-description.md`, then add one line back to the list above.
 
@@ -203,5 +205,5 @@ If you hit a failure mode **not covered by this file**, that's exactly the "envi
 
 ---
 
-_last human review: 2026-05-18_ (test tree promoted from `backend-fastapi/tests/` to repo-root `/tests/`)
+_last human review: 2026-05-20_ (added release flow rules after disjoint-history near-miss; new doc `docs/agents/release-flow.md`)
 _inspiration: Harness Engineering (Mitchell Hashimoto, 2026-02) + OpenAI 1M-line report_
