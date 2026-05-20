@@ -90,6 +90,10 @@ open http://localhost:3000
 - **[x] 多租户 + RBAC + 项目空间** · 所有资源带 `created_by` / `is_shared`,企业级开箱即用。* [`feature-multi-tenancy/`](./docs/feature-multi-tenancy/)
 - **[x] UUID 原生资源标识** · 所有核心资源用 UUID,跨实例迁移友好。* [`feature-uuid/`](./docs/feature-uuid/)
 
+### ✍️ 创作体验
+
+- **[ ] 魔法笔记 (Magic Journal) —— "自由叙述 → AI 帮你搭世界"** · 四栏工作台(笔记列表 / 笔记本 / AI 评论流 / 动作面板)。你像写日记一样把想做的事敲进去("我想搞一个董事会三方辩论 AI 中美关税问题,要有经济学家、外交官、市民……"),AI 段落级地把自然语言解析成具体的 `ActionSpace` / `Role` / `Rule` / `Variable` / `Plan` 脚手架。低风险动作自动落库,高风险动作排队等你一键确认。SSE 流式渲染,段落级粒度,输入 `@` 链接到已有实体。灵感来自我们内部 CRM journal-mode 原型。
+
 ### 🎭 多智能体交互
 
 - **[ ] 基于人类社会组织架构构建高级交互模式** · 面向更具协商性 / 制度感的多 Agent 动态,设计中。

@@ -90,6 +90,10 @@ Highlights — full design notes under [`docs/feature-*`](./docs/). Status: **`[
 - **[x] Multi-tenancy + RBAC + workspaces** · `created_by` / `is_shared` on every resource; enterprise-ready out of the box.* [`feature-multi-tenancy/`](./docs/feature-multi-tenancy/)
 - **[x] UUID-native resource IDs** · all core resources are UUIDs, friendly to cross-instance migration.* [`feature-uuid/`](./docs/feature-uuid/)
 
+### ✍️ Creation experience
+
+- **[ ] Magic Journal — "narrate freely → AI builds your world"** · a four-pane workbench (notes list / notebook / AI comment stream / action panel). You write down what you want like a journal entry ("I want a three-way debate space about US-China tariffs, with an economist, a diplomat, and a citizen…"); AI parses it paragraph-by-paragraph and turns it into concrete `ActionSpace` / `Role` / `Rule` / `Variable` / `Plan` scaffolds. Low-risk actions auto-execute; high-risk ones queue for your one-click confirmation. SSE-streamed, segment-level granularity, `@`-mention into existing entities. Inspired by our internal CRM journal-mode prototype.
+
 ### 🎭 Multi-agent interaction
 
 - **[ ] Advanced interaction modes modeled on human social organization** · more deliberative, more institutional multi-agent dynamics; design ongoing.
