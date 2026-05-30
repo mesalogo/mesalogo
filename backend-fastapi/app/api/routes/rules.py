@@ -889,7 +889,7 @@ async def update_rule_priority(rule_set_id: str, rule_id: str, request: Request)
 # ══════════════════════════════════════════════════════════════════════════════
 
 @router.post('/rules/test')
-async def test_rules(request: Request):
+async def test_rules(request: Request, current_user=Depends(get_current_user)):
     """测试规则
 
     可以同时测试多条自然语言规则，但逻辑规则只能一次测试一条
