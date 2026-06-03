@@ -163,11 +163,11 @@ export default {
   'modelConfig.form.additionalParamsPlaceholder': '{"use_fp16": true, "batch_size": 32}',
   'modelConfig.form.jsonParseError': '{{field}} 格式错误：请输入合法的 JSON 对象',
   'modelConfig.form.jsonNotObjectError': '{{field}} 必须是一个 JSON 对象 (key-value)，不能是数组、字符串或数字',
-  'modelConfig.form.formatCompatibility': '格式兼容性',
-  'modelConfig.form.formatCompatibilityTooltip': '选择API响应格式的兼容模式，影响流式响应和工具调用的解析方式',
-  'modelConfig.formatCompatibility.openai': 'OpenAI 兼容（适用于大多数服务）',
-  'modelConfig.formatCompatibility.anthropic': 'Anthropic 兼容（Claude 系列）',
-  'modelConfig.formatCompatibility.custom': '自定义格式（支持 reasoning_content 等特殊字段）',
+  'modelConfig.form.formatCompatibility': '接口协议',
+  'modelConfig.form.formatCompatibilityTooltip': '选择上游模型 API 的线协议（wire protocol），决定请求构建、流式响应与工具调用的解析方式',
+  'modelConfig.formatCompatibility.openaiCompatible': 'OpenAI 兼容 / Chat Completions（适用于大多数服务）',
+  'modelConfig.formatCompatibility.openai': 'OpenAI 官方 Responses API（/v1/responses）',
+  'modelConfig.formatCompatibility.anthropic': 'Anthropic Messages（Claude 系列）',
 
   // ----- 模型列表视图翻译 -----
   'modelConfig.list.providerFilter': '提供商',

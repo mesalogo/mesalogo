@@ -400,10 +400,17 @@ def call_llm_with_tool_results(original_messages: List[Dict[str, Any]],
         messages = cleaned_messages
         logger.info(f"[工具调用后再次调用LLM] 清理后消息数量: {len(messages)}, 原始: {len(original_messages)}")
 
-        # 2. 检测提供商类型
+        # 2. 确定消息格式：由线协议（api_format）驱动，而非厂商
+        #    anthropic -> Claude 消息格式；openai -> Responses input 格式；其余 -> Chat Completions
         agent_info = api_config.get("agent_info", {})
-        provider = agent_info.get('provider', 'openai')
-        
+        api_format = api_config.get('api_format', 'openai-compatible')
+        if api_format == 'anthropic':
+            provider = 'anthropic'
+        elif api_format == 'openai':
+            provider = 'openai-responses'
+        else:
+            provider = 'openai'
+
         # 导入格式转换器
         from .tool_format_converter import ToolFormatConverter
         
@@ -430,8 +437,19 @@ def call_llm_with_tool_results(original_messages: List[Dict[str, Any]],
             })
         
         # 4. 追加当前轮次的 assistant 消息（包含 tool_use）
-        assistant_message = ToolFormatConverter.to_provider_assistant_message("", unified_tool_calls, provider)
-        messages.append(assistant_message)
+        if provider == 'openai-responses':
+            # Responses API：每个工具调用是 input 数组里独立的 function_call 项
+            for utc in unified_tool_calls:
+                args = utc.get("arguments", {})
+                messages.append({
+                    "type": "function_call",
+                    "call_id": utc["id"],
+                    "name": utc["name"],
+                    "arguments": json.dumps(args, ensure_ascii=False) if isinstance(args, dict) else str(args)
+                })
+        else:
+            assistant_message = ToolFormatConverter.to_provider_assistant_message("", unified_tool_calls, provider)
+            messages.append(assistant_message)
 
         if DEBUG_LLM_RESPONSE:
             logger.debug(f"[工具调用后再次调用LLM] 创建了{provider}格式的assistant消息，包含 {len(unified_tool_calls)} 个工具调用")
@@ -448,7 +466,20 @@ def call_llm_with_tool_results(original_messages: List[Dict[str, Any]],
             logger.debug(f"[工具调用后再次调用LLM] 工具结果映射: {list(tool_result_map.keys())}")
             logger.debug(f"[工具调用后再次调用LLM] 工具调用ID列表: {[tc.get('id') for tc in tool_calls]}")
         
-        if provider == 'anthropic':
+        if provider == 'openai-responses':
+            # Responses API：每个工具结果是 input 数组里独立的 function_call_output 项
+            for tool_call in tool_calls:
+                tool_call_id = tool_call.get("id")
+                tool_result = tool_result_map.get(tool_call_id)
+                if tool_result:
+                    messages.append({
+                        "type": "function_call_output",
+                        "call_id": tool_call_id,
+                        "output": tool_result.get("result", "")
+                    })
+                else:
+                    logger.warning(f"[工具调用后再次调用LLM] 未找到工具调用 {tool_call_id} 的结果")
+        elif provider == 'anthropic':
             # Claude 格式：所有工具结果合并到一个 user 消息的 content 数组中
             tool_result_blocks = []
             for tool_call in tool_calls:
@@ -704,7 +735,11 @@ def _infer_tool_name_from_args(arguments_str: str, api_config: dict) -> str:
     return best_match
 
 def handle_streaming_response(response, callback, original_messages=None, api_config=None):
-    """处理流式响应 - 支持 OpenAI 和 Claude/Anthropic 格式"""
+    """处理流式响应 - 支持 OpenAI Chat Completions / Responses API / Claude(Anthropic) 格式"""
+    # 线协议：决定走哪条 SSE 解析分支。Responses 事件与 Anthropic 事件都带 type 字段，
+    # 必须用此显式标记区分，不能再靠"有 type 且无 choices"来推断。
+    api_format = (api_config.get('api_format') if api_config else None) or 'openai-compatible'
+
     # 初始化状态变量
     full_content = ""
     buffer = ""
@@ -718,6 +753,9 @@ def handle_streaming_response(response, callback, original_messages=None, api_co
     # 用于跟踪和累积Claude/Anthropic格式的工具调用
     anthropic_tool_calls = []
     current_anthropic_tool = None  # 当前正在收集的Claude工具调用
+
+    # 用于跟踪和累积 Responses API 的工具调用（按 output_index 累积）
+    responses_tool_calls = {}
 
     # 用于检测取消信号
     is_cancelled = False
@@ -756,7 +794,6 @@ def handle_streaming_response(response, callback, original_messages=None, api_co
             if connection_manager.is_cancelled(_request_id) or connection_manager.should_interrupt(_request_id):
                 is_cancelled = True
                 cancelled_agent_id = _agent_id
-                set_socket_timeout(0.1)
                 logger.info(f"[LLM流式响应] 检测到取消信号: {_request_id}")
                 raise StreamCancelledException(_request_id, _agent_id)
 
@@ -777,25 +814,13 @@ def handle_streaming_response(response, callback, original_messages=None, api_co
 
     # 处理流式响应 - 仅收集内容，不在流中执行工具调用
     try:
-        # 使用带超时的迭代器来避免无限阻塞
+        # socket 仅用于下方 except socket.timeout 分支
         import socket
 
-        # 动态设置socket超时 - 只在需要快速响应取消时设置短超时
-        def set_socket_timeout(timeout_seconds):
-            """动态设置socket超时"""
-            if hasattr(response, 'raw') and hasattr(response.raw, '_connection') and hasattr(response.raw._connection, 'sock'):
-                try:
-                    response.raw._connection.sock.settimeout(timeout_seconds)
-                    logger.debug(f"[LLM流式响应] 已设置socket超时为{timeout_seconds}秒")
-                    return True
-                except Exception as e:
-                    logger.debug(f"[LLM流式响应] 设置socket超时失败: {str(e)}")
-                    return False
-            return False
-
-        # 从api_config获取流式Socket超时配置，避免在无Flask上下文时读取数据库
-        stream_socket_timeout = api_config.get('stream_socket_timeout', 60) if api_config else 60
-        set_socket_timeout(float(stream_socket_timeout))
+        # 注意：取消的快速响应来自 AsyncStreamRunner.iter_lines 每 2s 的队列轮询，
+        # 而非底层 socket 超时。旧的 set_socket_timeout(抠 response.raw._connection.sock)
+        # 在当前异步包装(AsyncResponseWrapper 无 .raw)下恒为 no-op，已移除。
+        # 详见 docs/agents/stream-cancel-architecture.md §3。
 
         # 尝试获取HTTP状态码用于诊断
         if hasattr(response, 'status_code'):
@@ -879,6 +904,40 @@ def handle_streaming_response(response, callback, original_messages=None, api_co
                     if check_for_cancel_signal():
                         logger.info("[LLM流式响应] 在处理chunk时检测到取消信号")
                         break
+
+                    # ========== OpenAI Responses API 流式响应处理 ==========
+                    # Responses 事件形如 {"type": "response.output_text.delta", "delta": "..."}
+                    # 仅在线协议为 openai 时启用，避免与 Anthropic 的 type 字段冲突。
+                    if api_format == 'openai':
+                        responses_type = chunk.get('type', '')
+                        if responses_type == 'response.output_text.delta':
+                            text_piece = chunk.get('delta', '')
+                            if text_piece:
+                                buffer += text_piece
+                                full_content += text_piece
+                                callback(text_piece)
+                        elif responses_type == 'response.output_item.added':
+                            item = chunk.get('item', {})
+                            if item.get('type') == 'function_call':
+                                idx = chunk.get('output_index', 0)
+                                responses_tool_calls[idx] = {
+                                    'id': item.get('call_id') or item.get('id', str(uuid.uuid4())),
+                                    'name': item.get('name', ''),
+                                    'arguments': item.get('arguments', '') or ''
+                                }
+                        elif responses_type == 'response.function_call_arguments.delta':
+                            idx = chunk.get('output_index', 0)
+                            if idx in responses_tool_calls:
+                                responses_tool_calls[idx]['arguments'] += chunk.get('delta', '')
+                        elif responses_type == 'response.error' or responses_type == 'error':
+                            err = chunk.get('error') or chunk.get('message') or chunk
+                            err_msg = err.get('message') if isinstance(err, dict) else str(err)
+                            last_error_info = err_msg
+                            logger.warning(f"[LLM流式响应] Responses API 返回错误: {err_msg}")
+                            if callback:
+                                callback(f"\n[API错误] {err_msg}")
+                        # 其余 Responses 事件（response.created/completed/output_item.done 等）忽略
+                        continue
 
                     # ========== Claude/Anthropic 流式响应处理 ==========
                     # 检测 Claude 格式: 有 type 字段且不是 OpenAI 格式
@@ -1222,13 +1281,26 @@ def handle_streaming_response(response, callback, original_messages=None, api_co
             tool_call_content.append(tool_call)
             tool_result_content.append(tool_result_info)
 
-    # 合并OpenAI格式和Claude格式的工具调用（Claude已转换为OpenAI格式）
-    all_openai_format_tool_calls = openai_tool_calls + anthropic_tool_calls
-    
-    # 处理OpenAI格式的工具调用（包括从Claude转换的）
+    # 将 Responses API 工具调用归一为 OpenAI 格式
+    responses_format_tool_calls = []
+    for _idx in sorted(responses_tool_calls.keys()):
+        _tc = responses_tool_calls[_idx]
+        responses_format_tool_calls.append({
+            'id': _tc['id'] or f"call_{uuid.uuid4().hex[:24]}",
+            'type': 'function',
+            'function': {
+                'name': _tc['name'],
+                'arguments': _tc['arguments']
+            }
+        })
+
+    # 合并OpenAI格式、Claude格式、Responses格式的工具调用（后两者已转换为OpenAI格式）
+    all_openai_format_tool_calls = openai_tool_calls + anthropic_tool_calls + responses_format_tool_calls
+
+    # 处理OpenAI格式的工具调用（包括从Claude/Responses转换的）
     if all_openai_format_tool_calls:
         if DEBUG_LLM_RESPONSE:
-            logger.debug(f"[LLM流式响应] 处理 {len(all_openai_format_tool_calls)} 个工具调用 (OpenAI: {len(openai_tool_calls)}, Claude: {len(anthropic_tool_calls)})")
+            logger.debug(f"[LLM流式响应] 处理 {len(all_openai_format_tool_calls)} 个工具调用 (OpenAI: {len(openai_tool_calls)}, Claude: {len(anthropic_tool_calls)}, Responses: {len(responses_format_tool_calls)})")
 
         for openai_tool_call in all_openai_format_tool_calls:
             # 检查是否有取消信号
@@ -1411,7 +1483,7 @@ def handle_streaming_response(response, callback, original_messages=None, api_co
 
     # 如果流式响应完成但内容为空（非取消情况），返回更详细的错误信息
     # 注意：工具调用场景下 full_content 可能为空（模型只返回了工具调用，没有文本），这不是错误
-    has_tool_calls = bool(tool_call_content) or bool(openai_tool_calls) or bool(anthropic_tool_calls)
+    has_tool_calls = bool(tool_call_content) or bool(openai_tool_calls) or bool(anthropic_tool_calls) or bool(responses_tool_calls)
     if not full_content.strip() and not is_cancelled and not has_tool_calls:
         # 构建诊断信息
         diag_parts = []

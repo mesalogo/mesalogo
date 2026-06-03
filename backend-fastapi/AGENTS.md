@@ -212,6 +212,34 @@ Full rules: ⭐ [`/tests/AGENTS.md`](../tests/AGENTS.md) (30-second decision tre
 
 ---
 
+## 7.5 Linting (静态检查)
+
+The backend uses **ruff** as the single source of truth for both linting and
+formatting. Config lives in `backend-fastapi/pyproject.toml` (`[tool.ruff]`).
+The rule set is curated, not maximal — every selected rule maps to a real
+AGENTS.md guideline (e.g. `T20` enforces the §3.2 "No print() — use logger"
+red line).
+
+```bash
+cd backend-fastapi
+ruff check .                 # lint
+ruff check . --fix           # safe autofix
+ruff format .                # apply formatter (Black-compatible)
+```
+
+Notes:
+
+- Existing tech debt is large (thousands of pre-ruff findings). Do **not**
+  attempt a bulk autofix in one commit — break it up by rule family
+  (`F401`, `I001`, `B904` first; the noisy `UP00x` typing-modernization
+  family later, ideally after the `models.py` split planned in TODO.md).
+- New code is expected to be ruff-clean. `ruff check <changed files>`
+  before opening a PR is the contract.
+- `alembic/versions/` is auto-generated and excluded from ruff. Do not
+  hand-edit those migrations to pass lint.
+
+---
+
 ## 8. Config / secrets (配置 / 密钥)
 
 - Dev uses `config.conf` (INI format) + `.env`.

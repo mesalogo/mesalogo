@@ -54,9 +54,7 @@ pymilvus
 chonkie
 
 # 文档解析
-paddlepaddle
-paddleocr
-mineru
+# paddlepaddle / paddleocr / mineru 已独立部署，改为通过 HTTP API 调用，不再作为后端依赖安装
 
 # BM25检索和中文分词
 hanlp

@@ -313,6 +313,14 @@ async def startup_event():
     except Exception as e:
         logger.warning(f"后台任务管理器初始化失败: {e}")
 
+    # 5.5. 启动流式连接管理器的周期性回收（清理超时连接 + 孤立中断标志墓碑）
+    try:
+        from app.services.conversation.connection_manager import connection_manager
+        connection_manager.start_periodic_cleanup()
+        logger.info("✓ 流式连接回收器已启动")
+    except Exception as e:
+        logger.warning(f"流式连接回收器启动失败: {e}")
+
     # 6. 打印已注册的路由
     logger.info("\n==== 已注册的 FastAPI 路由 ====")
     for route in app.routes:
@@ -327,6 +335,12 @@ async def startup_event():
 async def shutdown_event():
     """应用关闭时执行"""
     logger.info("FastAPI 正在关闭...")
+    # 停止流式连接回收器
+    try:
+        from app.services.conversation.connection_manager import connection_manager
+        connection_manager.stop_periodic_cleanup()
+    except Exception as e:
+        logger.warning(f"流式连接回收器停止异常: {e}")
     # 清理 Redis 连接
     try:
         from core.redis_client import close_redis

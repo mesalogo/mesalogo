@@ -987,7 +987,7 @@ class ModelConfig(BaseMixin, db.Model):
     # 例如 reranker 的 use_fp16, batch_size；embedding 的 dimensions；LightRAG 的 embedding_dim
     # ⚠️ 不再向 additional_params 添加新的"会发送给上游"的字段；请改用 custom_body / custom_headers
     additional_params = Column(JSON, default=dict)  # 本地参数（local-only），见上方注释
-    format_compatibility = Column(String(20), default='openai')  # 格式兼容性: openai, anthropic, custom
+    format_compatibility = Column(String(20), default='openai-compatible')  # 协议: openai (Responses API), openai-compatible (Chat Completions), anthropic
 
     def __repr__(self):
         return f'<ModelConfig {self.name}>'

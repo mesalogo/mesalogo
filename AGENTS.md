@@ -101,6 +101,18 @@ These are **red lines (红线)**, not suggestions. Self-check before any action.
 - ❌ **Always run a secret-scan before pushing to `public` / `mesalogo`.** Minimum bar: `git diff origin/main...HEAD | grep -iE "(api[_-]?key|secret|token|password|client_secret|sk-[a-z0-9])"`. Install `gitleaks` as a pre-push hook if possible. **This has already gone wrong once** — see `docs/agents/failures/2026-05-13-public-branch-secret-leak.md`.
 - ❌ **Do not commit raw uncompressed screenshots / images** to `docs/`, `README.md`, or any tracked path. UI screenshots must be compressed before commit. Hard limits per file: **≤ 150 KB** for README hero images, **≤ 300 KB** for in-doc figures. Standard recipe (assumes ImageMagick): `magick in.png -resize '1600x>' -strip -interlace Plane -quality 82 out.jpg`. Reason: every uncompressed screenshot ends up in git history forever, balloons clone size, and a `git push` over a flaky link will silently fail with "Connection to github.com closed by remote host" (happened on the v0.51 push). PNG is acceptable only when transparency or pixel-perfect UI / diagram fidelity is required; in that case run `magick in.png -resize '1600x>' -strip -colors 256 -dither None out.png` to keep it small.
 
+### 3.1.1 Per-app linters (must run clean on changed files)
+
+| App | Linter | Config | Command |
+|---|---|---|---|
+| `backend-fastapi/` | ruff (lint + format) | `backend-fastapi/pyproject.toml` `[tool.ruff]` | `cd backend-fastapi && ruff check .` |
+| `frontend/` | ESLint (react-app preset) | `frontend/package.json` `eslintConfig` | `cd frontend && pnpm exec eslint src` |
+| `desktop-app/` | ESLint (eslint:recommended + Electron-aware rules) | `desktop-app/.eslintrc.cjs` | `cd desktop-app && pnpm lint` |
+
+New code is expected to pass these on the **changed files**. Bulk-fixing
+pre-existing findings is a separate, deliberate PR — do **not** mix bulk
+lint fixes with feature work; that loses signal on review.
+
 ### 3.2 Code red lines
 
 - ❌ **No `print()`**. Always use `logger` (see "Completed > print → logger migration" in TODO.md).

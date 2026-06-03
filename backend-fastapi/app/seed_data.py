@@ -509,6 +509,28 @@ def seed_data():
         db.session.commit()
         logger.info(f"系统设置创建完成，总计 {len(system_settings)} 个设置")
 
+        # 首次部署：自动签发一张试用许可证
+        #
+        # 行为受 env `ABM_AUTO_TRIAL_DAYS` 控制（默认 30 天，<=0 表示禁用）。
+        # 仅在 system_settings 中不存在 license_data 时签发，避免重启反复续命。
+        # 这样新机器跑起来就有一段开箱即用的体验期，过期后再走正常激活流程。
+        try:
+            from app.services.license_service import LicenseService
+            trial_result = LicenseService().issue_trial_license()
+            if trial_result.get('success'):
+                lic = trial_result.get('license', {})
+                logger.info(
+                    f"已自动签发试用许可证 (type={lic.get('license_type')}, "
+                    f"expiry={lic.get('expiry_date')})"
+                )
+            elif trial_result.get('skipped'):
+                logger.info(f"跳过自动试用许可签发: {trial_result.get('message')}")
+            else:
+                logger.warning(f"自动试用许可签发失败: {trial_result.get('message')}")
+        except Exception as e:
+            # 失败不阻塞 seed 流程；运维仍可手动激活
+            logger.error(f"自动签发试用许可证时发生异常: {e}", exc_info=True)
+
         # 创建默认外部环境变量
         logger.info("创建默认外部环境变量...")
 

@@ -73,7 +73,7 @@ const ModelConfigsPage = () => {
       customHeaders: '{}',
       customBody: '{}',
       additionalParams: '{}',
-      formatCompatibility: 'custom'
+      formatCompatibility: 'openai-compatible'
     });
     
     setModelModalVisible(true);
@@ -99,7 +99,7 @@ const ModelConfigsPage = () => {
         customHeaders: JSON.stringify(model.custom_headers || {}, null, 2),
         customBody: JSON.stringify(model.custom_body || {}, null, 2),
         additionalParams: JSON.stringify(model.additional_params || {}, null, 2),
-        formatCompatibility: model.format_compatibility || 'openai'
+        formatCompatibility: model.format_compatibility || 'openai-compatible'
       });
       
       setCurrentProvider(model.provider);
@@ -231,25 +231,27 @@ const ModelConfigsPage = () => {
     dataHook.clearAllProviderModels();
     
     // 根据 provider 设置默认的格式兼容性
+    // 厂商 -> 默认线协议。openai-compatible (Chat Completions) 覆盖绝大多数场景；
+    // OpenAI 官方 Responses API ('openai') 需用户显式选择。
     const FORMAT_DEFAULTS = {
       'anthropic': 'anthropic',
-      'openai': 'openai',
-      'ollama': 'openai',
-      'gpustack': 'openai',
-      'deepseek': 'openai',
-      'aliyun': 'openai',
-      'volcengine': 'openai',
-      'azure': 'openai',
-      'google': 'openai',
-      'xai': 'openai',
-      'custom': 'custom',
+      'openai': 'openai-compatible',
+      'ollama': 'openai-compatible',
+      'gpustack': 'openai-compatible',
+      'deepseek': 'openai-compatible',
+      'aliyun': 'openai-compatible',
+      'volcengine': 'openai-compatible',
+      'azure': 'openai-compatible',
+      'google': 'openai-compatible',
+      'xai': 'openai-compatible',
+      'custom': 'openai-compatible',
     };
     
     // 清空模型ID字段并设置格式兼容性
     modelForm.setFieldsValue({
       model_id: '',
       name: '',
-      formatCompatibility: FORMAT_DEFAULTS[provider] || 'openai'
+      formatCompatibility: FORMAT_DEFAULTS[provider] || 'openai-compatible'
     });
   };
   
@@ -468,7 +470,7 @@ const ModelConfigsPage = () => {
         custom_headers: customHeaders,
         custom_body: customBody,
         additional_params: additionalParams,
-        format_compatibility: values.formatCompatibility || 'openai'
+        format_compatibility: values.formatCompatibility || 'openai-compatible'
       };
       
       let success = false;

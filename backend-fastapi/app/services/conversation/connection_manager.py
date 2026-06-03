@@ -5,14 +5,12 @@ HTTP连接管理器
 支持异步模式：通过 asyncio.Task.cancel() 实现真正的硬取消
 """
 
-import threading
 import asyncio
-import time
-import socket
 import logging
-import signal
-import os
-from typing import Dict, Optional, Any, Union
+import threading
+import time
+from typing import Any, Dict, Optional
+
 import httpx
 
 logger = logging.getLogger(__name__)
@@ -25,6 +23,8 @@ class ConnectionManager:
         self._lock = threading.Lock()
         # 线程中断标志，用于强制终止流式处理
         self._thread_interrupt_flags: Dict[str, threading.Event] = {}
+        # 周期性回收任务句柄（由 start/stop_periodic_cleanup 管理）
+        self._cleanup_task: Optional[asyncio.Task] = None
 
     def register_connection(self, request_id: str, client: httpx.Client = None,
                           response: Optional[httpx.Response] = None,
@@ -79,48 +79,6 @@ class ConnectionManager:
                 'interrupt_flag': interrupt_flag
             }
             logger.info(f"[连接管理器] 已注册连接: {request_id}, 异步模式: {async_task is not None}")
-
-    def update_connection(self, request_id: str, response: httpx.Response = None,
-                         thread: threading.Thread = None) -> bool:
-        """
-        更新连接信息
-
-        Args:
-            request_id: 请求ID
-            response: 响应对象
-            thread: 处理线程
-            
-        Returns:
-            bool: 是否成功更新（连接存在且未被取消）
-        """
-        with self._lock:
-            # 检查连接是否存在
-            if request_id not in self._active_connections:
-                # 连接已被删除（可能已被取消），关闭响应对象
-                if response:
-                    try:
-                        response.close()
-                        logger.info(f"[连接管理器] 连接已取消，关闭迟到的响应: {request_id}")
-                    except:
-                        pass
-                return False
-            
-            # 检查是否已被标记为取消
-            if self._active_connections[request_id].get('cancelled'):
-                if response:
-                    try:
-                        response.close()
-                        logger.info(f"[连接管理器] 连接已标记取消，关闭响应: {request_id}")
-                    except:
-                        pass
-                return False
-                
-            if response:
-                self._active_connections[request_id]['response'] = response
-            if thread:
-                self._active_connections[request_id]['thread'] = thread
-            logger.debug(f"[连接管理器] 已更新连接: {request_id}")
-            return True
 
     def force_close_connection(self, request_id: str) -> bool:
         """
@@ -298,32 +256,38 @@ class ConnectionManager:
                 del self._thread_interrupt_flags[request_id]
                 logger.debug(f"[连接管理器] 清理孤立的中断标志: {request_id}")
 
-    def clear_interrupt_flag(self, request_id: str) -> bool:
+    async def _cleanup_loop(self, interval_seconds: int, max_age_seconds: int) -> None:
+        """周期性回收循环：定时调用 cleanup_old_connections。
+
+        interval 本身（分钟级）即墓碑标记（tombstone，见
+        docs/agents/stream-cancel-architecture.md）的宽限期，远大于 worker 2s
+        轮询周期，因此不会与仍在循环中的 worker 竞争误删。
         """
-        清理特定的中断标志
+        logger.info(f"[连接管理器] 周期性回收已启动: 间隔={interval_seconds}s, 最大存活={max_age_seconds}s")
+        while True:
+            try:
+                await asyncio.sleep(interval_seconds)
+                self.cleanup_old_connections(max_age_seconds)
+            except asyncio.CancelledError:
+                logger.info("[连接管理器] 周期性回收已停止")
+                raise
+            except Exception as e:
+                # 回收器自身绝不能因单次异常而退出，否则墓碑标记重新无界增长
+                logger.warning(f"[连接管理器] 周期性回收单次迭代出错: {e}")
 
-        Args:
-            request_id: 请求ID
+    def start_periodic_cleanup(self, interval_seconds: int = 300, max_age_seconds: int = 3600) -> None:
+        """在当前事件循环启动后台回收任务（幂等）。"""
+        if self._cleanup_task is not None and not self._cleanup_task.done():
+            return
+        self._cleanup_task = asyncio.create_task(
+            self._cleanup_loop(interval_seconds, max_age_seconds)
+        )
 
-        Returns:
-            bool: 是否成功清理
-        """
-        with self._lock:
-            if request_id in self._thread_interrupt_flags:
-                del self._thread_interrupt_flags[request_id]
-                logger.debug(f"[连接管理器] 已清理中断标志: {request_id}")
-                return True
-            return False
-
-    def get_active_connections(self) -> Dict[str, Dict[str, Any]]:
-        """获取所有活动连接信息"""
-        with self._lock:
-            return dict(self._active_connections)
-
-    def get_interrupt_flags_count(self) -> int:
-        """获取当前中断标志数量（用于调试）"""
-        with self._lock:
-            return len(self._thread_interrupt_flags)
+    def stop_periodic_cleanup(self) -> None:
+        """取消后台回收任务。"""
+        if self._cleanup_task is not None and not self._cleanup_task.done():
+            self._cleanup_task.cancel()
+        self._cleanup_task = None
 
 # 全局连接管理器实例
 connection_manager = ConnectionManager()

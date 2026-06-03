@@ -59,7 +59,7 @@ def get_model_configs(
             'custom_headers': config.custom_headers or {},
             'custom_body': config.custom_body or {},
             'additional_params': config.additional_params,
-            'format_compatibility': config.format_compatibility or 'openai',
+            'format_compatibility': config.format_compatibility or 'openai-compatible',
             'created_at': config.created_at.isoformat(),
             'updated_at': config.updated_at.isoformat()
         })
@@ -158,7 +158,7 @@ def get_model_config(
         'custom_headers': config.custom_headers or {},
         'custom_body': config.custom_body or {},
         'additional_params': config.additional_params,
-        'format_compatibility': config.format_compatibility or 'openai',
+        'format_compatibility': config.format_compatibility or 'openai-compatible',
         'created_at': config.created_at.isoformat(),
         'updated_at': config.updated_at.isoformat()
     }
@@ -230,7 +230,7 @@ async def create_model_config(request: Request):
         custom_headers=data.get('custom_headers', {}),
         custom_body=data.get('custom_body', {}),
         additional_params=data.get('additional_params', {}),
-        format_compatibility=data.get('format_compatibility', 'openai')
+        format_compatibility=data.get('format_compatibility', 'openai-compatible')
     )
 
     db.session.add(new_config)
@@ -321,7 +321,7 @@ async def update_model_config(config_id: str, request: Request):
         'custom_headers': config.custom_headers or {},
         'custom_body': config.custom_body or {},
         'additional_params': config.additional_params,
-        'format_compatibility': config.format_compatibility or 'openai',
+        'format_compatibility': config.format_compatibility or 'openai-compatible',
         'updated_at': config.updated_at.isoformat()
     }
 

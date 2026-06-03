@@ -77,6 +77,8 @@ class ToolFormatConverter:
         """
         if provider == 'anthropic':
             return ToolFormatConverter._to_anthropic_tools(tools)
+        elif provider == 'openai-responses':
+            return ToolFormatConverter._to_responses_tools(tools)
         else:
             # OpenAI及兼容格式，直接返回
             return tools
@@ -122,6 +124,33 @@ class ToolFormatConverter:
         
         return result
     
+    @staticmethod
+    def _to_responses_tools(tools: List[Dict]) -> List[Dict]:
+        """将 OpenAI Chat Completions 工具格式转换为 Responses API 格式。
+
+        Chat Completions:
+        {"type": "function", "function": {"name", "description", "parameters"}}
+
+        Responses API: function 字段平铺到顶层
+        {"type": "function", "name", "description", "parameters"}
+        """
+        result = []
+        for tool in tools:
+            if tool.get('type') != 'function':
+                continue
+            function = tool.get('function', {})
+            result.append({
+                "type": "function",
+                "name": function.get('name', ''),
+                "description": function.get('description', ''),
+                "parameters": function.get('parameters', {
+                    "type": "object",
+                    "properties": {},
+                    "required": []
+                })
+            })
+        return result
+
     @staticmethod
     def format_tool_choice(tool_choice: str, provider: str) -> Any:
         """

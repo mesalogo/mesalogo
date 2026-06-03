@@ -603,20 +603,20 @@ const ModelFormModal = ({
               name="formatCompatibility"
               label={t('modelConfig.form.formatCompatibility')}
               tooltip={t('modelConfig.form.formatCompatibilityTooltip')}
-              initialValue="openai"
+              initialValue="openai-compatible"
             >
               <Select>
-                <Option value="openai">
+                <Option value="openai-compatible">
                   <Tag color="blue">OpenAI</Tag>
+                  {t('modelConfig.formatCompatibility.openaiCompatible')}
+                </Option>
+                <Option value="openai">
+                  <Tag color="cyan">Responses</Tag>
                   {t('modelConfig.formatCompatibility.openai')}
                 </Option>
                 <Option value="anthropic">
                   <Tag color="purple">Anthropic</Tag>
                   {t('modelConfig.formatCompatibility.anthropic')}
-                </Option>
-                <Option value="custom">
-                  <Tag color="orange">Custom</Tag>
-                  {t('modelConfig.formatCompatibility.custom')}
                 </Option>
               </Select>
             </Form.Item>

@@ -8,11 +8,12 @@ License服务
 
 import os
 import json
+import uuid
 import base64
 import hashlib
 import hmac
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from core.config import settings
 from app.models import db, SystemSetting
 
@@ -338,6 +339,118 @@ class LicenseService:
 
         # 默认不限制
         return True
+
+    # ---------- Trial license (首次部署自动试用) ----------
+    #
+    # 设计要点（见 AGENTS.md §4 "No silent fallbacks"）:
+    #   - 默认 **不签发** trial：必须由调用方（seed_data 或运维脚本）显式触发
+    #   - 通过 env `ABM_AUTO_TRIAL_DAYS` 控制天数；<=0 视为关闭
+    #   - 同一系统已存在任何 license_data（哪怕过期）则不再覆盖，避免反复续命
+    #   - trial 是一张正常签发的 `standard` 许可，签名与厂商签发的格式一致
+    #
+    # build_trial_license_key() 拆出来便于单测，不写 DB。
+    # issue_trial_license() 是最终入口，负责"如果还没有就签一张并落库"。
+    DEFAULT_TRIAL_DAYS = 30
+    DEFAULT_TRIAL_TYPE = 'standard'
+    TRIAL_CUSTOMER_NAME = 'Trial (auto-issued)'
+
+    def _resolve_trial_days(self, override=None):
+        """优先级：显式 override > env `ABM_AUTO_TRIAL_DAYS` > DEFAULT_TRIAL_DAYS。"""
+        if override is not None:
+            return int(override)
+        raw = os.environ.get('ABM_AUTO_TRIAL_DAYS')
+        if raw is None or raw == '':
+            return self.DEFAULT_TRIAL_DAYS
+        try:
+            return int(raw)
+        except (TypeError, ValueError):
+            logger.warning(f"ABM_AUTO_TRIAL_DAYS 不是合法整数: {raw!r}，回退到默认 {self.DEFAULT_TRIAL_DAYS} 天")
+            return self.DEFAULT_TRIAL_DAYS
+
+    def build_trial_license_key(self, duration_days, license_type=None, customer_name=None, now=None):
+        """构造一把与 `tools/license_generator.py` 同格式的 trial 许可证密钥。
+
+        纯函数 + 不写 DB，方便单测。需要 `self.secret_key` 已就绪。
+        """
+        if not self.secret_key:
+            raise RuntimeError("许可证密钥（license_secret_key）尚未配置，无法签发 trial 许可证")
+
+        license_type = license_type or self.DEFAULT_TRIAL_TYPE
+        if license_type not in self.LICENSE_TYPES:
+            raise ValueError(f"不支持的许可证类型: {license_type}")
+
+        issued_at = now or datetime.now()
+        key_data = {
+            'customer': customer_name or self.TRIAL_CUSTOMER_NAME,
+            'type': license_type,
+            'uuid': str(uuid.uuid4()),
+            'timestamp': issued_at.timestamp(),
+            'duration_days': int(duration_days),
+            'expiry_date': (issued_at + timedelta(days=int(duration_days))).isoformat(),
+        }
+        data_bytes = json.dumps(key_data).encode()
+        signature = hmac.new(self.secret_key.encode(), data_bytes, hashlib.sha256).digest()
+        combined = signature + data_bytes
+        return base64.urlsafe_b64encode(combined).decode().rstrip('=')
+
+    def issue_trial_license(self, duration_days=None, license_type=None, customer_name=None, force=False):
+        """首次部署时签发一张试用许可证。
+
+        Args:
+            duration_days: 试用天数；None 则按 _resolve_trial_days() 推导
+            license_type: 许可证类型；None 则用 DEFAULT_TRIAL_TYPE (standard)
+            customer_name: 客户名；None 则用 TRIAL_CUSTOMER_NAME
+            force: 是否强制覆盖已有 license_data（仅用于运维/测试）
+
+        Returns:
+            dict: {'success': bool, 'license'?: dict, 'message'?: str, 'skipped'?: bool}
+        """
+        days = self._resolve_trial_days(duration_days)
+        if days <= 0:
+            return {
+                'success': False,
+                'skipped': True,
+                'message': f'ABM_AUTO_TRIAL_DAYS={days}，自动试用许可已禁用'
+            }
+
+        # 已经有 license 就不要再覆盖（避免重启反复刷新过期时间）
+        if not force:
+            existing = self.get_license_data(include_expired=True)
+            if existing:
+                return {
+                    'success': False,
+                    'skipped': True,
+                    'message': '系统已存在 license_data，跳过试用许可签发',
+                    'license': existing,
+                }
+
+        if not self.secret_key:
+            self.secret_key = self._get_license_secret_key()
+            if not self.secret_key:
+                return {
+                    'success': False,
+                    'message': '系统未配置许可证密钥，无法签发试用许可证',
+                }
+
+        try:
+            license_key = self.build_trial_license_key(
+                duration_days=days,
+                license_type=license_type,
+                customer_name=customer_name,
+            )
+        except Exception as e:
+            logger.error(f"构造 trial 许可证密钥失败: {e}")
+            return {'success': False, 'message': f'构造 trial 许可证失败: {e}'}
+
+        result = self.activate_license(license_key)
+        if result.get('success'):
+            logger.info(
+                f"已自动签发 {days} 天试用许可证 (type={license_type or self.DEFAULT_TRIAL_TYPE}, "
+                f"expiry={result['license'].get('expiry_date')})"
+            )
+        else:
+            logger.error(f"激活自动签发的 trial 许可证失败: {result}")
+        return result
 
     def load_license_from_file(self, file_path):
         """从文件加载许可证

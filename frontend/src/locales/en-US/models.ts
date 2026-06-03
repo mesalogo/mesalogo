@@ -163,11 +163,11 @@ export default {
   'modelConfig.form.additionalParamsPlaceholder': '{"use_fp16": true, "batch_size": 32}',
   'modelConfig.form.jsonParseError': '{{field}} is invalid: please enter valid JSON',
   'modelConfig.form.jsonNotObjectError': '{{field}} must be a JSON object (key-value), not an array, string or number',
-  'modelConfig.form.formatCompatibility': 'Format Compatibility',
-  'modelConfig.form.formatCompatibilityTooltip': 'Select API response format compatibility mode, affects streaming response and tool call parsing',
-  'modelConfig.formatCompatibility.openai': 'OpenAI Compatible (works with most services)',
-  'modelConfig.formatCompatibility.anthropic': 'Anthropic Compatible (Claude series)',
-  'modelConfig.formatCompatibility.custom': 'Custom Format (supports reasoning_content etc.)',
+  'modelConfig.form.formatCompatibility': 'API Protocol',
+  'modelConfig.form.formatCompatibilityTooltip': 'Select the wire protocol of the upstream model API; it drives request building, streaming response and tool-call parsing',
+  'modelConfig.formatCompatibility.openaiCompatible': 'OpenAI Compatible / Chat Completions (works with most services)',
+  'modelConfig.formatCompatibility.openai': 'OpenAI official Responses API (/v1/responses)',
+  'modelConfig.formatCompatibility.anthropic': 'Anthropic Messages (Claude series)',
 
   // ----- MODEL LIST VIEW TRANSLATIONS -----
   'modelConfig.list.providerFilter': 'Provider',

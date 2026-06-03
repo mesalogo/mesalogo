@@ -210,21 +210,12 @@ def cancel_request(task_id: int, conversation_id: int, agent_id: str = None) -> 
         else:
             logger.warning(f"[连接取消] 连接管理器未找到连接: {request_id}")
     else:
-        # 没有 agent_id：取消所有匹配 task_id:conversation_id:* 的连接
+        # 没有 agent_id：取消所有匹配 task_id:conversation_id:* 的连接。
+        # 复用 connection_manager 的带锁前缀清理，避免无锁遍历 _active_connections。
         prefix = f"{task_id}:{conversation_id}:"
         logger.info(f"[连接取消] 开始取消所有匹配的请求: {prefix}*")
-        
-        # 获取所有匹配的连接并关闭
-        closed_count = 0
-        for request_id in list(connection_manager._active_connections.keys()):
-            if request_id and request_id.startswith(prefix):
-                if connection_manager.force_close_connection(request_id):
-                    logger.info(f"[连接取消] 已关闭连接: {request_id}")
-                    closed_count += 1
-        
-        if closed_count > 0:
-            logger.info(f"[连接取消] 共关闭 {closed_count} 个连接")
-        else:
+        closed_count = connection_manager.force_close_connections_by_prefix(prefix)
+        if closed_count == 0:
             logger.warning(f"[连接取消] 未找到匹配的连接: {prefix}*")
 
     # 总是返回成功，避免前端卡住
@@ -236,15 +227,6 @@ class ModelClient:
     def __init__(self):
         """初始化模型客户端"""
         logger.debug("初始化统一模型客户端")
-
-        # 供应商适配器映射
-        self.provider_adapters = {
-            'openai': self._handle_openai_request,
-            'anthropic': self._handle_anthropic_request,
-            'google': self._handle_google_request,
-            'ollama': self._handle_ollama_request,
-            'gpustack': self._handle_gpustack_request,
-        }
 
     def send_request(self, model_config, messages: List[Dict[str, str]],
                     is_stream: bool = False, callback: Optional[Callable] = None,
@@ -268,7 +250,7 @@ class ModelClient:
             api_key = model_config.api_key
             model = model_config.model_id
 
-            # 检测提供商类型
+            # 检测提供商类型（vendor，仅用于视觉适配等厂商相关处理）
             detected_provider = self._detect_provider(
                 api_url,
                 model_config,
@@ -276,14 +258,20 @@ class ModelClient:
                 model,
             )
 
+            # 解析线协议（wire protocol）：唯一驱动请求构建/解析分支的轴
+            # openai = Responses API (/v1/responses)
+            # openai-compatible = Chat Completions (/v1/chat/completions)
+            # anthropic = Messages (/v1/messages)
+            api_format = self._resolve_api_format(model_config, kwargs.get('format_compatibility'))
+
             # 处理图像消息（如果包含图像）
             from .vision_adapter import vision_adapter
             if vision_adapter.has_images(messages):
                 logger.debug(f"[ModelClient] 检测到图像内容，使用视觉适配器处理")
                 messages = vision_adapter.format_for_provider(messages, detected_provider)
 
-            # 根据提供商规范化 API URL 和设置请求头
-            if detected_provider == 'anthropic':
+            # 根据线协议规范化 API URL 和设置请求头
+            if api_format == 'anthropic':
                 # Anthropic API 使用 /v1/messages 端点
                 if not api_url.endswith('/'):
                     api_url = api_url.rstrip('/')
@@ -320,8 +308,40 @@ class ModelClient:
 
                 if system_message:
                     payload["system"] = system_message
+            elif api_format == 'openai':
+                # OpenAI 官方 Responses API (/v1/responses)
+                if not api_url.endswith('/'):
+                    api_url = api_url.rstrip('/')
+                if not api_url.endswith('/responses'):
+                    if '/v1' in api_url:
+                        api_url = f"{api_url}/responses"
+                    else:
+                        api_url = f"{api_url}/v1/responses"
+
+                headers = {
+                    "Content-Type": "application/json",
+                }
+                if api_key:
+                    headers["Authorization"] = f"Bearer {api_key}"
+
+                # Responses API：system 提取为顶级 instructions，其余消息作为 input
+                system_message = None
+                input_messages = []
+                for msg in messages:
+                    if msg.get('role') == 'system':
+                        system_message = msg.get('content', '')
+                    else:
+                        input_messages.append(msg)
+
+                payload = {
+                    "model": model,
+                    "input": input_messages,
+                    "stream": is_stream,
+                }
+                if system_message:
+                    payload["instructions"] = system_message
             else:
-                # OpenAI 兼容格式（默认）
+                # OpenAI 兼容格式 (Chat Completions /v1/chat/completions，默认)
                 if not api_url.endswith('/'):
                     api_url = api_url.rstrip('/')
                 if not api_url.endswith('/chat/completions'):
@@ -347,29 +367,44 @@ class ModelClient:
                 'model_config',
             ]
 
+            # Responses API 用 max_output_tokens 而非 max_tokens
+            excluded_keys_format = list(excluded_keys) + ['format_compatibility']
+
             for key, value in kwargs.items():
-                if value is not None and value != [] and key not in excluded_keys:
+                if value is not None and value != [] and key not in excluded_keys_format:
                     if key == 'max_tokens' and value == 0:
                         continue
 
-                    # 根据提供商过滤参数
-                    if detected_provider == 'anthropic':
+                    # 根据线协议过滤参数
+                    if api_format == 'anthropic':
                         # Anthropic 支持的参数（注意：Claude 不支持 top_p，只支持 top_k）
                         if key in ['temperature', 'max_tokens', 'top_k', 'stop_sequences']:
+                            payload[key] = value
+                    elif api_format == 'openai':
+                        # Responses API 参数（max_tokens -> max_output_tokens）
+                        if key == 'max_tokens':
+                            payload['max_output_tokens'] = value
+                        elif key in ['temperature', 'top_p']:
                             payload[key] = value
                     else:
                         # OpenAI 兼容参数
                         payload[key] = value
 
-            # 添加工具定义(如果有) - 支持OpenAI和Anthropic格式
+            # 添加工具定义(如果有) - 支持 OpenAI/Anthropic/Responses 格式
             if agent_info and 'tools' in agent_info and agent_info['tools']:
                 from .tool_format_converter import ToolFormatConverter
-                
-                if detected_provider == 'anthropic':
+
+                if api_format == 'anthropic':
                     # 转换为Anthropic格式
                     payload['tools'] = ToolFormatConverter.to_provider_tools(agent_info['tools'], 'anthropic')
                     payload['tool_choice'] = ToolFormatConverter.format_tool_choice('auto', 'anthropic')
                     logger.info(f"[ModelClient] 为Anthropic添加了 {len(payload['tools'])} 个工具定义")
+                elif api_format == 'openai':
+                    # Responses API 工具格式：function 字段平铺到顶层
+                    payload['tools'] = ToolFormatConverter.to_provider_tools(agent_info['tools'], 'openai-responses')
+                    if 'tool_choice' not in payload:
+                        payload['tool_choice'] = "auto"
+                    logger.info(f"[ModelClient] 为Responses API添加了 {len(payload['tools'])} 个工具定义")
                 else:
                     # OpenAI兼容格式
                     payload['tools'] = agent_info['tools']
@@ -550,6 +585,8 @@ class ModelClient:
                     "model": model,
                     "model_config": model_config,
                     "agent_info": agent_info,
+                    # 线协议，stream_handler 据此选择 SSE 解析分支
+                    "api_format": api_format,
                     # 传递系统设置，避免子函数在无Flask上下文时读取数据库
                     "stream_socket_timeout": read_timeout,
                     "tool_call_context_rounds": tool_call_context_rounds,
@@ -614,6 +651,18 @@ class ModelClient:
                 # OpenAI 格式: choices[0].message.content
                 if result.get('choices') and result['choices'][0].get('message', {}).get('content'):
                     content = result['choices'][0]['message']['content']
+                # Responses API 格式: output_text 便捷字段，或 output[].content[].text
+                elif result.get('output_text'):
+                    content = result['output_text']
+                elif result.get('output') and isinstance(result['output'], list):
+                    for item in result['output']:
+                        if item.get('type') == 'message':
+                            for block in item.get('content', []):
+                                if block.get('type') == 'output_text' and block.get('text'):
+                                    content = block['text']
+                                    break
+                        if content:
+                            break
                 # Anthropic 格式: content[0].text
                 elif result.get('content') and isinstance(result['content'], list) and len(result['content']) > 0:
                     first_content = result['content'][0]
@@ -1044,6 +1093,28 @@ class ModelClient:
         # 默认返回 openai（OpenAI 兼容格式是最通用的）
         return 'openai'
 
+    def _resolve_api_format(self, model_config=None, override: str = None) -> str:
+        """解析线协议（wire protocol）。
+
+        唯一驱动请求构建与响应解析分支的轴，取值：
+        - 'openai'            OpenAI 官方 Responses API (/v1/responses)
+        - 'openai-compatible' Chat Completions (/v1/chat/completions)，默认
+        - 'anthropic'         Anthropic Messages (/v1/messages)
+
+        优先级：显式 override > model_config.format_compatibility > 默认。
+        旧值 'custom' 归一为 'openai-compatible'。
+        """
+        valid = {'openai', 'openai-compatible', 'anthropic'}
+        value = override or getattr(model_config, 'format_compatibility', None)
+        if value == 'custom' or not value:
+            return 'openai-compatible'
+        if value not in valid:
+            logger.warning(
+                f"[ModelClient] 未知 format_compatibility={value!r}，回退到 openai-compatible"
+            )
+            return 'openai-compatible'
+        return value
+
     def _build_parameters_from_hierarchy(self, model_config=None, platform_params=None,
                                         role_params=None, runtime_params=None) -> Tuple[Dict, Dict]:
         """
@@ -1140,30 +1211,3 @@ class ModelClient:
 
         logger.debug(f"[ModelClient] 供应商 {provider} 参数映射结果: {mapped_params}")
         return mapped_params
-
-    # === 供应商适配方法 ===
-
-    def _handle_openai_request(self, **params) -> Dict:
-        """处理OpenAI兼容请求"""
-        # 当前的send_request方法已经处理OpenAI格式，这里作为扩展点
-        return params
-
-    def _handle_anthropic_request(self, **params) -> Dict:
-        """处理Anthropic请求"""
-        # 当前的send_request方法已经处理Anthropic格式，这里作为扩展点
-        return params
-
-    def _handle_google_request(self, **params) -> Dict:
-        """处理Google AI请求 - 过滤不支持的参数"""
-        # 当前的send_request方法已经处理Google格式，这里作为扩展点
-        return params
-
-    def _handle_ollama_request(self, **params) -> Dict:
-        """处理Ollama请求"""
-        # 当前的send_request方法已经处理Ollama格式，这里作为扩展点
-        return params
-
-    def _handle_gpustack_request(self, **params) -> Dict:
-        """处理GPUStack请求"""
-        # 当前的send_request方法已经处理GPUStack格式，这里作为扩展点
-        return params

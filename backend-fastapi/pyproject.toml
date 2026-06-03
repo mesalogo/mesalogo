@@ -1,0 +1,97 @@
+# ============================================================================
+# backend-fastapi — Python tooling config (ruff)
+# ----------------------------------------------------------------------------
+# This file exists primarily so the backend has a real, runnable linter
+# (`ruff check .`) — not just AGENTS.md conventions. See repo-root AGENTS.md
+# §3.2 "no print(), no blocking I/O on async paths, no legacy compat shims";
+# the rule selection below operationalizes those conventions.
+#
+# Usage:
+#   cd backend-fastapi
+#   ruff check .                   # lint
+#   ruff check . --fix             # autofix
+#   ruff format .                  # apply formatter (Black-compatible)
+#
+# Why ruff and not flake8+isort+black? Ruff implements all three in a single
+# Rust binary, ~100x faster, with a unified config. It is the de-facto Python
+# linter as of 2026 and is also what backend-fastapi/AGENTS.md will start
+# pointing to once this lands.
+# ============================================================================
+
+[tool.ruff]
+# Match the runtime in README.md ("Python 3.13+").
+target-version = "py313"
+line-length = 120
+
+# Limit the lint scope to first-party code. We deliberately exclude:
+#   - alembic/versions: auto-generated migrations (would generate noise)
+#   - knowledgebase, logs, data: runtime artifacts (also in .gitignore)
+#   - skills/: SKILL.md skill scripts are external samples, not our code
+#   - third_party-like vendored helpers if any appear
+extend-exclude = [
+    "alembic/versions",
+    "knowledgebase",
+    "logs",
+    "data",
+    "skills",
+    "*.example",
+    "config.conf.example",
+    "mcp_config.json.example",
+]
+
+[tool.ruff.lint]
+# Curated rule set — chosen because each rule maps to a real backend AGENTS.md
+# guideline. Adding new rule families later is cheap; starting too strict and
+# rolling back is not.
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes (unused imports, undefined names, …)
+    "I",    # isort (import ordering)
+    "B",    # flake8-bugbear (likely-buggy patterns)
+    "UP",   # pyupgrade (modernize syntax for target-version)
+    "C4",   # flake8-comprehensions
+    "SIM",  # flake8-simplify
+    "T20",  # flake8-print  — enforces AGENTS.md §3.2 "No print(). Use logger."
+    "RUF",  # ruff-specific rules
+]
+
+# Practical ignores — these are noise on a large existing FastAPI codebase
+# and would not justify the churn of a bulk refactor right now.
+ignore = [
+    "E501",   # line-too-long: format handles this; do not double-flag.
+    "B008",   # FastAPI `Depends(...)` in defaults is idiomatic.
+    "SIM108", # ternary-vs-if: explicit if/else is often more readable here.
+    "UP007",  # `Union[X, Y]` -> `X | Y`: noisy on 90k-LOC models.py; future PR.
+    "UP006",  # `Dict[..]` -> `dict[..]`: same reason; touches ~1100 sites.
+    "UP035",  # deprecated typing imports: same reason as UP007.
+    "UP045",  # `Optional[X]` -> `X | None`: noisy bulk refactor; future PR.
+    # MesaLogo is an English-first, Chinese-as-glossary codebase (see root
+    # AGENTS.md "Language policy"). RUF00x ambiguous-unicode rules are
+    # designed to catch invisible homoglyph attacks in identifiers, but
+    # fire on every legitimate CJK character in our comments/docstrings.
+    "RUF001", # ambiguous-unicode-character-string
+    "RUF002", # ambiguous-unicode-character-docstring
+    "RUF003", # ambiguous-unicode-character-comment
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests are allowed to use bare asserts, magic numbers, and looser style.
+# (`B011` = `assert False`, `B017` = `pytest.raises(Exception)`.)
+"tests/**/*.py" = ["T201", "T203", "B011", "B017"]
+# `scripts/` holds operational probes (check_*.py / smoke_*.py per
+# backend-fastapi/AGENTS.md §7); `print()` is acceptable there because
+# operators run them interactively.
+"scripts/**/*.py" = ["T201", "T203"]
+# `__init__.py` files re-export public APIs; unused-import (F401) is expected.
+"__init__.py" = ["F401"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "core"]
+
+[tool.ruff.format]
+# Match Black defaults; this is mostly for explicitness so contributors know
+# `ruff format .` is the sanctioned formatter for backend-fastapi.
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
