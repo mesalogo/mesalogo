@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Card, Button, Table, Form, Input, Modal, Select, Space, Empty, Tag, message, Tooltip } from 'antd';
+import { App, Typography, Card, Button, Table, Form, Input, Modal, Select, Space, Empty, Tag, Tooltip } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +9,7 @@ const { TextArea } = Input;
 const { Option } = Select;
 
 const InternalEnvironmentVariables = () => {
+  const { message } = App.useApp();
   const { t } = useTranslation();
   const [variables, setVariables] = useState([]);
   const [actionSpaces, setActionSpaces] = useState([]);

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, Typography, message, Tabs, Table, Button, Space, Modal, Breadcrumb, Upload, Skeleton } from 'antd';
+import { App, Card, Typography, Tabs, Table, Button, Space, Modal, Breadcrumb, Upload, Skeleton } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { BookOutlined, FolderOutlined, EyeOutlined, DeleteOutlined, HomeOutlined, UploadOutlined, ReloadOutlined } from '@ant-design/icons';
 import WorkspaceNavigator from './components/WorkspaceNavigator';
@@ -16,6 +16,7 @@ const { Text, Title } = Typography;
  * 简化的文件浏览器界面
  */
 const PartitionWorkspaceTab = () => {
+  const { message, modal } = App.useApp();
   const { t } = useTranslation();
   const [selectedItem, setSelectedItem] = useState(null); // 选中的项目（任务或目录）
   const [workspaceFiles, setWorkspaceFiles] = useState([]);
@@ -207,7 +208,7 @@ const PartitionWorkspaceTab = () => {
 
   // 删除文件
   const handleDeleteFile = (file) => {
-    Modal.confirm({
+    modal.confirm({
       title: '确认删除',
       content: `确定要删除文件 "${file.file_name}" 吗？此操作不可恢复。`,
       okText: '删除',

@@ -463,7 +463,7 @@ const UserForm = ({ visible, user, onCancel, onSuccess }) => {
                           />
                           {plan.display_name}
                           {plan.price_monthly > 0 && (
-                            <span style={{ color: '#999' }}>
+                            <span style={{ color: 'var(--custom-text-secondary)' }}>
                               {t('userForm.pricePerMonth', { price: plan.price_monthly })}
                             </span>
                           )}

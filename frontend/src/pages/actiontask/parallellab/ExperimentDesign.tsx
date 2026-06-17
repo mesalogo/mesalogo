@@ -1013,7 +1013,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
 
               {/* 验证错误提示 */}
               {!readOnly && validationErrors.length > 0 && (
-                <div style={{ marginBottom: 16, padding: '8px 16px', backgroundColor: '#fff2f0', border: '1px solid #ffccc7', borderRadius: 8 }}>
+                <div style={{ marginBottom: 16, padding: '8px 16px', backgroundColor: 'var(--custom-error-bg)', border: '1px solid var(--custom-error-border)', borderRadius: 8 }}>
                   <Space align="start">
                     <WarningOutlined style={{ color: '#ff4d4f', marginTop: 4 }} />
                     <div>

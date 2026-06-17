@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, message, Spin } from 'antd';
+import { App, Modal, Spin } from 'antd';
 import { DocumentEditor } from '@onlyoffice/document-editor-react';
 import { workspaceAPI } from '../services/api/workspace';
 
@@ -8,6 +8,7 @@ import { workspaceAPI } from '../services/api/workspace';
  * 从后端获取配置，包括服务器URL和JWT token
  */
 const OnlyOfficeEditor = ({ visible, file, onClose, onSave }) => {
+  const { message } = App.useApp();
   const [editorConfig, setEditorConfig] = useState(null);
   const [serverUrl, setServerUrl] = useState(null);
   const [loading, setLoading] = useState(false);

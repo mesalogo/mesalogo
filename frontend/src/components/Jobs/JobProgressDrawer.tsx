@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Drawer, Modal, Button, Space, Progress, Tag, Timeline, Typography } from 'antd';
+import { App, Drawer, Button, Space, Progress, Tag, Timeline, Typography } from 'antd';
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -22,6 +22,7 @@ const JobProgressDrawer = ({
   onFailed
 }) => {
   const { t } = useTranslation();
+  const { modal } = App.useApp();
   const [cancelling, setCancelling] = useState(false);
 
   const STATUS_CONFIG = {
@@ -47,12 +48,12 @@ const JobProgressDrawer = ({
     try {
       setCancelling(true);
       await jobsAPI.cancelJob(jobId);
-      Modal.success({
+      modal.success({
         title: t('jobs.msg.cancelSuccess'),
         content: t('jobs.msg.cancelTaskSuccess')
       });
     } catch (error) {
-      Modal.error({
+      modal.error({
         title: t('jobs.btn.cancel'),
         content: error.response?.data?.error || t('jobs.msg.cancelTaskFailed')
       });
@@ -65,7 +66,7 @@ const JobProgressDrawer = ({
     if (isCompleted || isFailed || !isRunning) {
       onClose();
     } else {
-      Modal.confirm({
+      modal.confirm({
         title: t('jobs.msg.stillRunning'),
         content: t('jobs.msg.stillRunningContent'),
         onOk: onClose

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Input, Button, Space, message } from 'antd';
+import { App, Input, Button, Space } from 'antd';
 import { SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { MarkdownRenderer } from '../actiontask/components/ConversationExtraction';
@@ -12,6 +12,7 @@ const { TextArea } = Input;
  * 始终保持分屏模式，左侧编辑，右侧预览
  */
 const WorkspaceEditor = ({ value, onChange, onSave, onCancel, showActions = true }: any) => {
+  const { message } = App.useApp();
   const { t } = useTranslation();
   const [content, setContent] = useState(value || '');
 

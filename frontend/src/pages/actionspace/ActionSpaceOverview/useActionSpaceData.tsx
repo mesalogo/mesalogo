@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { message } from 'antd';
+import { App } from 'antd';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
 import { actionTaskAPI } from '../../../services/api/actionTask';
 
@@ -8,6 +8,7 @@ import { actionTaskAPI } from '../../../services/api/actionTask';
  * 负责获取行动空间列表、标签数据等
  */
 export const useActionSpaceData = () => {
+  const { message } = App.useApp();
   const [actionSpaces, setActionSpaces] = useState([]);
   const [industryTags, setIndustryTags] = useState([]);
   const [scenarioTags, setScenarioTags] = useState([]);

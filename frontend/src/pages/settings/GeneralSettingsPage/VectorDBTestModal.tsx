@@ -35,7 +35,7 @@ export const getTestSteps = (t) => [
 /**
  * 显示测试详情Modal
  */
-export const showDetailedTestResult = (providerDisplayName, result, t) => {
+export const showDetailedTestResult = (providerDisplayName, result, t, modal) => {
   const { info } = result;
 
   if (!info || !info.test_levels) {
@@ -101,7 +101,7 @@ export const showDetailedTestResult = (providerDisplayName, result, t) => {
   }
 
   // 使用Modal显示详细信息
-  Modal.info({
+  modal.info({
     title: `${providerDisplayName} 测试详情`,
     content: (
       <div style={{ whiteSpace: 'pre-line', fontFamily: 'monospace', fontSize: '13px' }}>

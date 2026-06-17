@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Input, Button, Space, Typography, message, Alert } from 'antd';
+import { App, Card, Form, Input, Button, Space, Typography, Alert } from 'antd';
 import { SaveOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import knowledgeAPI from '../../../services/api/knowledge';
 
@@ -7,6 +7,7 @@ const { Text } = Typography;
 const { TextArea } = Input;
 
 const BasicSettings = ({ knowledgeId, knowledgeData, onUpdate }) => {
+  const { message } = App.useApp();
   const [saving, setSaving] = useState(false);
   const [basicForm] = Form.useForm();
 

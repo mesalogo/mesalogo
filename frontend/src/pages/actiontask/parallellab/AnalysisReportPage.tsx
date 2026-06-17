@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Typography, message, Skeleton, Row, Col } from 'antd';
+import { App, Typography, Skeleton, Row, Col } from 'antd';
 import { useTranslation } from 'react-i18next';
 import AnalysisReport from './AnalysisReport';
 import * as parallelExperimentApi from '../../../services/api/parallelExperiment';
@@ -7,6 +7,7 @@ import * as parallelExperimentApi from '../../../services/api/parallelExperiment
 const { Title, Text } = Typography;
 
 const AnalysisReportPage = () => {
+  const { message } = App.useApp();
   const { t } = useTranslation();
   const [experiments, setExperiments] = useState<any[]>([]);
   const [pageLoading, setPageLoading] = useState(true);

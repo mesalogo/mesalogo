@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Tag, Button, Empty, Tooltip, Tabs, Space, Typography, Divider, Input, Popconfirm, message } from 'antd';
+import { App, Table, Tag, Button, Empty, Tooltip, Tabs, Space, Typography, Divider, Input, Popconfirm } from 'antd';
 import { LineChartOutlined, GlobalOutlined, RobotOutlined, ShareAltOutlined, LockOutlined, EditOutlined, DeleteOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { actionTaskAPI } from '../../../services/api/actionTask';
@@ -8,6 +8,7 @@ const { TabPane } = Tabs;
 const { Text } = Typography;
 
 const ActionTaskEnvironment = ({ task, showGlobalOnly = false, onVariablesChange = null }) => {
+  const { message } = App.useApp();
   const { t } = useTranslation();
   // 环境变量状态
   const [environmentVariables, setEnvironmentVariables] = useState([]);

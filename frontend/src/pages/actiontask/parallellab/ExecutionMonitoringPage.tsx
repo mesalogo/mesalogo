@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Typography, message, Skeleton, Select, Space } from 'antd';
+import { App, Typography, Skeleton, Select, Space } from 'antd';
 import { useTranslation } from 'react-i18next';
 import ExecutionMonitoring from './ExecutionMonitoring';
 import * as parallelExperimentApi from '../../../services/api/parallelExperiment';
@@ -7,6 +7,7 @@ import * as parallelExperimentApi from '../../../services/api/parallelExperiment
 const { Title, Text } = Typography;
 
 const ExecutionMonitoringPage = () => {
+  const { message } = App.useApp();
   const { t } = useTranslation();
   const [allExperiments, setAllExperiments] = useState<any[]>([]);
   const [selectedExperimentId, setSelectedExperimentId] = useState<string | null>(null);

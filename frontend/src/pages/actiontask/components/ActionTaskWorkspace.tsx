@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, Table, Typography, Skeleton, Empty, message, Button, Space, Breadcrumb, Upload, Modal, Radio, Segmented } from 'antd';
+import { App, Card, Table, Typography, Skeleton, Empty, Button, Space, Breadcrumb, Upload, Modal, Radio, Segmented } from 'antd';
 import { EyeOutlined, DeleteOutlined, HomeOutlined, ReloadOutlined, UploadOutlined, FolderOutlined, FileOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import WorkspaceFileViewer from '../../workspace/components/WorkspaceFileViewer';
@@ -16,6 +16,7 @@ const { Text } = Typography;
  * @param {string|null} respondingAgentId - 当前正在响应的智能体ID
  */
 const ActionTaskWorkspace = ({ task, respondingAgentId }) => {
+  const { message, modal } = App.useApp();
   const { t } = useTranslation();
   const [workspaceFiles, setWorkspaceFiles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -183,7 +184,7 @@ const ActionTaskWorkspace = ({ task, respondingAgentId }) => {
 
   // 删除文件
   const handleDeleteFile = (file) => {
-    Modal.confirm({
+    modal.confirm({
       title: '确认删除',
       content: `确定要删除文件 "${file.file_name}" 吗？此操作不可恢复。`,
       okText: '删除',

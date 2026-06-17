@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Space, Modal, Form, Input, message, Tag, Select, Typography, Checkbox, Tooltip, Alert, Popover, TreeSelect, App, Skeleton } from 'antd';
+import { Card, Table, Button, Space, Modal, Form, Input, Tag, Select, Typography, Checkbox, Tooltip, Alert, Popover, TreeSelect, App, Skeleton } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
@@ -35,7 +35,7 @@ const { Title, Text } = Typography;
 
 const ToolManagement = () => {
   const { t } = useTranslation();
-  const { modal } = App.useApp();
+  const { modal, message } = App.useApp();
   const [capabilities, setCapabilities] = useState([]);
   const [categories, setCategories] = useState([]); // 分类列表
   const [tempCategories, setTempCategories] = useState([]); // 临时分类列表，用于UI展示但尚未提交到后端

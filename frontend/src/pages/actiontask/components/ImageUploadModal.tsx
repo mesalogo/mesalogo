@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Modal, Button, Typography, message, Spin } from 'antd';
+import { App, Modal, Button, Typography, Spin } from 'antd';
 import { CloseOutlined, CheckCircleOutlined, UploadOutlined } from '@ant-design/icons';
 import api from '../../../services/api/axios';
 
@@ -72,6 +72,7 @@ const ImageUploadModal = ({
   onRemoveImage,
   disabled = false
 }) => {
+  const { message } = App.useApp();
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState(null);
@@ -265,8 +266,8 @@ const ImageUploadModal = ({
           <div style={{
             marginTop: '8px',
             padding: '8px 12px',
-            backgroundColor: '#fff2f0',
-            border: '1px solid #ffccc7',
+            backgroundColor: 'var(--custom-error-bg)',
+            border: '1px solid var(--custom-error-border)',
             borderRadius: '4px',
             color: '#ff4d4f',
             fontSize: '12px'

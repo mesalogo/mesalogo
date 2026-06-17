@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Typography, Space, Tag, Spin, Alert, Button, Form, Input, Tabs, Upload, Modal, message, Row, Col, Progress, Statistic } from 'antd';
+import { App, Card, Typography, Space, Tag, Spin, Alert, Button, Form, Input, Tabs, Upload, Modal, Row, Col, Progress, Statistic } from 'antd';
 import { SafetyCertificateOutlined, KeyOutlined, UploadOutlined, CopyOutlined, RobotOutlined, AppstoreOutlined, TeamOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -49,6 +49,7 @@ const { Title, Text, Paragraph } = Typography;
  * 显示系统的基本信息、版本和版权声明
  */
 const AboutPage = () => {
+  const { message } = App.useApp();
   const { t } = useTranslation();
   const { isDark } = useTheme();
   const [form] = Form.useForm();

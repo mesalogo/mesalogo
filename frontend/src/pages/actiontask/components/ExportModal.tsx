@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Form, Checkbox, Radio, Button, message, Space, Typography, Divider } from 'antd';
+import { App, Modal, Form, Checkbox, Radio, Button, Space, Typography, Divider } from 'antd';
 import { ExportOutlined, FileExcelOutlined, FolderOutlined } from '@ant-design/icons';
 import { actionTaskAPI } from '../../../services/api/actionTask';
 
@@ -9,6 +9,7 @@ const { Text } = Typography;
  * 导出行动任务数据Modal组件
  */
 const ExportModal = ({ visible, onCancel, task, currentConversationId }) => {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 

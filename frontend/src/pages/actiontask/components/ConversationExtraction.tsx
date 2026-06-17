@@ -1272,10 +1272,10 @@ function ConversationExtraction({
                               <div>
                                 <div style={{
                                   padding: '10px',
-                                  backgroundColor: '#fffbe6',
-                                  border: '1px solid #ffe58f',
+                                  backgroundColor: 'var(--custom-warning-bg)',
+                                  border: '1px solid var(--custom-warning-border)',
                                   borderRadius: '4px',
-                                  color: '#874d00',
+                                  color: 'var(--custom-text)',
                                   marginBottom: '10px'
                                 }}>
                                   <p>JSON parse warning: {e.message}</p>

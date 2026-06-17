@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Modal, Typography, Skeleton, Button, Dropdown, message } from 'antd';
+import { App, Modal, Typography, Skeleton, Button, Dropdown } from 'antd';
 import { DownloadOutlined, ExportOutlined, EditOutlined } from '@ant-design/icons';
 import { MarkdownRenderer } from '../../actiontask/components/ConversationExtraction';
 import { workspaceAPI } from '../../../services/api/workspace';
@@ -13,6 +13,7 @@ const { Title } = Typography;
  * 用于查看和编辑工作空间文件内容
  */
 const WorkspaceFileViewer = ({ visible, file, onClose, onSave }: any) => {
+  const { message } = App.useApp();
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);

@@ -33,7 +33,7 @@ const { Title, Text } = Typography;
 
 const GeneralSettingsPage = () => {
   const { t } = useTranslation();
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
 
   // 使用统一的数据管理Hook
   const {
@@ -358,7 +358,7 @@ const GeneralSettingsPage = () => {
         onClose={() => setTestStepsModal(prev => ({ ...prev, visible: false }))}
         onShowDetail={() => {
           setTestStepsModal(prev => ({ ...prev, visible: false }));
-          showDetailedTestResult(testStepsModal.providerName, testStepsModal.result, t);
+          showDetailedTestResult(testStepsModal.providerName, testStepsModal.result, t, modal);
         }}
       />
     </div>

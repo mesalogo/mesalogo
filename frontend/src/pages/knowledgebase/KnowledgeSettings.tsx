@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Input, Button, Space, Typography, message, Alert, Empty, Tabs, Spin } from 'antd';
+import { App, Card, Form, Input, Button, Space, Typography, Alert, Empty, Tabs, Spin } from 'antd';
 import { SaveOutlined, InfoCircleOutlined, LockOutlined } from '@ant-design/icons';
 import ChunkSettings from './components/ChunkSettings';
 import knowledgeAPI from '../../services/api/knowledge';
@@ -8,6 +8,7 @@ const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 const KnowledgeSettings = ({ selectedKnowledgeId: propKnowledgeId }) => {
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');

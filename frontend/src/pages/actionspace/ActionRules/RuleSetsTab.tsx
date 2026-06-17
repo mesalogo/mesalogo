@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Button, Table, Space, Tooltip, Tag, Modal, List, Checkbox, Spin, message, Typography } from 'antd';
+import { App, Card, Button, Table, Space, Tooltip, Tag, Modal, List, Checkbox, Spin, Typography } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
 import RuleSetModal from './RuleSetModal';
@@ -10,6 +10,7 @@ const { Text } = Typography;
  * 规则集管理 Tab
  */
 const RuleSetsTab = ({ ruleSets, loading, onRefresh }: any) => {
+  const { message, modal } = App.useApp();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingRuleSet, setEditingRuleSet] = useState(null);
   
@@ -34,7 +35,7 @@ const RuleSetsTab = ({ ruleSets, loading, onRefresh }: any) => {
   };
 
   const handleDelete = async (id) => {
-    Modal.confirm({
+    modal.confirm({
       title: '确认删除',
       content: '确定要删除这个规则集吗？删除后无法恢复。',
       okText: '确认',

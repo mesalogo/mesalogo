@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Typography, message, Skeleton } from 'antd';
+import { App, Typography, Skeleton } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import ExperimentDesign from './ExperimentDesign';
@@ -9,6 +9,7 @@ import { actionSpaceAPI } from '../../../services/api/actionspace';
 const { Title, Text } = Typography;
 
 const ExperimentDesignPage = () => {
+  const { message } = App.useApp();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);

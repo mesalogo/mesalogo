@@ -19,6 +19,11 @@
   /* 代码和消息 */
   --md-code-bg: #f6f8fa;
   --msg-human-bg: #e6f7ff;
+  /* 语义反馈底色（提示框背景/边框，随主题切换） */
+  --custom-error-bg: #fff2f0;
+  --custom-error-border: #ffccc7;
+  --custom-warning-bg: #fffbe6;
+  --custom-warning-border: #ffe58f;
   /* 树形控件 */
   --tree-selected-bg: #e6f7ff;
   --tree-selected-border: #91d5ff;
@@ -51,6 +56,11 @@
   /* 代码和消息 */
   --md-code-bg: #2d2d2d;
   --msg-human-bg: #111d2c;
+  /* 语义反馈底色（提示框背景/边框，随主题切换） */
+  --custom-error-bg: #2a1215;
+  --custom-error-border: #58181c;
+  --custom-warning-bg: #2b2111;
+  --custom-warning-border: #594214;
   /* 树形控件 */
   --tree-selected-bg: #111d2c;
   --tree-selected-border: #153450;

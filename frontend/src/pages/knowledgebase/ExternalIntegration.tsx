@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Space, Table, Tag, Typography, Modal, Form, Input, Select, message, Steps, Radio, Divider, Tooltip, Badge, Progress } from 'antd';
+import { App, Card, Button, Space, Table, Tag, Typography, Modal, Form, Input, Select, Steps, Radio, Divider, Tooltip, Badge, Progress } from 'antd';
 import { ApiOutlined, PlusOutlined, SyncOutlined, DeleteOutlined, CheckCircleOutlined, CloseCircleOutlined, CloudSyncOutlined, LinkOutlined, SettingOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 
@@ -107,6 +107,7 @@ const mockConnections = [
 ];
 
 const ExternalIntegration = () => {
+  const { message } = App.useApp();
   const { t } = useTranslation();
   const externalSourceTypes = buildExternalSourceTypes(t);
   const [connections, setConnections] = useState([]);

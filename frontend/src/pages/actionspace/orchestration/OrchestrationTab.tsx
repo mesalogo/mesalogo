@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Button, message, Space, Switch, Typography } from 'antd';
+import { App, Button, Space, Switch, Typography } from 'antd';
 import { SaveOutlined, ClearOutlined } from '@ant-design/icons';
 import { Node, Edge } from '@xyflow/react';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
@@ -27,6 +27,7 @@ const OrchestrationTab: React.FC<OrchestrationTabProps> = ({
   roles,
 }) => {
   const orchestration = settings?.orchestration || { enabled: false, nodes: [], edges: [] };
+  const { message } = App.useApp();
   const [enabled, setEnabled] = useState(orchestration.enabled || false);
   const [nodes, setNodes] = useState<Node[]>(orchestration.nodes || []);
   const [edges, setEdges] = useState<Edge[]>(orchestration.edges || []);

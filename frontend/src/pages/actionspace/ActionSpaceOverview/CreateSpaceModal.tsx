@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Input, Select, Checkbox, message, Space, Typography } from 'antd';
+import { App, Modal, Form, Input, Select, Checkbox, Space, Typography } from 'antd';
 import { RobotOutlined, TeamOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
@@ -17,6 +17,7 @@ const { Text } = Typography;
  * Includes form fields and assistant generation.
  */
 const CreateSpaceModal = ({ visible, onCancel, onSuccess, industryTags, scenarioTags }: any) => {
+  const { message } = App.useApp();
   const { t } = useTranslation();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);

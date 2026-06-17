@@ -1,9 +1,12 @@
 import type { ThemeConfig } from 'antd';
 import { theme as antdTheme } from 'antd';
 
+// 主色：全站唯一来源，Tabs/Slider/Switch 等组件均引用此常量，避免出现多套蓝色
+const colorPrimary = '#1677ff';
+
 // 共享的 Token（亮色和暗色通用）
 const sharedToken = {
-  colorPrimary: '#1677ff',
+  colorPrimary,
   borderRadius: 8,
   borderRadiusLG: 12,
   borderRadiusSM: 6,
@@ -50,23 +53,23 @@ const sharedComponents = {
     boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
   },
   Tabs: {
-    itemActiveColor: '#2563eb',
-    itemHoverColor: '#2563eb',
-    itemSelectedColor: '#2563eb',
-    inkBarColor: '#2563eb',
+    itemActiveColor: colorPrimary,
+    itemHoverColor: colorPrimary,
+    itemSelectedColor: colorPrimary,
+    inkBarColor: colorPrimary,
     titleFontSize: 14,
     titleFontSizeLG: 16,
     cardPadding: '12px 4px',
   },
   Slider: {
-    trackBg: '#3b82f6',
-    trackHoverBg: '#3b82f6',
-    handleColor: '#3b82f6',
-    handleActiveColor: '#3b82f6',
+    trackBg: colorPrimary,
+    trackHoverBg: colorPrimary,
+    handleColor: colorPrimary,
+    handleActiveColor: colorPrimary,
   },
   Switch: {
-    colorPrimary: '#3b82f6',
-    colorPrimaryHover: '#2563eb',
+    // 选中态背景跟随主色；hover 态由 antd 算法从主色派生
+    colorPrimary,
   },
   Pagination: {
     itemActiveBg: '#e6f4ff',

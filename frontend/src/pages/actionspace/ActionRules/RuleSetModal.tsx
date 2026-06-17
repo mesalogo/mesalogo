@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Modal, Form, Input, message, Checkbox, Space } from 'antd';
+import { App, Modal, Form, Input, Checkbox, Space } from 'antd';
 import { TeamOutlined } from '@ant-design/icons';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
 
@@ -9,6 +9,7 @@ const { TextArea } = Input;
  * 规则集创建/编辑 Modal
  */
 const RuleSetModal = ({ visible, ruleSet, onCancel, onSuccess }: any) => {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const [loading, setLoading] = React.useState(false);
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { message } from 'antd';
+import { App } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { actionTaskAPI } from '../../../../services/api/actionTask';
 import conversationAPI from '../../../../services/api/conversation';
@@ -9,6 +9,7 @@ import conversationAPI from '../../../../services/api/conversation';
  * 负责任务详情获取、消息获取、轮询更新
  */
 export default function useTaskData(taskId) {
+  const { message } = App.useApp();
   const { t } = useTranslation();
   const [task, setTask] = useState(null);
   const [messages, setMessages] = useState([]);

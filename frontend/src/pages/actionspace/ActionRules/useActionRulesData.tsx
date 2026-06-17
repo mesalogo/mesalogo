@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { message } from 'antd';
+import { App } from 'antd';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
 import { api as apiInstance } from '../../../services/api/index';
 
@@ -15,6 +15,7 @@ const isCacheExpired = (lastFetchTime) => {
 };
 
 export const useActionRulesData = (activeTab) => {
+  const { message } = App.useApp();
   const [ruleSets, setRuleSets] = useState([]);
   const [allRules, setAllRules] = useState([]);
   const [roles, setRoles] = useState([]);

@@ -52,7 +52,7 @@ const ExternalUserSystems: React.FC = () => {
       case 'microsoft':
         return <WindowsOutlined style={{ ...iconStyle, color: '#00A4EF' }} />;
       case 'apple':
-        return <AppleOutlined style={{ ...iconStyle, color: '#000000' }} />;
+        return <AppleOutlined style={{ ...iconStyle, color: 'var(--custom-text)' }} />;
       case 'aws_cognito':
         return <CloudOutlined style={{ ...iconStyle, color: '#FF9900' }} />;
       case 'oidc':

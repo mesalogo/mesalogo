@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Table, Space, Tag, Modal, message, Typography, Tooltip } from 'antd';
+import { App, Card, Button, Table, Space, Tag, Modal, Typography, Tooltip } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, GlobalOutlined, TeamOutlined, LockOutlined } from '@ant-design/icons';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
 import RuleEditModal from './RuleEditModal';
@@ -19,6 +19,7 @@ const RulesListTab = ({
   onLoadRoles,
   onLoadEnvironmentVariables
 }) => {
+  const { message, modal } = App.useApp();
   const [ruleModalVisible, setRuleModalVisible] = useState(false);
   const [editingRule, setEditingRule] = useState(null);
 
@@ -54,7 +55,7 @@ const RulesListTab = ({
   };
 
   const handleDeleteRule = async (ruleId) => {
-    Modal.confirm({
+    modal.confirm({
       title: '确认删除',
       content: '确定要删除这条规则吗？删除后无法恢复。',
       okText: '确认',

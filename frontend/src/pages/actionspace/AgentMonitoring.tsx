@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, Table, Button, Space, Modal, Tag, Descriptions, Statistic, Row, Col, Timeline, message, Typography, Tabs, Empty, Spin, Avatar } from 'antd';
+import { App, Card, Table, Button, Space, Modal, Tag, Descriptions, Statistic, Row, Col, Timeline, Typography, Tabs, Empty, Spin, Avatar } from 'antd';
 import { MonitorOutlined, EyeOutlined, SyncOutlined, ReloadOutlined, DatabaseOutlined, MessageOutlined, RobotOutlined, UserOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { agentAPI } from '../../services/api/agent';
@@ -12,6 +12,7 @@ const { Text } = Typography;
 const { TabPane } = Tabs;
 
 const AgentMonitoring = () => {
+  const { message } = App.useApp();
   const { t } = useTranslation();
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(false);

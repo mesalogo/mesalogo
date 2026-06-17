@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Modal, message, Space, Tag } from 'antd';
+import { App, Card, Table, Button, Modal, Space, Tag } from 'antd';
 import { DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 
 const History = () => {
   const { t } = useTranslation('history');
+  const { message } = App.useApp();
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState(null);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Avatar, Badge, Space, Tooltip, Table, Tag, Empty, Typography, Input, Button, Popconfirm, message, Modal, Select } from 'antd';
+import { App, Card, Avatar, Badge, Space, Tooltip, Table, Tag, Empty, Typography, Input, Button, Popconfirm, Modal, Select } from 'antd';
 import {
   TeamOutlined,
   EyeOutlined,
@@ -28,6 +28,7 @@ const { Text } = Typography;
  * 显示参与智能体、监督者智能体、环境变量和自主行动
  */
 const MonitorTab = ({ task, messages, variablesRefreshKey, respondingAgentId, activeConversationId, refreshKey, t: tProp, onVariablesChange, onAgentAdded }) => {
+  const { message } = App.useApp();
   const { t: tHook } = useTranslation();
   const t = tProp || tHook;
   // 编辑状态管理
