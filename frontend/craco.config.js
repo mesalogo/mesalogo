@@ -3,8 +3,13 @@ const dotenv = require('dotenv');
 
 // 加载.env环境变量
 const env = dotenv.config().parsed || {};
-// 从环境变量中获取后端URL
-const BACKEND_URL = env.REACT_APP_API_URL ? env.REACT_APP_API_URL.replace('/api', '') : 'http://localhost:8080';
+// 开发服务器 /api 代理的后端目标。
+// 优先使用 BACKEND_PROXY_TARGET；REACT_APP_API_URL 现为浏览器内相对地址(/api)，
+// 不能再用它推导代理目标（strip 后会得到空字符串导致代理失效）。
+const BACKEND_URL =
+  env.BACKEND_PROXY_TARGET ||
+  process.env.BACKEND_PROXY_TARGET ||
+  'http://localhost:8080';
 
 module.exports = {
   devServer: {
