@@ -21,8 +21,6 @@ import asyncio
 import concurrent.futures
 import traceback
 from typing import Dict, List, Optional, Any
-# Legacy Flask imports removed — Flask Blueprint 路由已迁移到 app/api/routes/mcp_servers.py
-# from flask import Blueprint, request, jsonify
 from pathlib import Path
 import requests
 
@@ -87,10 +85,6 @@ class MCPServerManager:
         # 持久事件循环（用于会话管理，确保会话在同一事件循环中）
         self._persistent_loop = None
         self._loop_thread = None
-        
-        # Legacy Flask Blueprint 已移除，路由已迁移到 app/api/routes/mcp_servers.py
-        # self.api_blueprint = Blueprint('mcp_servers', __name__, url_prefix='/api/mcp')
-        # self._register_endpoints()
 
         # 在初始化时加载配置，避免重复加载
         self.load_config()

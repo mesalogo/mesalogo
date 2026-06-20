@@ -40,10 +40,8 @@ Not sure                                   → put in unit/
 │   ├── scenarios/ smoke/
 ├── contract/           guards against API / tool-signature regression
 │   ├── openapi/ mcp_tools/
-├── fixtures/           shared factories + mocks + data
-│   ├── factories.py mocks/ data/
-├── _archive/           historical FastAPI-era leftovers, read-only, do not touch
-└── _legacy_snippets/   Flask-era (2025-05~09) reference scripts, read-only, not collected
+└── fixtures/           shared factories + mocks + data
+    ├── factories.py mocks/ data/
 
 /pytest.ini             repo-root pytest config (testpaths=tests, markers, ignores)
 ```
@@ -85,7 +83,7 @@ pytest --collect-only -q               # collect, don't run
 
 ## 4. Red lines (红线 — violation = guaranteed regression)
 
-1. ❌ **No Flask patterns** (`create_app()`, `app.test_client()`, `with app.app_context()`). `_archive/` is full of these — **do not** copy-paste from there. The FastAPI canonical form is the `client` fixture in `tests/integration/conftest.py` (`httpx.AsyncClient` + `ASGITransport`).
+1. ❌ **No Flask patterns** (`create_app()`, `app.test_client()`, `with app.app_context()`). The FastAPI canonical form is the `client` fixture in `tests/integration/conftest.py` (`httpx.AsyncClient` + `ASGITransport`).
 2. ❌ **No sync I/O** (`requests`, `time.sleep`, large synchronous file reads). Same rule as repo-root AGENTS §3.2.
 3. ❌ **Do not mock the supervisor, rule_sandbox, or MCP tool signatures.** They **are** the system under test. What you may mock: LLM calls and external APIs.
 4. ❌ **No `print()`**. Use `caplog` / `caplog_info`. Production code completed the `print → logger` migration; tests must not regress that.
@@ -93,7 +91,6 @@ pytest --collect-only -q               # collect, don't run
 6. ❌ **Unit tests must not depend on network / DB / Redis.** If they do, they're not unit tests — move them to `integration/`.
 7. ❌ **Do not reverse the bug-fix order**: first write a failing test that reproduces the bug, **watch it fail**, then fix to green. Otherwise you don't know if you fixed it.
 8. ❌ **No `@pytest.mark.skip` to "survive"**. Delete the test; explain why in the commit message.
-9. ❌ **`_archive/` is read-only**. Do not add files there. Do not say "I copied from _archive" in a PR.
 
 ## 5. Mock LLM — the only standard way
 
