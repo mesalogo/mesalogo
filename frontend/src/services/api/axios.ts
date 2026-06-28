@@ -73,13 +73,15 @@ api.interceptors.response.use(
       if (error.response.status === 401) {
         // 登录接口的 401 不自动跳转，让登录页面自己处理错误显示
         const isLoginRequest = error.config?.url?.includes('/auth/login');
+        // 首启引导接口在系统未配置时调用，此时本就没有登录态，豁免跳转
+        const isSetupRequest = error.config?.url?.includes('/setup/');
         // 以下请求的 401 是第三方 API 密钥错误，不是用户登录失效
-        const isThirdPartyApiRequest = 
+        const isThirdPartyApiRequest =
           error.config?.url?.includes('/model-configs/') ||
           error.config?.url?.includes('/test-external-connection') ||
           error.config?.url?.includes('/external-kb/') ||
           error.config?.url?.includes('/vector-db/');
-        if (!isLoginRequest && !isThirdPartyApiRequest) {
+        if (!isLoginRequest && !isThirdPartyApiRequest && !isSetupRequest) {
           window.location.href = '/login';
         }
       } else if (error.response.status === 403) {

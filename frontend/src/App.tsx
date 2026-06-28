@@ -11,6 +11,7 @@ import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { lightTheme, darkTheme } from './theme';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import PermissionGuard from './components/auth/PermissionGuard';
+import SetupGate from './components/setup/SetupGate';
 import { useGlobalErrorHandler } from './hooks/useGlobalErrorHandler';
 import { PERMISSIONS } from './constants/permissions';
 import './App.css';
@@ -103,6 +104,7 @@ const AppContent: React.FC = () => {
       theme={isDark ? darkTheme : lightTheme}
     >
       <AntdApp>
+        <SetupGate>
         <AuthProvider>
           <LayoutProvider>
             <Routes>
@@ -273,6 +275,7 @@ const AppContent: React.FC = () => {
             </Routes>
           </LayoutProvider>
         </AuthProvider>
+        </SetupGate>
       </AntdApp>
     </ConfigProvider>
   );

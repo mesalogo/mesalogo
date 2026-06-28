@@ -6,7 +6,7 @@ ABM-LLM FastAPI 应用入口
 替代 Flask 的 run_app.py + app/__init__.py create_app()
 
 启动:
-    uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+    uvicorn main:app --host 0.0.0.0 --port 19080 --reload
 """
 import os
 import sys
@@ -191,12 +191,18 @@ app.add_middleware(
 )
 
 # ─── 自定义中间件（注意顺序：后注册的先执行） ───
-# 执行顺序：RequestLog → License → SecurityHeaders → DBSession(cleanup)
-# 注册顺序相反，最后注册的最先执行
-app.add_middleware(SecurityHeadersMiddleware)
-app.add_middleware(LicenseMiddleware)
-app.add_middleware(RequestLogMiddleware)
-app.add_middleware(DBSessionMiddleware)  # 最后注册 = 最先执行(外层)，确保 finally 最后清理
+# Setup 模式下数据库尚未配置，跳过依赖 DB 的中间件（License 会查 system_settings、
+# DBSession 会操作 scoped_session），否则 /api/setup 请求会被许可证检查 403 拦截。
+if settings.SETUP_MODE:
+    app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(RequestLogMiddleware)
+else:
+    # 执行顺序：RequestLog → License → SecurityHeaders → DBSession(cleanup)
+    # 注册顺序相反，最后注册的最先执行
+    app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(LicenseMiddleware)
+    app.add_middleware(RequestLogMiddleware)
+    app.add_middleware(DBSessionMiddleware)  # 最后注册 = 最先执行(外层)，确保 finally 最后清理
 
 
 # ═══════════════════════════════════════════════════════
@@ -245,6 +251,17 @@ app.include_router(api_router, prefix='/api')
 async def startup_event():
     """应用启动时执行"""
     logger.info("=" * 50)
+
+    # ─── Setup 模式：尚未完成连接级配置，跳过一切依赖 DB 的初始化 ───
+    # 此时只有 /api/setup 路由可用，前端据此显示首启引导。完成配置写入
+    # config.conf 后，后端自重启，is_configured() 转真，走下面的正常流程。
+    if settings.SETUP_MODE:
+        logger.info("ABM-LLM 以 [Setup 模式] 启动 —— 等待首次初始化配置")
+        logger.info("  未检测到 DATABASE_URI（环境变量或 config.conf）")
+        logger.info("  仅挂载 /api/setup/* 路由；请通过前端引导完成配置")
+        logger.info("=" * 50)
+        return
+
     logger.info("ABM-LLM FastAPI 启动中...")
     logger.info(f"数据库: {settings.DATABASE_URI.split('@')[-1] if '@' in settings.DATABASE_URI else settings.DATABASE_URI}")
     logger.info(f"日志级别: {settings.LOG_LEVEL}")
@@ -352,17 +369,3 @@ async def shutdown_event():
     engine.dispose()
     logger.info("数据库连接池已清理")
 
-
-# ═══════════════════════════════════════════════════════
-# 直接运行
-# ═══════════════════════════════════════════════════════
-
-if __name__ == '__main__':
-    import uvicorn
-    uvicorn.run(
-        'main:app',
-        host=settings.HOST,
-        port=settings.PORT,
-        reload=settings.DEBUG,
-        log_level=settings.LOG_LEVEL.lower(),
-    )

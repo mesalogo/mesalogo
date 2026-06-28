@@ -21,7 +21,8 @@ from core.config import settings
 
 if __name__ == '__main__':
     host = settings.HOST or '0.0.0.0'
-    port = int(os.environ.get('PORT', settings.PORT or 8080))
+    # 端口的唯一真相来源是 settings.PORT（已按 环境变量 > config.conf > 默认 解析）
+    port = settings.PORT
 
     is_prod = '--prod' in sys.argv
 

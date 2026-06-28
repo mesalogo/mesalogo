@@ -32,6 +32,28 @@ def _get(key: str, default: str = '', value_type: str = 'string'):
     return default
 
 
+def is_configured() -> bool:
+    """
+    判定系统是否已完成连接级配置（即可跳过首启引导）。
+
+    判定标准（任一成立即视为已配置）：
+    1. ABM_SKIP_SETUP=1 —— 逃生口，用于裸 SQLite 开发，强制跳过引导。
+    2. 存在 DATABASE_URI 环境变量 —— 容器化部署，配置由编排注入。
+    3. config.conf 的 [BACKEND_CONFIG] 含非空 DATABASE_URI 键。
+
+    注意：默认 SQLite 回落（core/config.py 中 DATABASE_URI 的兜底）**不**计入，
+    因为那只是缺省值而非用户的显式选择，正是首启引导要覆盖的场景。
+    """
+    if os.environ.get('ABM_SKIP_SETUP') == '1':
+        return True
+    if os.environ.get('DATABASE_URI'):
+        return True
+    if 'BACKEND_CONFIG' in _config_parser:
+        if _config_parser['BACKEND_CONFIG'].get('DATABASE_URI', '').strip():
+            return True
+    return False
+
+
 class Settings:
     """
     全局配置对象（单例）
@@ -39,6 +61,11 @@ class Settings:
     优先级：环境变量 > config.conf > 默认值
     直接使用类属性，不需要 Pydantic BaseSettings（减少依赖）
     """
+
+    # ─── 首启引导 ───
+    # True 表示尚未完成连接级配置，后端以 Setup 模式启动（跳过 DB 初始化，
+    # 仅挂载 /api/setup 路由），前端在登录页之前显示初始化引导。
+    SETUP_MODE: bool = not is_configured()
 
     # ─── 基础 ───
     DEBUG: bool = _get('DEBUG', 'False', 'bool')
@@ -61,7 +88,7 @@ class Settings:
 
     # ─── 服务器 ───
     HOST: str = _get('HOST', '0.0.0.0')
-    PORT: int = int(os.environ.get('PORT', _get('PORT', '8080', 'int') or 8080))
+    PORT: int = int(os.environ.get('PORT', _get('PORT', '19080', 'int') or 19080))
 
     # ─── API ───
     API_VERSION: str = '1.0'
