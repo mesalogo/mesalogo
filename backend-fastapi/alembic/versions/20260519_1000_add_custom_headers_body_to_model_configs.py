@@ -41,29 +41,38 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
+def _has_column(bind, table: str, column: str) -> bool:
+    return bool(bind.execute(sa.text(
+        """
+        SELECT 1 FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :t AND COLUMN_NAME = :c
+        """
+    ), {"t": table, "c": column}).first())
+
+
 def upgrade() -> None:
-    """Add custom_headers / custom_body JSON columns to model_configs."""
-    op.add_column(
-        'model_configs',
-        sa.Column(
-            'custom_headers',
-            sa.JSON(),
-            nullable=False,
-            server_default=sa.text("('{}')"),
-        ),
-    )
-    op.add_column(
-        'model_configs',
-        sa.Column(
-            'custom_body',
-            sa.JSON(),
-            nullable=False,
-            server_default=sa.text("('{}')"),
-        ),
-    )
+    """Add custom_headers / custom_body JSON columns to model_configs.
+
+    幂等：若列已存在则跳过。基线迁移（从已迁移 DB 反向生成）已包含这两列，
+    全新库上本迁移应为 no-op；仅在更早期的老库上才真正执行 ADD COLUMN。
+    """
+    bind = op.get_bind()
+    if not _has_column(bind, 'model_configs', 'custom_headers'):
+        op.add_column(
+            'model_configs',
+            sa.Column('custom_headers', sa.JSON(), nullable=False, server_default=sa.text("('{}')")),
+        )
+    if not _has_column(bind, 'model_configs', 'custom_body'):
+        op.add_column(
+            'model_configs',
+            sa.Column('custom_body', sa.JSON(), nullable=False, server_default=sa.text("('{}')")),
+        )
 
 
 def downgrade() -> None:
     """Drop custom_headers / custom_body columns from model_configs."""
-    op.drop_column('model_configs', 'custom_body')
-    op.drop_column('model_configs', 'custom_headers')
+    bind = op.get_bind()
+    if _has_column(bind, 'model_configs', 'custom_body'):
+        op.drop_column('model_configs', 'custom_body')
+    if _has_column(bind, 'model_configs', 'custom_headers'):
+        op.drop_column('model_configs', 'custom_headers')

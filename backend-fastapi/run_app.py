@@ -26,8 +26,13 @@ if __name__ == '__main__':
 
     is_prod = '--prod' in sys.argv
 
+    # WORKERS 可显式覆盖 worker 数。容器内设 WORKERS=1：使首启引导写配置后
+    # os._exit 能直接终结主进程→容器退出→由 restart 策略拉起读新配置的新容器
+    # （多 worker 时退出单个 worker 只会被 master 补一个，配置不刷新）。
+    workers = int(os.environ.get('WORKERS', '4' if is_prod else '1'))
+
     print(f"启动 FastAPI 服务器于 http://{host}:{port}")
-    print(f"模式: {'生产' if is_prod else '开发'}")
+    print(f"模式: {'生产' if is_prod else '开发'} | workers={workers}")
     print(f"Swagger UI: http://{host}:{port}/docs")
 
     uvicorn.run(
@@ -35,6 +40,6 @@ if __name__ == '__main__':
         host=host,
         port=port,
         reload=not is_prod,
-        workers=4 if is_prod else 1,
+        workers=workers,
         log_level=settings.LOG_LEVEL.lower() if not is_prod else 'info',
     )

@@ -11,6 +11,7 @@ services:
       - LC_ALL=C.UTF-8
       - LANG=C.UTF-8
       - PORT=8080
+      - WORKERS=1
       - REDIS_URL=${REDIS_URL:-redis://abm-redis:6379/0}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - UV_INDEX_URL=${UV_INDEX_URL:-https://mirrors.aliyun.com/pypi/simple/}

@@ -32,6 +32,13 @@ copy_config_files() {
         cp -r "$PROJECT_ROOT/backend-fastapi/knowledgebase/demo_files" "$SCRIPT_DIR/volumes/backend-knowledgebase/" 2>/dev/null || true
         cp "$PROJECT_ROOT/backend-fastapi/knowledgebase/README.md" "$SCRIPT_DIR/volumes/backend-knowledgebase/" 2>/dev/null || true
     fi
+    # seed_data_models.json 含模型配置（可能带 key），被 .gitignore 忽略，仅提供 .example。
+    # 镜像内需要一份可用默认值，否则 seed 初始化会因缺文件中断。若用户未自备，则从模板播种。
+    SEED_MODELS="$PROJECT_ROOT/backend-fastapi/app/seed_data/seed_data_models.json"
+    if [ ! -f "$SEED_MODELS" ] && [ -f "$SEED_MODELS.example" ]; then
+        echo "==> Seeding seed_data_models.json from template..."
+        cp "$SEED_MODELS.example" "$SEED_MODELS"
+    fi
 }
 
 build_backend() {

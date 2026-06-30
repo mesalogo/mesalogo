@@ -1,4 +1,4 @@
-.PHONY: build up down restart logs status clean help up-milvus up-graphiti up-lightrag up-onlyoffice up-galapagos up-vscode up-paddleocr up-mariadb up-all
+.PHONY: build up up-core down restart logs status clean help up-milvus up-graphiti up-lightrag up-onlyoffice up-galapagos up-vscode up-paddleocr up-mariadb up-all
 
 help:
 	@echo "ABM-LLM-V2 Docker 管理命令"
@@ -8,6 +8,7 @@ help:
 	@echo "命令:"
 	@echo "  build          构建镜像"
 	@echo "  up             启动核心服务 (backend, frontend)"
+	@echo "  up-core        一键启动核心 + 数据库 + Redis (本地常用)"
 	@echo "  up-milvus      启动 Milvus"
 	@echo "  up-graphiti    启动 Graphiti/Neo4j (记忆系统)"
 	@echo "  up-lightrag    启动 LightRAG (知识库系统)"
@@ -34,6 +35,18 @@ up:
 	@echo "核心服务已启动！"
 	@echo "前端: http://localhost:16000"
 	@echo "后端: http://localhost:16001"
+
+up-core:
+	docker compose \
+		-f docker-compose.yml \
+		-f docker-compose.mariadb.yml \
+		-f docker-compose.redis.yml \
+		--profile core --profile mariadb --profile redis up -d
+	@echo ""
+	@echo "核心 + 数据库 + Redis 已启动！"
+	@echo "前端: http://localhost:16000"
+	@echo "后端: http://localhost:16001"
+	@echo "MariaDB: localhost:16011    Redis: localhost:16010"
 
 up-milvus:
 	docker compose --profile milvus up -d

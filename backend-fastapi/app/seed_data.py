@@ -92,12 +92,20 @@ def seed_data():
         db.session.commit()
 
         # 创建模型配置
+        # seed_data_models.json 含模型配置（可能带 API key），被 .gitignore 忽略，
+        # 仅提供 .example 模板。文件可选：缺失时跳过而非中断整个 seed，用户可后续
+        # 在「设置 → 模型配置」中自行添加。
         logger.info("创建模型配置...")
-        model_configs = json.load(open('app/seed_data/seed_data_models.json', 'r', encoding='utf-8'))
-
-        for config_data in model_configs:
-            config = ModelConfig(**config_data)
-            db.session.add(config)
+        _models_path = 'app/seed_data/seed_data_models.json'
+        if os.path.exists(_models_path):
+            model_configs = json.load(open(_models_path, 'r', encoding='utf-8'))
+            for config_data in model_configs:
+                # 过滤下划线开头的元数据键（如模板里的 _comment 说明），它们不是 ORM 列
+                config_data = {k: v for k, v in config_data.items() if not k.startswith('_')}
+                config = ModelConfig(**config_data)
+                db.session.add(config)
+        else:
+            logger.warning(f"{_models_path} 不存在，跳过默认模型配置（可后续在设置中手动添加）")
 
         # 创建行动空间 - 优化：减少重复空间
         logger.info("创建行动空间...")

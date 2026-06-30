@@ -123,12 +123,25 @@ def write_config(payload: dict) -> dict:
         if not section.get(key, '').strip():
             section[key] = secrets.token_urlsafe(48)
 
-    # 原子写：先写临时文件再 os.replace，避免半截配置
+    # 优先原子写（临时文件 + os.replace，避免半截配置）。
+    # 但容器�� config.conf 常以单文件 bind mount 挂载，目标本身是挂载点，
+    # os.replace 跨不过挂载点会报 OSError(Errno 16, Device or resource busy)；
+    # 此时降级为原地直接写入（非原子，但对挂载点可行）。
     tmp_path = _config_path + '.tmp'
     try:
         with open(tmp_path, 'w', encoding='utf-8') as f:
             parser.write(f)
-        os.replace(tmp_path, _config_path)
+        try:
+            os.replace(tmp_path, _config_path)
+        except OSError:
+            # 挂载点无法被 rename 替换 —— 原地覆盖写入
+            with open(_config_path, 'w', encoding='utf-8') as f:
+                parser.write(f)
+            if os.path.exists(tmp_path):
+                try:
+                    os.remove(tmp_path)
+                except Exception:
+                    pass
         logger.info(f"首启配置已写入: {_config_path}")
         return {'ok': True}
     except Exception as e:
@@ -142,21 +155,27 @@ def write_config(payload: dict) -> dict:
 
 def schedule_restart(delay: float = 1.0):
     """
-    延迟后用 os.execv 自重启进程，让新写入的 config.conf 生效。
+    延迟后重启后端进程，让新写入的 config.conf 生效。
 
-    延迟是为了让 /api/setup/save 的 HTTP 响应先返回前端。开发模式
-    （run_app.py / uvicorn reload）下可靠；生产 gunicorn 需配合
-    systemd / supervisor 的自动拉起，详见 README。
+    延迟是为了让 /api/setup/save 的 HTTP 响应先返回前端。
+
+    两种重启路径：
+    1. 优先 os.execv 原地替换进程 —— 适用于 `python run_app.py` 单进程开发场景。
+    2. execv 失败时（容器内 uvicorn 多 worker / gunicorn 下，继承的 socket fd 会让
+       execv 抛 OSError: Bad file descriptor）降级为直接退出进程，依赖容器编排的
+       `restart: unless-stopped`（见 docker-compose.yml）或 systemd/supervisor
+       自动拉起新进程，新进程读到已写好的 config.conf 即退出 Setup 模式。
     """
     def _restart():
         logger.info("首启配置完成，正在重启后端以应用新配置...")
         try:
             # sys.orig_argv 完整保留原始解释器参数（含 `-m uvicorn` 等），
-            # 对 `python run_app.py` 和 `python -m uvicorn main:app` 两种入口
-            # 都能正确重建命令；直接用 sys.argv 会丢失 `-m` 上下文导致重启崩溃。
+            # 直接用 sys.argv 会丢失 `-m` 上下文导致重启崩溃。
             argv = getattr(sys, 'orig_argv', None) or ([sys.executable] + sys.argv)
             os.execv(sys.executable, [sys.executable] + argv[1:])
         except Exception as e:
-            logger.error(f"自重启失败，请手动重启后端: {e}")
+            # execv 在容器多 worker 下不可靠；退出进程交给编排重启
+            logger.warning(f"execv 自重启不可用（{type(e).__name__}: {e}），改为退出进程，由容器/守护进程自动拉起")
+            os._exit(0)
 
     threading.Timer(delay, _restart).start()
