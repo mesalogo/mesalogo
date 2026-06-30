@@ -7,8 +7,19 @@ import api from './axios';
  * 写接口（test-db / test-redis / save）仅在 Setup 模式下存在。
  */
 
+export interface SetupDefaults {
+  in_docker: boolean;
+  db_type: string;
+  db_host: string;
+  db_port: string;
+  db_name: string;
+  db_user: string;
+  redis_url: string;
+}
+
 export interface SetupStatus {
   setup_mode: boolean;
+  defaults?: SetupDefaults;
 }
 
 export interface TestResult {

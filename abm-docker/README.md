@@ -38,8 +38,13 @@ make up     # 启动服务
 
 ### 3. 访问应用
 
-- **前端**: http://localhost
-- **后端API**: http://localhost:8080
+- **前端**: http://localhost:16000
+- **后端API**: http://localhost:16001
+
+> **端口约定**：所有宿主暴露端口统一在 16000 段。核心 16000(前端)/16001(后端)；
+> Redis 16010、MariaDB 16011；Milvus 16020-16024；OnlyOffice 16030/16031；
+> Graphiti/Neo4j 16040-16043；LightRAG 16050；Galapagos 16060；PaddleOCR 16070；VSCode 16080。
+> 容器内端口与容器间通信不受影响。
 
 ## Makefile命令
 

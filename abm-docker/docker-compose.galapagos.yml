@@ -5,7 +5,7 @@ services:
     profiles:
       - galapagos
     ports:
-      - "9000:9000"
+      - "16060:9000"
     environment:
       # 必填:生产环境请在 abm-docker/.env 设置 PLAY_HTTP_SECRET_KEY 为强随机字符串
       # 生成示例: openssl rand -base64 36

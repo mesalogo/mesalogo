@@ -18,18 +18,19 @@ echo ""
 # 从 backend 目录拷贝配置文件到 abm-docker（如果不存在）
 copy_config_files() {
     if [ ! -f "$SCRIPT_DIR/config.conf" ]; then
-        echo "==> Copying config.conf from backend..."
-        cp "$PROJECT_ROOT/backend/config.conf" "$SCRIPT_DIR/config.conf"
+        echo "==> Seeding config.conf from template (edit it to point at your DB, or leave DATABASE_URI empty to use first-run setup)..."
+        cp "$SCRIPT_DIR/config.conf.example" "$SCRIPT_DIR/config.conf"
     fi
     if [ ! -f "$SCRIPT_DIR/mcp_config.json" ]; then
-        echo "==> Copying mcp_config.json from backend..."
-        cp "$PROJECT_ROOT/backend/mcp_config.json" "$SCRIPT_DIR/mcp_config.json"
+        echo "==> Seeding mcp_config.json from backend-fastapi..."
+        cp "$PROJECT_ROOT/backend-fastapi/mcp_config.json" "$SCRIPT_DIR/mcp_config.json" 2>/dev/null \
+            || cp "$PROJECT_ROOT/backend-fastapi/mcp_config.json.example" "$SCRIPT_DIR/mcp_config.json"
     fi
     if [ ! -d "$SCRIPT_DIR/volumes/backend-knowledgebase" ]; then
-        echo "==> Copying knowledgebase from backend..."
+        echo "==> Copying knowledgebase from backend-fastapi..."
         mkdir -p "$SCRIPT_DIR/volumes/backend-knowledgebase"
-        cp -r "$PROJECT_ROOT/backend/knowledgebase/demo_files" "$SCRIPT_DIR/volumes/backend-knowledgebase/"
-        cp "$PROJECT_ROOT/backend/knowledgebase/README.md" "$SCRIPT_DIR/volumes/backend-knowledgebase/" 2>/dev/null || true
+        cp -r "$PROJECT_ROOT/backend-fastapi/knowledgebase/demo_files" "$SCRIPT_DIR/volumes/backend-knowledgebase/" 2>/dev/null || true
+        cp "$PROJECT_ROOT/backend-fastapi/knowledgebase/README.md" "$SCRIPT_DIR/volumes/backend-knowledgebase/" 2>/dev/null || true
     fi
 }
 

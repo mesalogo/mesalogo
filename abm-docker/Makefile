@@ -32,8 +32,8 @@ up:
 	docker compose --profile core up -d
 	@echo ""
 	@echo "核心服务已启动！"
-	@echo "前端: http://localhost:3080"
-	@echo "后端: http://localhost:8080"
+	@echo "前端: http://localhost:16000"
+	@echo "后端: http://localhost:16001"
 
 up-milvus:
 	docker compose --profile milvus up -d
@@ -45,7 +45,7 @@ up-graphiti:
 
 up-lightrag:
 	docker compose --profile lightrag up -d
-	@echo "LightRAG 服务已启动: http://localhost:9621"
+	@echo "LightRAG 服务已启动: http://localhost:16050"
 
 up-onlyoffice:
 	docker compose --profile onlyoffice up -d
@@ -57,15 +57,15 @@ up-galapagos:
 
 up-vscode:
 	docker compose --profile vscode-server up -d
-	@echo "VSCode Server 已启动: https://localhost:11443"
+	@echo "VSCode Server 已启动: https://localhost:16080"
 
 up-paddleocr:
 	docker compose --profile paddleocr-vl up -d
-	@echo "PaddleOCR-VL 已启动: http://localhost:8050"
+	@echo "PaddleOCR-VL 已启动: http://localhost:16070"
 
 up-mariadb:
 	docker compose --profile mariadb up -d
-	@echo "MariaDB 已启动: localhost:3306"
+	@echo "MariaDB 已启动: localhost:16011"
 
 up-all:
 	docker compose --profile core --profile milvus --profile graphiti --profile lightrag --profile onlyoffice --profile galapagos --profile vscode-server --profile paddleocr-vl --profile mariadb up -d

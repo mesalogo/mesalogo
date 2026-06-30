@@ -7,7 +7,7 @@ services:
     environment:
       MILVUS_URL: milvus-standalone:19530
     ports:
-      - "18000:3000"
+      - "16024:3000"
     depends_on:
       - milvus-standalone
     networks:
@@ -43,8 +43,8 @@ services:
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
     ports:
-      - "9001:9001"
-      - "9000:9000"
+      - "16023:9001"
+      - "16022:9000"
     volumes:
       - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/milvus-minio:/minio_data
     command: minio server /minio_data --console-address ":9001"
@@ -77,8 +77,8 @@ services:
       timeout: 20s
       retries: 3
     ports:
-      - "19530:19530"
-      - "9091:9091"
+      - "16020:19530"
+      - "16021:9091"
     depends_on:
       - "milvus-etcd"
       - "milvus-minio"

@@ -22,8 +22,8 @@ services:
       - ALLOW_PRIVATE_IP_ADDRESS=true
       - USE_UNAUTHORIZED_STORAGE=true
     ports:
-      - '18080:80'
-      - '18443:443'
+      - '16030:80'
+      - '16031:443'
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/info/info.json"]
       interval: 30s

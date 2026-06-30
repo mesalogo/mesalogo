@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Result, Button, Spin } from 'antd';
-import { setupAPI } from '../../services/api/setup';
+import { setupAPI, SetupDefaults } from '../../services/api/setup';
 import SetupWizard from '../../pages/setup/SetupWizard';
 
 /**
@@ -15,11 +15,13 @@ type Phase = 'checking' | 'setup' | 'ready' | 'error';
 
 const SetupGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [phase, setPhase] = useState<Phase>('checking');
+  const [defaults, setDefaults] = useState<SetupDefaults | undefined>(undefined);
 
   const check = async () => {
     setPhase('checking');
     try {
       const s = await setupAPI.getStatus();
+      setDefaults(s.defaults);
       setPhase(s.setup_mode ? 'setup' : 'ready');
     } catch {
       setPhase('error');
@@ -54,7 +56,7 @@ const SetupGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   }
 
   if (phase === 'setup') {
-    return <SetupWizard onDone={() => setPhase('ready')} />;
+    return <SetupWizard defaults={defaults} onDone={() => setPhase('ready')} />;
   }
 
   return <>{children}</>;

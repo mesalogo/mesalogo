@@ -7,7 +7,7 @@ services:
     volumes:
       - ./paddleocr-vl-config.yml:/vllm-config.yml
     ports:
-      - "8050:8080"
+      - "16070:8080"
     restart: unless-stopped
     deploy:
       resources:

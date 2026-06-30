@@ -5,8 +5,8 @@ services:
     profiles:
       - graphiti
     ports:
-      - "8002:8000"  # FastAPI service
-      - "8003:8001"  # MCP SSE service
+      - "16040:8000"  # FastAPI service
+      - "16041:8001"  # MCP SSE service
     healthcheck:
       test:
         [
@@ -49,8 +49,8 @@ services:
       retries: 10
       start_period: 3s
     ports:
-      - "7474:7474"
-      - "7687:7687"
+      - "16042:7474"
+      - "16043:7687"
     volumes:
       - neo4j_data:/data
     environment:

@@ -31,19 +31,24 @@ RUN ARCH=$(dpkg --print-architecture) && \
     npm config set registry https://registry.npmmirror.com
 
 # 复制并安装Python依赖
-COPY backend/requirements.txt .
+COPY backend-fastapi/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 复制后端代码
-COPY backend/ .
+COPY backend-fastapi/ .
 
 # 创建数据目录
 RUN mkdir -p logs data knowledgebase agent-workspace
 
 # 健康检查
+# 用 /api/setup/status（常驻路由，Setup 模式与正常模式都响应）而非 /api/health
+# （后者是业务路由，Setup 模式下不挂载会 404 导致健康检查永远失败）。
+# 用 127.0.0.1 避免容器内 localhost 解析到 IPv6 的问题。
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:8080/api/health || exit 1
+    CMD curl -f http://127.0.0.1:8080/api/setup/status || exit 1
 
 EXPOSE 8080
 
-CMD ["python", "run_app.py"]
+# --prod：生产模式（关闭 uvicorn reload）。容器挂载的 data/logs 卷在 /app 下持续
+# 写入会触发 watchfiles 无限热重载，必须用生产模式避免。
+CMD ["python", "run_app.py", "--prod"]

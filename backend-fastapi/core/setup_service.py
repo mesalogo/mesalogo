@@ -22,6 +22,31 @@ from core.config import _config_path, BASE_DIR
 logger = logging.getLogger(__name__)
 
 
+def suggested_defaults() -> dict:
+    """
+    给前端首启引导提供预填的连接默认值。
+
+    后端最清楚自己的运行环境：容器内（存在 /.dockerenv）时按 docker-compose 的
+    服务名约定预填（abm-mariadb / abm-redis），本地直跑时用 127.0.0.1。
+    REDIS_URL 若已由环境注入（compose 已设），直接回填该真实值。
+    密码无法预知（在 db 容器侧），留空由用户填写。
+    """
+    in_docker = os.path.exists('/.dockerenv')
+    db_host = 'abm-mariadb' if in_docker else '127.0.0.1'
+    redis_url = os.environ.get('REDIS_URL', '') or (
+        'redis://abm-redis:6379/0' if in_docker else 'redis://127.0.0.1:6379/0'
+    )
+    return {
+        'in_docker': in_docker,
+        'db_type': 'mysql',
+        'db_host': db_host,
+        'db_port': '3306',
+        'db_name': os.environ.get('MARIADB_DATABASE', 'abm'),
+        'db_user': 'root',
+        'redis_url': redis_url,
+    }
+
+
 def test_db(database_uri: str) -> dict:
     """实测数据库连接。返回 {ok: bool, error?: str}。不持久化。"""
     if not database_uri or not database_uri.strip():

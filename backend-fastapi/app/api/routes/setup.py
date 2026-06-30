@@ -28,8 +28,12 @@ setup_router = APIRouter()
 
 @status_router.get('/setup/status')
 def setup_status():
-    """前端探活：返回是否处于 Setup 模式。"""
-    return {'setup_mode': settings.SETUP_MODE}
+    """前端探活：返回是否处于 Setup 模式；Setup 模式下附带预填默认值。"""
+    resp = {'setup_mode': settings.SETUP_MODE}
+    if settings.SETUP_MODE:
+        from core.setup_service import suggested_defaults
+        resp['defaults'] = suggested_defaults()
+    return resp
 
 
 def _ensure_setup_mode():

@@ -5,7 +5,7 @@ services:
     profiles:
       - redis
     ports:
-      - "6379:6379"
+      - "16010:6379"
     command: >
       redis-server
       --maxmemory 256mb
