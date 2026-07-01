@@ -986,7 +986,15 @@ class ParallelExperimentService:
         if created_pending_count < max_concurrent and experiment.pending_combinations:
             # 需要补充创建的数量：保持缓冲区为 max_concurrent 个待运行任务
             needed = max_concurrent - created_pending_count
-            ParallelExperimentService._create_next_tasks(experiment, needed)
+            # 串行化：与 executor 回调线程互斥，避免重复创建。抢不到锁说明
+            # 另一个线程正在创建（幂等兜底），本次跳过。
+            from app.services.experiment_executor import get_creation_lock
+            creation_lock = get_creation_lock(experiment.id)
+            if creation_lock.acquire(blocking=False):
+                try:
+                    ParallelExperimentService._create_next_tasks(experiment, needed)
+                finally:
+                    creation_lock.release()
     
     @staticmethod
     def _create_next_tasks(experiment: ParallelExperiment, count: int) -> List[str]:
@@ -1178,6 +1186,13 @@ class ParallelExperimentService:
             'all_results': results
         }
         flag_modified(experiment, 'results_summary')
+        
+        # 释放 executor 内存状态（防泄漏）
+        try:
+            from app.services.experiment_executor import cleanup_experiment
+            cleanup_experiment(experiment.id)
+        except Exception as e:
+            logger.warning(f"清理 executor 状态失败: {str(e)[:100]}")
         
         logger.info(f"实验完成: {experiment.name}, 第{current_iteration}轮, 最佳结果: {best_run}")
     
@@ -1564,6 +1579,13 @@ class ParallelExperimentService:
                 experiment.end_time = get_current_time_with_timezone()
                 db.session.commit()
         
+        # 释放 executor 内存状态（防泄漏）
+        try:
+            from app.services.experiment_executor import cleanup_experiment
+            cleanup_experiment(experiment_id)
+        except Exception as e:
+            logger.warning(f"清理 executor 状态失败: {str(e)[:100]}")
+        
         logger.info(f"实验已停止: {experiment.name}")
         return True
     
@@ -1602,13 +1624,20 @@ class ParallelExperimentService:
                         except Exception:
                             pass
         
+        # 释放 executor 内存状态（防泄漏）
+        try:
+            from app.services.experiment_executor import cleanup_experiment
+            cleanup_experiment(experiment_id)
+        except Exception as e:
+            logger.warning(f"清理 executor 状态失败: {str(e)[:100]}")
+        
         # 重新查询 experiment（之前的 commit/rollback 可能使 ORM 对象 detached）
         experiment = ParallelExperiment.query.get(experiment_id)
         if experiment:
+            exp_name = experiment.name
             db.session.delete(experiment)
             db.session.commit()
-        
-        logger.info(f"实验已删除: {experiment.name}")
+            logger.info(f"实验已删除: {exp_name}")
         return True
     
     @staticmethod

@@ -12,13 +12,39 @@ from typing import Dict, Any, Optional, List, Set
 
 logger = logging.getLogger(__name__)
 
-# 全局线程池，worker 数量取所有实验中最大的 maxConcurrent
+# 全局线程池，worker 数量取所有并行实验 maxConcurrent 之和
+# （每个运行中的 Run 会独占一个线程直到跑完，因此多实验同时运行时需要 SUM 而非 MAX，
+#  否则后启动的实验会被先启动的实验饿死在 ThreadPoolExecutor 内部队列里）
 _executor: Optional[ThreadPoolExecutor] = None
 _executor_size: int = 0
 _lock = threading.Lock()
 
 # 每个实验的状态
 _experiment_state: Dict[str, Dict[str, Any]] = {}
+
+# 每个实验的"任务创建"串行锁，防止 executor 回调线程与 web 轮询线程
+# 同时从 pending_combinations 取相同组合造成重复创建（延迟创建竞态）
+_creation_locks: Dict[str, threading.Lock] = {}
+_creation_locks_guard = threading.Lock()
+
+
+def get_creation_lock(experiment_id: str) -> threading.Lock:
+    """获取某个实验的任务创建串行锁（不存在则创建）"""
+    with _creation_locks_guard:
+        lock = _creation_locks.get(experiment_id)
+        if lock is None:
+            lock = threading.Lock()
+            _creation_locks[experiment_id] = lock
+        return lock
+
+
+def _required_workers_locked() -> int:
+    """所有未停止实验 max_concurrent 之和（调用方须持有 _lock）"""
+    total = 0
+    for state in _experiment_state.values():
+        if not state.get("stopped"):
+            total += state.get("max_concurrent", 0)
+    return total
 
 
 def _get_executor(min_workers: int = 3) -> ThreadPoolExecutor:
@@ -45,8 +71,6 @@ def submit_experiment_tasks(
     max_concurrent: int = 3
 ):
     """批量提交实验任务，内部控制并发数"""
-    _get_executor(min_workers=max_concurrent)
-
     with _lock:
         state = _experiment_state.get(experiment_id)
         if state is None:
@@ -68,6 +92,11 @@ def submit_experiment_tasks(
                 if tid not in state["submitted"]:
                     state["pending"].append(tid)
                     state["submitted"].add(tid)
+
+        # 线程池须容纳所有并行实验同时运行的 Run（SUM），否则多实验互相饿死
+        required_workers = max(_required_workers_locked(), max_concurrent)
+
+    _get_executor(min_workers=required_workers)
 
     _dispatch(experiment_id)
 
@@ -109,6 +138,30 @@ def cancel_experiment(experiment_id: str, all_task_ids: list = None):
                 logger.info(f"Experiment cancel: actively stopped {stopped_count} scheduler tasks for exp={experiment_id}")
         except Exception as e:
             logger.error(f"Error actively stopping scheduler tasks: {e}")
+
+
+def cleanup_experiment(experiment_id: str):
+    """实验终态（completed/stopped/deleted）后释放内存状态，防止长期泄漏
+
+    幂等：仅当没有 Run 仍在运行时才真正清理，否则只标记 stopped 由回调兜底。
+    """
+    with _lock:
+        state = _experiment_state.get(experiment_id)
+        if state is None:
+            _drop_creation_lock(experiment_id)
+            return
+        state["stopped"] = True
+        state["pending"].clear()
+        if state["running"] > 0:
+            # 仍有线程在跑，留待最后一个回调完成时清理
+            return
+        _experiment_state.pop(experiment_id, None)
+    _drop_creation_lock(experiment_id)
+
+
+def _drop_creation_lock(experiment_id: str):
+    with _creation_locks_guard:
+        _creation_locks.pop(experiment_id, None)
 
 
 def _dispatch(experiment_id: str):
@@ -192,6 +245,15 @@ def _on_task_done(future: Future, experiment_id: str, task_id: str):
     
     _dispatch(experiment_id)
 
+    # 若实验已停止且所有线程收敛，释放内存状态（防泄漏）
+    with _lock:
+        state = _experiment_state.get(experiment_id)
+        drained = bool(state) and state.get("stopped") and state["running"] == 0
+        if drained:
+            _experiment_state.pop(experiment_id, None)
+    if drained:
+        _drop_creation_lock(experiment_id)
+
 
 def _try_create_next_tasks(experiment_id: str):
     """尝试从 pending_combinations 中创建新任务（延迟创建）
@@ -203,7 +265,13 @@ def _try_create_next_tasks(experiment_id: str):
         if not state or state.get("stopped"):
             return
         max_concurrent = state.get("max_concurrent", 3)
-    
+
+    # 串行化任务创建：executor 回调线程与 web 轮询线程不得同时从
+    # pending_combinations 取相同组合（否则重复创建 Run）
+    creation_lock = get_creation_lock(experiment_id)
+    if not creation_lock.acquire(blocking=False):
+        # 已有线程在创建，本次跳过（缓冲区补充是幂等的兜底逻辑）
+        return
     try:
         from app import db
         from app.models import ParallelExperiment
@@ -257,6 +325,8 @@ def _try_create_next_tasks(experiment_id: str):
             db.session.remove()
     except Exception as e:
         logger.error(f"延迟创建任务失败: exp={experiment_id}, error={e}", exc_info=True)
+    finally:
+        creation_lock.release()
 
 
 def is_task_submitted(experiment_id: str, task_id: str) -> bool:
