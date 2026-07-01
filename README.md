@@ -47,36 +47,29 @@ We're not religious about these — but every feature in this repo can be traced
 
 ## 🔭 What we're waiting for
 
-> *A quiet feeling we don't often say out loud: it took LLMs for us to see how limited our toolbox used to be. That's why we take this project seriously.*
-> *— from the team*
+The most exciting work in multi-agent systems hasn't happened yet, and much of it lives at the seam where **LLMs**, **social science**, and **simulation** meet. We're building for three shifts we think are close:
 
-We think the most exciting work in multi-agent systems hasn't happened yet — and a lot of it will happen at the seam where **LLMs**, **social science**, and **simulation** meet.
+- **Cheaper, faster models** → thousands of LLM-driven agents in one run, real experiments instead of demos. Our 5000-concurrency architecture, parallel experiment lab, and Action Space abstraction are bets on that day.
+- **Production-ready cognition + simulation** → models reliable enough to play social actors, physics simulators and LLM reasoning sharing one loop, MCP plugins safely reaching real systems.
+- **Memory as architecture, not addon** → temporal knowledge graphs, contradiction detection, multi-scale forgetting. MemoryPalace v0.51 is our first serious attempt.
 
-A few things we're quietly preparing for:
-
-- **When models get cheaper and faster** → simulations with thousands of LLM-driven agents stop being demos and start being *real experiments*. Our 5000-concurrency architecture, parallel experiment lab, and Action Space abstraction are bets that this day is closer than people think.
-- **When everything is production-ready** → models reliable enough to play social actors; physics simulators and LLM reasoning sharing one loop; MCP plugins safely reaching real systems. These pieces won't arrive together — but when they do, computational social science, organizational research, policy simulation, and industrial-grade agent experiments will need a substrate.
-- **When memory becomes architecture, not addon** → temporal knowledge graphs, contradiction detection, multi-scale forgetting. MemoryPalace v0.51 is our first serious attempt; we don't think it'll be the last.
-
-We can't promise these breakthroughs will arrive on any particular timeline. But we'd rather build the platform now, so that when they do, the work that follows is *infrastructure questions* — not *first-principles questions*.
-
-> If any of this resonates — especially if you work in **computational social science, ABM, organizational research, policy simulation, or agentic systems research** — we'd love to hear from you. Open an issue, or leave a note in Discussions.
+> If any of this resonates, especially if you work in **computational social science, ABM, organizational research, policy simulation, or agentic systems research**, open an issue or start a Discussion.
 
 ---
 
 ## 🗝️ Key Features
 
-Highlights — full design notes under [`docs/feature-*`](./docs/). Status: **`[x]`** stable · **`[~]`** MVP/Beta · **`[ ]`** spec/planned. Items marked with **`*`** still need code-level verification.
+Highlights — full design notes under [`docs/feature-*`](./docs/). Status: **`[x]`** stable · **`[~]`** MVP/Beta · **`[ ]`** spec/planned.
 
 ### 🧱 Platform foundation
 
 | Status | Feature | One-liner | Design notes |
 |---|---|---|---|
 | [x] | Action Space — a first-class "world" | Roles, rules, variables, supervisors, MCP tools all live *inside* one space, not as a flat list. | [`feature-action-space/`](./docs/feature-action-space/) |
-| [x] | Role ↔ Agent: template / instance split \* | One "Critic" template can run as N independent agents across N spaces, each with its own state, memory, tool access. | [`feature-role-management/`](./docs/feature-role-management/) |
-| [x] | Variable system — template / instance / cross-space \* | Not just prompt variables, but a state channel between action spaces. | [`feature-variables/`](./docs/feature-variables/) |
-| [x] | Multi-tenancy + RBAC + workspaces \* | `created_by` / `is_shared` on every resource; enterprise-ready out of the box. | [`feature-multi-tenancy/`](./docs/feature-multi-tenancy/) |
-| [x] | UUID-native resource IDs \* | All core resources are UUIDs, friendly to cross-instance migration. | [`feature-uuid/`](./docs/feature-uuid/) |
+| [x] | Role ↔ Agent: template / instance split | One "Critic" template can run as N independent agents across N spaces, each with its own state, memory, tool access. | [`feature-role-management/`](./docs/feature-role-management/) |
+| [x] | Variable system — template / instance / cross-space | Not just prompt variables, but a state channel between action spaces. | [`feature-variables/`](./docs/feature-variables/) |
+| [x] | Multi-tenancy + RBAC + workspaces | `created_by` / `is_shared` on every resource; enterprise-ready out of the box. | [`feature-multi-tenancy/`](./docs/feature-multi-tenancy/) |
+| [x] | UUID-native resource IDs | All core resources are UUIDs, friendly to cross-instance migration. | [`feature-uuid/`](./docs/feature-uuid/) |
 
 ### ✍️ Creation experience
 
@@ -90,10 +83,10 @@ Highlights — full design notes under [`docs/feature-*`](./docs/). Status: **`[
 |---|---|---|---|
 | [ ] | Advanced interaction modes modeled on human social organization | More deliberative, more institutional multi-agent dynamics; design ongoing. | — |
 | [x] | Supervisor + dual-engine rule sandbox | Natural-language rules + programmatic logic rules; supervisor intervenes in real time. | [`feature-supervisor-workflow/`](./docs/feature-supervisor-workflow/) · `supervisor_*.py` · `rule_sandbox.py` |
-| [x] | Observer with multi-tier intervention \* | `round_based` triggering × `passive`/active intervention modes; decides *when* and *how strongly* the supervisor steps in. | `ObserverManagement.tsx` |
+| [x] | Observer with multi-tier intervention | `round_based` triggering × `passive`/active intervention modes; decides *when* and *how strongly* the supervisor steps in. | `ObserverManagement.tsx` |
 | [x] | Smart Dispatch — auto routing to the best agent | When a user message arrives, picks the most suitable agent without `@`-mentioning. Hot-path with LRU caches sized for a 260k-row conversation–agent table. | `smart_dispatch_service.py` · `core/model_cache.py` |
-| [~] | Cross-space orchestration (`cross_space`) \* | SubAgents must explicitly declare crossing space boundaries; the supervisor blocks undeclared crossings. | [`feature-subagent/`](./docs/feature-subagent/) · [`feature-workflow-graph/`](./docs/feature-workflow-graph/) |
-| [x] | Resource-relation visualizer \* | See the live web of `ActionSpace ↔ Role ↔ Agent ↔ Rule ↔ Variable` in the UI. | [`feature-ui-resource-graph/`](./docs/feature-ui-resource-graph/) |
+| [~] | Cross-space orchestration (`cross_space`) | SubAgents must explicitly declare crossing space boundaries; the supervisor blocks undeclared crossings. | [`feature-subagent/`](./docs/feature-subagent/) · [`feature-workflow-graph/`](./docs/feature-workflow-graph/) |
+| [x] | Resource-relation visualizer | See the live web of `ActionSpace ↔ Role ↔ Agent ↔ Rule ↔ Variable` in the UI. | [`feature-ui-resource-graph/`](./docs/feature-ui-resource-graph/) |
 | [ ] | Heartbeat — ABM-tick-driven "living" agents | Every Agent has its own beat; even with no one chatting, it runs `observe → reflect/plan → act`. ActionSpace closes ⇒ heartbeat stops. Inspired by Mesa `step()` / NetLogo `tick` / Stanford Generative Agents. | [`feature-heartbeat/`](./docs/feature-heartbeat/) |
 | [ ] | True parallel multi-agent execution | Independent SSE streams + isolated queues per agent; ends shared-stream interleaving. | `TODO.md#7` |
 
@@ -101,58 +94,58 @@ Highlights — full design notes under [`docs/feature-*`](./docs/). Status: **`[
 
 | Status | Feature | One-liner | Design notes |
 |---|---|---|---|
-| [~] | SubAgent nesting via MCP \* | `invoke_agent` / `invoke_agents` / `list_available_agents` exposed as MCP tools; Phase 1 MVP shipped. | [`feature-subagent/`](./docs/feature-subagent/) |
-| [x] | SubAgent sandbox \* | executor / context_builder / security as three separate layers. | [`feature-subagent/`](./docs/feature-subagent/) |
-| [~] | ODM — structured agent protocols \* | IDL-style contracts on SubAgent inputs / outputs. | [`feature-odm/`](./docs/feature-odm/) |
+| [~] | SubAgent nesting via MCP | `invoke_agent` / `invoke_agents` / `list_available_agents` exposed as MCP tools; Phase 1 MVP shipped. | [`feature-subagent/`](./docs/feature-subagent/) |
+| [x] | SubAgent sandbox | executor / context_builder / security as three separate layers. | [`feature-subagent/`](./docs/feature-subagent/) |
+| [~] | ODM — structured agent protocols | IDL-style contracts on SubAgent inputs / outputs. | [`feature-odm/`](./docs/feature-odm/) |
 
 ### 🔌 MCP ecosystem (more than just an MCP client)
 
 | Status | Feature | One-liner | Design notes |
 |---|---|---|---|
 | [x] | MCP Server Manager | Full lifecycle: register / start / stop / health-check / isolation. Not "we call MCP tools" — we *operate* MCP servers. | `mcp_server_manager.py` (73 KB) |
-| [x] | MCP server isolation \* | MCP instances in different spaces don't bleed into each other. | [`feature-mcp-server-isolation/`](./docs/feature-mcp-server-isolation/) |
-| [~] | MCP → API gateway (`mcp2apimcp`) \* | Expose any MCP server as a standard HTTP API so legacy systems can call it. | [`feature-mcp2apimcp/`](./docs/feature-mcp2apimcp/) |
+| [x] | MCP server isolation | MCP instances in different spaces don't bleed into each other. | [`feature-mcp-server-isolation/`](./docs/feature-mcp-server-isolation/) |
+| [~] | MCP → API gateway (`mcp2apimcp`) | Expose any MCP server as a standard HTTP API so legacy systems can call it. | [`feature-mcp2apimcp/`](./docs/feature-mcp2apimcp/) |
 
 ### 🎯 Orchestration & autonomy
 
 | Status | Feature | One-liner | Design notes |
 |---|---|---|---|
 | [ ] | Workflow Graph — visual DAG editor | ReactFlow-based; node types: agent / condition / parallel / loop. | [`feature-workflow-graph/`](./docs/feature-workflow-graph/) |
-| [x] | Planner — structured plan items \* | `create_plan` / `update_plan_item` / `get_plan` as MCP tools + frontend `PlannerPanel` + live SSE updates. | [`feature-planner/`](./docs/feature-planner/) |
-| [x] | Autonomous Task — three trigger modes \* | Time-triggered, variable-triggered, self-driven scheduling. | [`feature-autonomous/`](./docs/feature-autonomous/) |
-| [~] | Parallel Experiment Lab \* | Parameter sweeps across populations of LLM agents — an old ABM idea, re-applied. | `parallel_experiment_service.py` (74 KB) · [`feature-parallellab/`](./docs/feature-parallellab/) |
-| [~] | Job queue / task manager \* | Redis + thread pool + handler-registry pattern. | [`feature-job-queue/`](./docs/feature-job-queue/) |
+| [x] | Planner — structured plan items | `create_plan` / `update_plan_item` / `get_plan` as MCP tools + frontend `PlannerPanel` + live SSE updates. | [`feature-planner/`](./docs/feature-planner/) |
+| [x] | Autonomous Task — three trigger modes | Time-triggered, variable-triggered, self-driven scheduling. | [`feature-autonomous/`](./docs/feature-autonomous/) |
+| [~] | Parallel Experiment Lab | Parameter sweeps across populations of LLM agents — an old ABM idea, re-applied. | `parallel_experiment_service.py` (74 KB) · [`feature-parallellab/`](./docs/feature-parallellab/) |
+| [~] | Job queue / task manager | Redis + thread pool + handler-registry pattern. | [`feature-job-queue/`](./docs/feature-job-queue/) |
 
 ### 🧬 Memory & knowledge
 
 | Status | Feature | One-liner | Design notes |
 |---|---|---|---|
 | [ ] | MemoryPalace v0.51 — temporal-KG memory | `(subject, predicate, object, valid_from, valid_to)` triples; built-in `kg_verify` + offline `fact_check()`; 5-layer `Realm → Wing → Hall → Room → Drawer`. Drops external Graphiti dependency, fully local, fully async. | [`feature-mempalace-v0.51/`](./docs/feature-mempalace-v0.51/) |
-| [~] | Memory partitions (global / agent / conversation) \* | Strict isolation with cross-partition policies. | [`PLAN-memory-partition.md`](./docs/feature-memory/PLAN-memory-partition.md) |
-| [~] | Graphiti-style community detection \* | Auto-discover communities within memory graphs. | [`PLAN-COMMUNITIES-GRAPH.md`](./docs/feature-memory/PLAN-COMMUNITIES-GRAPH.md) |
-| [~] | LightRAG + Milvus + BM25 hybrid retrieval \* | Knowledge graph × vector × full-text, three lanes in parallel. | [`lightrag-PLAN.md`](./docs/feature-knowledge-base/lightrag-PLAN.md) · [`feature-vector-db/`](./docs/feature-vector-db/) |
-| [x] | Document parser pipeline \* | PDF / Word / Excel pre-processing before ingestion. | [`feature-document-parser/`](./docs/feature-document-parser/) |
-| [x] | Production-grade context engineering \* | Summary service strips `tool_call` args before next round; auto-summarize for long sessions. Most frameworks have blown up on this; we paid the price already. | [`feature-auto-summarize/`](./docs/feature-auto-summarize/) |
+| [~] | Memory partitions (global / agent / conversation) | Strict isolation with cross-partition policies. | [`PLAN-memory-partition.md`](./docs/feature-memory/PLAN-memory-partition.md) |
+| [~] | Graphiti-style community detection | Auto-discover communities within memory graphs. | [`PLAN-COMMUNITIES-GRAPH.md`](./docs/feature-memory/PLAN-COMMUNITIES-GRAPH.md) |
+| [~] | LightRAG + Milvus + BM25 hybrid retrieval | Knowledge graph × vector × full-text, three lanes in parallel. | [`lightrag-PLAN.md`](./docs/feature-knowledge-base/lightrag-PLAN.md) · [`feature-vector-db/`](./docs/feature-vector-db/) |
+| [x] | Document parser pipeline | PDF / Word / Excel pre-processing before ingestion. | [`feature-document-parser/`](./docs/feature-document-parser/) |
+| [x] | Production-grade context engineering | Summary service strips `tool_call` args before next round; auto-summarize for long sessions. Most frameworks have blown up on this; we paid the price already. | [`feature-auto-summarize/`](./docs/feature-auto-summarize/) |
 
 ### 🏪 Entity apps & integrations
 
 | Status | Feature | One-liner | Design notes |
 |---|---|---|---|
-| [~] | Entity App Market (Applization) \* | NetLogo / GIS / RPA / RPG / VSCode etc. mount into an action space as first-class apps. | [`feature-applization/`](./docs/feature-applization/) · [`feature-market/`](./docs/feature-market/) |
-| [x] | NetLogo bridge \* | Bidirectional ABM-physics × LLM-cognition; via `third_party/Galapagos`. | — |
+| [~] | Entity App Market (Applization) | NetLogo / GIS / RPA / RPG / VSCode etc. mount into an action space as first-class apps. | [`feature-applization/`](./docs/feature-applization/) · [`feature-market/`](./docs/feature-market/) |
+| [x] | NetLogo bridge | Bidirectional ABM-physics × LLM-cognition; via `third_party/Galapagos`. | — |
 | [ ] | Mesa Python integration | Alongside NetLogo. | `TODO.md` Phase 4 |
-| [x] | OpenAI-compatible API + Python SDK \* | Action spaces, agents, knowledge bases all callable externally; API key mgmt + rate limit + OpenAPI docs. | [`feature-openai-export/`](./docs/feature-openai-export/) |
-| [x] | External role import — Coze & FastGPT \* | Pull agents from third-party platforms with one line of config. | [`PLAN-role-coze.md`](./docs/feature-role-management/PLAN-role-coze.md) · [`PLAN-role-fastgpt.md`](./docs/feature-role-management/PLAN-role-fastgpt.md) |
-| [x] | Multimodal image input \* | — | [`feature-image-input/`](./docs/feature-image-input/) |
+| [x] | OpenAI-compatible API + Python SDK | Action spaces, agents, knowledge bases all callable externally; API key mgmt + rate limit + OpenAPI docs. | [`feature-openai-export/`](./docs/feature-openai-export/) |
+| [x] | External role import — Coze & FastGPT | Pull agents from third-party platforms with one line of config. | [`PLAN-role-coze.md`](./docs/feature-role-management/PLAN-role-coze.md) · [`PLAN-role-fastgpt.md`](./docs/feature-role-management/PLAN-role-fastgpt.md) |
+| [x] | Multimodal image input | — | [`feature-image-input/`](./docs/feature-image-input/) |
 
 ### 🛠️ Engineering & culture
 
 | Status | Feature | One-liner | Design notes |
 |---|---|---|---|
 | [x] | Fully async backend | FastAPI + SQLAlchemy 2.0 + httpx; no blocking I/O on request paths (AGENTS.md red-line). | [`AGENTS.md`](./AGENTS.md) |
-| [x] | SSE streaming with cancel & keep-alive \* | Long sessions kept alive; mid-stream cancel supported. | [`feature-stream-cancel/`](./docs/feature-stream-cancel/) · [`feature-keep-alive-conversation/`](./docs/feature-keep-alive-conversation/) |
-| [x] | Three-bag `ModelConfig` \* | Strict split between `custom_headers` / `custom_body` / `additional_params`, merged through `app/services/llm_http`. | [`model-config-custom-params.md`](./docs/agents/model-config-custom-params.md) |
-| [x] | Strict i18n \* | Per-feature namespaces; zh/en key-consistency enforced in CI (`node frontend/scripts/check-i18n-keys.js`); zero hard-coded CJK in frontend source. | [`feature-multi-lang/`](./docs/feature-multi-lang/) · [`docs/agents/i18n.md`](./docs/agents/i18n.md) |
+| [x] | SSE streaming with cancel & keep-alive | Long sessions kept alive; mid-stream cancel supported. | [`feature-stream-cancel/`](./docs/feature-stream-cancel/) · [`feature-keep-alive-conversation/`](./docs/feature-keep-alive-conversation/) |
+| [x] | Three-bag `ModelConfig` | Strict split between `custom_headers` / `custom_body` / `additional_params`, merged through `app/services/llm_http`. | [`model-config-custom-params.md`](./docs/agents/model-config-custom-params.md) |
+| [x] | Strict i18n | Per-feature namespaces; zh/en key-consistency enforced in CI (`node frontend/scripts/check-i18n-keys.js`); zero hard-coded CJK in frontend source. | [`feature-multi-lang/`](./docs/feature-multi-lang/) · [`docs/agents/i18n.md`](./docs/agents/i18n.md) |
 | [x] | AGENTS.md-driven development culture | An "onboarding manual" for AI coding agents; every red line traces back to a real incident; release contract written down. Rare in open-source — this *is* a feature. | [`docs/agents/failures/`](./docs/agents/failures/) · [`release-flow.md`](./docs/agents/release-flow.md) |
 
 ---
@@ -219,18 +212,6 @@ Highlights — full design notes under [`docs/feature-*`](./docs/). Status: **`[
 - **Debate** — pro/con sides, structured rounds.
 - **Collaborative** — agents jointly solve a problem.
 
-### Production-ready capabilities
-- ✅ Multi-agent orchestration with parallel and conditional execution
-- ✅ MCP plugin ecosystem (built-in + extensible; isolation; MCP→API gateway)
-- ✅ Supervisor / rule sandbox for safe controlled experiments
-- ✅ Knowledge bases with vector + BM25 hybrid search (LightRAG, Milvus)
-- ✅ Parallel experiment lab for parameter sweeps
-- ✅ NetLogo bridge for ABM × LLM cognition
-- ✅ OpenAI-compatible API for headless integration
-- ✅ Multi-tenancy with role-based access control
-- ✅ Streaming SSE for real-time agent output
-- ✅ Redis caching for high-throughput scenarios
-
 ### Example use cases
 | Scenario | Why MesaLogo fits |
 |---|---|
@@ -289,8 +270,8 @@ Highlights — full design notes under [`docs/feature-*`](./docs/). Status: **`[
 ### Docker (recommended)
 
 ```bash
-git clone https://github.com/yourname/MesaLogo.git
-cd MesaLogo
+git clone https://github.com/mesalogo/mesalogo.git
+cd mesalogo
 
 # 1. Copy secrets / config templates and fill in your values.
 #    Full guide: docs/SECRETS.md
@@ -305,7 +286,7 @@ cd abm-docker
 make up
 ```
 
-Boots backend + frontend + MariaDB + Redis + Milvus + Neo4j (optional). Open <http://localhost:3000>.
+Boots backend + frontend + MariaDB + Redis + Milvus + Neo4j (optional). Open <http://localhost:16000> (backend API on `16001`; all host ports live in the `16000` range).
 
 > 📖 **Read [`docs/SECRETS.md`](./docs/SECRETS.md)** for the full configuration walk-through.
 

@@ -47,36 +47,29 @@
 
 ## 🔭 我们在等什么
 
-> *一个不太常说出口的感受:LLM 出现之后,我们才回头看清,从前手里能用的工具有多有限。所以现在做这件事,我们很认真。*
-> *—— from the team*
+多智能体系统最激动人心的工作还没发生,而其中很大一部分会出现在 **LLM**、**社会科学**、**仿真** 三者交汇的缝隙里。我们在为三个正在临近的转折做准备:
 
-我们认为多智能体系统**最激动人心的工作还没发生** —— 而其中很大一部分,会出现在 **LLM**、**社会科学**、**仿真** 三者交汇的缝隙里。
+- **更便宜、更快的模型** → 上千个 LLM 驱动的 Agent 一起跑,不再是 demo,而是真正的实验。我们的 5000 并发架构、并行实验室、Action Space 抽象,都是在赌这一天。
+- **可用于生产的认知 + 仿真** → 模型足够可靠,能稳定扮演社会行动者;物理仿真和 LLM 推理在同一个回路里跑;MCP 插件安全地触达真实系统。
+- **记忆成为架构,而不是附加件** → 时态知识图、矛盾检测、多尺度遗忘。MemoryPalace v0.51 是我们第一次认真的尝试。
 
-我们正在悄悄为这些时刻做准备:
-
-- **当模型变得更便宜、更快** → 上千个 LLM 驱动的 Agent 一起跑,不再是 demo,而是*真正的实验*。我们的 5000 并发架构、并行实验室、Action Space 抽象,都是在赌这一天比大多数人想的要近。
-- **当一切就绪,可以走出实验室** → 模型足够可靠,能稳定扮演社会行动者;物理仿真和 LLM 推理能在同一个回路里跑;MCP 插件能安全地触达真实系统。这些条件不会同时到来 —— 但当它们到来时,计算社会科学、组织研究、政策仿真、工业级 Agent 实验会需要一个底座。
-- **当记忆成为架构,而不是附加件** → 时态知识图、矛盾检测、多尺度遗忘。MemoryPalace v0.51 是我们第一次认真的尝试,我们不觉得它会是最后一次。
-
-我们不能保证这些突破会在某个明确的时间点到来。但我们宁愿现在就把平台搭好 —— 这样当那一天到来时,接下来要回答的是*基础设施问题*,而不是*第一性原理问题*。
-
-> 如果上面有任何一条让你共鸣 —— 尤其是你在做**计算社会科学、ABM、组织研究、政策仿真、Agent 系统研究** —— 欢迎告诉我们。开 issue,或者在 Discussions 留个言。
+> 如果上面有任何一条让你共鸣,尤其是你在做**计算社会科学、ABM、组织研究、政策仿真、Agent 系统研究**,欢迎开 issue 或在 Discussions 留言。
 
 ---
 
 ## 🗝️ 关键特性
 
-精选 —— 完整设计文档在 [`docs/feature-*`](./docs/) 下。状态:**`[x]`** 已稳定 · **`[~]`** MVP/Beta · **`[ ]`** 设计/规划中。带 **`*`** 的条目尚未做代码级核实。
+精选 —— 完整设计文档在 [`docs/feature-*`](./docs/) 下。状态:**`[x]`** 已稳定 · **`[~]`** MVP/Beta · **`[ ]`** 设计/规划中。
 
 ### 🧱 平台底盘
 
 | 状态 | 特性 | 一句话说明 | 设计文档 |
 |---|---|---|---|
 | [x] | 行动空间(Action Space)—— 一等"世界"抽象 | 角色、规则、变量、监督者、MCP 工具全部活在一个空间*内部*,而非扁平列表。 | [`feature-action-space/`](./docs/feature-action-space/) |
-| [x] | 角色 ↔ 智能体:模板 / 实例分离 \* | 一个"批评者"模板可以同时在 N 个空间里跑成 N 个独立 Agent,各有自己的状态、记忆、工具权限。 | [`feature-role-management/`](./docs/feature-role-management/) |
-| [x] | 变量系统 —— 模板 / 实例 / 跨空间传播 \* | 不只是 prompt 变量,而是行动空间之间的状态通道。 | [`feature-variables/`](./docs/feature-variables/) |
-| [x] | 多租户 + RBAC + 项目空间 \* | 所有资源带 `created_by` / `is_shared`,企业级开箱即用。 | [`feature-multi-tenancy/`](./docs/feature-multi-tenancy/) |
-| [x] | UUID 原生资源标识 \* | 所有核心资源用 UUID,跨实例迁移友好。 | [`feature-uuid/`](./docs/feature-uuid/) |
+| [x] | 角色 ↔ 智能体:模板 / 实例分离 | 一个"批评者"模板可以同时在 N 个空间里跑成 N 个独立 Agent,各有自己的状态、记忆、工具权限。 | [`feature-role-management/`](./docs/feature-role-management/) |
+| [x] | 变量系统 —— 模板 / 实例 / 跨空间传播 | 不只是 prompt 变量,而是行动空间之间的状态通道。 | [`feature-variables/`](./docs/feature-variables/) |
+| [x] | 多租户 + RBAC + 项目空间 | 所有资源带 `created_by` / `is_shared`,企业级开箱即用。 | [`feature-multi-tenancy/`](./docs/feature-multi-tenancy/) |
+| [x] | UUID 原生资源标识 | 所有核心资源用 UUID,跨实例迁移友好。 | [`feature-uuid/`](./docs/feature-uuid/) |
 
 ### ✍️ 创作体验
 
@@ -90,10 +83,10 @@
 |---|---|---|---|
 | [ ] | 基于人类社会组织架构构建高级交互模式 | 面向更具协商性 / 制度感的多 Agent 动态,设计中。 | — |
 | [x] | Supervisor + 双引擎规则沙箱 | 自然语言规则 + 程序逻辑规则,监督者实时干预。 | [`feature-supervisor-workflow/`](./docs/feature-supervisor-workflow/) · `supervisor_*.py` · `rule_sandbox.py` |
-| [x] | Observer 多档干预策略 \* | `round_based` 触发 × `passive`/active 干预模式,决定监督者*何时*、*以多强力度*介入。 | `ObserverManagement.tsx` |
+| [x] | Observer 多档干预策略 | `round_based` 触发 × `passive`/active 干预模式,决定监督者*何时*、*以多强力度*介入。 | `ObserverManagement.tsx` |
 | [x] | Smart Dispatch —— 自动路由到最合适的智能体 | 用户消息进来时根据内容自动选最佳 Agent 响应,不需要 `@`。热路径带 LRU 缓存,针对 26 万行的会话-智能体关系表做了优化。 | `smart_dispatch_service.py` · `core/model_cache.py` |
-| [~] | 跨空间编排 (`cross_space`) \* | SubAgent 跨空间必须显式声明,监督者拦截非法跨越。 | [`feature-subagent/`](./docs/feature-subagent/) · [`feature-workflow-graph/`](./docs/feature-workflow-graph/) |
-| [x] | 资源关系图可视化 \* | 在 UI 上看 `ActionSpace ↔ Role ↔ Agent ↔ Rule ↔ Variable` 的实时网。 | [`feature-ui-resource-graph/`](./docs/feature-ui-resource-graph/) |
+| [~] | 跨空间编排 (`cross_space`) | SubAgent 跨空间必须显式声明,监督者拦截非法跨越。 | [`feature-subagent/`](./docs/feature-subagent/) · [`feature-workflow-graph/`](./docs/feature-workflow-graph/) |
+| [x] | 资源关系图可视化 | 在 UI 上看 `ActionSpace ↔ Role ↔ Agent ↔ Rule ↔ Variable` 的实时网。 | [`feature-ui-resource-graph/`](./docs/feature-ui-resource-graph/) |
 | [ ] | Heartbeat —— ABM tick 驱动的"活着的"Agent | 每个 Agent 有自己的心跳节拍,即使没人对话也会 `observe → reflect/plan → act`;ActionSpace 关闭 ⇒ 该空间心跳停。灵感来自 Mesa `step()` / NetLogo `tick` / 斯坦福 Generative Agents。 | [`feature-heartbeat/`](./docs/feature-heartbeat/) |
 | [ ] | 真正并行的多智能体执行 | 每个 Agent 独立 SSE 流 + 独立队列,告别共享流交错。 | `TODO.md#7` |
 
@@ -101,58 +94,58 @@
 
 | 状态 | 特性 | 一句话说明 | 设计文档 |
 |---|---|---|---|
-| [~] | SubAgent 嵌套调用(通过 MCP) \* | `invoke_agent` / `invoke_agents` / `list_available_agents` 暴露为 MCP 工具;Phase 1 MVP 已落地。 | [`feature-subagent/`](./docs/feature-subagent/) |
-| [x] | SubAgent 沙箱 \* | executor / context_builder / security 三层独立。 | [`feature-subagent/`](./docs/feature-subagent/) |
-| [~] | ODM —— 智能体结构化协议约束 \* | 给 SubAgent 加 IDL 风格的输入 / 输出契约。 | [`feature-odm/`](./docs/feature-odm/) |
+| [~] | SubAgent 嵌套调用(通过 MCP) | `invoke_agent` / `invoke_agents` / `list_available_agents` 暴露为 MCP 工具;Phase 1 MVP 已落地。 | [`feature-subagent/`](./docs/feature-subagent/) |
+| [x] | SubAgent 沙箱 | executor / context_builder / security 三层独立。 | [`feature-subagent/`](./docs/feature-subagent/) |
+| [~] | ODM —— 智能体结构化协议约束 | 给 SubAgent 加 IDL 风格的输入 / 输出契约。 | [`feature-odm/`](./docs/feature-odm/) |
 
 ### 🔌 MCP 生态(不只是 MCP 客户端)
 
 | 状态 | 特性 | 一句话说明 | 设计文档 |
 |---|---|---|---|
 | [x] | MCP Server Manager | 全生命周期:注册 / 启动 / 停止 / 健康检查 / 隔离。不是"我们能调 MCP 工具",而是"我们*运营* MCP 服务"。 | `mcp_server_manager.py`(73 KB) |
-| [x] | MCP 服务隔离 \* | 不同空间的 MCP 实例互不串扰。 | [`feature-mcp-server-isolation/`](./docs/feature-mcp-server-isolation/) |
-| [~] | MCP → API 网关 (`mcp2apimcp`) \* | 把任何 MCP 服务暴露成标准 HTTP API,反向接入老系统。 | [`feature-mcp2apimcp/`](./docs/feature-mcp2apimcp/) |
+| [x] | MCP 服务隔离 | 不同空间的 MCP 实例互不串扰。 | [`feature-mcp-server-isolation/`](./docs/feature-mcp-server-isolation/) |
+| [~] | MCP → API 网关 (`mcp2apimcp`) | 把任何 MCP 服务暴露成标准 HTTP API,反向接入老系统。 | [`feature-mcp2apimcp/`](./docs/feature-mcp2apimcp/) |
 
 ### 🎯 编排与自主任务
 
 | 状态 | 特性 | 一句话说明 | 设计文档 |
 |---|---|---|---|
 | [ ] | Workflow Graph —— 可视化 DAG 编辑器 | 基于 ReactFlow;节点类型:agent / condition / parallel / loop。 | [`feature-workflow-graph/`](./docs/feature-workflow-graph/) |
-| [x] | Planner —— 结构化计划 \* | `create_plan` / `update_plan_item` / `get_plan` 作为 MCP 工具 + 前端 `PlannerPanel` + 实时 SSE 更新。 | [`feature-planner/`](./docs/feature-planner/) |
-| [x] | 自主任务 —— 三种触发模式 \* | 时间触发、变量触发、自主调度。 | [`feature-autonomous/`](./docs/feature-autonomous/) |
-| [~] | 并行实验室(Parallel Experiment Lab) \* | 对 LLM Agent 群体跑参数扫描 —— ABM 思想被重新应用。 | `parallel_experiment_service.py`(74 KB) · [`feature-parallellab/`](./docs/feature-parallellab/) |
-| [~] | Job Queue / Task Manager \* | Redis + 线程池 + 注册式 handler 模式。 | [`feature-job-queue/`](./docs/feature-job-queue/) |
+| [x] | Planner —— 结构化计划 | `create_plan` / `update_plan_item` / `get_plan` 作为 MCP 工具 + 前端 `PlannerPanel` + 实时 SSE 更新。 | [`feature-planner/`](./docs/feature-planner/) |
+| [x] | 自主任务 —— 三种触发模式 | 时间触发、变量触发、自主调度。 | [`feature-autonomous/`](./docs/feature-autonomous/) |
+| [~] | 并行实验室(Parallel Experiment Lab) | 对 LLM Agent 群体跑参数扫描 —— ABM 思想被重新应用。 | `parallel_experiment_service.py`(74 KB) · [`feature-parallellab/`](./docs/feature-parallellab/) |
+| [~] | Job Queue / Task Manager | Redis + 线程池 + 注册式 handler 模式。 | [`feature-job-queue/`](./docs/feature-job-queue/) |
 
 ### 🧬 记忆与知识
 
 | 状态 | 特性 | 一句话说明 | 设计文档 |
 |---|---|---|---|
 | [ ] | MemoryPalace v0.51 —— 时态知识图记忆 | `(subject, predicate, object, valid_from, valid_to)` 三元组;内置 `kg_verify` + 离线 `fact_check()`;5 层 `Realm → Wing → Hall → Room → Drawer`。脱离外部 Graphiti 依赖,全本地、全 async。 | [`feature-mempalace-v0.51/`](./docs/feature-mempalace-v0.51/) |
-| [~] | 记忆分区(global / agent / conversation) \* | 严格隔离 + 跨分区策略。 | [`PLAN-memory-partition.md`](./docs/feature-memory/PLAN-memory-partition.md) |
-| [~] | Graphiti 风格社区检测 \* | 自动从记忆图谱里挖社区。 | [`PLAN-COMMUNITIES-GRAPH.md`](./docs/feature-memory/PLAN-COMMUNITIES-GRAPH.md) |
-| [~] | LightRAG + Milvus + BM25 混合检索 \* | 知识图谱 × 向量 × 全文,三路并发。 | [`lightrag-PLAN.md`](./docs/feature-knowledge-base/lightrag-PLAN.md) · [`feature-vector-db/`](./docs/feature-vector-db/) |
-| [x] | 文档解析管线 \* | PDF / Word / Excel 入库前预处理。 | [`feature-document-parser/`](./docs/feature-document-parser/) |
-| [x] | 生产级上下文工程 \* | summary 服务下一轮前剥离 `tool_call` 参数,长会话自动摘要。绝大多数框架都炸过这个坑,我们已付过学费。 | [`feature-auto-summarize/`](./docs/feature-auto-summarize/) |
+| [~] | 记忆分区(global / agent / conversation) | 严格隔离 + 跨分区策略。 | [`PLAN-memory-partition.md`](./docs/feature-memory/PLAN-memory-partition.md) |
+| [~] | Graphiti 风格社区检测 | 自动从记忆图谱里挖社区。 | [`PLAN-COMMUNITIES-GRAPH.md`](./docs/feature-memory/PLAN-COMMUNITIES-GRAPH.md) |
+| [~] | LightRAG + Milvus + BM25 混合检索 | 知识图谱 × 向量 × 全文,三路并发。 | [`lightrag-PLAN.md`](./docs/feature-knowledge-base/lightrag-PLAN.md) · [`feature-vector-db/`](./docs/feature-vector-db/) |
+| [x] | 文档解析管线 | PDF / Word / Excel 入库前预处理。 | [`feature-document-parser/`](./docs/feature-document-parser/) |
+| [x] | 生产级上下文工程 | summary 服务下一轮前剥离 `tool_call` 参数,长会话自动摘要。绝大多数框架都炸过这个坑,我们已付过学费。 | [`feature-auto-summarize/`](./docs/feature-auto-summarize/) |
 
 ### 🏪 实体应用与外部生态
 
 | 状态 | 特性 | 一句话说明 | 设计文档 |
 |---|---|---|---|
-| [~] | 实体应用市场(Applization) \* | NetLogo / GIS / RPA / RPG / VSCode 等作为一等应用挂载到行动空间。 | [`feature-applization/`](./docs/feature-applization/) · [`feature-market/`](./docs/feature-market/) |
-| [x] | NetLogo 桥接 \* | ABM 物理 × LLM 认知双向通信,经由 `third_party/Galapagos`。 | — |
+| [~] | 实体应用市场(Applization) | NetLogo / GIS / RPA / RPG / VSCode 等作为一等应用挂载到行动空间。 | [`feature-applization/`](./docs/feature-applization/) · [`feature-market/`](./docs/feature-market/) |
+| [x] | NetLogo 桥接 | ABM 物理 × LLM 认知双向通信,经由 `third_party/Galapagos`。 | — |
 | [ ] | Mesa Python 集成 | 与 NetLogo 并存。 | `TODO.md` Phase 4 |
-| [x] | OpenAI 兼容 API + Python SDK \* | 行动空间 / agent / 知识库都可被外部调用;API Key 管理 + 速率限制 + OpenAPI 文档。 | [`feature-openai-export/`](./docs/feature-openai-export/) |
-| [x] | 外部角色导入 —— Coze & FastGPT \* | 一行配置从第三方平台拉智能体。 | [`PLAN-role-coze.md`](./docs/feature-role-management/PLAN-role-coze.md) · [`PLAN-role-fastgpt.md`](./docs/feature-role-management/PLAN-role-fastgpt.md) |
-| [x] | 多模态图像输入 \* | — | [`feature-image-input/`](./docs/feature-image-input/) |
+| [x] | OpenAI 兼容 API + Python SDK | 行动空间 / agent / 知识库都可被外部调用;API Key 管理 + 速率限制 + OpenAPI 文档。 | [`feature-openai-export/`](./docs/feature-openai-export/) |
+| [x] | 外部角色导入 —— Coze & FastGPT | 一行配置从第三方平台拉智能体。 | [`PLAN-role-coze.md`](./docs/feature-role-management/PLAN-role-coze.md) · [`PLAN-role-fastgpt.md`](./docs/feature-role-management/PLAN-role-fastgpt.md) |
+| [x] | 多模态图像输入 | — | [`feature-image-input/`](./docs/feature-image-input/) |
 
 ### 🛠️ 工程与文化
 
 | 状态 | 特性 | 一句话说明 | 设计文档 |
 |---|---|---|---|
 | [x] | 全 async 后端 | FastAPI + SQLAlchemy 2.0 + httpx;请求路径上无阻塞 I/O(AGENTS.md 红线)。 | [`AGENTS.md`](./AGENTS.md) |
-| [x] | SSE 流式 + 中止 + 保活 \* | 长会话保活;流中途可取消。 | [`feature-stream-cancel/`](./docs/feature-stream-cancel/) · [`feature-keep-alive-conversation/`](./docs/feature-keep-alive-conversation/) |
-| [x] | 三袋制 `ModelConfig` \* | `custom_headers` / `custom_body` / `additional_params` 严格分离,经 `app/services/llm_http` 合并。 | [`model-config-custom-params.md`](./docs/agents/model-config-custom-params.md) |
-| [x] | 严格的 i18n 治理 \* | 按功能划分 namespace;CI 校验中英 key 一致(`node frontend/scripts/check-i18n-keys.js`);前端源码零硬编码中文。 | [`feature-multi-lang/`](./docs/feature-multi-lang/) · [`docs/agents/i18n.md`](./docs/agents/i18n.md) |
+| [x] | SSE 流式 + 中止 + 保活 | 长会话保活;流中途可取消。 | [`feature-stream-cancel/`](./docs/feature-stream-cancel/) · [`feature-keep-alive-conversation/`](./docs/feature-keep-alive-conversation/) |
+| [x] | 三袋制 `ModelConfig` | `custom_headers` / `custom_body` / `additional_params` 严格分离,经 `app/services/llm_http` 合并。 | [`model-config-custom-params.md`](./docs/agents/model-config-custom-params.md) |
+| [x] | 严格的 i18n 治理 | 按功能划分 namespace;CI 校验中英 key 一致(`node frontend/scripts/check-i18n-keys.js`);前端源码零硬编码中文。 | [`feature-multi-lang/`](./docs/feature-multi-lang/) · [`docs/agents/i18n.md`](./docs/agents/i18n.md) |
 | [x] | AGENTS.md driven 工程文化 | 给 AI 编码助手的"入职手册";每条红线都能追溯到一次真实事故;发布契约写明。开源圈很少见 —— 它本身就是一项特性。 | [`docs/agents/failures/`](./docs/agents/failures/) · [`release-flow.md`](./docs/agents/release-flow.md) |
 
 ---
@@ -219,18 +212,6 @@
 - **辩论模式** — 正反双方,结构化轮次
 - **协作模式** — 智能体共同解决问题
 
-### 已落地的能力
-- ✅ 多 Agent 编排:并行 + 条件分支
-- ✅ MCP 插件生态(内置 + 可扩展;隔离;MCP→API 网关)
-- ✅ 监督者 / 规则沙箱(安全可控的实验)
-- ✅ 知识库:向量 + BM25 混合检索(LightRAG、Milvus)
-- ✅ 并行实验室:参数扫描
-- ✅ NetLogo 桥接:ABM × LLM 认知
-- ✅ OpenAI 兼容 API:无头集成
-- ✅ 多租户 + RBAC
-- ✅ SSE 流式输出
-- ✅ Redis 缓存,支持高吞吐场景
-
 ### 适用场景
 | 场景 | 为什么用 MesaLogo |
 |---|---|
@@ -289,8 +270,8 @@
 ### Docker 启动(推荐)
 
 ```bash
-git clone https://github.com/yourname/MesaLogo.git
-cd MesaLogo
+git clone https://github.com/mesalogo/mesalogo.git
+cd mesalogo
 
 # 1. 从模板复制配置文件并填入你自己的值。
 #    完整指南:docs/SECRETS.md
@@ -305,7 +286,7 @@ cd abm-docker
 make up
 ```
 
-启动后端 + 前端 + MariaDB + Redis + Milvus + Neo4j(可选)。打开 <http://localhost:3000>。
+启动后端 + 前端 + MariaDB + Redis + Milvus + Neo4j(可选)。打开 <http://localhost:16000>(后端 API 在 `16001`;所有宿主端口统一在 `16000` 段)。
 
 > 📖 **完整配置指南见 [`docs/SECRETS.md`](./docs/SECRETS.md)。**
 
