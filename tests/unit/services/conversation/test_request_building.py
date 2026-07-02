@@ -64,6 +64,9 @@ class _Cfg:
         self.custom_body = {}
         self.modalities = []
         self.max_output_tokens = 1000
+        # These tests pin the one-shot POST payload/URL construction, so opt out
+        # of the default wire-level streaming with a single-shot POST.
+        self.additional_params = {"wire_stream": False}
 
 
 @pytest.fixture
@@ -145,6 +148,27 @@ def test_openai_responses_parses_output_array(client, patch_httpx):
         is_stream=False,
     )
     assert out == "from-array"
+
+
+def test_internal_control_kwargs_never_leak_into_payload(client, patch_httpx):
+    """Repro: internal routing kwargs (send_target etc.) leaked into the request
+    body, causing strict gateways to 400 with 'Extra inputs are not permitted'."""
+    patch_httpx._response_factory = staticmethod(
+        lambda: _FakeResponse({"choices": [{"message": {"content": "ok"}}]})
+    )
+    client.send_request(
+        _Cfg("openai-compatible"),
+        [{"role": "user", "content": "U"}],
+        is_stream=False,
+        send_target="task",
+        isolation_mode=False,
+        user_id=42,
+        smart_dispatch=False,
+        enable_subagent=True,
+    )
+    body = patch_httpx.captured["json"]
+    for leaked in ("send_target", "isolation_mode", "user_id", "smart_dispatch", "enable_subagent"):
+        assert leaked not in body, f"internal kwarg {leaked!r} must not reach the LLM request body"
 
 
 # ── anthropic (Messages) ────────────────────────────────────────────────

@@ -167,6 +167,19 @@ exception, write it up in `docs/agents/failures/` first.
   currently swallow exceptions. Those will be brought under this rule
   in a separate change.
 
+### ⚠️ Logging trap: `fileConfig` disables existing loggers
+
+`alembic/env.py` calls `logging.config.fileConfig()`, which defaults to
+`disable_existing_loggers=True`. That not only rebuilds the root logger's
+handlers (dropping the app's `logs/app.log` FileHandler) but also sets
+`.disabled = True` on **every already-existing logger** (`main`, `app`,
+`app.services`, …), silently muting all app logs for the rest of the
+process. `_auto_migrate` now snapshots/restores root handlers, level, **and
+every logger's `disabled` flag** around the embedded upgrade. Rule: any new
+`fileConfig(...)` / `dictConfig(...)` must pass
+`disable_existing_loggers=False` unless it intentionally owns global logging.
+Post-mortem: `docs/agents/failures/2026-07-alembic-fileconfig-disables-loggers.md`.
+
 ---
 
 ## 5. Checklist for adding a new route (新路由)

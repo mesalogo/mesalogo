@@ -40,6 +40,8 @@ def configure_logging():
         level=log_level,
         format='[%(levelname)s] %(asctime)s - %(name)s - %(message)s'
     )
+    root = logging.getLogger()
+    root.setLevel(log_level)
     logging.getLogger('app').setLevel(log_level)
     logging.getLogger('app.services').setLevel(log_level)
     logging.getLogger('app.api').setLevel(log_level)
@@ -48,14 +50,24 @@ def configure_logging():
         logging.getLogger('app.services.conversation').setLevel(logging.DEBUG)
         logging.getLogger('app.services.mcp_server_manager').setLevel(logging.DEBUG)
 
-    # 文件 handler
+    # File handler — idempotent. Third-party libraries invoked during startup
+    # (alembic's fileConfig, HanLP/TensorFlow) rebuild the root logger's
+    # handlers and drop ours, which froze logs/app.log after startup. Drop any
+    # stale app.log handler and reinstall a fresh one so this function can be
+    # safely re-invoked (e.g. at the end of startup) to guarantee runtime logs
+    # keep reaching the file.
     os.makedirs('logs', exist_ok=True)
+    log_path = os.path.abspath('logs/app.log')
+    for h in list(root.handlers):
+        if isinstance(h, logging.FileHandler) and os.path.abspath(getattr(h, 'baseFilename', '')) == log_path:
+            root.removeHandler(h)
+            h.close()
     file_handler = logging.FileHandler('logs/app.log')
     file_handler.setFormatter(logging.Formatter(
         '[%(levelname)s] %(asctime)s - %(name)s - %(message)s'
     ))
     file_handler.setLevel(log_level)
-    logging.getLogger().addHandler(file_handler)
+    root.addHandler(file_handler)
 
 
 configure_logging()
@@ -293,13 +305,26 @@ async def startup_event():
     except Exception as e:
         logger.warning(f"OAuth 初始化失败: {e}")
 
-    # 3. 初始化 HanLP（可选）
-    try:
-        import hanlp
-        hanlp.load(hanlp.pretrained.mtl.CLOSE_TOK_POS_NER_SRL_DEP_SDP_CON_ELECTRA_BASE_ZH)
-        logger.info("✓ HanLP分词器初始化完成")
-    except Exception as e:
-        logger.warning(f"HanLP分词器初始化失败: {e}")
+    # 3. 初始化 HanLP（可选，后台异步预热）
+    # hanlp.load() 会加载 TensorFlow 模型，耗时数十秒且是阻塞的同步调用；放在
+    # startup 主协程里会拖慢/阻塞事件循环。此处仅作缓存预热（返回值不使用；实际
+    # 分词器由 bm25_search_service 自行加载），因此改为后台 daemon 线程预热。
+    # 另外 HanLP/TensorFlow 加载时会重置 root logger 的 handlers（清空 stdout 与
+    # app.log handler），导致此后日志被静默；线程内加载完成后重建日志配置
+    # （configure_logging 幂等），确保运行期日志继续落盘。
+    def _warmup_hanlp():
+        try:
+            import hanlp
+            hanlp.load(hanlp.pretrained.mtl.CLOSE_TOK_POS_NER_SRL_DEP_SDP_CON_ELECTRA_BASE_ZH)
+            configure_logging()
+            logger.info("✓ HanLP分词器初始化完成（后台预热）")
+        except Exception as e:
+            configure_logging()
+            logger.warning(f"HanLP分词器初始化失败: {e}")
+
+    import threading
+    threading.Thread(target=_warmup_hanlp, name="hanlp-warmup", daemon=True).start()
+    logger.info("HanLP分词器后台预热已启动")
 
     # 4. 初始化并行实验室事件总线
     try:
@@ -344,6 +369,12 @@ async def startup_event():
         if hasattr(route, 'methods') and hasattr(route, 'path'):
             logger.info(f"  {', '.join(route.methods)} {route.path}")
     logger.info("================================\n")
+
+    # Startup imports (alembic fileConfig, HanLP/TensorFlow) may have rebuilt
+    # the root logger and dropped our app.log FileHandler. Re-apply logging
+    # config now, after all noisy initialization, so runtime request logs are
+    # guaranteed to reach logs/app.log. configure_logging() is idempotent.
+    configure_logging()
 
     logger.info(f"✓ FastAPI 启动完成，监听 {settings.HOST}:{settings.PORT}")
 

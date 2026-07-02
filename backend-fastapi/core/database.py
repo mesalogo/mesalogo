@@ -148,6 +148,25 @@ def _auto_migrate() -> None:
     has_alembic = 'alembic_version' in existing
     has_business_tables = bool(existing - {'alembic_version'})
 
+    # alembic/env.py calls logging.config.fileConfig(), which by default runs
+    # with disable_existing_loggers=True. That does two destructive things to
+    # the app's logging set up in main.configure_logging():
+    #   1. rebuilds the root logger's handlers from alembic.ini (drops our
+    #      logs/app.log FileHandler), and
+    #   2. sets `.disabled = True` on every already-existing logger
+    #      ('main', 'app', 'app.services', ...), silently muting ALL app logs
+    #      for the rest of the process lifetime.
+    # Snapshot and restore the root handlers/level AND every logger's disabled
+    # flag around the embedded upgrade so runtime logs keep reaching app.log.
+    _root = logging.getLogger()
+    _saved_handlers = list(_root.handlers)
+    _saved_level = _root.level
+    _saved_disabled = {
+        name: lg.disabled
+        for name, lg in logging.root.manager.loggerDict.items()
+        if isinstance(lg, logging.Logger)
+    }
+
     _acquire_migration_lock()
     try:
         if not has_business_tables:
@@ -168,6 +187,12 @@ def _auto_migrate() -> None:
             command.upgrade(cfg, 'head')
     finally:
         _release_migration_lock()
+        _root.handlers = _saved_handlers
+        _root.setLevel(_saved_level)
+        for name, was_disabled in _saved_disabled.items():
+            lg = logging.root.manager.loggerDict.get(name)
+            if isinstance(lg, logging.Logger):
+                lg.disabled = was_disabled
 
 
 def _acquire_migration_lock() -> None:

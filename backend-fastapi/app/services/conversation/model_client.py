@@ -362,9 +362,14 @@ class ModelClient:
                 }
 
             # 添加其他参数（根据提供商过滤）
+            # 注意：OpenAI 兼容分支是"denylist 透传"，任何未列出的 kwarg 都会进入请求体。
+            # 内部路由/控制类 kwargs（如 send_target/isolation_mode/user_id）绝不能进入
+            # 上游请求体——严格网关会以 "Extra inputs are not permitted" 报 400。
             excluded_keys = [
                 'agent_info', 'task_id', 'conversation_id', 'config', 'provider',
                 'model_config',
+                'send_target', 'isolation_mode', 'user_id', 'smart_dispatch',
+                'enable_subagent', 'wire_stream', 'response_order',
             ]
 
             # Responses API 用 max_output_tokens 而非 max_tokens
@@ -535,7 +540,17 @@ class ModelClient:
                 logger.info(f"[API请求] 流式请求已启动（异步模式）: {request_id}")
                 
             else:
-                # 非流式请求使用同步模式
+                # 非流式对外契约：同步返回完整文本。
+                # 线级默认走 stream=true 并同步聚合——所有模型都支持流式，且部分模型
+                # （如网关上的 minimax-m3 / deepseek-v4-pro）仅支持流式，非流式会 400。
+                # 若某模型确需一次性 POST，可在其 additional_params 里设 wire_stream=false。
+                _ap = getattr(model_config, 'additional_params', None) or {}
+                wire_stream = not (isinstance(_ap, dict) and _ap.get('wire_stream') is False)
+                if wire_stream:
+                    payload["stream"] = True
+                    return self._collect_stream_as_text(api_url, headers, payload, timeout, api_format)
+
+                # 显式关闭线级流式：回退到一次性 POST
                 client = httpx.Client(timeout=timeout)
                 response = client.post(api_url, headers=headers, json=payload)
                 
@@ -1058,6 +1073,71 @@ class ModelClient:
             }
 
     # === 内部方法 ===
+
+    def _collect_stream_as_text(self, api_url: str, headers: dict, payload: dict,
+                                timeout: "httpx.Timeout", api_format: str) -> str:
+        """同步发起线级流式请求并将增量拼接为完整文本。
+
+        用于对外契约为"非流式/同步返回完整文本"的内部调用（子智能体、摘要、
+        智能分发、supervisor 等）。这些调用运行在线程池中，没有 SSE 所需的
+        connection_manager 上下文，因此不能走异步流式路径；这里用同步
+        httpx 流式读取，既兼容"仅支持流式"的模型，又保持同步返回契约。
+
+        兼容 openai-compatible(chat) / openai(responses) / anthropic 三种 SSE 增量形态。
+        非 200 直接抛 httpx.HTTPStatusError，交由上层统一错误处理。
+        """
+        parts: List[str] = []
+        has_reasoning = False
+        with httpx.Client(timeout=timeout) as client:
+            with client.stream("POST", api_url, headers=headers, json=payload) as response:
+                if response.status_code != 200:
+                    body = response.read().decode("utf-8", errors="replace")
+                    raise httpx.HTTPStatusError(
+                        f"[API请求] 错误: 服务器返回非200状态码: {response.status_code}\n[API请求] 响应内容: {body}",
+                        request=response.request,
+                        response=response,
+                    )
+                for line in response.iter_lines():
+                    if not line:
+                        continue
+                    data = line[len("data:"):].strip() if line.startswith("data:") else line.strip()
+                    if not data or data == "[DONE]":
+                        continue
+                    try:
+                        obj = json.loads(data)
+                    except (json.JSONDecodeError, ValueError):
+                        continue
+                    reasoning, content = self._extract_stream_delta(obj)
+                    # reasoning_content 用 <thinking>…</thinking> 包裹，与 stream_handler 保持一致
+                    if reasoning:
+                        if not has_reasoning:
+                            parts.append("<thinking>\n")
+                            has_reasoning = True
+                        parts.append(reasoning)
+                    if content:
+                        if has_reasoning:
+                            parts.append("\n</thinking>\n")
+                            has_reasoning = False
+                        parts.append(content)
+        if has_reasoning:
+            parts.append("\n</thinking>")
+        return "".join(parts)
+
+    @staticmethod
+    def _extract_stream_delta(obj: dict) -> tuple:
+        """从单条 SSE 增量对象中提取 (reasoning, content)，兼容三种线协议。"""
+        if not isinstance(obj, dict):
+            return None, None
+        choices = obj.get("choices")
+        if choices and isinstance(choices, list):
+            delta = choices[0].get("delta") or {}
+            return delta.get("reasoning_content"), delta.get("content")
+        obj_type = obj.get("type", "")
+        if obj_type == "content_block_delta":
+            return None, (obj.get("delta") or {}).get("text")
+        if obj_type.endswith("output_text.delta"):
+            return None, obj.get("delta")
+        return None, None
 
     def _detect_provider(self, api_url: str = None, config = None, provider: str = None, model_id: str = None) -> str:
         """
