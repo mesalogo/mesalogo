@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { App, Modal, Form, Input, Checkbox, Space } from 'antd';
 import { TeamOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
 
 const { TextArea } = Input;
@@ -9,6 +10,7 @@ const { TextArea } = Input;
  * 规则集创建/编辑 Modal
  */
 const RuleSetModal = ({ visible, ruleSet, onCancel, onSuccess }: any) => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const [form] = Form.useForm();
   const [loading, setLoading] = React.useState(false);
@@ -46,17 +48,17 @@ const RuleSetModal = ({ visible, ruleSet, onCancel, onSuccess }: any) => {
 
       if (ruleSet) {
         await actionSpaceAPI.updateRuleSet(ruleSet.id, ruleSetData);
-        message.success('规则集更新成功');
+        message.success(t('ruleSetModal.updateSuccess'));
       } else {
         await actionSpaceAPI.createRuleSet(ruleSetData);
-        message.success('规则集创建成功');
+        message.success(t('ruleSetModal.createSuccess'));
       }
 
       form.resetFields();
       onSuccess();
     } catch (error) {
-      console.error('保存规则集失败:', error);
-      message.error(ruleSet ? '更新规则集失败' : '创建规则集失败');
+      console.error('Failed to save rule set:', error);
+      message.error(ruleSet ? t('ruleSetModal.updateFailed') : t('ruleSetModal.createFailed'));
     } finally {
       setLoading(false);
     }
@@ -69,7 +71,7 @@ const RuleSetModal = ({ visible, ruleSet, onCancel, onSuccess }: any) => {
 
   return (
     <Modal
-      title={ruleSet ? '编辑规则集' : '创建规则集'}
+      title={ruleSet ? t('ruleSetModal.editTitle') : t('ruleSetModal.createTitle')}
       open={visible}
       onOk={handleSubmit}
       onCancel={handleCancel}
@@ -79,29 +81,29 @@ const RuleSetModal = ({ visible, ruleSet, onCancel, onSuccess }: any) => {
       <Form form={form} layout="vertical">
         <Form.Item
           name="name"
-          label="规则集名称"
-          rules={[{ required: true, message: '请输入规则集名称' }]}
+          label={t('ruleSetModal.name')}
+          rules={[{ required: true, message: t('ruleSetModal.nameRequired') }]}
         >
-          <Input placeholder="输入规则集名称" />
+          <Input placeholder={t('ruleSetModal.namePlaceholder')} />
         </Form.Item>
 
         <Form.Item
           name="description"
-          label="描述"
-          rules={[{ required: true, message: '请输入描述' }]}
+          label={t('ruleSetModal.description')}
+          rules={[{ required: true, message: t('ruleSetModal.descriptionRequired') }]}
         >
-          <TextArea rows={3} placeholder="输入规则集描述" />
+          <TextArea rows={3} placeholder={t('ruleSetModal.descriptionPlaceholder')} />
         </Form.Item>
 
         <Form.Item
           name="is_shared"
           valuePropName="checked"
-          tooltip="勾选后，该规则集将对所有用户可见可用（但只有创建者可编辑）"
+          tooltip={t('ruleSetModal.sharedTooltip')}
         >
           <Checkbox>
             <Space>
               <TeamOutlined />
-              共享给所有用户
+              {t('ruleSetModal.shareToAll')}
             </Space>
           </Checkbox>
         </Form.Item>

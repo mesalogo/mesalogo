@@ -19,12 +19,14 @@ import {
   ReloadOutlined,
   EyeOutlined
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import api from '../../../services/api/axios';
 import graphEnhancementAPI from '../../../services/api/graphEnhancement';
 
 const { Title, Text } = Typography;
 
 const PartitionDetailModal = ({ visible, partition, onClose, onViewFullGraph }: any) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('info');
   const [partitionStats, setPartitionStats] = useState(null);
@@ -39,10 +41,10 @@ const PartitionDetailModal = ({ visible, partition, onClose, onViewFullGraph }: 
       if (data.success) {
         setPartitionStats(data.data);
       } else {
-        console.error('加载分区统计失败:', data.message);
+        console.error(t('memory.partition.loadStatsFailed', { reason: data.message }));
       }
     } catch (error) {
-      console.error('加载分区统计失败:', error);
+      console.error(t('memory.partition.loadStatsFailed', { reason: error }));
     }
   };
 
@@ -56,11 +58,11 @@ const PartitionDetailModal = ({ visible, partition, onClose, onViewFullGraph }: 
       if (response.success) {
         setGraphData(response.data);
       } else {
-        message.error(`加载图谱数据失败: ${response.message}`);
+        message.error(t('memory.partition.loadGraphFailedWithReason', { reason: response.message }));
       }
     } catch (error) {
-      console.error('加载图谱数据失败:', error);
-      message.error('加载图谱数据失败');
+      console.error('Failed to load graph data:', error);
+      message.error(t('memory.partition.loadGraphFailed'));
     } finally {
       setLoading(false);
     }
@@ -81,20 +83,20 @@ const PartitionDetailModal = ({ visible, partition, onClose, onViewFullGraph }: 
   const renderPartitionInfo = () => (
     <div>
       <Descriptions column={2} bordered>
-        <Descriptions.Item label="分区ID">
+        <Descriptions.Item label={t('memory.partition.partitionId')}>
           {partition?.id}
         </Descriptions.Item>
-        <Descriptions.Item label="分区名称">
+        <Descriptions.Item label={t('memory.partition.partitionName')}>
           {partition?.name}
         </Descriptions.Item>
-        <Descriptions.Item label="分区类型">
+        <Descriptions.Item label={t('memory.partition.type')}>
           <Tag color="blue">{partition?.type}</Tag>
         </Descriptions.Item>
-        <Descriptions.Item label="关联实体">
+        <Descriptions.Item label={t('memory.partition.relatedEntity')}>
           {partition?.entity_name}
         </Descriptions.Item>
-        <Descriptions.Item label="描述" span={2}>
-          {partition?.description || '无描述'}
+        <Descriptions.Item label={t('memory.partition.descriptionLabel')} span={2}>
+          {partition?.description || t('memory.partition.noDescription')}
         </Descriptions.Item>
       </Descriptions>
     </div>
@@ -105,18 +107,16 @@ const PartitionDetailModal = ({ visible, partition, onClose, onViewFullGraph }: 
     <div>
       <div style={{ marginBottom: 16 }}>
         <Space>
-          <Text strong>图谱数据</Text>
+          <Text strong>{t('memory.partition.graphData')}</Text>
           <Button
-           
             icon={<ReloadOutlined />}
             onClick={() => loadGraphData(partition.id)}
             loading={loading}
           >
-            刷新
+            {t('memory.partition.refresh')}
           </Button>
           {onViewFullGraph && (
             <Button
-             
               type="primary"
               icon={<EyeOutlined />}
               onClick={() => {
@@ -124,7 +124,7 @@ const PartitionDetailModal = ({ visible, partition, onClose, onViewFullGraph }: 
                 onClose();
               }}
             >
-              查看完整图谱
+              {t('memory.partition.viewFullGraph')}
             </Button>
           )}
         </Space>
@@ -137,18 +137,17 @@ const PartitionDetailModal = ({ visible, partition, onClose, onViewFullGraph }: 
             {graphData.stats && (
               <Card style={{ marginBottom: 16 }}>
                 <Space>
-                  <Text strong>图谱统计:</Text>
-                  <Tag color="blue">节点: {graphData.stats.entity_count || graphData.nodes.length}</Tag>
-                  <Tag color="green">关系: {graphData.stats.relationship_count || graphData.edges?.length || 0}</Tag>
+                  <Text strong>{t('memory.partition.graphStats')}</Text>
+                  <Tag color="blue">{t('memory.partition.statNodes', { count: graphData.stats.entity_count || graphData.nodes.length })}</Tag>
+                  <Tag color="green">{t('memory.partition.statRelations', { count: graphData.stats.relationship_count || graphData.edges?.length || 0 })}</Tag>
                   {graphData.stats.group_id && (
-                    <Tag color="orange">分区: {graphData.stats.group_id}</Tag>
+                    <Tag color="orange">{t('memory.partition.statPartition', { id: graphData.stats.group_id })}</Tag>
                   )}
                 </Space>
               </Card>
             )}
-            <Card title={`节点 (${graphData.nodes.length})`} style={{ marginBottom: 16 }}>
+            <Card title={t('memory.partition.nodesTitle', { count: graphData.nodes.length })} style={{ marginBottom: 16 }}>
               <List
-               
                 dataSource={graphData.nodes.slice(0, 10)}
                 renderItem={(node: any) => (
                   <List.Item>
@@ -171,15 +170,14 @@ const PartitionDetailModal = ({ visible, partition, onClose, onViewFullGraph }: 
               />
               {graphData.nodes.length > 10 && (
                 <Text type="secondary">
-                  还有 {graphData.nodes.length - 10} 个节点...
+                  {t('memory.partition.moreNodes', { count: graphData.nodes.length - 10 })}
                 </Text>
               )}
             </Card>
 
             {graphData.edges && graphData.edges.length > 0 && (
-              <Card title={`关系 (${graphData.edges.length})`}>
+              <Card title={t('memory.partition.relationsTitle', { count: graphData.edges.length })}>
                 <List
-                 
                   dataSource={graphData.edges.slice(0, 5)}
                   renderItem={(edge: any) => (
                     <List.Item>
@@ -201,7 +199,7 @@ const PartitionDetailModal = ({ visible, partition, onClose, onViewFullGraph }: 
                 />
                 {graphData.edges.length > 5 && (
                   <Text type="secondary">
-                    还有 {graphData.edges.length - 5} 个关系...
+                    {t('memory.partition.moreRelations', { count: graphData.edges.length - 5 })}
                   </Text>
                 )}
               </Card>
@@ -209,7 +207,7 @@ const PartitionDetailModal = ({ visible, partition, onClose, onViewFullGraph }: 
           </div>
         ) : (
           <Empty 
-            description={graphData?.message || "暂无图谱数据"}
+            description={graphData?.message || t('memory.partition.noGraphData')}
             image={Empty.PRESENTED_IMAGE_SIMPLE}
           />
         )}
@@ -221,7 +219,7 @@ const PartitionDetailModal = ({ visible, partition, onClose, onViewFullGraph }: 
 
   return (
     <Modal
-      title={`分区详情: ${partition?.name || ''}`}
+      title={`${t('memory.partition.detail')}: ${partition?.name || ''}`}
       open={visible}
       onCancel={onClose}
       footer={null}
@@ -234,12 +232,12 @@ const PartitionDetailModal = ({ visible, partition, onClose, onViewFullGraph }: 
         items={[
           {
             key: 'info',
-            label: '基本信息',
+            label: t('memory.partition.basicInfo'),
             children: renderPartitionInfo()
           },
           {
             key: 'graph',
-            label: '图谱数据',
+            label: t('memory.partition.graphData'),
             children: renderGraphData()
           }
         ]}

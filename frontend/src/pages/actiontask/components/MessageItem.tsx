@@ -44,12 +44,12 @@ const MessageItem = React.memo(({
 
     if (textToCopy.trim()) {
       navigator.clipboard.writeText(textToCopy.trim()).then(() => {
-        messageApi.success('消息内容已复制到剪贴板');
+        messageApi.success(t('messageItem.copiedToClipboard'));
       }).catch(() => {
-        messageApi.error('复制失败');
+        messageApi.error(t('common.copyFailed'));
       });
     } else {
-      messageApi.warning('没有可复制的文本内容');
+      messageApi.warning(t('messageItem.noCopyableContent'));
     }
   };
 
@@ -87,7 +87,7 @@ const MessageItem = React.memo(({
                 icon={<ApartmentOutlined />}
                 style={{ marginRight: '5px' }}
               >
-                {agent ? `@${agent.name}` : `@智能体-${agentId}`}
+                {agent ? `@${agent.name}` : t('messageItem.agentTagFallback', { id: agentId })}
               </Tag>
             );
           })}
@@ -115,7 +115,7 @@ const MessageItem = React.memo(({
               key={agentId}
               style={{ marginRight: '5px' }}
             >
-              {agent ? `@${agent.name}` : `@智能体-${agentId}`}
+              {agent ? `@${agent.name}` : t('messageItem.agentTagFallback', { id: agentId })}
             </Tag>
           );
         })}
@@ -180,7 +180,7 @@ const MessageItem = React.memo(({
               fontWeight: 500
             }}>
               <EyeOutlined />
-              <Text strong style={{ color: '#1677ff' }}>上一会话总结</Text>
+              <Text strong style={{ color: '#1677ff' }}>{t('conversation.previousConversationSummary')}</Text>
             </div>
             <div style={{ color: 'var(--custom-text-secondary)', lineHeight: 1.6 }}>
               <ConversationExtraction 
@@ -251,7 +251,7 @@ const MessageItem = React.memo(({
             }}>
               <span>🔗</span>
               <Text strong style={{ color: '#722ed1' }}>
-                SubAgent 调用
+                {t('messageItem.subAgentInvocation')}
               </Text>
               <Text type="secondary" style={{ fontSize: '12px' }}>
                 {message.meta?.caller_agent_name} → {message.meta?.target_agent_name}
@@ -260,7 +260,7 @@ const MessageItem = React.memo(({
                 color={message.meta?.status === 'success' ? 'success' : 'error'}
                 style={{ fontSize: '11px', lineHeight: '18px', padding: '0 4px', marginLeft: 'auto' }}
               >
-                {message.meta?.status === 'success' ? '成功' : '失败'}
+                {message.meta?.status === 'success' ? t('messageItem.status.success') : t('messageItem.status.failed')}
               </Tag>
               {message.meta?.elapsed_seconds && (
                 <Tag style={{ fontSize: '11px', lineHeight: '18px', padding: '0 4px' }}>
@@ -269,7 +269,9 @@ const MessageItem = React.memo(({
               )}
             </div>
             <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)', marginBottom: '8px' }}>
-              任务: {message.meta?.task_description?.substring(0, 150)}{message.meta?.task_description?.length > 150 ? '...' : ''}
+              {t('messageItem.taskLabel', {
+                description: `${message.meta?.task_description?.substring(0, 150)}${message.meta?.task_description?.length > 150 ? '...' : ''}`
+              })}
             </div>
             {message.meta?.response_summary && (
               <div style={{
@@ -354,7 +356,7 @@ const MessageItem = React.memo(({
               }
 
               // 否则显示默认的"系统"标签
-              return <Tag color="purple">系统</Tag>;
+              return <Tag color="purple">{t('messageItem.system')}</Tag>;
             })()}
             <Text type="secondary" style={{ fontSize: '12px' }}>
               {new Date(message.timestamp || message.created_at).toLocaleString()}
@@ -384,11 +386,11 @@ const MessageItem = React.memo(({
                 }}
                 size="small"
               />
-              <Text strong>用户</Text>
-              {message.isVirtual && <Tag color="orange">虚拟消息</Tag>}
+              <Text strong>{t('messageItem.user')}</Text>
+              {message.isVirtual && <Tag color="orange">{t('messageItem.virtualMessage')}</Tag>}
               {/* 检查是否为监督者干预消息 */}
               {message.source === 'supervisorConversation' && message.meta?.type === 'info' && (
-                <Tag color="purple">干预</Tag>
+                <Tag color="purple">{t('taskSupervisor.intervention')}</Tag>
               )}
             </div>
             <Text type="secondary" style={{ fontSize: '12px' }}>
@@ -458,7 +460,7 @@ const MessageItem = React.memo(({
 
                 // 如果还是没有智能体名称，使用默认值
                 if (!agentName) {
-                  agentName = '智能体';
+                  agentName = t('messageItem.defaultAgentName');
                 }
 
                 // 组合显示
@@ -471,16 +473,16 @@ const MessageItem = React.memo(({
             </Text>
 
             {message.agent_id === streamingAgentId && isObserving && (
-              <Tag color="orange" style={{ marginLeft: '8px' }}>回应中...</Tag>
+              <Tag color="orange" style={{ marginLeft: '8px' }}>{t('messageItem.responding')}</Tag>
             )}
 
             {/* 检查是否为监督者干预回复 */}
             {message.source === 'supervisorConversation' && message.meta?.type === 'info' && (
-              <Tag color="purple" style={{ marginLeft: '8px' }}>干预</Tag>
+              <Tag color="purple" style={{ marginLeft: '8px' }}>{t('taskSupervisor.intervention')}</Tag>
             )}
 
             {message.response_order && (
-              <Tag color="cyan" style={{ marginLeft: '8px' }}>响应顺序: {message.response_order}</Tag>
+              <Tag color="cyan" style={{ marginLeft: '8px' }}>{t('messageItem.responseOrder', { order: message.response_order })}</Tag>
             )}
 
             <Text type="secondary" style={{ fontSize: '12px', marginLeft: 'auto' }}>
@@ -525,7 +527,7 @@ const MessageItem = React.memo(({
                 e.currentTarget.style.color = 'var(--custom-text-secondary)';
                 e.currentTarget.style.backgroundColor = 'transparent';
               }}
-              title="复制消息内容"
+              title={t('messageItem.copyMessageTooltip')}
             />
           </div>
         </>

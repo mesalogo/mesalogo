@@ -5,6 +5,7 @@
  */
 import { useState, useCallback } from 'react';
 import { App } from 'antd';
+import { useTranslation } from 'react-i18next';
 import lightragAPI, { LightRAGConfig, LightRAGStatus, LightRAGQueryResult } from '../../../services/api/lightrag';
 import { modelConfigAPI } from '../../../services/api/model';
 
@@ -13,6 +14,7 @@ export type ModelInfo = any;
 
 export const useLightRAG = () => {
   const { message } = App.useApp();
+  const { t } = useTranslation();
   
   // 配置状态
   const [config, setConfig] = useState<LightRAGConfig | null>(null);
@@ -52,16 +54,16 @@ export const useLightRAG = () => {
         setConfig(result.data);
         return result.data;
       } else {
-        message.error(result.message || '获取配置失败');
+        message.error(result.message || t('lightragHook.getConfigFailed'));
         return null;
       }
     } catch (error: any) {
-      message.error('获取配置失败: ' + error.message);
+      message.error(t('lightragHook.getConfigFailedDetail', { error: error.message }));
       return null;
     } finally {
       setLoading(false);
     }
-  }, [message]);
+  }, [message, t]);
 
   /**
    * 保存 LightRAG 配置
@@ -76,16 +78,16 @@ export const useLightRAG = () => {
         setConfig(prev => prev ? { ...prev, ...values } : values as LightRAGConfig);
         return result;
       } else {
-        message.error(result.message || '配置保存失败');
+        message.error(result.message || t('lightragHook.saveConfigFailed'));
         return null;
       }
     } catch (error: any) {
-      message.error('配置保存失败: ' + error.message);
+      message.error(t('lightragHook.saveConfigFailedDetail', { error: error.message }));
       return null;
     } finally {
       setLoading(false);
     }
-  }, [message]);
+  }, [message, t]);
 
   // ==================== 服务状态 ====================
 
@@ -101,7 +103,7 @@ export const useLightRAG = () => {
       }
       return null;
     } catch (error) {
-      console.error('获取状态失败:', error);
+      console.error('Failed to get status:', error);
       return null;
     }
   }, []);
@@ -114,7 +116,7 @@ export const useLightRAG = () => {
       const result = await lightragAPI.healthCheck();
       return result;
     } catch (error) {
-      console.error('健康检查失败:', error);
+      console.error('Health check failed:', error);
       return null;
     }
   }, []);
@@ -181,7 +183,7 @@ export const useLightRAG = () => {
 
       return configs;
     } catch (error) {
-      console.error('加载模型配置失败:', error);
+      console.error('Failed to load model configs:', error);
       return [];
     }
   }, []);
@@ -197,21 +199,21 @@ export const useLightRAG = () => {
       const result = await lightragAPI.syncConfig();
 
       if (result.success) {
-        message.success('配置已同步到 LightRAG 并重启容器');
+        message.success(t('lightragHook.syncSuccess'));
         // 重新加载状态
         await loadStatus();
         return true;
       } else {
-        message.error(`同步失败: ${result.error || result.message}`);
+        message.error(t('lightragHook.syncFailed', { error: result.error || result.message }));
         return false;
       }
     } catch (error: any) {
-      message.error(`同步失败: ${error.message}`);
+      message.error(t('lightragHook.syncFailed', { error: error.message }));
       return false;
     } finally {
       setSyncLoading(false);
     }
-  }, [message, loadStatus]);
+  }, [message, t, loadStatus]);
 
   // ==================== 服务控制 ====================
 
@@ -224,7 +226,7 @@ export const useLightRAG = () => {
       const result = await lightragAPI.controlService(action);
 
       if (result.success) {
-        message.success(result.message || `服务${action === 'start' ? '启动' : '停止'}成功`);
+        message.success(result.message || (action === 'start' ? t('lightragHook.startSuccess') : t('lightragHook.stopSuccess')));
         
         // 轮询检查服务状态
         const targetStatus = action === 'start' ? 'healthy' : 'unreachable';
@@ -242,16 +244,16 @@ export const useLightRAG = () => {
         
         return true;
       } else {
-        message.error(`操作失败: ${result.error || result.message}`);
+        message.error(t('lightragHook.operationFailed', { error: result.error || result.message }));
         return false;
       }
     } catch (error: any) {
-      message.error(`操作失败: ${error.message}`);
+      message.error(t('lightragHook.operationFailed', { error: error.message }));
       return false;
     } finally {
       setLoading(false);
     }
-  }, [message, loadStatus]);
+  }, [message, t, loadStatus]);
 
   // ==================== 查询测试 ====================
 
@@ -277,22 +279,22 @@ export const useLightRAG = () => {
 
       if (result.success && result.data) {
         setTestResult(result.data);
-        message.success('查询测试成功');
+        message.success(t('lightragHook.queryTestSuccess'));
         return result.data;
       } else {
-        message.error(result.message || '查询测试失败');
+        message.error(result.message || t('lightragHook.queryTestFailed'));
         setTestResult(null);
         return null;
       }
     } catch (error: any) {
-      console.error('查询测试失败:', error);
-      message.error('查询测试失败: ' + error.message);
+      console.error('Query test failed:', error);
+      message.error(t('lightragHook.queryTestFailedDetail', { error: error.message }));
       setTestResult(null);
       return null;
     } finally {
       setQueryLoading(false);
     }
-  }, [message]);
+  }, [message, t]);
 
   // ==================== 数据管理 ====================
 
@@ -305,20 +307,20 @@ export const useLightRAG = () => {
       const result = await lightragAPI.clearWorkspace(workspace);
 
       if (result.success) {
-        message.success('数据清空成功');
+        message.success(t('lightragHook.clearDataSuccess'));
         await loadStatus();
         return true;
       } else {
-        message.error(result.message || '数据清空失败');
+        message.error(result.message || t('lightragHook.clearDataFailed'));
         return false;
       }
     } catch (error: any) {
-      message.error('数据清空失败: ' + error.message);
+      message.error(t('lightragHook.clearDataFailedDetail', { error: error.message }));
       return false;
     } finally {
       setClearLoading(false);
     }
-  }, [message, loadStatus]);
+  }, [message, t, loadStatus]);
 
   return {
     // 状态

@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { App } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { modelConfigAPI } from '../../../services/api/model';
 
 /**
@@ -8,6 +9,7 @@ import { modelConfigAPI } from '../../../services/api/model';
  * 集中管理所有状态、数据获取、CRUD操作、Provider模型列表、测试功能
  */
 export const useModelConfigData = () => {
+  const { t } = useTranslation();
   const { message, modal } = App.useApp();
   
   // ==================== 核心数据状态 ====================
@@ -49,14 +51,14 @@ export const useModelConfigData = () => {
         configsWithKeysMap[config.id] = config;
       });
       setModelConfigsWithKeys(configsWithKeysMap);
-      console.log('已加载所有模型配置（包含API密钥）');
+      console.log('Loaded all model configurations (including API keys)');
     } catch (error) {
-      console.error('获取模型配置失败:', error);
-      message.error('加载模型配置失败');
+      console.error('Failed to fetch model configurations:', error);
+      message.error(t('modelConfig.loadFailed'));
     } finally {
       setLoading(false);
     }
-  }, [message]);
+  }, [message, t]);
   
   // 获取默认模型配置
   const fetchDefaultModels = useCallback(async () => {
@@ -64,7 +66,7 @@ export const useModelConfigData = () => {
       const defaults = await modelConfigAPI.getDefaults();
       setCurrentDefaults(defaults);
     } catch (error) {
-      console.error('获取默认模型配置失败:', error);
+      console.error('Failed to fetch default model configuration:', error);
     }
   }, []);
   
@@ -75,18 +77,18 @@ export const useModelConfigData = () => {
     const needsApiKey = modelData.provider !== 'ollama';
     
     if (needsApiKey && modelData.provider !== 'custom' && (!modelData.api_key || modelData.api_key.trim() === '')) {
-      message.warning('警告：您没有提供API密钥。如果此服务需要密钥，测试将失败。');
+      message.warning(t('modelConfig.apiKeyMissingWarning'));
     }
     
     setLoading(true);
     try {
-      console.log('正在创建新模型配置，API数据:', {
+      console.log('Creating new model configuration, API data:', {
         ...modelData, 
-        api_key: modelData.api_key ? '***已隐藏***' : undefined
+        api_key: modelData.api_key ? '***hidden***' : undefined
       });
       
       const newModel = await modelConfigAPI.create(modelData);
-      message.success('创建成功');
+      message.success(t('modelConfig.createSuccess'));
       
       if (newModel && newModel.id) {
         setModelConfigsWithKeys(prev => ({
@@ -101,25 +103,25 @@ export const useModelConfigData = () => {
       await fetchModelConfigs();
       return { success: true, data: newModel };
     } catch (error) {
-      console.error('创建模型失败:', error);
-      message.error('创建失败: ' + (error.response?.data?.error || error.message));
+      console.error('Failed to create model:', error);
+      message.error(t('modelConfig.createFailedWithReason', { reason: error.response?.data?.error || error.message }));
       return { success: false, error };
     } finally {
       setLoading(false);
     }
-  }, [message, fetchModelConfigs]);
+  }, [message, fetchModelConfigs, t]);
   
   // 更新模型
   const updateModel = useCallback(async (modelId, modelData) => {
     setLoading(true);
     try {
-      console.log('正在更新模型配置，API数据:', {
+      console.log('Updating model configuration, API data:', {
         ...modelData,
-        api_key: modelData.api_key ? '***已隐藏***' : undefined
+        api_key: modelData.api_key ? '***hidden***' : undefined
       });
       
       const updatedModel = await modelConfigAPI.update(modelId, modelData);
-      message.success('更新成功');
+      message.success(t('modelConfig.updateSuccess'));
       
       if (updatedModel) {
         setModelConfigsWithKeys(prev => {
@@ -150,25 +152,25 @@ export const useModelConfigData = () => {
       await fetchModelConfigs();
       return { success: true, data: updatedModel };
     } catch (error) {
-      console.error('更新模型失败:', error);
-      message.error('更新失败: ' + (error.response?.data?.error || error.message));
+      console.error('Failed to update model:', error);
+      message.error(t('modelConfig.updateFailedWithReason', { reason: error.response?.data?.error || error.message }));
       return { success: false, error };
     } finally {
       setLoading(false);
     }
-  }, [message, fetchModelConfigs]);
+  }, [message, fetchModelConfigs, t]);
   
   // 删除模型
   const deleteModel = useCallback((model) => {
     return new Promise((resolve) => {
       modal.confirm({
-        title: '确认删除',
+        title: t('modelConfig.confirmDelete'),
         icon: <ExclamationCircleOutlined />,
-        content: `确定要删除模型配置 "${model.name}" 吗？`,
+        content: t('modelConfig.deleteConfirm', { name: model.name }),
         onOk: async () => {
           try {
             await modelConfigAPI.delete(model.id);
-            message.success('删除成功');
+            message.success(t('modelConfig.deleteSuccess'));
             
             setModelConfigsWithKeys(prev => {
               const newCache = { ...prev };
@@ -179,30 +181,30 @@ export const useModelConfigData = () => {
             await fetchModelConfigs();
             resolve({ success: true });
           } catch (error) {
-            console.error('删除模型失败:', error);
-            message.error('删除失败');
+            console.error('Failed to delete model:', error);
+            message.error(t('modelConfig.deleteFailed'));
             resolve({ success: false, error });
           }
         },
         onCancel: () => resolve({ success: false, cancelled: true })
       });
     });
-  }, [message, modal, fetchModelConfigs]);
+  }, [message, modal, fetchModelConfigs, t]);
   
   // 设置默认模型
   const setDefaultModels = useCallback(async (textModelId, embeddingModelId, rerankModelId) => {
     try {
       await modelConfigAPI.setDefaults(textModelId, embeddingModelId, rerankModelId);
-      message.success('默认模型设置成功');
+      message.success(t('modelConfig.setDefaultsSuccess'));
       await fetchDefaultModels();
       await fetchModelConfigs();
       return { success: true };
     } catch (error) {
-      console.error('设置默认模型失败:', error);
-      message.error('设置失败: ' + (error.response?.data?.error || error.message));
+      console.error('Failed to set default models:', error);
+      message.error(t('modelConfig.setDefaultsFailedWithReason', { reason: error.response?.data?.error || error.message }));
       return { success: false, error };
     }
-  }, [message, fetchDefaultModels, fetchModelConfigs]);
+  }, [message, fetchDefaultModels, fetchModelConfigs, t]);
   
   // ==================== Provider模型列表获取 ====================
   
@@ -215,18 +217,18 @@ export const useModelConfigData = () => {
       const response = await modelConfigAPI.fetchOllamaModels(baseUrl);
       if (response.success) {
         setOllamaModels(response.models || []);
-        console.log('获取到Ollama模型列表:', response.models);
+        console.log('Fetched Ollama model list:', response.models);
       } else {
-        throw new Error(response.message || '获取模型列表失败');
+        throw new Error(response.message || t('modelConfig.fetchOllamaModelsFailed'));
       }
     } catch (error) {
-      console.error('获取Ollama模型列表失败:', error);
-      message.error(`获取Ollama模型列表失败: ${error.message}`);
+      console.error('Failed to fetch Ollama model list:', error);
+      message.error(t('modelConfig.fetchOllamaModelsFailedWithReason', { reason: error.message }));
       setOllamaModels([]);
     } finally {
       setOllamaModelsLoading(false);
     }
-  }, [message]);
+  }, [message, t]);
   
   // 获取GPUStack模型列表
   const fetchGpustackModels = useCallback(async (baseUrl, apiKey) => {
@@ -237,18 +239,18 @@ export const useModelConfigData = () => {
       const response = await modelConfigAPI.fetchGpustackModels(baseUrl, apiKey);
       if (response.success) {
         setGpustackModels(response.models || []);
-        console.log('获取到GPUStack模型列表:', response.models);
+        console.log('Fetched GPUStack model list:', response.models);
       } else {
-        throw new Error(response.message || '获取模型列表失败');
+        throw new Error(response.message || t('modelConfig.fetchGpustackModelsFailed'));
       }
     } catch (error) {
-      console.error('获取GPUStack模型列表失败:', error);
-      message.error(`获取GPUStack模型列表失败: ${error.message}`);
+      console.error('Failed to fetch GPUStack model list:', error);
+      message.error(t('modelConfig.fetchGpustackModelsFailedWithReason', { reason: error.message }));
       setGpustackModels([]);
     } finally {
       setGpustackModelsLoading(false);
     }
-  }, [message]);
+  }, [message, t]);
   
   // 获取Anthropic模型列表
   const fetchAnthropicModels = useCallback(async (baseUrl, apiKey) => {
@@ -259,18 +261,18 @@ export const useModelConfigData = () => {
       const response = await modelConfigAPI.fetchAnthropicModels(baseUrl, apiKey);
       if (response.success) {
         setAnthropicModels(response.models || []);
-        console.log('获取到Anthropic模型列表:', response.models);
+        console.log('Fetched Anthropic model list:', response.models);
       } else {
-        throw new Error(response.message || '获取模型列表失败');
+        throw new Error(response.message || t('modelConfig.fetchAnthropicModelsFailed'));
       }
     } catch (error) {
-      console.error('获取Anthropic模型列表失败:', error);
-      message.error(`获取Anthropic模型列表失败: ${error.message}`);
+      console.error('Failed to fetch Anthropic model list:', error);
+      message.error(t('modelConfig.fetchAnthropicModelsFailedWithReason', { reason: error.message }));
       setAnthropicModels([]);
     } finally {
       setAnthropicModelsLoading(false);
     }
-  }, [message]);
+  }, [message, t]);
   
   // 获取Google模型列表
   const fetchGoogleModels = useCallback(async (baseUrl, apiKey) => {
@@ -281,18 +283,18 @@ export const useModelConfigData = () => {
       const response = await modelConfigAPI.fetchGoogleModels(baseUrl, apiKey);
       if (response.success) {
         setGoogleModels(response.models || []);
-        console.log('获取到Google模型列表:', response.models);
+        console.log('Fetched Google model list:', response.models);
       } else {
-        throw new Error(response.message || '获取模型列表失败');
+        throw new Error(response.message || t('modelConfig.fetchGoogleModelsFailed'));
       }
     } catch (error) {
-      console.error('获取Google模型列表失败:', error);
-      message.error(`获取Google模型列表失败: ${error.message}`);
+      console.error('Failed to fetch Google model list:', error);
+      message.error(t('modelConfig.fetchGoogleModelsFailedWithReason', { reason: error.message }));
       setGoogleModels([]);
     } finally {
       setGoogleModelsLoading(false);
     }
-  }, [message]);
+  }, [message, t]);
   
   // 获取X.ai模型列表
   const fetchXaiModels = useCallback(async (baseUrl, apiKey) => {
@@ -303,18 +305,18 @@ export const useModelConfigData = () => {
       const response = await modelConfigAPI.fetchXaiModels(baseUrl, apiKey);
       if (response.success) {
         setXaiModels(response.models || []);
-        console.log('获取到X.ai模型列表:', response.models);
+        console.log('Fetched X.ai model list:', response.models);
       } else {
-        throw new Error(response.message || '获取模型列表失败');
+        throw new Error(response.message || t('modelConfig.fetchXaiModelsFailed'));
       }
     } catch (error) {
-      console.error('获取X.ai模型列表失败:', error);
-      message.error(`获取X.ai模型列表失败: ${error.message}`);
+      console.error('Failed to fetch X.ai model list:', error);
+      message.error(t('modelConfig.fetchXaiModelsFailedWithReason', { reason: error.message }));
       setXaiModels([]);
     } finally {
       setXaiModelsLoading(false);
     }
-  }, [message]);
+  }, [message, t]);
   
   // 清空所有模型列表
   const clearAllProviderModels = useCallback(() => {
@@ -330,7 +332,7 @@ export const useModelConfigData = () => {
   // 测试连接
   const testConnection = useCallback(async (baseUrl, provider, apiKey) => {
     if (!baseUrl) {
-      message.warning('请输入API基础URL');
+      message.warning(t('modelConfig.baseUrlRequiredWarning'));
       return { success: false };
     }
     
@@ -338,28 +340,28 @@ export const useModelConfigData = () => {
     try {
       const response = await modelConfigAPI.testConnection(baseUrl, provider, apiKey);
       if (response.success) {
-        message.success('连接测试成功');
+        message.success(t('modelConfig.connectionTestSuccess'));
         return { success: true };
       } else {
-        throw new Error(response.message || '连接测试失败');
+        throw new Error(response.message || t('modelConfig.connectionTestFailed'));
       }
     } catch (error) {
-      console.error('连接测试失败:', error);
-      message.error(`连接测试失败: ${error.message}`);
+      console.error('Connection test failed:', error);
+      message.error(t('modelConfig.connectionTestFailedWithReason', { reason: error.message }));
       return { success: false, error };
     } finally {
       setTestConnectionLoading(false);
     }
-  }, [message]);
+  }, [message, t]);
   
   // 测试模型（流式响应）
   const testModelStream = useCallback(async (modelId, prompt, onChunk, systemPrompt) => {
-    console.log("[模型测试] 发送参数:", { modelId, prompt, systemPrompt });
+    console.log("[Model test] Sending params:", { modelId, prompt, systemPrompt });
     
     try {
       await modelConfigAPI.testModelStream(modelId, prompt, onChunk, systemPrompt);
     } catch (error) {
-      console.error('测试LLM失败:', error);
+      console.error('Failed to test LLM:', error);
       throw error;
     }
   }, []);

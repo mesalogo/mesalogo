@@ -1,4 +1,5 @@
 import api from './axios';
+import i18n from '../../locales';
 
 /**
  * 许可证API服务
@@ -31,10 +32,10 @@ export const licenseAPI = {
       const response = await api.get('/license/expired');
       return response.data.data;
     } catch (error) {
-      console.error('获取过期许可证信息失败:', error);
+      console.error('Failed to get expired license info:', error);
       // 对于404错误，抛出特定的license错误
       if (error.response?.status === 404) {
-        const licenseError: any = new Error('未找到任何许可证信息');
+        const licenseError: any = new Error(i18n.t('about.error.licenseNotFound'));
         licenseError.isLicenseError = true;
         licenseError.code = 'LICENSE_NOT_FOUND';
         throw licenseError;

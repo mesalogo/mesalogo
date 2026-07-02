@@ -1,6 +1,7 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { BookOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 interface KnowledgeNodeProps {
   data: {
@@ -13,6 +14,7 @@ interface KnowledgeNodeProps {
 }
 
 const KnowledgeNode: React.FC<KnowledgeNodeProps> = ({ data, selected }) => {
+  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -51,9 +53,9 @@ const KnowledgeNode: React.FC<KnowledgeNodeProps> = ({ data, selected }) => {
           <BookOutlined style={{ color: '#fa8c16', fontSize: 16 }} />
         </div>
         <div>
-          <div style={{ fontWeight: 600, color: '#fa8c16', fontSize: 13 }}>知识库</div>
+          <div style={{ fontWeight: 600, color: '#fa8c16', fontSize: 13 }}>{t('orchNode.knowledge')}</div>
           <div style={{ fontSize: 12, color: 'var(--custom-text)', marginTop: 2 }}>
-            {data?.kbName || '选择知识库'}
+            {data?.kbName || t('orchNode.selectKb')}
           </div>
         </div>
       </div>
@@ -68,7 +70,7 @@ const KnowledgeNode: React.FC<KnowledgeNodeProps> = ({ data, selected }) => {
             lineHeight: 1.4,
           }}
         >
-          查询: {data.query.substring(0, 30)}...
+          {t('orchNode.query')}: {data.query.substring(0, 30)}...
         </div>
       )}
       <Handle

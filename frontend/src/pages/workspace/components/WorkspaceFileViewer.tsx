@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { App, Modal, Typography, Skeleton, Button, Dropdown } from 'antd';
 import { DownloadOutlined, ExportOutlined, EditOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { MarkdownRenderer } from '../../actiontask/components/ConversationExtraction';
 import { workspaceAPI } from '../../../services/api/workspace';
 import OnlyOfficeEditor from '../../../components/OnlyOfficeEditor';
@@ -13,6 +14,7 @@ const { Title } = Typography;
  * 用于查看和编辑工作空间文件内容
  */
 const WorkspaceFileViewer = ({ visible, file, onClose, onSave }: any) => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,7 +30,7 @@ const WorkspaceFileViewer = ({ visible, file, onClose, onSave }: any) => {
         const appDetail = await marketService.getAppDetail('online-office');
         setOnlyOfficeEnabled(appDetail.enabled);
       } catch (error) {
-        console.error('检查OnlyOffice应用状态失败:', error);
+        console.error('Failed to check OnlyOffice app status:', error);
         setOnlyOfficeEnabled(false);
       }
     };
@@ -46,22 +48,22 @@ const WorkspaceFileViewer = ({ visible, file, onClose, onSave }: any) => {
       const data = await workspaceAPI.getWorkspaceFileContent(file.file_path);
       setContent(data.content || '');
     } catch (error) {
-      console.error('加载文件内容失败:', error);
+      console.error('Failed to load file content:', error);
       // 检查是否是二进制文件或不支持的文件类型
       if (error.response && error.response.data && error.response.data.error) {
         const errorMsg = error.response.data.error;
         if (errorMsg.includes('不支持文本预览') || errorMsg.includes('二进制文件')) {
-          setContent('此文件类型不支持预览，请使用下载功能获取文件，或使用在线编辑器编辑（如已配置）。');
+          setContent(t('workspace.viewer.notSupportedContent'));
         } else {
-          setContent(`加载文件内容失败: ${errorMsg}`);
+          setContent(t('workspace.viewer.loadFailedWithReason', { reason: errorMsg }));
         }
       } else {
-        setContent('加载文件内容失败');
+        setContent(t('workspace.viewer.loadFailed'));
       }
     } finally {
       setLoading(false);
     }
-  }, [file]);
+  }, [file, t]);
 
   // 加载图片文件
   const loadImageFile = useCallback(async () => {
@@ -73,7 +75,7 @@ const WorkspaceFileViewer = ({ visible, file, onClose, onSave }: any) => {
       const url = window.URL.createObjectURL(blob);
       setImageUrl(url);
     } catch (error) {
-      console.error('加载图片失败:', error);
+      console.error('Failed to load image:', error);
       setImageUrl(null);
     } finally {
       setLoading(false);
@@ -115,7 +117,7 @@ const WorkspaceFileViewer = ({ visible, file, onClose, onSave }: any) => {
       setEditMode(false);
       if (onSave) onSave();
     } catch (error) {
-      console.error('保存文件失败:', error);
+      console.error('Failed to save file:', error);
     }
   };
 
@@ -133,10 +135,10 @@ const WorkspaceFileViewer = ({ visible, file, onClose, onSave }: any) => {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      message.success('文件下载成功');
+      message.success(t('workspace.viewer.downloadSuccess'));
     } catch (error) {
-      console.error('下载文件失败:', error);
-      message.error('下载文件失败');
+      console.error('Failed to download file:', error);
+      message.error(t('workspace.viewer.downloadFailed'));
     }
   };
 
@@ -159,7 +161,7 @@ const WorkspaceFileViewer = ({ visible, file, onClose, onSave }: any) => {
     if (!file) return;
 
     if (!isOnlyOfficeSupported(file.file_name)) {
-      message.error('该文件类型不支持在线编辑');
+      message.error(t('workspace.viewer.onlineEditNotSupported'));
       return;
     }
 
@@ -174,10 +176,10 @@ const WorkspaceFileViewer = ({ visible, file, onClose, onSave }: any) => {
       const blob = await workspaceAPI.downloadWorkspaceFile(file.file_path);
       const url = window.URL.createObjectURL(blob);
       window.open(url, '_blank');
-      message.success('已在新标签页打开文件');
+      message.success(t('workspace.viewer.openedInNewTab'));
     } catch (error) {
-      console.error('打开文件失败:', error);
-      message.error('打开文件失败');
+      console.error('Failed to open file:', error);
+      message.error(t('workspace.viewer.openFailed'));
     }
   };
 
@@ -187,7 +189,7 @@ const WorkspaceFileViewer = ({ visible, file, onClose, onSave }: any) => {
       title={
         <div>
           <Title level={4} style={{ margin: 0 }}>
-            {file?.file_name || '文件查看器'}
+            {file?.file_name || t('workspace.viewer.title')}
           </Title>
           <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)', marginTop: 4 }}>
             {file?.typeName} • {file?.file_path}
@@ -202,17 +204,17 @@ const WorkspaceFileViewer = ({ visible, file, onClose, onSave }: any) => {
           {editMode ? (
             <>
               <Button key="cancel" onClick={() => setEditMode(false)} style={{ marginRight: 8 }}>
-                取消
+                {t('workspace.viewer.cancel')}
               </Button>
               <Button key="save" type="primary" onClick={handleSave}>
-                保存
+                {t('workspace.viewer.save')}
               </Button>
             </>
           ) : (
             <>
               {!isImageFile(file?.file_name || '') && (
                 <Button key="edit" type="primary" onClick={() => setEditMode(true)} style={{ marginRight: 8 }}>
-                  编辑
+                  {t('workspace.viewer.edit')}
                 </Button>
               )}
               <Dropdown
@@ -220,19 +222,19 @@ const WorkspaceFileViewer = ({ visible, file, onClose, onSave }: any) => {
                   items: [
                     ...(onlyOfficeEnabled && isOnlyOfficeSupported(file?.file_name || '') ? [{
                       key: 'onlyoffice',
-                      label: '在线编辑',
+                      label: t('workspace.viewer.onlineEdit'),
                       icon: <EditOutlined />,
                       onClick: handleOnlyOfficeEdit
                     }] : []),
                     {
                       key: 'download',
-                      label: '下载文件',
+                      label: t('workspace.viewer.download'),
                       icon: <DownloadOutlined />,
                       onClick: handleDownload
                     },
                     {
                       key: 'openInNewTab',
-                      label: '在新标签打开',
+                      label: t('workspace.viewer.openInNewTab'),
                       icon: <ExportOutlined />,
                       onClick: handleOpenInNewTab
                     }
@@ -241,11 +243,11 @@ const WorkspaceFileViewer = ({ visible, file, onClose, onSave }: any) => {
                 trigger={['click']}
               >
                 <Button style={{ marginRight: 8 }}>
-                  操作
+                  {t('workspace.viewer.actions')}
                 </Button>
               </Dropdown>
               <Button key="close" onClick={onClose}>
-                关闭
+                {t('workspace.viewer.close')}
               </Button>
             </>
           )}
@@ -276,7 +278,7 @@ const WorkspaceFileViewer = ({ visible, file, onClose, onSave }: any) => {
               }}
             />
           ) : (
-            <div style={{ color: 'var(--custom-text-secondary)', padding: '40px' }}>图片加载失败</div>
+            <div style={{ color: 'var(--custom-text-secondary)', padding: '40px' }}>{t('workspace.viewer.imageLoadFailed')}</div>
           )}
         </div>
       ) : editMode ? (
@@ -293,7 +295,7 @@ const WorkspaceFileViewer = ({ visible, file, onClose, onSave }: any) => {
             fontSize: '14px',
             resize: 'vertical'
           }}
-          placeholder="请输入文件内容..."
+          placeholder={t('workspace.viewer.contentPlaceholder')}
         />
       ) : (
         <div
@@ -311,7 +313,7 @@ const WorkspaceFileViewer = ({ visible, file, onClose, onSave }: any) => {
             const isMarkdownFile = fileName.toLowerCase().endsWith('.md') || fileName.toLowerCase().endsWith('.markdown');
 
             if (isMarkdownFile) {
-              return <MarkdownRenderer content={content || '文件内容为空'} />;
+              return <MarkdownRenderer content={content || t('workspace.viewer.emptyContent')} />;
             } else {
               // 非markdown文件显示为纯文本
               return (
@@ -323,7 +325,7 @@ const WorkspaceFileViewer = ({ visible, file, onClose, onSave }: any) => {
                   whiteSpace: 'pre-wrap',
                   wordBreak: 'break-word'
                 }}>
-                  {content || '文件内容为空'}
+                  {content || t('workspace.viewer.emptyContent')}
                 </pre>
               );
             }
@@ -339,7 +341,7 @@ const WorkspaceFileViewer = ({ visible, file, onClose, onSave }: any) => {
       onClose={() => setOnlyOfficeVisible(false)}
       onSave={() => {
         setOnlyOfficeVisible(false);
-        message.success('文件保存成功');
+        message.success(t('workspace.viewer.saveSuccess'));
         if (onSave) onSave();
       }}
     />

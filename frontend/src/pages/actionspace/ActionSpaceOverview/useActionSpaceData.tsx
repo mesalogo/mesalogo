@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { App } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
 import { actionTaskAPI } from '../../../services/api/actionTask';
 
@@ -8,6 +9,7 @@ import { actionTaskAPI } from '../../../services/api/actionTask';
  * 负责获取行动空间列表、标签数据等
  */
 export const useActionSpaceData = () => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const [actionSpaces, setActionSpaces] = useState([]);
   const [industryTags, setIndustryTags] = useState([]);
@@ -43,11 +45,11 @@ export const useActionSpaceData = () => {
       
       // 分类标签
       const allTags = tags || [];
-      setIndustryTags(allTags.filter(t => t.type === 'industry'));
-      setScenarioTags(allTags.filter(t => t.type === 'scenario'));
+      setIndustryTags(allTags.filter(tag => tag.type === 'industry'));
+      setScenarioTags(allTags.filter(tag => tag.type === 'scenario'));
     } catch (error) {
-      console.error('获取数据失败:', error);
-      message.error('获取数据失败');
+      console.error('Failed to get data:', error);
+      message.error(t('spaceData.fetchFailed'));
       setActionSpaces([]);
       setIndustryTags([]);
       setScenarioTags([]);

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button, App } from 'antd';
 import { CloseOutlined, FullscreenOutlined } from '@ant-design/icons';
+import i18n from '../../../locales';
 import { marketService } from '../../../services/marketService';
 import { getAppIconWithColor } from '../../../utils/appUtils';
 
@@ -62,24 +63,24 @@ class AppTabManager {
       if (!this.actionSpaceId) {
         // 如果行动空间ID不存在，静默返回空数组，不显示错误信息
         // 这通常发生在组件初始化时，任务数据还未加载完成
-        console.log('AppTabManager: 行动空间ID不存在，等待任务数据加载...');
+        console.log('AppTabManager: action space ID missing, waiting for task data to load...');
         this.enabledApps = [];
         this.notifyListeners();
         return [];
       }
 
-      console.log('AppTabManager: 加载行动空间绑定的应用，space_id:', this.actionSpaceId);
+      console.log('AppTabManager: loading apps bound to action space, space_id:', this.actionSpaceId);
       // 严格按照行动空间绑定关系获取应用
       response = await marketService.getActionSpaceApps(this.actionSpaceId);
-      console.log('AppTabManager: 获取到的绑定应用:', response);
+      console.log('AppTabManager: bound apps received:', response);
 
       this.enabledApps = response.apps || [];
       this.notifyListeners();
       return this.enabledApps;
     } catch (error) {
-      console.error('加载启用应用失败:', error);
+      console.error('Failed to load enabled apps:', error);
       if (this.messageApi) {
-        this.messageApi.error('加载应用列表失败');
+        this.messageApi.error(i18n.t('appTab.loadAppsFailed'));
       }
       return [];
     }
@@ -104,13 +105,13 @@ class AppTabManager {
             const vscodeUrl = `http://localhost:11443/?folder=/config/workspace/ActionTask-${this.taskId}`;
             window.open(vscodeUrl, '_blank');
             if (this.messageApi) {
-              this.messageApi.success(`已在新标签页中启动 ${app.name}`);
+              this.messageApi.success(i18n.t('appTab.launchedInNewTab', { name: app.name }));
             }
           } else {
             // 其他应用使用原有逻辑
             window.open(launchConfig.url, '_blank');
             if (this.messageApi) {
-              this.messageApi.success(`已在新标签页中启动 ${app.name}`);
+              this.messageApi.success(i18n.t('appTab.launchedInNewTab', { name: app.name }));
             }
           }
         } else if (launchConfig.type === 'iframe' || launchConfig.type === 'component') {
@@ -125,19 +126,19 @@ class AppTabManager {
           this.openApps.set(app.id, appInstance);
           this.notifyListeners();
           if (this.messageApi) {
-            this.messageApi.success(`已启动 ${app.name}`);
+            this.messageApi.success(i18n.t('appTab.launched', { name: app.name }));
           }
           return appInstance;
         } else {
           if (this.messageApi) {
-            this.messageApi.warning('应用配置错误，无法启动');
+            this.messageApi.warning(i18n.t('appTab.configError'));
           }
         }
       }
     } catch (error) {
-      console.error('启动应用失败:', error);
+      console.error('Failed to launch app:', error);
       if (this.messageApi) {
-        this.messageApi.error('启动应用失败');
+        this.messageApi.error(i18n.t('appTab.launchFailed'));
       }
     }
     return null;
@@ -150,7 +151,7 @@ class AppTabManager {
       this.openApps.delete(appId);
       this.notifyListeners();
       if (this.messageApi) {
-        this.messageApi.success(`已关闭 ${app.name}`);
+        this.messageApi.success(i18n.t('appTab.closed', { name: app.name }));
       }
 
       // 调用关闭回调
@@ -208,7 +209,7 @@ class AppTabManager {
                   onFullscreenApp(app);
                 }
               }}
-              title="全屏显示"
+              title={i18n.t('appTab.fullscreen')}
             />
             <Button
               type="text"
@@ -227,7 +228,7 @@ class AppTabManager {
                   onCloseApp(app.id);
                 }
               }}
-              title="关闭应用"
+              title={i18n.t('appTab.closeApp')}
             />
           </span>
         ),

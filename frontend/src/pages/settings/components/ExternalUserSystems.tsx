@@ -67,19 +67,19 @@ const ExternalUserSystems: React.FC = () => {
   const getProviderDescription = (providerId: string) => {
     switch (providerId) {
       case 'google':
-        return t('externalUserSystems.googleDesc', 'Google 账号登录');
+        return t('externalUserSystems.googleDesc');
       case 'microsoft':
-        return t('externalUserSystems.microsoftDesc', 'Microsoft 账号登录');
+        return t('externalUserSystems.microsoftDesc');
       case 'apple':
-        return t('externalUserSystems.appleDesc', 'Apple ID 登录');
+        return t('externalUserSystems.appleDesc');
       case 'aws_cognito':
-        return t('externalUserSystems.cognitoDesc', 'AWS Cognito 企业 SSO');
+        return t('externalUserSystems.cognitoDesc');
       case 'oidc':
-        return t('externalUserSystems.oidcDesc', 'OpenID Connect 标准协议');
+        return t('externalUserSystems.oidcDesc');
       case 'oauth2':
-        return t('externalUserSystems.oauth2Desc', 'OAuth 2.0 自定义服务');
+        return t('externalUserSystems.oauth2Desc');
       default:
-        return t('externalUserSystems.customDesc', '自定义登录');
+        return t('externalUserSystems.customDesc');
     }
   };
 
@@ -94,7 +94,7 @@ const ExternalUserSystems: React.FC = () => {
   if (providers.length === 0) {
     return (
       <Empty
-        description={t('externalUserSystems.noProviders', '暂无配置外部登录')}
+        description={t('externalUserSystems.noProviders')}
         style={{ padding: 48 }}
       />
     );

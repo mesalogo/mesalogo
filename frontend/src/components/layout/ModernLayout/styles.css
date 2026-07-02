@@ -8,6 +8,29 @@
   transition: all 0.3s;
 }
 
+/* 右上角操作区：统一控件高度并垂直居中 */
+.modern-header-actions .ant-space-item {
+  display: flex;
+  align-items: center;
+}
+
+.modern-header-actions .ant-btn {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modern-header-actions .ant-select {
+  height: 32px;
+}
+
+.modern-header-actions .ant-select .ant-select-selector {
+  height: 32px !important;
+  display: flex;
+  align-items: center;
+}
+
 /* 全局菜单抽屉 */
 .global-menu-drawer .ant-drawer-body {
   padding: 0;

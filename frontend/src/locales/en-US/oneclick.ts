@@ -119,4 +119,18 @@ export default {
   'oneClick.edit.task.desc': 'Task Description',
   'oneClick.edit.task.descPlaceholder': 'Enter task description',
   'oneClick.edit.task.descRequired': 'Please enter task description',
+
+  // ----- OneClickModal additional strings -----
+  'oneClick.modalTitle': 'One-Click Creation',
+  'oneClick.assistantNotEnabled': 'Assistant generation feature not enabled, please enable in system settings',
+  'oneClick.editBtn': 'Edit',
+  'oneClick.regenerateBtn': 'Regenerate',
+  'oneClick.role.systemPromptLabel': 'System Prompt',
+  'oneClick.actionSpace.nameLabel': 'Space Name',
+  'oneClick.actionSpace.descLabel': 'Space Description',
+  'oneClick.rules.typeLabel': 'Type',
+  'oneClick.rules.contentLabel': 'Content',
+  'oneClick.generateFailedAlert': 'Generation Failed',
+  'oneClick.cancelBtn': 'Cancel',
+  'oneClick.prevBtn': 'Previous',
 };

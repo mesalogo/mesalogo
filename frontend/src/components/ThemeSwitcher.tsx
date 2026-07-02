@@ -24,9 +24,9 @@ export const ThemeDropdown: React.FC = () => {
   const { themeMode, setThemeMode, isDark } = useTheme();
   
   const items = [
-    { key: 'light', label: t('theme.light') || '亮色模式', icon: <SunOutlined /> },
-    { key: 'dark', label: t('theme.dark') || '暗色模式', icon: <MoonOutlined /> },
-    { key: 'system', label: t('theme.system') || '跟随系统', icon: <SettingOutlined /> },
+    { key: 'light', label: t('theme.light'), icon: <SunOutlined /> },
+    { key: 'dark', label: t('theme.dark'), icon: <MoonOutlined /> },
+    { key: 'system', label: t('theme.system'), icon: <SettingOutlined /> },
   ];
 
   return (

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { App } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { roleAPI } from '../../services/api/role';
 import { modelConfigAPI } from '../../services/api/model';
 import capabilityAPI from '../../services/api/capability';
@@ -9,6 +10,7 @@ import { settingsAPI } from '../../services/api/settings';
 import { actionSpaceAPI } from '../../services/api/actionspace';
 
 export const useRoleManagement = () => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   
   const [roles, setRoles] = useState([]);
@@ -47,12 +49,12 @@ export const useRoleManagement = () => {
 
       setRoles(rolesWithDetails);
     } catch (error) {
-      console.error('获取角色列表失败:', error);
-      message.error(`获取角色列表失败: ${error.message || '未知错误'}`);
+      console.error('Failed to fetch role list:', error);
+      message.error(t('roleManagement.fetchRolesFailed', { reason: error.message || t('roleManagement.unknownError') }));
     } finally {
       setLoading(false);
     }
-  }, [message]);
+  }, [message, t]);
 
   const fetchModels = useCallback(async () => {
     try {
@@ -60,12 +62,12 @@ export const useRoleManagement = () => {
       const data = await modelConfigAPI.getAll();
       setModels(data);
     } catch (error) {
-      console.error('获取模型列表失败:', error);
-      message.error(`获取模型列表失败: ${error.message || '未知错误'}`);
+      console.error('Failed to fetch model list:', error);
+      message.error(t('roleManagement.fetchModelsFailed', { reason: error.message || t('roleManagement.unknownError') }));
     } finally {
       setLoadingModels(false);
     }
-  }, [message]);
+  }, [message, t]);
 
   const fetchCapabilities = useCallback(async () => {
     try {
@@ -87,12 +89,12 @@ export const useRoleManagement = () => {
 
       setCapabilities(capsByType);
     } catch (error) {
-      console.error('获取能力列表失败:', error);
-      message.error(`获取能力列表失败: ${error.message || '未知错误'}`);
+      console.error('Failed to fetch capability list:', error);
+      message.error(t('roleManagement.fetchCapabilitiesFailed', { reason: error.message || t('roleManagement.unknownError') }));
     } finally {
       setLoadingCapabilities(false);
     }
-  }, [message]);
+  }, [message, t]);
 
   const fetchAllKnowledges = useCallback(async () => {
     try {
@@ -117,7 +119,7 @@ export const useRoleManagement = () => {
         internalKnowledges = internalKnowledges.map(kb => ({
           ...kb,
           type: 'internal',
-          provider_name: '内部知识库',
+          provider_name: t('roleManagement.internalKnowledgeBaseName'),
           status: 'active'
         }));
 
@@ -144,22 +146,22 @@ export const useRoleManagement = () => {
 
       setAllKnowledges(allKnowledgesData);
     } catch (error) {
-      console.error('获取知识库列表失败:', error);
-      message.error(`获取知识库列表失败: ${error.message || '未知错误'}`);
+      console.error('Failed to fetch knowledge base list:', error);
+      message.error(t('roleManagement.fetchKnowledgesFailed', { reason: error.message || t('roleManagement.unknownError') }));
     } finally {
       setLoadingKnowledges(false);
     }
-  }, [message]);
+  }, [message, t]);
 
   const fetchActionSpaces = useCallback(async () => {
     try {
       const spaces = await actionSpaceAPI.getAll();
       setActionSpaces(spaces);
     } catch (error) {
-      console.error('获取行动空间列表失败:', error);
-      message.error('获取行动空间列表失败');
+      console.error('Failed to fetch action space list:', error);
+      message.error(t('roleManagement.fetchActionSpacesFailed'));
     }
-  }, [message]);
+  }, [message, t]);
 
   const fetchGlobalSettings = useCallback(async () => {
     try {
@@ -170,49 +172,49 @@ export const useRoleManagement = () => {
         assistantGenerationModel: settings.assistantGenerationModel || 'default'
       });
     } catch (error) {
-      console.error('获取全局设置失败:', error);
+      console.error('Failed to fetch global settings:', error);
     }
   }, []);
 
   const createRole = useCallback(async (formData) => {
     try {
       const result = await roleAPI.create(formData);
-      message.success('角色创建成功');
+      message.success(t('roleManagement.createSuccess'));
       return result;
     } catch (error: any) {
-      console.error('创建角色失败:', error);
+      console.error('Failed to create role:', error);
       // 检查是否是配额超限错误
       if (error.response?.status === 403 && error.response?.data?.quota) {
-        message.error(`配额超限：${error.response.data.message || '您的计划已达到智能体数量上限'}`);
+        message.error(t('roleManagement.quotaExceeded', { message: error.response.data.message || t('roleManagement.quotaDefault') }));
       } else {
-        message.error('创建角色失败');
+        message.error(t('roleManagement.createFailed'));
       }
       throw error;
     }
-  }, [message]);
+  }, [message, t]);
 
   const updateRole = useCallback(async (roleId, formData) => {
     try {
       await roleAPI.update(roleId, formData);
-      message.success('角色更新成功');
+      message.success(t('roleManagement.updateSuccess'));
     } catch (error) {
-      console.error('更新角色失败:', error);
-      message.error('更新角色失败');
+      console.error('Failed to update role:', error);
+      message.error(t('roleManagement.updateFailed'));
       throw error;
     }
-  }, [message]);
+  }, [message, t]);
 
   const deleteRole = useCallback(async (roleId) => {
     try {
       await roleAPI.delete(roleId);
-      message.success('角色删除成功');
+      message.success(t('roleManagement.deleteSuccess'));
       await fetchRoles();
     } catch (error) {
-      console.error('删除角色失败:', error);
-      message.error('删除角色失败');
+      console.error('Failed to delete role:', error);
+      message.error(t('roleManagement.deleteFailed'));
       throw error;
     }
-  }, [message, fetchRoles]);
+  }, [message, fetchRoles, t]);
 
   const updateRoleCapabilities = useCallback(async (roleId, capabilitiesMap) => {
     try {
@@ -248,7 +250,7 @@ export const useRoleManagement = () => {
         await fetchRoles();
       }
     } catch (error) {
-      console.error(`更新角色能力关联失败:`, error);
+      console.error('Failed to update role capability association:', error);
       throw error;
     }
   }, [fetchRoles]);
@@ -270,9 +272,9 @@ export const useRoleManagement = () => {
       try {
         await knowledgeAPI.mountToRole(roleId, kbId);
       } catch (error) {
-        console.error(`内部知识库绑定失败: ${kbId}`, error);
+        console.error(`Failed to bind internal knowledge base: ${kbId}`, error);
         hasError = true;
-        errorMessage = error.message || '未知错误';
+        errorMessage = error.message || t('roleManagement.unknownError');
       }
     }
 
@@ -281,9 +283,9 @@ export const useRoleManagement = () => {
       try {
         await externalKnowledgeAPI.bindRoleExternalKnowledge(roleId, kbId);
       } catch (error) {
-        console.error(`外部知识库绑定失败: ${kbId}`, error);
+        console.error(`Failed to bind external knowledge base: ${kbId}`, error);
         hasError = true;
-        errorMessage = error.message || '未知错误';
+        errorMessage = error.message || t('roleManagement.unknownError');
       }
     }
 
@@ -292,9 +294,9 @@ export const useRoleManagement = () => {
       try {
         await knowledgeAPI.unmountFromRole(roleId, kbId);
       } catch (error) {
-        console.error(`内部知识库解绑失败: ${kbId}`, error);
+        console.error(`Failed to unbind internal knowledge base: ${kbId}`, error);
         hasError = true;
-        errorMessage = error.message || '未知错误';
+        errorMessage = error.message || t('roleManagement.unknownError');
       }
     }
 
@@ -303,20 +305,20 @@ export const useRoleManagement = () => {
       try {
         await externalKnowledgeAPI.unbindRoleExternalKnowledge(roleId, kbId);
       } catch (error) {
-        console.error(`外部知识库解绑失败: ${kbId}`, error);
+        console.error(`Failed to unbind external knowledge base: ${kbId}`, error);
         hasError = true;
-        errorMessage = error.message || '未知错误';
+        errorMessage = error.message || t('roleManagement.unknownError');
       }
     }
 
     await fetchRoles();
 
     if (hasError) {
-      message.warning(`部分知识库操作失败: ${errorMessage}`);
+      message.warning(t('roleManagement.partialKnowledgeOpFailed', { reason: errorMessage }));
     } else if (toBindIds.length > 0 || toUnbindIds.length > 0) {
-      message.success('知识库绑定更新成功');
+      message.success(t('roleManagement.knowledgeBindingSuccess'));
     }
-  }, [message, fetchRoles]);
+  }, [message, fetchRoles, t]);
 
   useEffect(() => {
     fetchRoles();

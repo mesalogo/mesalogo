@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Select, Empty, Spin, Typography, Space } from 'antd';
 import { DatabaseOutlined, SearchOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import knowledgeAPI from '../../services/api/knowledge';
 
 const { Text } = Typography;
@@ -16,13 +17,15 @@ const KnowledgeBaseSelector = ({
   value,
   onChange,
   knowledgeBases = [],
-  placeholder = '选择知识库',
+  placeholder,
   disabled = false,
   style = {},
   allowClear = true,
   showSearch = true,
   ...selectProps
 }) => {
+  const { t } = useTranslation();
+  const resolvedPlaceholder = placeholder ?? t('kbSelector.placeholder');
   const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [localKnowledgeBases, setLocalKnowledgeBases] = useState(knowledgeBases);
@@ -88,9 +91,9 @@ const KnowledgeBaseSelector = ({
       image={<DatabaseOutlined style={{ fontSize: 48, color: 'var(--custom-border)' }} />}
       description={
         <Space orientation="vertical">
-          <Text type="secondary">暂无知识库</Text>
+          <Text type="secondary">{t('kbSelector.empty')}</Text>
           <Text type="secondary" style={{ fontSize: '12px' }}>
-            请先创建知识库后再上传文档
+            {t('kbSelector.emptyDesc')}
           </Text>
         </Space>
       }
@@ -102,7 +105,7 @@ const KnowledgeBaseSelector = ({
   if (loading) {
     return (
       <Select
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         disabled={true}
         style={style}
         suffixIcon={<Spin />}
@@ -115,7 +118,7 @@ const KnowledgeBaseSelector = ({
   if (localKnowledgeBases.length === 0) {
     return (
       <Select
-        placeholder="暂无知识库"
+        placeholder={t('kbSelector.empty')}
         disabled={true}
         style={style}
         popupRender={() => renderEmptyState()}
@@ -128,7 +131,7 @@ const KnowledgeBaseSelector = ({
     <Select
       value={value}
       onChange={handleChange}
-      placeholder={placeholder}
+      placeholder={resolvedPlaceholder}
       disabled={disabled}
       style={style}
       allowClear={allowClear}
@@ -148,7 +151,7 @@ const KnowledgeBaseSelector = ({
             image={<SearchOutlined style={{ fontSize: 24, color: 'var(--custom-border)' }} />}
             description={
               <Text type="secondary" style={{ fontSize: '12px' }}>
-                未找到匹配的知识库
+                {t('kbSelector.noMatch')}
               </Text>
             }
             style={{ padding: '10px 0' }}

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { App, Card, Form, Input, Button, Space, Typography, Alert } from 'antd';
 import { SaveOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import knowledgeAPI from '../../../services/api/knowledge';
 
 const { Text } = Typography;
 const { TextArea } = Input;
 
 const BasicSettings = ({ knowledgeId, knowledgeData, onUpdate }) => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const [saving, setSaving] = useState(false);
   const [basicForm] = Form.useForm();
@@ -27,15 +29,15 @@ const BasicSettings = ({ knowledgeId, knowledgeData, onUpdate }) => {
       setSaving(true);
       const response = await knowledgeAPI.update(knowledgeId, values);
       if (response.success) {
-        message.success('保存成功');
+        message.success(t('kbBasic.saveSuccess'));
         if (onUpdate) {
           onUpdate(); // 刷新父组件数据
         }
       } else {
-        message.error('保存失败: ' + response.message);
+        message.error(t('kbBasic.saveFailed', { error: response.message }));
       }
     } catch (error) {
-      message.error('保存失败: ' + error.message);
+      message.error(t('kbBasic.saveFailed', { error: error.message }));
     } finally {
       setSaving(false);
     }
@@ -46,7 +48,7 @@ const BasicSettings = ({ knowledgeId, knowledgeData, onUpdate }) => {
       title={
         <Space>
           <InfoCircleOutlined />
-          <span>基本信息</span>
+          <span>{t('kbBasic.basicInfo')}</span>
         </Space>
       }
       extra={
@@ -56,7 +58,7 @@ const BasicSettings = ({ knowledgeId, knowledgeData, onUpdate }) => {
           loading={saving}
           onClick={() => basicForm.submit()}
         >
-          保存
+          {t('kbBasic.save')}
         </Button>
       }
     >
@@ -67,25 +69,25 @@ const BasicSettings = ({ knowledgeId, knowledgeData, onUpdate }) => {
       >
         <Form.Item
           name="name"
-          label="知识库名称"
+          label={t('kbBasic.name')}
           rules={[
-            { required: true, message: '请输入知识库名称' },
-            { max: 100, message: '名称不能超过100个字符' }
+            { required: true, message: t('kbBasic.nameRequired') },
+            { max: 100, message: t('kbBasic.nameMaxLength') }
           ]}
         >
-          <Input placeholder="请输入知识库名称" />
+          <Input placeholder={t('kbBasic.namePlaceholder')} />
         </Form.Item>
 
         <Form.Item
           name="description"
-          label="描述"
+          label={t('kbBasic.description')}
           rules={[
-            { max: 500, message: '描述不能超过500个字符' }
+            { max: 500, message: t('kbBasic.descriptionMaxLength') }
           ]}
         >
           <TextArea
             rows={4}
-            placeholder="请输入知识库描述（可选）"
+            placeholder={t('kbBasic.descriptionPlaceholder')}
             showCount
             maxLength={500}
           />
@@ -93,15 +95,15 @@ const BasicSettings = ({ knowledgeId, knowledgeData, onUpdate }) => {
 
         {knowledgeData && (
           <Alert
-            message="知识库信息"
+            message={t('kbBasic.kbInfo')}
             description={
               <Space orientation="vertical" style={{ width: '100%' }}>
                 <Text type="secondary">ID: {knowledgeData.id}</Text>
                 <Text type="secondary">
-                  创建时间: {knowledgeData.created_at ? new Date(knowledgeData.created_at).toLocaleString() : '-'}
+                  {t('kbBasic.createdAt', { time: knowledgeData.created_at ? new Date(knowledgeData.created_at).toLocaleString() : '-' })}
                 </Text>
                 <Text type="secondary">
-                  更新时间: {knowledgeData.updated_at ? new Date(knowledgeData.updated_at).toLocaleString() : '-'}
+                  {t('kbBasic.updatedAt', { time: knowledgeData.updated_at ? new Date(knowledgeData.updated_at).toLocaleString() : '-' })}
                 </Text>
               </Space>
             }

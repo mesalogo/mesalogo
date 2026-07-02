@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { App, Modal, Form, Checkbox, Radio, Button, Space, Typography, Divider } from 'antd';
 import { ExportOutlined, FileExcelOutlined, FolderOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { actionTaskAPI } from '../../../services/api/actionTask';
 
 const { Text } = Typography;
@@ -9,6 +10,7 @@ const { Text } = Typography;
  * 导出行动任务数据Modal组件
  */
 const ExportModal = ({ visible, onCancel, task, currentConversationId }) => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -27,7 +29,7 @@ const ExportModal = ({ visible, onCancel, task, currentConversationId }) => {
         include_workspace: values.include_workspace
       };
 
-      console.log('开始导出，选项:', exportOptions);
+      console.log('Starting export, options:', exportOptions);
 
       // 调用导出API
       const response = await actionTaskAPI.exportData(task.id, exportOptions);
@@ -48,12 +50,12 @@ const ExportModal = ({ visible, onCancel, task, currentConversationId }) => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      message.success('导出成功！文件已开始下载');
+      message.success(t('exportModal.success'));
       onCancel();
 
     } catch (error) {
-      console.error('导出失败:', error);
-      message.error('导出失败: ' + (error.response?.data?.error || error.message));
+      console.error('Export failed:', error);
+      message.error(t('exportModal.failed', { error: error.response?.data?.error || error.message }));
     } finally {
       setLoading(false);
     }
@@ -70,14 +72,14 @@ const ExportModal = ({ visible, onCancel, task, currentConversationId }) => {
       title={
         <Space>
           <ExportOutlined />
-          导出行动任务数据
+          {t('exportModal.title')}
         </Space>
       }
       open={visible}
       onCancel={handleCancel}
       footer={[
         <Button key="cancel" onClick={handleCancel}>
-          取消
+          {t('cancel')}
         </Button>,
         <Button
           key="export"
@@ -86,7 +88,7 @@ const ExportModal = ({ visible, onCancel, task, currentConversationId }) => {
           loading={loading}
           onClick={handleExport}
         >
-          开始导出
+          {t('exportModal.start')}
         </Button>
       ]}
       width={500}
@@ -102,21 +104,21 @@ const ExportModal = ({ visible, onCancel, task, currentConversationId }) => {
       >
         <div style={{ marginBottom: 16 }}>
           <Text type="secondary">
-            任务: <Text strong>{task?.title}</Text>
+            {t('exportModal.task')} <Text strong>{task?.title}</Text>
           </Text>
         </div>
 
         <Divider orientationMargin="0">
           <FileExcelOutlined style={{ marginRight: 4 }} />
-          数据内容
+          {t('exportModal.dataContent')}
         </Divider>
 
         <Form.Item name="include_agents" valuePropName="checked">
           <Checkbox>
             <Space>
-              智能体列表
+              {t('exportModal.includeAgents')}
               <Text type="secondary" style={{ fontSize: '12px' }}>
-                (包含智能体基本信息、角色、状态等)
+                {t('exportModal.includeAgentsDesc')}
               </Text>
             </Space>
           </Checkbox>
@@ -124,23 +126,23 @@ const ExportModal = ({ visible, onCancel, task, currentConversationId }) => {
 
         <Form.Item
           name="conversations_scope"
-          label="会话数据范围"
+          label={t('exportModal.conversationsScope')}
         >
           <Radio.Group>
             <Space orientation="vertical">
               <Radio value="all">
                 <Space>
-                  全部会话
+                  {t('exportModal.allConversations')}
                   <Text type="secondary" style={{ fontSize: '12px' }}>
-                    (导出所有会话的消息记录)
+                    {t('exportModal.allConversationsDesc')}
                   </Text>
                 </Space>
               </Radio>
               <Radio value="current" disabled={!currentConversationId}>
                 <Space>
-                  当前会话
+                  {t('exportModal.currentConversation')}
                   <Text type="secondary" style={{ fontSize: '12px' }}>
-                    {currentConversationId ? '(仅导出当前查看的会话)' : '(请先选择一个会话)'}
+                    {currentConversationId ? t('exportModal.currentConversationDesc') : t('exportModal.selectConversationFirst')}
                   </Text>
                 </Space>
               </Radio>
@@ -150,15 +152,15 @@ const ExportModal = ({ visible, onCancel, task, currentConversationId }) => {
 
         <Divider orientationMargin="0">
           <FolderOutlined style={{ marginRight: 4 }} />
-          工作空间文件
+          {t('exportModal.workspaceFiles')}
         </Divider>
 
         <Form.Item name="include_workspace" valuePropName="checked">
           <Checkbox>
             <Space>
-              包含工作空间内容
+              {t('exportModal.includeWorkspace')}
               <Text type="secondary" style={{ fontSize: '12px' }}>
-                (包含任务的所有工作空间文件和目录)
+                {t('exportModal.includeWorkspaceDesc')}
               </Text>
             </Space>
           </Checkbox>
@@ -171,10 +173,10 @@ const ExportModal = ({ visible, onCancel, task, currentConversationId }) => {
           marginTop: '16px'
         }}>
           <Text type="secondary" style={{ fontSize: '12px' }}>
-            <strong>导出说明:</strong><br />
-            • 数据将以Excel格式导出，包含智能体和会话消息两个工作表<br />
-            • 如选择包含工作空间，将一并打包所有相关文件<br />
-            • 最终生成ZIP压缩包供下载
+            <strong>{t('exportModal.notesTitle')}</strong><br />
+            • {t('exportModal.note1')}<br />
+            • {t('exportModal.note2')}<br />
+            • {t('exportModal.note3')}
           </Text>
         </div>
       </Form>

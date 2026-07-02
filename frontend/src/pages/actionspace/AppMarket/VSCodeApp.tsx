@@ -13,6 +13,7 @@ import {
   CodeOutlined,
   InfoCircleOutlined
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 const { Text } = Typography;
 
@@ -20,6 +21,7 @@ const { Text } = Typography;
  * VSCode Server 代码管理应用配置组件
  */
 const VSCodeApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
 
   // 获取启动配置
@@ -49,7 +51,7 @@ const VSCodeApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
         await onConfigChange(newConfig);
       }
     } catch (error) {
-      console.error('保存配置失败:', error);
+      console.error('Failed to save config:', error);
     }
   };
 
@@ -60,8 +62,8 @@ const VSCodeApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
         title={
           <Space>
             <CodeOutlined />
-            <span>VSCode Server - 代码管理配置</span>
-            <Tooltip title="配置在线代码编辑器的访问地址，支持多种编程语言和版本控制">
+            <span>{t('vscodeApp.title')}</span>
+            <Tooltip title={t('vscodeApp.titleTooltip')}>
               <InfoCircleOutlined style={{ color: '#1677ff', cursor: 'pointer' }} />
             </Tooltip>
           </Space>
@@ -72,12 +74,12 @@ const VSCodeApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
           layout="vertical"
           onFinish={handleSaveConfig}
         >
-          <Card title="启动配置">
+          <Card title={t('vscodeApp.launchConfig')}>
             <Form.Item
               name="url"
-              label="访问地址"
-              rules={[{ required: true, message: '请输入访问地址' }]}
-              tooltip="VSCode Server 的访问URL路径"
+              label={t('vscodeApp.accessUrl')}
+              rules={[{ required: true, message: t('vscodeApp.accessUrlRequired') }]}
+              tooltip={t('vscodeApp.accessUrlTooltip')}
             >
               <Input placeholder="/vscode" />
             </Form.Item>
@@ -88,11 +90,11 @@ const VSCodeApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
           <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
             {onClose && (
               <Button onClick={onClose}>
-                关闭
+                {t('vscodeApp.close')}
               </Button>
             )}
             <Button type="primary" htmlType="submit">
-              保存配置
+              {t('vscodeApp.saveConfig')}
             </Button>
           </Space>
         </Form>

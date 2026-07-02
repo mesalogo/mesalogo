@@ -110,101 +110,101 @@ export const PromptTemplateModal = ({
           items={[
             {
               key: 'roleSystemPrompt',
-              label: '角色系统提示词',
+              label: t('promptTemplate.tab.roleSystemPrompt'),
               children: (
                 <Form.Item
                   name="roleSystemPrompt"
-                  label="角色系统提示词生成模板"
-                  extra="可用变量：{{name}} - 角色名称，{{description}} - 角色描述"
+                  label={t('promptTemplate.roleSystemPrompt.label')}
+                  extra={t('promptTemplate.roleSystemPrompt.extra')}
                 >
                   <Input.TextArea
                     rows={12}
-                    placeholder="请输入角色系统提示词生成模板..."
+                    placeholder={t('promptTemplate.roleSystemPrompt.placeholder')}
                   />
                 </Form.Item>
               )
             },
             {
               key: 'actionSpaceBackground',
-              label: '行动空间背景',
+              label: t('promptTemplate.tab.actionSpaceBackground'),
               children: (
                 <Form.Item
                   name="actionSpaceBackground"
-                  label="行动空间背景设定生成模板"
-                  extra="可用变量：{{name}} - 空间名称，{{description}} - 空间描述"
+                  label={t('promptTemplate.actionSpaceBackground.label')}
+                  extra={t('promptTemplate.actionSpaceBackground.extra')}
                 >
                   <Input.TextArea
                     rows={12}
-                    placeholder="请输入行动空间背景设定生成模板..."
+                    placeholder={t('promptTemplate.actionSpaceBackground.placeholder')}
                   />
                 </Form.Item>
               )
             },
             {
               key: 'actionSpaceRules',
-              label: '行动空间规则',
+              label: t('promptTemplate.tab.actionSpaceRules'),
               children: (
                 <Form.Item
                   name="actionSpaceRules"
-                  label="行动空间基本规则生成模板"
-                  extra="可用变量：{{name}} - 空间名称，{{description}} - 空间描述"
+                  label={t('promptTemplate.actionSpaceRules.label')}
+                  extra={t('promptTemplate.actionSpaceRules.extra')}
                 >
                   <Input.TextArea
                     rows={12}
-                    placeholder="请输入行动空间基本规则生成模板..."
+                    placeholder={t('promptTemplate.actionSpaceRules.placeholder')}
                   />
                 </Form.Item>
               )
             },
             {
               key: 'actionTaskDescription',
-              label: '行动任务描述',
+              label: t('promptTemplate.tab.actionTaskDescription'),
               children: (
                 <Form.Item
                   name="actionTaskDescription"
-                  label="行动任务描述生成模板"
-                  extra="可用变量：{{title}} - 任务名称，{{action_space_name}} - 空间名称，{{action_space_description}} - 空间描述，{{roles}} - 参与角色"
+                  label={t('promptTemplate.actionTaskDescription.label')}
+                  extra={t('promptTemplate.actionTaskDescription.extra')}
                 >
                   <Input.TextArea
                     rows={12}
-                    placeholder="请输入行动任务描述生成模板..."
+                    placeholder={t('promptTemplate.actionTaskDescription.placeholder')}
                   />
                 </Form.Item>
               )
             },
             {
               key: 'userMessageExpand',
-              label: '用户消息辅助',
+              label: t('promptTemplate.tab.userMessageExpand'),
               children: (
                 <Form.Item
                   name="userMessageExpand"
-                  label="用户消息辅助生成模板"
-                  extra="可用变量：{{original_message}} - 原始消息，{{action_space_name}} - 空间名称，{{action_space_description}} - 空间描述，{{participant_roles}} - 参与角色，{{assist_mode}} - 辅助模式"
+                  label={t('promptTemplate.userMessageExpand.label')}
+                  extra={t('promptTemplate.userMessageExpand.extra')}
                 >
                   <Input.TextArea
                     rows={12}
-                    placeholder="请输入用户消息辅助生成模板..."
+                    placeholder={t('promptTemplate.userMessageExpand.placeholder')}
                   />
                 </Form.Item>
               )
             },
             {
               key: 'experimentProtocolGeneration',
-              label: '实验协议生成',
+              label: t('promptTemplate.tab.experimentProtocolGeneration'),
               children: (
                 <Space direction="vertical" style={{ width: '100%' }}>
                   <Form.Item
                     name="experimentProtocolGeneration"
-                    label="实验行为协议生成模板"
-                    extra="可用变量：{{experiment_name}} - 实验名称，{{action_space_name}} - 空间名称，{{action_space_description}} - 空间描述，{{roles}} - 参与角色，{{topic}} - 实验主题，{{variables_json}} - 扫描变量JSON，{{objectives_json}} - 目标变量JSON"
+                    label={t('promptTemplate.experimentProtocolGeneration.label')}
+                    extra={t('promptTemplate.experimentProtocolGeneration.extra')}
                   >
                     <Input.TextArea
                       rows={12}
-                      placeholder="请输入实验行为协议生成模板..."
+                      placeholder={t('promptTemplate.experimentProtocolGeneration.placeholder')}
                     />
                   </Form.Item>
                   <Text type="secondary" style={{ fontSize: 12 }}>
-                    此模板用于并行实验室中生成实验行为协议，协议将指导智能体如何根据扫描参数调整行为。
+                    {t('promptTemplate.experimentProtocolGeneration.hint')}
                   </Text>
                 </Space>
               )

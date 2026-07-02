@@ -188,6 +188,30 @@ cd frontend && pnpm dev
 cd abm-docker && make up
 ```
 
+### 6.1 Applying source changes to running containers (更新镜像)
+
+The `frontend` (and `backend`) container runs a **pre-built image**, not a live
+mount. Editing `frontend/src/` alone does **not** affect a running container
+(port 16000/16001) — you must rebuild the image and recreate the container.
+
+```bash
+cd abm-docker
+# 1. Rebuild only the changed image (frontend | backend | all)
+./build-docker-image.sh frontend
+
+# 2. Recreate ONLY that container. Do NOT use bare `docker compose up`:
+#    .env's COMPOSE_FILE chains many services (galapagos needs PLAY_HTTP_SECRET_KEY
+#    and will abort with a "required variable ... missing" error).
+#    Use the core compose file + --no-deps so other services stay untouched:
+docker compose -f docker-compose.yml --profile core up -d --no-deps frontend
+
+# 3. Verify (not just "no crash"):
+docker ps --filter name=abm-frontend --format '{{.Status}}'   # expect: Up (healthy)
+curl -s -o /dev/null -w "HTTP %{http_code}\n" http://localhost:16000/   # expect: 200
+```
+
+Then hard-refresh the browser (Ctrl+Shift+R) to bypass cached assets.
+
 **Done means** (do not declare victory otherwise):
 
 1. `python3 -c "import main"` succeeds (no syntax/import errors).

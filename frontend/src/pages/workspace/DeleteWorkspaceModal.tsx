@@ -1,20 +1,22 @@
 import React from 'react';
 import { Modal } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 /**
  * 删除文件确认对话框组件
  */
 const DeleteWorkspaceModal = ({ visible, onCancel, onConfirm }: any) => {
+  const { t } = useTranslation();
   return (
     <Modal
-      title="确认删除"
+      title={t('deleteWorkspace.title')}
       open={visible}
       onOk={onConfirm}
       onCancel={onCancel}
-      okText="删除"
-      cancelText="取消"
+      okText={t('deleteWorkspace.ok')}
+      cancelText={t('deleteWorkspace.cancel')}
     >
-      <p>确定要删除这条记忆吗？此操作不可撤销。</p>
+      <p>{t('deleteWorkspace.confirmText')}</p>
     </Modal>
   );
 };

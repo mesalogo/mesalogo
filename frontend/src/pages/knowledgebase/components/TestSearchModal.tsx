@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Button, Space, Input, Spin, List, Typography, App } from 'antd';
 import { DownOutlined, RightOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import knowledgeAPI from '../../../services/api/knowledge';
 
 const { Text } = Typography;
@@ -21,6 +22,7 @@ const TestSearchModal = ({
   knowledgeName,
   searchOptions = {}
 }) => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const [testQuery, setTestQuery] = useState('');
   const [testQueryResults, setTestQueryResults] = useState([]);
@@ -38,12 +40,12 @@ const TestSearchModal = ({
   // 处理测试查询
   const handleTestQuery = async () => {
     if (!testQuery.trim()) {
-      message.warning('请输入查询内容');
+      message.warning(t('testSearchModal.enterQuery'));
       return;
     }
 
     if (!knowledgeId) {
-      message.warning('知识库ID无效');
+      message.warning(t('testSearchModal.invalidKnowledgeId'));
       return;
     }
 
@@ -55,7 +57,7 @@ const TestSearchModal = ({
         score_threshold: (searchOptions as any).score_threshold !== undefined ? (searchOptions as any).score_threshold : 0.0
       };
       
-      console.log('搜索选项:', options);
+      console.log('Search options:', options);
       
       const response = await knowledgeAPI.search(knowledgeId, testQuery, options);
       
@@ -64,7 +66,7 @@ const TestSearchModal = ({
         const results = response.data.results || [];
         
         // 添加日志确认排序
-        console.log('搜索结果:', results.map(r => ({
+        console.log('Search results:', results.map(r => ({
           doc: r.document_name,
           score: r.score,
           method: r.search_method
@@ -72,15 +74,15 @@ const TestSearchModal = ({
         
         setTestQueryResults(results);
         if (results.length === 0) {
-          message.info('未找到相关内容');
+          message.info(t('testSearchModal.noRelatedContent'));
         }
       } else {
-        message.error(response.message || '查询失败');
+        message.error(response.message || t('testSearchModal.queryFailed'));
         setTestQueryResults([]);
       }
     } catch (error) {
-      console.error('测试查询失败:', error);
-      message.error('查询失败');
+      console.error('Test query failed:', error);
+      message.error(t('testSearchModal.queryFailed'));
       setTestQueryResults([]);
     } finally {
       setTestQueryLoading(false);
@@ -100,24 +102,24 @@ const TestSearchModal = ({
 
   return (
     <Modal
-      title={`测试查询 - ${knowledgeName || ''}`}
+      title={t('testSearchModal.title', { name: knowledgeName || '' })}
       open={visible}
       onCancel={handleClose}
       width={800}
       footer={[
         <Button key="close" onClick={handleClose}>
-          关闭
+          {t('testSearchModal.close')}
         </Button>
       ]}
       style={{ top: 20 }}
     >
       <Space orientation="vertical" style={{ width: '100%' }} size="large">
         <Input.Search
-          placeholder="输入查询内容..."
+          placeholder={t('testSearchModal.queryPlaceholder')}
           value={testQuery}
           onChange={(e) => setTestQuery(e.target.value)}
           onSearch={handleTestQuery}
-          enterButton="查询"
+          enterButton={t('testSearchModal.queryBtn')}
           size="large"
           loading={testQueryLoading}
         />
@@ -126,7 +128,7 @@ const TestSearchModal = ({
           {testQueryResults.length > 0 ? (
             <div>
               <div style={{ marginBottom: '16px', color: 'var(--custom-text-secondary)' }}>
-                找到 {testQueryResults.length} 个相关结果
+                {t('testSearchModal.resultsCount', { count: testQueryResults.length })}
               </div>
               <List
                 itemLayout="vertical"
@@ -153,36 +155,36 @@ const TestSearchModal = ({
                       <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Space orientation="vertical" size={4}>
                           <Text strong style={{ fontSize: '14px' }}>
-                            {item.document_name || '未知文档'}
+                            {item.document_name || t('testSearchModal.unknownDocument')}
                           </Text>
                           <Text type="secondary" style={{ fontSize: '12px' }}>
-                            分段 #{item.chunk_index !== undefined ? item.chunk_index + 1 : index + 1}
+                            {t('testSearchModal.chunkLabel', { index: item.chunk_index !== undefined ? item.chunk_index + 1 : index + 1 })}
                           </Text>
                         </Space>
                         <Space orientation="vertical" size={0} align="end">
                           {/* 显示Reranker分数（优先级最高） */}
                           {item.rerank_score !== undefined && (
                             <Text strong style={{ fontSize: '13px', color: '#52c41a' }}>
-                              Rerank分数: {(item.rerank_score * 100).toFixed(1)}%
+                              {t('testSearchModal.rerankScore', { value: (item.rerank_score * 100).toFixed(1) })}
                             </Text>
                           )}
                           {/* 显示融合分数或原始分数 */}
                           {item.fusion_score !== undefined && (
                             <Text strong style={{ fontSize: '13px', color: '#1677ff' }}>
-                              {item.rerank_score !== undefined ? '原始' : ''}相似度: {(item.fusion_score * 100).toFixed(1)}%
+                              {t('testSearchModal.similarity', { prefix: item.rerank_score !== undefined ? t('testSearchModal.originalPrefix') : '', value: (item.fusion_score * 100).toFixed(1) })}
                             </Text>
                           )}
                           {item.fusion_score === undefined && item.score !== undefined && (
                             <Text strong style={{ fontSize: '13px', color: '#1677ff' }}>
-                              {item.rerank_score !== undefined ? '原始' : ''}相似度: {(item.score * 100).toFixed(1)}%
+                              {t('testSearchModal.similarity', { prefix: item.rerank_score !== undefined ? t('testSearchModal.originalPrefix') : '', value: (item.score * 100).toFixed(1) })}
                             </Text>
                           )}
                           {/* 显示检索方法标签 */}
                           {item.search_method && (
                             <Text type="secondary" style={{ fontSize: '11px' }}>
-                              {item.search_method === 'hybrid' && '混合检索'}
-                              {item.search_method === 'vector' && '向量检索'}
-                              {item.search_method === 'bm25' && 'BM25检索'}
+                              {item.search_method === 'hybrid' && t('testSearchModal.searchMethod.hybrid')}
+                              {item.search_method === 'vector' && t('testSearchModal.searchMethod.vector')}
+                              {item.search_method === 'bm25' && t('testSearchModal.searchMethod.bm25')}
                               {item.search_method.includes('+Reranker') && item.search_method}
                               {!['hybrid', 'vector', 'bm25'].includes(item.search_method) && !item.search_method.includes('+Reranker') && item.search_method}
                             </Text>
@@ -206,11 +208,10 @@ const TestSearchModal = ({
                         <div style={{ marginTop: '8px', textAlign: 'center' }}>
                           <Button
                             type="link"
-                           
                             onClick={() => toggleExpand(index)}
                             icon={isExpanded ? <DownOutlined /> : <RightOutlined />}
                           >
-                            {isExpanded ? '收起' : '展开'}
+                            {isExpanded ? t('testSearchModal.collapse') : t('testSearchModal.expand')}
                           </Button>
                         </div>
                       )}
@@ -226,7 +227,7 @@ const TestSearchModal = ({
                 padding: '40px',
                 color: 'var(--custom-text-secondary)'
               }}>
-                未找到相关内容
+                {t('testSearchModal.noRelatedContentHint')}
               </div>
             )
           )}
@@ -237,7 +238,7 @@ const TestSearchModal = ({
               padding: '40px',
               color: 'var(--custom-text-secondary)'
             }}>
-              请输入查询内容进行测试
+              {t('testSearchModal.enterQueryHint')}
             </div>
           )}
         </Spin>

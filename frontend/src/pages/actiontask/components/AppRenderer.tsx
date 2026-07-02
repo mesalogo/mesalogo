@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Typography, Modal, Button, Space } from 'antd';
 import { FullscreenExitOutlined } from '@ant-design/icons';
 import { getAppIconWithColor } from '../../../utils/appUtils';
@@ -16,10 +17,11 @@ const { Text } = Typography;
  * @param {Function} onExitFullscreen - 退出全屏回调
  */
 const AppRenderer = ({ app, fullscreen = false, onExitFullscreen = null }: any) => {
+  const { t } = useTranslation();
   if (!app) {
     return (
       <div style={{ textAlign: 'center', padding: '50px 0' }}>
-        <Text type="secondary">应用加载中...</Text>
+        <Text type="secondary">{t('appRenderer.loading')}</Text>
       </div>
     );
   }
@@ -43,7 +45,7 @@ const AppRenderer = ({ app, fullscreen = false, onExitFullscreen = null }: any) 
               <Text type="secondary">{app.name}</Text>
               <br />
               <Text type="secondary" style={{ fontSize: '12px' }}>
-                此应用应在新标签页中打开，如果您看到此页面，请检查应用配置。
+                {t('appRenderer.openInNewTab')}
               </Text>
             </div>
           </div>
@@ -82,7 +84,7 @@ const AppRenderer = ({ app, fullscreen = false, onExitFullscreen = null }: any) 
               icon={<FullscreenExitOutlined />}
               onClick={onExitFullscreen}
             >
-              退出全屏
+              {t('appRenderer.exitFullscreen')}
             </Button>
           </Space>
         }

@@ -305,8 +305,8 @@ export default function useConversationData(task, externalConversations, externa
       setAgentVariables(agentVars);
       console.log('批量获取变量成功，最后更新时间:', batchVariables.lastUpdated);
     } catch (error) {
-      console.error('获取变量失败:', error);
-      message.error('获取环境变量失败: ' + error.message);
+      console.error('Failed to get variables:', error);
+      message.error(t('taskEnv.getVarsFailed', { error: error.message }));
     }
   };
 

@@ -1,12 +1,14 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { PlayCircleOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 interface StartNodeProps {
   selected?: boolean;
 }
 
 const StartNode: React.FC<StartNodeProps> = ({ selected }) => {
+  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -34,7 +36,7 @@ const StartNode: React.FC<StartNodeProps> = ({ selected }) => {
         >
           <PlayCircleOutlined style={{ color: '#fff', fontSize: 14 }} />
         </div>
-        <span style={{ fontWeight: 600, color: '#389e0d', fontSize: 14 }}>开始</span>
+        <span style={{ fontWeight: 600, color: '#389e0d', fontSize: 14 }}>{t('orchNode.start')}</span>
       </div>
       <Handle
         type="source"

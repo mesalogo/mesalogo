@@ -74,7 +74,7 @@ const WorkspaceEditor = ({ value, onChange, onSave, onCancel, showActions = true
           <TextArea
             value={content}
             onChange={(e) => handleContentChange(e.target.value)}
-            placeholder="在此输入项目文件内容（支持Markdown格式）"
+            placeholder={t('wsEditor.contentPlaceholder')}
             style={{
               height: '100%',
               resize: 'none',

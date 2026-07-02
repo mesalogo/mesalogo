@@ -33,14 +33,14 @@ interface ModelConfigAPI {
 export const modelConfigAPI: ModelConfigAPI = {
   // 获取所有模型配置
   getAll: async (includeKeys = false) => {
-    console.log('获取所有模型配置，includeKeys =', includeKeys);
+    console.log('Fetching all model configurations, includeKeys =', includeKeys);
     const response = await api.get(`/model-configs${includeKeys ? '?include_api_keys=true' : ''}`);
     return response.data.model_configs || [];
   },
 
   // 获取单个模型配置
   getById: async (id: string, includeKeys = false) => {
-    console.log('获取单个模型配置，id =', id, 'includeKeys =', includeKeys);
+    console.log('Fetching a single model configuration, id =', id, 'includeKeys =', includeKeys);
     const response = await api.get(`/model-configs/${id}${includeKeys ? '?include_api_keys=true' : ''}`);
     return response.data;
   },
@@ -105,7 +105,7 @@ export const modelConfigAPI: ModelConfigAPI = {
 
       return data;
     } catch (error) {
-      console.error(`测试模型(ID: ${modelId})失败:`, error);
+      console.error(`Failed to test model (ID: ${modelId}):`, error);
       throw error;
     }
   },
@@ -113,7 +113,7 @@ export const modelConfigAPI: ModelConfigAPI = {
   // 测试聊天功能
   chatTest: async (modelId, prompt, systemPrompt = '', parameters = {}) => {
     try {
-      console.log('测试聊天，modelId =', modelId, '提示 =', prompt);
+      console.log('Testing chat, modelId =', modelId, 'prompt =', prompt);
 
       // 尝试通过API测试
       const response = await api.post(`/model-configs/${modelId}/chat-test`, {
@@ -135,14 +135,14 @@ export const modelConfigAPI: ModelConfigAPI = {
       }
 
       // 如果API测试失败，抛出错误
-      throw new Error('API测试失败，无法获取响应');
+      throw new Error('API test failed, no response received');
     } catch (error) {
-      console.error('测试聊天失败:', error);
+      console.error('Chat test failed:', error);
 
       // 返回错误信息
       return {
         success: false,
-        error: error.message || '测试失败，请检查网络连接和模型配置'
+        error: error.message || 'Test failed, please check the network connection and model configuration'
       };
     }
   },
@@ -166,19 +166,19 @@ export const modelConfigAPI: ModelConfigAPI = {
       });
 
       if (response.ok) {
-        return { success: true, corsStatus: "可正常访问" };
+        return { success: true, corsStatus: "Accessible" };
       } else {
-        throw new Error(`HTTP错误: ${response.status}`);
+        throw new Error(`HTTP error: ${response.status}`);
       }
     } catch (error) {
-      return { success: false, corsStatus: "存在CORS限制", error: error.message };
+      return { success: false, corsStatus: "CORS restriction detected", error: error.message };
     }
   },
 
   // 使用SSE测试模型配置
   testModelStream: async (modelId, prompt, onChunkReceived = null, systemPrompt = "You are a helpful assistant.", advancedParams = {}) => {
     try {
-      console.log(`[ModelConfigAPI] 开始SSE流式测试: 模型ID=${modelId}, 提示="${prompt?.substring(0, 30)}..."`);
+      console.log(`[ModelConfigAPI] Starting SSE streaming test: modelId=${modelId}, prompt="${prompt?.substring(0, 30)}..."`);
 
       const url = `${api.defaults.baseURL}/model-configs/${modelId}/test-stream`;
 
@@ -199,7 +199,7 @@ export const modelConfigAPI: ModelConfigAPI = {
         if ((advancedParams as any).stop_sequences !== undefined) (payload as any).stop = (advancedParams as any).stop_sequences;
       }
 
-      console.log('[ModelConfigAPI] 发送请求体:', payload);
+      console.log('[ModelConfigAPI] Sending request body:', payload);
 
       // 发送POST请求，获取SSE流响应
       const response = await fetch(url, {
@@ -212,10 +212,10 @@ export const modelConfigAPI: ModelConfigAPI = {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`流式请求失败(${response.status}): ${errorText}`);
+        throw new Error(`Streaming request failed (${response.status}): ${errorText}`);
       }
 
-      console.log('[ModelConfigAPI] SSE连接已建立, 开始接收数据流');
+      console.log('[ModelConfigAPI] SSE connection established, receiving data stream');
 
       // 读取流
       const reader = response.body.getReader();
@@ -238,7 +238,7 @@ export const modelConfigAPI: ModelConfigAPI = {
 
         // 处理缓冲区中的SSE消息
         const messages = buffer.split('\n\n');
-        buffer = messages.pop() || ''; // 保留最后一个可能不完整的消息
+        buffer = messages.pop() || ''; // Keep the last possibly incomplete message
 
         for (const message of messages) {
           if (!message || message.trim() === '') continue;
@@ -252,7 +252,7 @@ export const modelConfigAPI: ModelConfigAPI = {
 
             // 检查是否为结束标记
             if (dataContent === '[DONE]') {
-              console.log('[ModelConfigAPI] 收到结束标记');
+              console.log('[ModelConfigAPI] Received end marker');
               if (onChunkReceived) {
                 onChunkReceived(null, { connectionStatus: 'done' });
               }
@@ -265,7 +265,7 @@ export const modelConfigAPI: ModelConfigAPI = {
 
               // 处理状态消息
               if (jsonData.status) {
-                console.log(`[ModelConfigAPI] 状态更新: ${jsonData.status}`);
+                console.log(`[ModelConfigAPI] Status update: ${jsonData.status}`);
                 if (onChunkReceived) {
                   onChunkReceived(null, {
                     connectionStatus: jsonData.status,
@@ -277,7 +277,7 @@ export const modelConfigAPI: ModelConfigAPI = {
 
               // 处理错误消息
               if (jsonData.error) {
-                console.error(`[ModelConfigAPI] 错误: ${jsonData.error}`);
+                console.error(`[ModelConfigAPI] Error: ${jsonData.error}`);
                 if (onChunkReceived) {
                   onChunkReceived(null, {
                     connectionStatus: 'error',
@@ -292,7 +292,7 @@ export const modelConfigAPI: ModelConfigAPI = {
                 const content = jsonData.choices[0].delta.content;
                 // 过滤掉null、undefined和'null'字符串，但允许空字符串
                 if (onChunkReceived && content !== null && content !== undefined && content !== 'null' && content !== 'undefined') {
-                  console.log(`[ModelConfigAPI] 收到内容块: "${content.substring(0, 30)}${content.length > 30 ? '...' : ''}" (${content.length}字符)`);
+                  console.log(`[ModelConfigAPI] Received content chunk: "${content.substring(0, 30)}${content.length > 30 ? '...' : ''}" (${content.length} chars)`);
 
                   // 更新全部响应
                   fullResponse += content;
@@ -306,17 +306,17 @@ export const modelConfigAPI: ModelConfigAPI = {
               if (e.message && !e.message.includes('JSON')) {
                 throw e;
               }
-              console.error(`[ModelConfigAPI] 解析SSE数据错误: ${e.message}`, dataContent);
+              console.error(`[ModelConfigAPI] Failed to parse SSE data: ${e.message}`, dataContent);
             }
           }
         }
       }
 
-      console.log(`[ModelConfigAPI] SSE流结束，总响应长度: ${fullResponse.length}`);
+      console.log(`[ModelConfigAPI] SSE stream ended, total response length: ${fullResponse.length}`);
       return { success: true, response: fullResponse };
 
     } catch (error) {
-      console.error('[ModelConfigAPI] 测试模型流异常:', error);
+      console.error('[ModelConfigAPI] Model stream test error:', error);
       if (onChunkReceived) {
         onChunkReceived(null, {
           connectionStatus: 'error',
@@ -330,11 +330,11 @@ export const modelConfigAPI: ModelConfigAPI = {
   // 获取单个模型配置详情
   getModelById: async (modelId) => {
     try {
-      console.log(`[ModelConfigAPI] 获取模型配置详情: ID=${modelId}`);
+      console.log(`[ModelConfigAPI] Fetching model configuration details: ID=${modelId}`);
       const response = await api.get(`/model-configs/${modelId}`);
       return response.data;
     } catch (error) {
-      console.error(`[ModelConfigAPI] 获取模型配置详情失败: ${error.message}`);
+      console.error(`[ModelConfigAPI] Failed to fetch model configuration details: ${error.message}`);
       throw error;
     }
   },
@@ -342,14 +342,14 @@ export const modelConfigAPI: ModelConfigAPI = {
   // 获取GPUStack模型列表
   fetchGpustackModels: async (baseUrl, apiKey) => {
     try {
-      console.log(`[ModelConfigAPI] 获取GPUStack模型列表: baseUrl=${baseUrl}`);
+      console.log(`[ModelConfigAPI] Fetching GPUStack model list: baseUrl=${baseUrl}`);
       const response = await api.post('/model-configs/gpustack/models', {
         base_url: baseUrl,
         api_key: apiKey
       });
       return response.data;
     } catch (error) {
-      console.error(`[ModelConfigAPI] 获取GPUStack模型列表失败: ${error.message}`);
+      console.error(`[ModelConfigAPI] Failed to fetch GPUStack model list: ${error.message}`);
       throw error;
     }
   },
@@ -357,13 +357,13 @@ export const modelConfigAPI: ModelConfigAPI = {
   // 获取Ollama模型列表
   fetchOllamaModels: async (baseUrl) => {
     try {
-      console.log(`[ModelConfigAPI] 获取Ollama模型列表: baseUrl=${baseUrl}`);
+      console.log(`[ModelConfigAPI] Fetching Ollama model list: baseUrl=${baseUrl}`);
       const response = await api.post('/model-configs/ollama/models', {
         base_url: baseUrl
       });
       return response.data;
     } catch (error) {
-      console.error(`[ModelConfigAPI] 获取Ollama模型列表失败: ${error.message}`);
+      console.error(`[ModelConfigAPI] Failed to fetch Ollama model list: ${error.message}`);
       throw error;
     }
   },
@@ -371,14 +371,14 @@ export const modelConfigAPI: ModelConfigAPI = {
   // 获取Anthropic模型列表
   fetchAnthropicModels: async (baseUrl, apiKey) => {
     try {
-      console.log(`[ModelConfigAPI] 获取Anthropic模型列表: baseUrl=${baseUrl}`);
+      console.log(`[ModelConfigAPI] Fetching Anthropic model list: baseUrl=${baseUrl}`);
       const response = await api.post('/model-configs/anthropic/models', {
         base_url: baseUrl,
         api_key: apiKey
       });
       return response.data;
     } catch (error) {
-      console.error(`[ModelConfigAPI] 获取Anthropic模型列表失败: ${error.message}`);
+      console.error(`[ModelConfigAPI] Failed to fetch Anthropic model list: ${error.message}`);
       throw error;
     }
   },
@@ -386,14 +386,14 @@ export const modelConfigAPI: ModelConfigAPI = {
   // 获取Google模型列表
   fetchGoogleModels: async (baseUrl, apiKey) => {
     try {
-      console.log(`[ModelConfigAPI] 获取Google模型列表: baseUrl=${baseUrl}`);
+      console.log(`[ModelConfigAPI] Fetching Google model list: baseUrl=${baseUrl}`);
       const response = await api.post('/model-configs/google/models', {
         base_url: baseUrl,
         api_key: apiKey
       });
       return response.data;
     } catch (error) {
-      console.error(`[ModelConfigAPI] 获取Google模型列表失败: ${error.message}`);
+      console.error(`[ModelConfigAPI] Failed to fetch Google model list: ${error.message}`);
       throw error;
     }
   },
@@ -401,14 +401,14 @@ export const modelConfigAPI: ModelConfigAPI = {
   // 获取X.ai模型列表
   fetchXaiModels: async (baseUrl, apiKey) => {
     try {
-      console.log(`[ModelConfigAPI] 获取X.ai模型列表: baseUrl=${baseUrl}`);
+      console.log(`[ModelConfigAPI] Fetching X.ai model list: baseUrl=${baseUrl}`);
       const response = await api.post('/model-configs/xai/models', {
         base_url: baseUrl,
         api_key: apiKey
       });
       return response.data;
     } catch (error) {
-      console.error(`[ModelConfigAPI] 获取X.ai模型列表失败: ${error.message}`);
+      console.error(`[ModelConfigAPI] Failed to fetch X.ai model list: ${error.message}`);
       throw error;
     }
   },
@@ -416,7 +416,7 @@ export const modelConfigAPI: ModelConfigAPI = {
   // 测试模型服务连接
   testConnection: async (baseUrl, provider, apiKey = '') => {
     try {
-      console.log(`[ModelConfigAPI] 测试连接: baseUrl=${baseUrl}, provider=${provider}`);
+      console.log(`[ModelConfigAPI] Testing connection: baseUrl=${baseUrl}, provider=${provider}`);
       const response = await api.post('/model-configs/test-connection', {
         base_url: baseUrl,
         provider: provider,
@@ -424,7 +424,7 @@ export const modelConfigAPI: ModelConfigAPI = {
       });
       return response.data;
     } catch (error) {
-      console.error(`[ModelConfigAPI] 连接测试失败: ${error.message}`);
+      console.error(`[ModelConfigAPI] Connection test failed: ${error.message}`);
       throw error;
     }
   }

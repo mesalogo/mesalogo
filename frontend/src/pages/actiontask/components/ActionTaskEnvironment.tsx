@@ -76,14 +76,14 @@ const ActionTaskEnvironment = ({ task, showGlobalOnly = false, onVariablesChange
   const handleSaveVariable = async (variableName) => {
     try {
       await actionTaskAPI.updateEnvironmentVariable(task.id, variableName, editingValue);
-      message.success('环境变量更新成功');
+      message.success(t('taskEnv.updateSuccess'));
       setEditingVariable(null);
       setEditingValue('');
       if (onVariablesChange) {
         onVariablesChange();
       }
     } catch (error) {
-      message.error('环境变量更新失败: ' + error.message);
+      message.error(t('taskEnv.updateFailed', { error: error.message }));
     }
   };
 
@@ -97,13 +97,13 @@ const ActionTaskEnvironment = ({ task, showGlobalOnly = false, onVariablesChange
   const handleDeleteVariable = async (variableName) => {
     try {
       await actionTaskAPI.deleteEnvironmentVariable(task.id, variableName);
-      message.success('环境变量删除成功');
+      message.success(t('taskEnv.deleteSuccess'));
       setPopconfirmOpen(null);
       if (onVariablesChange) {
         onVariablesChange();
       }
     } catch (error) {
-      message.error('环境变量删除失败: ' + error.message);
+      message.error(t('taskEnv.deleteFailed', { error: error.message }));
     }
   };
 
@@ -224,7 +224,7 @@ const ActionTaskEnvironment = ({ task, showGlobalOnly = false, onVariablesChange
                   onClick={() => handleEditVariable(record.name, value)}
                 />
                 <Popconfirm
-                  title="确认删除此环境变量？"
+                  title={t('taskEnv.confirmDelete')}
                   onConfirm={() => handleDeleteVariable(record.name)}
                   onOpenChange={(open) => {
                     if (open) {
@@ -234,8 +234,8 @@ const ActionTaskEnvironment = ({ task, showGlobalOnly = false, onVariablesChange
                       setHoveredVariable(null);
                     }
                   }}
-                  okText="删除"
-                  cancelText="取消"
+                  okText={t('taskEnv.delete')}
+                  cancelText={t('taskEnv.cancel')}
                 >
                   <Button
                     color="danger"

@@ -8,6 +8,7 @@ import {
   PlusOutlined, DeleteOutlined,
   ExpandAltOutlined, LinkOutlined
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { actionSpaceAPI } from '../../services/api/actionspace';
 import api from '../../services/api/axios';
 
@@ -19,6 +20,7 @@ const { Panel } = Collapse;
  * 用于管理行动空间与规则集的关联关系
  */
 const RuleSetAssociation = ({ actionSpaceId }: any) => {
+  const { t } = useTranslation();
   const [ruleSets, setRuleSets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedRuleSets, setExpandedRuleSets] = useState({});
@@ -36,8 +38,8 @@ const RuleSetAssociation = ({ actionSpaceId }: any) => {
       const data = await actionSpaceAPI.getRuleSetsStats(actionSpaceId);
       setRuleSets(data || []);
     } catch (error) {
-      console.error('获取规则集失败:', error);
-      message.error('获取规则集失败');
+      console.error('Failed to fetch rule sets:', error);
+      message.error(t('ruleSetAssoc.fetchFailed'));
     } finally {
       setLoading(false);
     }
@@ -52,8 +54,8 @@ const RuleSetAssociation = ({ actionSpaceId }: any) => {
       const available = allRuleSets.filter(rs => !currentRuleSetIds.includes(rs.id));
       setAvailableRuleSets(available);
     } catch (error) {
-      console.error('获取可关联的规则集失败:', error);
-      message.error('获取可关联的规则集失败');
+      console.error('Failed to fetch associable rule sets:', error);
+      message.error(t('ruleSetAssoc.fetchAvailableFailed'));
     }
   };
 
@@ -66,8 +68,8 @@ const RuleSetAssociation = ({ actionSpaceId }: any) => {
       const rules = await actionSpaceAPI.getRuleSetRules(actionSpaceId, ruleSetId);
       setRulesData(prev => ({ ...prev, [ruleSetId]: rules }));
     } catch (error) {
-      console.error(`获取规则集${ruleSetId}的规则失败:`, error);
-      message.error(`获取规则集规则失败`);
+      console.error(`Failed to fetch rules for rule set ${ruleSetId}:`, error);
+      message.error(t('ruleSetAssoc.fetchRulesFailed'));
     } finally {
       setRulesLoading(prev => ({ ...prev, [ruleSetId]: false }));
     }
@@ -78,29 +80,29 @@ const RuleSetAssociation = ({ actionSpaceId }: any) => {
     try {
       // 发送关联请求
       await api.post(`/action-spaces/${actionSpaceId}/rule-sets/${ruleSetId}/associate`);
-      message.success('规则集关联成功');
+      message.success(t('ruleSetAssoc.associateSuccess'));
       setAssociateModalVisible(false);
       fetchRuleSets(); // 刷新规则集列表
     } catch (error) {
-      console.error('关联规则集失败:', error);
-      message.error('关联规则集失败');
+      console.error('Failed to associate rule set:', error);
+      message.error(t('ruleSetAssoc.associateFailed'));
     }
   };
 
   // 解除规则集关联
   const handleDisassociateRuleSet = async (ruleSetId) => {
     Modal.confirm({
-      title: '确认解除关联',
-      content: '确定要解除与该规则集的关联吗？此操作不会删除规则集。',
+      title: t('ruleSetAssoc.disassociateConfirmTitle'),
+      content: t('ruleSetAssoc.disassociateConfirmContent'),
       onOk: async () => {
         try {
           // 发送解除关联请求
           await api.delete(`/action-spaces/${actionSpaceId}/rule-sets/${ruleSetId}`);
-          message.success('规则集关联已解除');
+          message.success(t('ruleSetAssoc.disassociateSuccess'));
           fetchRuleSets(); // 刷新规则集列表
         } catch (error) {
-          console.error('解除规则集关联失败:', error);
-          message.error('解除规则集关联失败');
+          console.error('Failed to unassociate rule set:', error);
+          message.error(t('ruleSetAssoc.disassociateFailed'));
         }
       }
     });
@@ -139,39 +141,39 @@ const RuleSetAssociation = ({ actionSpaceId }: any) => {
     if (isLoading) {
       return (
         <Spin spinning={true}>
-          <div style={{ padding: '20px', textAlign: 'center' }}>加载规则中...</div>
+          <div style={{ padding: '20px', textAlign: 'center' }}>{t('ruleSetAssoc.loadingRules')}</div>
         </Spin>
       );
     }
 
     if (rules.length === 0) {
-      return <Empty description="暂无规则" />;
+      return <Empty description={t('ruleSetAssoc.noRules')} />;
     }
 
     const columns = [
       {
-        title: '规则名称',
+        title: t('ruleSetAssoc.col.ruleName'),
         dataIndex: 'name',
         key: 'name',
       },
       {
-        title: '类型',
+        title: t('ruleSetAssoc.col.type'),
         dataIndex: 'type',
         key: 'type',
         render: (type) => (
           <Tag color={type === 'llm' ? 'green' : 'blue'}>
-            {type === 'llm' ? '自然语言规则' : '逻辑规则'}
+            {type === 'llm' ? t('ruleSetAssoc.ruleType.llm') : t('ruleSetAssoc.ruleType.logic')}
           </Tag>
         )
       },
       {
-        title: '描述',
+        title: t('ruleSetAssoc.col.description'),
         dataIndex: 'description',
         key: 'description',
         ellipsis: true,
       },
       {
-        title: '优先级',
+        title: t('ruleSetAssoc.col.priority'),
         dataIndex: 'priority',
         key: 'priority',
       }
@@ -192,23 +194,23 @@ const RuleSetAssociation = ({ actionSpaceId }: any) => {
   const renderAssociateRuleSetList = () => {
     const columns = [
       {
-        title: '规则集名称',
+        title: t('ruleSetAssoc.col.ruleSetName'),
         dataIndex: 'name',
         key: 'name',
       },
       {
-        title: '描述',
+        title: t('ruleSetAssoc.col.description'),
         dataIndex: 'description',
         key: 'description',
         ellipsis: true,
       },
       {
-        title: '规则数量',
+        title: t('ruleSetAssoc.col.ruleCount'),
         dataIndex: 'rule_count',
         key: 'rule_count',
       },
       {
-        title: '操作',
+        title: t('ruleSetAssoc.col.actions'),
         key: 'action',
         render: (_, record) => (
           <Button
@@ -216,7 +218,7 @@ const RuleSetAssociation = ({ actionSpaceId }: any) => {
             icon={<LinkOutlined />}
             onClick={() => handleAssociateRuleSet(record.id)}
           >
-            关联
+            {t('ruleSetAssoc.action.associate')}
           </Button>
         )
       }
@@ -234,25 +236,25 @@ const RuleSetAssociation = ({ actionSpaceId }: any) => {
 
   return (
     <Card
-      title="规则关联"
+      title={t('ruleSetAssoc.cardTitle')}
       extra={
         <Button
           type="primary"
           icon={<LinkOutlined />}
           onClick={showAssociateModal}
         >
-          关联规则集
+          {t('ruleSetAssoc.associateRuleSet')}
         </Button>
       }
     >
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px 0' }}>
           <Spin spinning={true}>
-            <div style={{ padding: '50px', textAlign: 'center' }}>加载规则集中...</div>
+            <div style={{ padding: '50px', textAlign: 'center' }}>{t('ruleSetAssoc.loadingRuleSets')}</div>
           </Spin>
         </div>
       ) : ruleSets.length === 0 ? (
-        <Empty description="暂无关联的规则集" />
+        <Empty description={t('ruleSetAssoc.noAssociatedRuleSets')} />
       ) : (
         ruleSets.map(ruleSet => (
           <Card
@@ -268,7 +270,7 @@ const RuleSetAssociation = ({ actionSpaceId }: any) => {
               </div>
             }
             extra={
-              <Tooltip title="解除关联">
+              <Tooltip title={t('ruleSetAssoc.action.unassociate')}>
                 <Button
                   danger
                   type="text"
@@ -281,7 +283,7 @@ const RuleSetAssociation = ({ actionSpaceId }: any) => {
           >
             <Paragraph ellipsis={{ rows: 2 }}>{ruleSet.description}</Paragraph>
             <div>
-              <Text>规则数量: </Text>
+              <Text>{t('ruleSetAssoc.ruleCountLabel')}</Text>
               <Text strong>{ruleSet.rule_count || 0}</Text>
             </div>
 
@@ -296,7 +298,7 @@ const RuleSetAssociation = ({ actionSpaceId }: any) => {
 
       {/* 关联规则集对话框 */}
       <Modal
-        title="关联规则集"
+        title={t('ruleSetAssoc.associateModalTitle')}
         open={associateModalVisible}
         onCancel={() => setAssociateModalVisible(false)}
         footer={null}

@@ -1,15 +1,15 @@
 import api from './axios';
 
-// 模拟角色数据
+// Mock role data (fallback when API is unavailable)
 const mockRoles = [
-  { id: 'role-001', name: '战略分析专家', description: '擅长市场趋势分析和战略规划', model_id: 'gpt-4', prompt_template: '你是一位战略分析专家...' },
-  { id: 'role-002', name: '财务专家', description: '专注于财务分析和资源分配优化', model_id: 'gpt-4', prompt_template: '你是一位财务专家...' },
-  { id: 'role-003', name: '市场营销专家', description: '擅长市场营销策略和竞争分析', model_id: 'gpt-4', prompt_template: '你是一位市场营销专家...' },
-  { id: 'role-004', name: '运营专家', description: '专注于企业运营优化和效率提升', model_id: 'gpt-4', prompt_template: '你是一位运营专家...' },
-  { id: 'role-005', name: '法律顾问', description: '专注于法律分析和风险评估', model_id: 'gpt-4', prompt_template: '你是一位法律顾问...' },
-  { id: 'role-006', name: '教育专家', description: '擅长教育方案设计和学习路径规划', model_id: 'gpt-4', prompt_template: '你是一位教育专家...' },
-  { id: 'role-007', name: '农业专家', description: '专注于农业生产优化和资源管理', model_id: 'gpt-4', prompt_template: '你是一位农业专家...' },
-  { id: 'role-008', name: '医疗顾问', description: '擅长医疗诊断和治疗方案制定', model_id: 'gpt-4', prompt_template: '你是一位医疗顾问...' }
+  { id: 'role-001', name: 'Strategy Analyst', description: 'Specializes in market trend analysis and strategic planning', model_id: 'gpt-4', prompt_template: 'You are a strategy analyst...' },
+  { id: 'role-002', name: 'Finance Expert', description: 'Focuses on financial analysis and resource allocation optimization', model_id: 'gpt-4', prompt_template: 'You are a finance expert...' },
+  { id: 'role-003', name: 'Marketing Expert', description: 'Specializes in marketing strategy and competitive analysis', model_id: 'gpt-4', prompt_template: 'You are a marketing expert...' },
+  { id: 'role-004', name: 'Operations Expert', description: 'Focuses on enterprise operations optimization and efficiency improvement', model_id: 'gpt-4', prompt_template: 'You are an operations expert...' },
+  { id: 'role-005', name: 'Legal Advisor', description: 'Focuses on legal analysis and risk assessment', model_id: 'gpt-4', prompt_template: 'You are a legal advisor...' },
+  { id: 'role-006', name: 'Education Expert', description: 'Specializes in education program design and learning path planning', model_id: 'gpt-4', prompt_template: 'You are an education expert...' },
+  { id: 'role-007', name: 'Agriculture Expert', description: 'Focuses on agricultural production optimization and resource management', model_id: 'gpt-4', prompt_template: 'You are an agriculture expert...' },
+  { id: 'role-008', name: 'Medical Advisor', description: 'Specializes in medical diagnosis and treatment planning', model_id: 'gpt-4', prompt_template: 'You are a medical advisor...' }
 ];
 
 /**
@@ -32,7 +32,7 @@ export const roleAPI = {
       const response = await api.get(url);
       return response.data.roles;
     } catch (error) {
-      console.warn('获取角色失败，使用模拟数据', error);
+      console.warn('Failed to get roles, using mock data', error);
       return mockRoles;
     }
   },
@@ -43,7 +43,7 @@ export const roleAPI = {
       const response = await api.get('/roles/with-details');
       return response.data;
     } catch (error) {
-      console.error('获取角色详细信息失败:', error);
+      console.error('Failed to get role details:', error);
       // 如果新API失败，回退到原有方式
       const roles = await roleAPI.getAll();
       return roles.map(role => ({
@@ -62,7 +62,7 @@ export const roleAPI = {
       const response = await api.get('/roles/knowledge-bindings');
       return response.data;
     } catch (error) {
-      console.error('获取角色知识库绑定关系失败:', error);
+      console.error('Failed to get role knowledge bindings:', error);
       throw error;
     }
   },
@@ -73,7 +73,7 @@ export const roleAPI = {
       // 复用getAll方法
       return await roleAPI.getAll();
     } catch (error) {
-      console.error('获取可用角色失败:', error);
+      console.error('Failed to get available roles:', error);
       throw error;
     }
   },
@@ -84,7 +84,7 @@ export const roleAPI = {
       const response = await api.get(`/roles/${id}`);
       return response.data;
     } catch (error) {
-      console.warn(`获取角色${id}失败，使用模拟数据`, error);
+      console.warn(`Failed to get role ${id}, using mock data`, error);
       return mockRoles.find(role => role.id === id) || null;
     }
   },
@@ -104,17 +104,17 @@ export const roleAPI = {
     if (apiData.source !== 'external') {
       // 检查关键字段是否存在
       if (apiData.temperature === undefined) {
-        console.warn('警告: temperature字段缺失，使用默认值0.7');
+        console.warn('Warning: temperature field missing, using default value 0.7');
         apiData.temperature = 0.7;
       }
     }
 
     // 检查并记录所有字段
-    console.log('更新角色请求数据 - ID:', id);
-    console.log('更新角色请求数据 - 完整数据:', JSON.stringify(apiData, null, 2));
+    console.log('Update role request data - ID:', id);
+    console.log('Update role request data - full data:', JSON.stringify(apiData, null, 2));
 
     if (apiData.source === 'external') {
-      console.log('更新外部角色请求数据 - 字段检查:', {
+      console.log('Update external role request data - field check:', {
         name: apiData.name ? '✓' : '✗',
         description: apiData.description ? '✓' : '✗',
         source: apiData.source ? '✓' : '✗',
@@ -122,7 +122,7 @@ export const roleAPI = {
         external_config: apiData.external_config ? '✓' : '✗'
       });
     } else {
-      console.log('更新内部角色请求数据 - 字段检查:', {
+      console.log('Update internal role request data - field check:', {
         name: apiData.name ? '✓' : '✗',
         model: apiData.model ? '✓' : '✗',
         system_prompt: apiData.system_prompt ? '✓' : '✗',
@@ -149,23 +149,23 @@ export const roleAPI = {
   getModelConfigs: async () => {
     try {
       // 优先使用完整的模型配置API获取详细信息
-      console.log('尝试从完整的模型配置API获取数据...');
+      console.log('Trying to get data from full model config API...');
       const completeResponse = await api.get('/model-configs');
-      console.log('成功获取完整模型配置:', completeResponse.data.model_configs);
+      console.log('Successfully got full model config:', completeResponse.data.model_configs);
       return completeResponse.data.model_configs;
     } catch (modelConfigError) {
-      console.warn('无法从模型配置API获取数据，尝试使用角色API获取模型配置:', modelConfigError);
+      console.warn('Cannot get data from model config API, trying role API for model config:', modelConfigError);
 
       try {
         // 回退到使用角色API
         const response = await api.get('/roles/model-configs');
-        console.log('从角色API获取到的模型配置:', response.data.model_configs);
+        console.log('Model config obtained from role API:', response.data.model_configs);
         return response.data.model_configs;
       } catch (error) {
-        console.warn('获取模型配置失败，使用模拟数据', error);
+        console.warn('Failed to get model config, using mock data', error);
         return [
-          { id: 'gpt-4', name: 'GPT-4', description: '强大的大语言模型' },
-          { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', description: '平衡性能与成本的模型' }
+          { id: 'gpt-4', name: 'GPT-4', description: 'Powerful large language model' },
+          { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', description: 'Model balancing performance and cost' }
         ];
       }
     }
@@ -178,7 +178,7 @@ export const roleAPI = {
       ...advancedParams // 添加高级参数
     };
 
-    console.log(`测试角色 ${roleId} 请求数据:`, data);
+    console.log(`Test role ${roleId} request data:`, data);
     const response = await api.post(`/roles/${roleId}/test`, data);
     return response.data;
   },
@@ -189,7 +189,7 @@ export const roleAPI = {
       const response = await api.get('/roles/predefined');
       return response.data.predefined_roles || [];
     } catch (error) {
-      console.warn('获取预定义角色失败，使用模拟数据', error);
+      console.warn('Failed to get predefined roles, using mock data', error);
       return mockRoles;
     }
   },
@@ -206,7 +206,7 @@ export const roleAPI = {
       const response = await api.get(`/roles/most-used?limit=${limit}`);
       return response.data.roles || [];
     } catch (error) {
-      console.warn('获取常用角色失败，使用模拟数据', error);
+      console.warn('Failed to get most-used roles, using mock data', error);
       return mockRoles.slice(0, limit);
     }
   },
@@ -217,7 +217,7 @@ export const roleAPI = {
       const response = await api.get(`/roles/recent?limit=${limit}`);
       return response.data.roles || [];
     } catch (error) {
-      console.warn('获取最近角色失败，使用模拟数据', error);
+      console.warn('Failed to get recent roles, using mock data', error);
       return mockRoles.slice(0, limit);
     }
   },
@@ -234,7 +234,7 @@ export const roleAPI = {
       const response = await api.get(`/action-spaces/${actionSpaceId}/roles/${roleId}/environment-variables`);
       return response.data.environment_variables || [];
     } catch (error) {
-      console.warn(`获取角色${roleId}的变量失败:`, error);
+      console.warn(`Failed to get variables for role ${roleId}:`, error);
 
       // 如果API不存在，返回空数组
       return [];
@@ -247,11 +247,11 @@ export const roleAPI = {
       // 确保数据格式与后端一致
       const apiData = { ...variableData };
 
-      console.log(`发送到API的角色变量数据:`, apiData);
+      console.log('Role variable data sent to API:', apiData);
       const response = await api.post(`/action-spaces/${actionSpaceId}/roles/${roleId}/environment-variables`, apiData);
       return response.data;
     } catch (error) {
-      console.error(`为角色${roleId}创建变量失败:`, error);
+      console.error(`Failed to create variable for role ${roleId}:`, error);
 
       // 如果API未实现，模拟创建
       const mockResponse = {
@@ -271,7 +271,7 @@ export const roleAPI = {
       const response = await api.put(`/action-spaces/${actionSpaceId}/roles/${roleId}/environment-variables/${variableId}`, apiData);
       return response.data;
     } catch (error) {
-      console.error(`更新角色${roleId}的变量${variableId}失败:`, error);
+      console.error(`Failed to update variable ${variableId} for role ${roleId}:`, error);
 
       // 如果API未实现，模拟更新
       return {
@@ -287,7 +287,7 @@ export const roleAPI = {
       const response = await api.delete(`/action-spaces/${actionSpaceId}/roles/${roleId}/environment-variables/${variableId}`);
       return response.data;
     } catch (error) {
-      console.error(`删除角色${roleId}的变量${variableId}失败:`, error);
+      console.error(`Failed to delete variable ${variableId} for role ${roleId}:`, error);
 
       // 如果API未实现，模拟删除成功
       return { success: true };

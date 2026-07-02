@@ -1,6 +1,7 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { UserOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 interface AgentNodeProps {
   data: {
@@ -12,6 +13,7 @@ interface AgentNodeProps {
 }
 
 const AgentNode: React.FC<AgentNodeProps> = ({ data, selected }) => {
+  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -50,9 +52,9 @@ const AgentNode: React.FC<AgentNodeProps> = ({ data, selected }) => {
           <UserOutlined style={{ color: '#1677ff', fontSize: 16 }} />
         </div>
         <div>
-          <div style={{ fontWeight: 600, color: '#1677ff', fontSize: 13 }}>智能体</div>
+          <div style={{ fontWeight: 600, color: '#1677ff', fontSize: 13 }}>{t('orchNode.agent')}</div>
           <div style={{ fontSize: 12, color: 'var(--custom-text)', marginTop: 2 }}>
-            {data?.roleName || '选择角色'}
+            {data?.roleName || t('orchNode.selectRole')}
           </div>
         </div>
       </div>

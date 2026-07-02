@@ -42,7 +42,7 @@ const ActionTaskWorkspace = ({ task, respondingAgentId }) => {
       });
       setAgentInfo(agentMap);
     } catch (error) {
-      console.error('获取智能体信息失败:', error);
+      console.error('Failed to fetch agent info:', error);
     }
   };
 
@@ -129,8 +129,8 @@ const ActionTaskWorkspace = ({ task, respondingAgentId }) => {
       setWorkspaceFiles(processedFiles);
 
     } catch (error) {
-      console.error('加载工作空间文件失败:', error);
-      message.error('加载工作空间文件失败');
+      console.error('Failed to load workspace files:', error);
+      message.error(t('workspace.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -172,7 +172,7 @@ const ActionTaskWorkspace = ({ task, respondingAgentId }) => {
 
   // 处理面包屑导航
   const handleBreadcrumbClick = (breadcrumb) => {
-    console.log('面包屑导航，路径:', breadcrumb.path);
+    console.log('Breadcrumb navigation, path:', breadcrumb.path);
     loadWorkspaceFiles(viewMode, breadcrumb.path);
   };
 
@@ -185,19 +185,19 @@ const ActionTaskWorkspace = ({ task, respondingAgentId }) => {
   // 删除文件
   const handleDeleteFile = (file) => {
     modal.confirm({
-      title: '确认删除',
-      content: `确定要删除文件 "${file.file_name}" 吗？此操作不可恢复。`,
-      okText: '删除',
+      title: t('workspace.deleteConfirmTitle'),
+      content: t('workspace.deleteConfirmContent', { name: file.file_name }),
+      okText: t('workspace.deleteConfirmOk'),
       okType: 'danger',
-      cancelText: '取消',
+      cancelText: t('workspace.deleteConfirmCancel'),
       onOk: async () => {
         try {
           await workspaceAPI.deleteWorkspaceFile(file.file_path);
-          message.success('文件删除成功');
+          message.success(t('workspace.deleteFileSuccess'));
           loadWorkspaceFiles(viewMode, currentPath); // 重新加载当前目录
         } catch (error) {
-          console.error('删除文件失败:', error);
-          message.error('删除文件失败');
+          console.error('Failed to delete file:', error);
+          message.error(t('workspace.deleteFileFailed'));
         }
       }
     });
@@ -211,28 +211,28 @@ const ActionTaskWorkspace = ({ task, respondingAgentId }) => {
     }
 
     if (!task || !task.id) {
-      message.error('任务信息无效');
+      message.error(t('workspace.invalidTaskInfo'));
       return false;
     }
 
     // 检查文件大小（10MB限制）
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
-      message.error('文件大小不能超过10MB');
+      message.error(t('workspace.uploadFileSizeLimit'));
       return false;
     }
 
     try {
       const result = await workspaceAPI.uploadWorkspaceFile(task.id, currentPath, file);
       if (result.success) {
-        message.success('文件上传成功');
+        message.success(t('workspace.uploadFileSuccess'));
         loadWorkspaceFiles(viewMode, currentPath); // 重新加载当前目录
       } else {
-        message.error(result.error || '文件上传失败');
+        message.error(result.error || t('workspace.uploadFileFailed'));
       }
     } catch (error) {
-      console.error('文件上传失败:', error);
-      message.error('文件上传失败');
+      console.error('Failed to upload file:', error);
+      message.error(t('workspace.uploadFileFailed'));
     }
 
     return false; // 阻止默认上传行为
@@ -306,7 +306,7 @@ const ActionTaskWorkspace = ({ task, respondingAgentId }) => {
         const hasChanges = mergedFiles.some(f => f._isNew || f._hasChanged);
 
         if (hasChanges) {
-          console.log('检测到工作空间文件变化');
+          console.log('Detected changes in workspace files');
           return mergedFiles;
         }
         
@@ -314,7 +314,7 @@ const ActionTaskWorkspace = ({ task, respondingAgentId }) => {
         return currentFiles;
       });
     } catch (error) {
-      console.error('静默刷新文件失败:', error);
+      console.error('Silent file refresh failed:', error);
     } finally {
       setIsPolling(false);
     }
@@ -334,14 +334,14 @@ const ActionTaskWorkspace = ({ task, respondingAgentId }) => {
       return;
     }
 
-    console.log('Agent正在响应，启动工作空间轮询（每3秒）');
+    console.log('Agent is responding, starting workspace polling (every 3s)');
 
     const interval = setInterval(() => {
       silentRefreshFiles();
     }, 3000);
 
     return () => {
-      console.log('Agent停止响应，停止工作空间轮询');
+      console.log('Agent stopped responding, stopping workspace polling');
       clearInterval(interval);
     };
   }, [respondingAgentId, task?.id, silentRefreshFiles]);
@@ -373,7 +373,7 @@ const ActionTaskWorkspace = ({ task, respondingAgentId }) => {
   // 文件列表的列定义
   const columns = [
     {
-      title: '文件名',
+      title: t('workspace.col.fileName'),
       dataIndex: 'file_name',
       key: 'file_name',
       render: (text, record) => (
@@ -441,7 +441,7 @@ const ActionTaskWorkspace = ({ task, respondingAgentId }) => {
       )
     },
     {
-      title: '操作',
+      title: t('workspace.col.actions'),
       key: 'actions',
       width: '120px',
       render: (_, record) => (
@@ -450,19 +450,17 @@ const ActionTaskWorkspace = ({ task, respondingAgentId }) => {
             <>
               <Button
                 type="text"
-               
                 icon={<EyeOutlined />}
                 onClick={() => handleViewFile(record)}
-                title="查看"
+                title={t('workspace.action.view')}
                 style={{ color: '#1677ff' }}
               />
 
               <Button
                 type="text"
-               
                 icon={<DeleteOutlined />}
                 onClick={() => handleDeleteFile(record)}
-                title="删除"
+                title={t('workspace.action.delete')}
                 danger
               />
             </>
@@ -473,7 +471,7 @@ const ActionTaskWorkspace = ({ task, respondingAgentId }) => {
   ];
 
   if (!task) {
-    return <Empty description="请先选择一个任务" />;
+    return <Empty description={t('workspace.noTaskSelected')} />;
   }
 
   return (
@@ -501,9 +499,8 @@ const ActionTaskWorkspace = ({ task, respondingAgentId }) => {
                 >
                   <Button
                     type="text"
-                   
                     icon={<UploadOutlined />}
-                    title="上传文件到当前目录"
+                    title={t('workspace.action.uploadToCurrentDir')}
                     style={{ color: '#1677ff' }}
                   >
                   </Button>
@@ -511,11 +508,10 @@ const ActionTaskWorkspace = ({ task, respondingAgentId }) => {
               )}
               <Button
                 type="text"
-               
                 icon={<ReloadOutlined />}
                 onClick={() => loadWorkspaceFiles(viewMode, viewMode === 'root' ? '' : currentPath)}
                 loading={loading}
-                title="刷新"
+                title={t('workspace.action.refresh')}
                 style={{ color: '#1677ff' }}
               />
             </Space>
@@ -571,7 +567,7 @@ const ActionTaskWorkspace = ({ task, respondingAgentId }) => {
               return classes.join(' ');
             }}
             locale={{
-              emptyText: '该任务暂无工作空间文件'
+              emptyText: t('workspace.noTaskFiles')
             }}
           />
         )}

@@ -1,6 +1,7 @@
 /**
  * 模型工具函数
  */
+import i18n from '../locales';
 
 /**
  * 获取用于辅助生成的模型ID
@@ -43,13 +44,13 @@ export const getAssistantGenerationModelId = async (models, assistantGenerationM
   if (!defaultModel && models.length > 0) {
     // 最后的备选方案：使用第一个模型，但要记录警告
     defaultModel = models[0];
-    console.warn('未找到合适的默认模型，使用第一个可用模型:', defaultModel.name);
+    console.warn('No suitable default model found, using the first available model:', defaultModel.name);
   }
   
   if (defaultModel) {
-    console.log('辅助生成使用模型:', defaultModel.name, '(ID:', defaultModel.id, ')');
+    console.log('Assistant generation using model:', defaultModel.name, '(ID:', defaultModel.id, ')');
     return defaultModel.id;
   } else {
-    throw new Error('未找到可用的模型');
+    throw new Error(i18n.t('modelConfig.noAvailableModel'));
   }
 };

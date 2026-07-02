@@ -1,6 +1,7 @@
 /**
  * API URL验证和处理工具
  */
+import i18n from '../../locales';
 
 /**
  * 验证API URL的格式
@@ -19,14 +20,14 @@ export const validateApiUrl = (url: any, options: any = {}) => {
   };
   
   if (!url || typeof url !== 'string') {
-    result.error = 'URL不能为空';
+    result.error = i18n.t('validation.urlEmpty');
     if (throwOnError) throw new Error(result.error);
     return result;
   }
   
   // 基本格式验证：必须以http或https开头
   if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    result.error = 'URL必须以http://或https://开头';
+    result.error = i18n.t('validation.urlProtocol');
     if (throwOnError) throw new Error(result.error);
     return result;
   }
@@ -39,13 +40,13 @@ export const validateApiUrl = (url: any, options: any = {}) => {
     
     // HTTPS警告
     if (urlObj.protocol === 'http:') {
-      result.warnings.push('建议使用HTTPS以确保安全通信');
+      result.warnings.push(i18n.t('validation.urlHttpsWarning'));
     }
     
     result.isValid = true;
     return result;
   } catch (e) {
-    result.error = `URL格式不正确: ${e.message}`;
+    result.error = i18n.t('validation.urlInvalidFormat', { message: e.message });
     if (throwOnError) throw new Error(result.error);
     return result;
   }

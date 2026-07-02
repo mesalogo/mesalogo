@@ -30,4 +30,8 @@ export default {
   knowledgeBase: 'Knowledge Base',
   memoryManagement: 'Memory Management',
   memoryPartition: 'Memory Partition',
+
+  // Role Selector (demo component)
+  'roleSelector.title': 'Select Role',
+  'roleSelector.placeholder': 'Select a role to start the conversation',
 };

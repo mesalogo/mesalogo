@@ -1,4 +1,5 @@
 import api from './axios';
+import i18n from '../../locales';
 
 /**
  * 行动任务相关API服务
@@ -8,14 +9,14 @@ export const actionTaskAPI = {
   getAll: async (includeAgents = false) => {
     const params = includeAgents ? '?include_agents=true' : '';
     const response = await api.get(`/action-tasks${params}`);
-    console.log('获取行动任务列表响应:', response.data);
+    console.log('Get action task list response:', response.data);
     return response.data.action_tasks || []; // 返回action_tasks数组，如果不存在则返回空数组
   },
 
   // 获取所有行动任务及其智能体信息（用于记忆管理页面）
   getAllWithAgents: async () => {
     const response = await api.get('/action-tasks?include_agents=true');
-    console.log('获取行动任务及智能体列表响应:', response.data);
+    console.log('Get action tasks with agents list response:', response.data);
     return response.data.action_tasks || [];
   },
 
@@ -28,16 +29,16 @@ export const actionTaskAPI = {
   // 删除行动任务
   delete: async (id, cascade = true, forceCleanup = false) => {
     try {
-      console.log('删除行动任务:', id, '级联删除:', cascade, '强制清理:', forceCleanup);
+      console.log('Delete action task:', id, 'cascade:', cascade, 'forceCleanup:', forceCleanup);
       const params = new URLSearchParams({
         cascade: cascade ? 'true' : 'false',
         force_cleanup: forceCleanup ? 'true' : 'false'
       });
       const response = await api.delete(`/action-tasks/${id}?${params}`);
-      console.log('删除行动任务成功，响应数据:', response.data);
+      console.log('Delete action task succeeded, response data:', response.data);
       return response.data;
     } catch (error) {
-      console.error('删除行动任务失败:', error);
+      console.error('Failed to delete action task:', error);
       throw error;
     }
   },
@@ -45,12 +46,12 @@ export const actionTaskAPI = {
   // 创建新行动任务
   create: async (data) => {
     try {
-      console.log('创建行动任务请求数据:', data);
+      console.log('Create action task request data:', data);
       const response = await api.post('/action-tasks', data);
-      console.log('创建行动任务成功，响应数据:', response.data);
+      console.log('Create action task succeeded, response data:', response.data);
       return response.data;
     } catch (error) {
-      console.error('创建行动任务失败:', error);
+      console.error('Failed to create action task:', error);
       throw error;
     }
   },
@@ -110,22 +111,22 @@ export const actionTaskAPI = {
   // 创建新行动任务并实例化智能体
   createWithAgents: async (data) => {
     try {
-      console.log('创建行动任务请求数据:', data);
+      console.log('Create action task request data:', data);
       const response = await api.post('/action-tasks', {
         ...data,
         role_ids: data.role_ids || []  // 确保包含role_ids字段
       });
-      console.log('创建行动任务成功，响应数据:', response.data);
+      console.log('Create action task succeeded, response data:', response.data);
       return response.data;
     } catch (error) {
-      console.error('创建行动任务失败:', error);
+      console.error('Failed to create action task:', error);
       throw error;
     }
   },
 
   // 获取行动任务的消息
   getMessages: async (id) => {
-    console.warn('警告: actionTaskAPI.getMessages 已废弃，请使用 conversationAPI.getConversationMessages 代替');
+    console.warn('Warning: actionTaskAPI.getMessages is deprecated, use conversationAPI.getConversationMessages instead');
     // 导入conversationAPI
     const { default: conversationAPI } = await import('./conversation');
     return conversationAPI.getMessages(id);
@@ -133,12 +134,12 @@ export const actionTaskAPI = {
 
   // 发送消息 (已废弃 - 不再支持非流式模式)
   sendMessage: async (id, content, targetAgentId = null) => {
-    throw new Error('actionTaskAPI.sendMessage 已废弃且不再支持非流式模式，请使用 conversationAPI.sendConversationMessageStream 代替');
+    throw new Error(i18n.t('apiSvc.sendMessageDeprecated'));
   },
 
   // 发送消息并获取流式响应 (WebSocket版本已废弃，请使用conversationAPI.sendConversationMessageStream)
   sendMessageStream: async (id, content, modelConfig, onChunk) => {
-    console.warn('警告: actionTaskAPI.sendMessageStream 已废弃，请使用 conversationAPI.sendConversationMessageStream 代替');
+    console.warn('Warning: actionTaskAPI.sendMessageStream is deprecated, use conversationAPI.sendConversationMessageStream instead');
 
     // 导入conversationAPI
     const { default: conversationAPI } = await import('./conversation');
@@ -160,8 +161,8 @@ export const actionTaskAPI = {
         const task = taskResponse.data;
 
         const newConversation = await conversationAPI.createConversation(id, {
-          title: `${task.title || '行动任务'} - 默认会话`,
-          description: '自动创建的默认会话',
+          title: `${task.title || i18n.t('apiSvc.defaultTaskName')} - ${i18n.t('apiSvc.defaultConversationSuffix')}`,
+          description: i18n.t('apiSvc.autoCreatedConversation'),
           mode: task.mode || 'sequential'
         });
 
@@ -171,11 +172,11 @@ export const actionTaskAPI = {
         }, onChunk);
       }
     } catch (error) {
-      console.error('发送消息失败:', error);
+      console.error('Failed to send message:', error);
       if (onChunk) {
         onChunk(null, {
           connectionStatus: 'error',
-          error: error.message || '发送消息失败'
+          error: error.message || i18n.t('apiSvc.sendMessageFailed')
         });
       }
       throw error;
@@ -199,7 +200,7 @@ export const actionTaskAPI = {
       const response = await api.get(`/action-tasks/${id}/environment?agent_variables=true`);
       return response.data.variables;
     } catch (error) {
-      console.error('获取任务环境变量失败:', error);
+      console.error('Failed to get task environment variables:', error);
       return [];
     }
   },
@@ -210,7 +211,7 @@ export const actionTaskAPI = {
       const response = await api.get(`/action-tasks/${taskId}/agents/${agentId}/variables`);
       return response.data.variables;
     } catch (error) {
-      console.error(`获取智能体 ${agentId} 的变量失败:`, error);
+      console.error(`Failed to get variables for agent ${agentId}:`, error);
       return [];
     }
   },
@@ -225,7 +226,7 @@ export const actionTaskAPI = {
         lastUpdated: response.data.last_updated
       };
     } catch (error) {
-      console.error('批量获取变量失败:', error);
+      console.error('Failed to batch-get variables:', error);
       return {
         environmentVariables: [],
         agentVariables: [],
@@ -245,7 +246,7 @@ export const actionTaskAPI = {
       });
       return response.data;
     } catch (error) {
-      console.error('发送监督者消息失败:', error);
+      console.error('Failed to send supervisor message:', error);
       throw error;
     }
   },
@@ -263,7 +264,7 @@ export const actionTaskAPI = {
 
       return supervisorMessages;
     } catch (error) {
-      console.error('获取监督者消息失败:', error);
+      console.error('Failed to get supervisor messages:', error);
       return [];
     }
   },
@@ -293,7 +294,7 @@ export const actionTaskAPI = {
 
       return taskMessages;
     } catch (error) {
-      console.error('获取任务消息失败:', error);
+      console.error('Failed to get task messages:', error);
       return [];
     }
   },
@@ -314,7 +315,7 @@ export const actionTaskAPI = {
       const response = await api.delete(`/action-tasks/${id}/environment/variables/${variableName}`);
       return response.data;
     } catch (error) {
-      console.error(`删除任务 ${id} 的环境变量 ${variableName} 失败:`, error);
+      console.error(`Failed to delete environment variable ${variableName} of task ${id}:`, error);
       throw error;
     }
   },
@@ -339,7 +340,7 @@ export const actionTaskAPI = {
       const response = await api.get(`/action-tasks/${taskId}/observers`);
       return response.data.observers || [];
     } catch (error) {
-      console.error(`获取行动任务${taskId}的监督者失败:`, error);
+      console.error(`Failed to get supervisors of action task ${taskId}:`, error);
       return [];
     }
   },
@@ -350,7 +351,7 @@ export const actionTaskAPI = {
       const response = await api.post(`/action-tasks/${taskId}/observers`, observerData);
       return response.data;
     } catch (error) {
-      console.error(`向行动任务${taskId}添加监督者失败:`, error);
+      console.error(`Failed to add supervisor to action task ${taskId}:`, error);
       throw error;
     }
   },
@@ -361,7 +362,7 @@ export const actionTaskAPI = {
       const response = await api.get(`/action-tasks/${taskId}/rules`);
       return response.data.rules;
     } catch (error) {
-      console.error('获取任务规则失败:', error);
+      console.error('Failed to get task rules:', error);
       throw error;
     }
   },
@@ -372,7 +373,7 @@ export const actionTaskAPI = {
       const response = await api.get(`/action-tasks/${taskId}/rule-variables`);
       return response.data.variables;
     } catch (error) {
-      console.error('获取任务规则变量失败:', error);
+      console.error('Failed to get task rule variables:', error);
       throw error;
     }
   },
@@ -401,14 +402,14 @@ export const actionTaskAPI = {
         requestData.role_id = roleId;
       }
 
-      console.log('发送任务规则测试请求:', requestData);
+      console.log('Sending task rule test request:', requestData);
 
       // 调用规则测试API
       const response = await api.post('/rules/test', requestData);
-      console.log('任务规则测试成功:', response.data);
+      console.log('Task rule test succeeded:', response.data);
       return response.data;
     } catch (error) {
-      console.error('任务规则测试失败:', error);
+      console.error('Task rule test failed:', error);
       throw error;
     }
   },
@@ -429,10 +430,10 @@ export const actionTaskAPI = {
 
       const url = `/action-tasks/${taskId}/rule-triggers${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
       const response = await api.get(url);
-      console.log('获取规则触发记录成功:', response.data);
+      console.log('Get rule trigger records succeeded:', response.data);
       return response.data;
     } catch (error) {
-      console.error('获取规则触发记录失败:', error);
+      console.error('Failed to get rule trigger records:', error);
       throw error;
     }
   },
@@ -441,10 +442,10 @@ export const actionTaskAPI = {
   createRuleTrigger: async (taskId, triggerData) => {
     try {
       const response = await api.post(`/action-tasks/${taskId}/rule-triggers`, triggerData);
-      console.log('创建规则触发记录成功:', response.data);
+      console.log('Create rule trigger record succeeded:', response.data);
       return response.data;
     } catch (error) {
-      console.error('创建规则触发记录失败:', error);
+      console.error('Failed to create rule trigger record:', error);
       throw error;
     }
   },
@@ -454,17 +455,17 @@ export const actionTaskAPI = {
     try {
       // 如果没有提供conversationId，尝试获取默认会话
       if (!conversationId || conversationId === 'undefined') {
-        console.warn('会话ID无效，尝试获取默认会话');
+        console.warn('Conversation ID invalid, trying to get default conversation');
         // 导入conversationAPI来获取会话列表
         const { default: conversationAPI } = await import('./conversation');
         const conversations = await conversationAPI.getConversations(taskId);
 
         if (conversations && conversations.length > 0) {
           conversationId = conversations[0].id;
-          console.log('使用默认会话ID:', conversationId);
+          console.log('Using default conversation ID:', conversationId);
         } else {
-          console.warn('没有找到可用的会话');
-          return '当前任务会话上下文：暂无会话记录';
+          console.warn('No available conversation found');
+          return i18n.t('apiSvc.contextNoConversation');
         }
       }
 
@@ -473,30 +474,30 @@ export const actionTaskAPI = {
       const recentMessages = messages.slice(-10); // 最近10条消息
 
       if (recentMessages.length === 0) {
-        return '当前任务会话上下文：暂无消息记录';
+        return i18n.t('apiSvc.contextNoMessages');
       }
 
       const context = recentMessages.map(msg =>
-        `${msg.role === 'human' ? '用户' : msg.agent_name || '智能体'}: ${msg.content}`
+        `${msg.role === 'human' ? i18n.t('apiSvc.contextUser') : msg.agent_name || i18n.t('apiSvc.contextAgent')}: ${msg.content}`
       ).join('\n');
 
-      return `当前任务会话上下文：\n${context}`;
+      return i18n.t('apiSvc.contextPrefix', { context });
     } catch (error) {
-      console.error('构建任务上下文失败:', error);
-      return '当前任务会话上下文：无法获取会话内容，将使用默认测试场景';
+      console.error('Failed to build task context:', error);
+      return i18n.t('apiSvc.contextFailed');
     }
   },
 
   // 导出行动任务数据
   exportData: async (taskId, options) => {
     try {
-      console.log('导出行动任务数据:', taskId, options);
+      console.log('Exporting action task data:', taskId, options);
       const response = await api.post(`/action-tasks/${taskId}/export`, options, {
         responseType: 'blob'
       });
       return response;
     } catch (error) {
-      console.error('导出行动任务数据失败:', error);
+      console.error('Failed to export action task data:', error);
       throw error;
     }
   },
@@ -509,7 +510,7 @@ export const actionTaskAPI = {
       });
       return response.data;
     } catch (error) {
-      console.error(`更新智能体 ${agentId} 的变量 ${variableName} 失败:`, error);
+      console.error(`Failed to update variable ${variableName} of agent ${agentId}:`, error);
       throw error;
     }
   },
@@ -520,7 +521,7 @@ export const actionTaskAPI = {
       const response = await api.delete(`/agents/${agentId}/variables/${variableName}`);
       return response.data;
     } catch (error) {
-      console.error(`删除智能体 ${agentId} 的变量 ${variableName} 失败:`, error);
+      console.error(`Failed to delete variable ${variableName} of agent ${agentId}:`, error);
       throw error;
     }
   }

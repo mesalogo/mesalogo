@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Modal, Badge, Empty, Spin, Card, App } from 'antd';
 import { VncScreen } from 'react-vnc';
+import { useTranslation } from 'react-i18next';
 import { vncProxyService } from '../../../services/marketService';
 
 interface NextRPATabProps {
@@ -8,6 +9,7 @@ interface NextRPATabProps {
 }
 
 const NextRPATab: React.FC<NextRPATabProps> = ({ appConfig }) => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const [modalVisible, setModalVisible] = useState(false);
   const [token, setToken] = useState<string | null>(null);
@@ -40,7 +42,7 @@ const NextRPATab: React.FC<NextRPATabProps> = ({ appConfig }) => {
         setToken(result.token);
         setWsPort(result.ws_port);
       } catch (error: any) {
-        console.error('[NextRPATab] VNC 代理启动失败:', error);
+        console.error('[NextRPATab] VNC proxy start failed:', error);
         setErrorMsg(error?.message || String(error));
         setStatus('error');
         setLoading(false);
@@ -75,18 +77,18 @@ const NextRPATab: React.FC<NextRPATabProps> = ({ appConfig }) => {
   const getStatusBadge = () => {
     switch (status) {
       case 'connected':
-        return <Badge status="success" text="已连接" />;
+        return <Badge status="success" text={t('nextRPA.vnc.connected')} />;
       case 'connecting':
-        return <Badge status="processing" text="连接中" />;
+        return <Badge status="processing" text={t('nextRPA.vnc.connecting')} />;
       case 'error':
-        return <Badge status="error" text={`连接失败: ${errorMsg}`} />;
+        return <Badge status="error" text={t('nextRPA.vnc.connectFailed', { error: errorMsg })} />;
       default:
-        return <Badge status="default" text="未连接" />;
+        return <Badge status="default" text={t('nextRPA.vnc.notConnected')} />;
     }
   };
 
   if (!vncAddress) {
-    return <Empty description="请先配置 VNC 地址" />;
+    return <Empty description={t('nextRPA.vnc.configureFirst')} />;
   }
 
   return (
@@ -104,7 +106,7 @@ const NextRPATab: React.FC<NextRPATabProps> = ({ appConfig }) => {
         {loading && !wsUrl ? (
           <div style={{ width: '100%', aspectRatio: '16/9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8 }}>
             <Spin />
-            <span>正在连接 VNC...</span>
+            <span>{t('nextRPA.vnc.connectingVnc')}</span>
           </div>
         ) : wsUrl ? (
           <div style={{ width: '100%', aspectRatio: '16/9', position: 'relative' }}>
@@ -119,14 +121,14 @@ const NextRPATab: React.FC<NextRPATabProps> = ({ appConfig }) => {
                 console.log('[NextRPATab] VNC connected!');
                 setStatus('connected');
                 setLoading(false);
-                message.success('VNC 连接成功');
+                message.success(t('nextRPA.vnc.connectSuccess'));
               }}
               onDisconnect={(e: any) => {
                 console.log('[NextRPATab] VNC disconnected:', e);
                 if (e?.detail?.clean === false || e?.detail?.code === 1011) {
-                  setErrorMsg(e?.detail?.reason || '无法连接到目标服务器');
+                  setErrorMsg(e?.detail?.reason || t('nextRPA.vnc.cannotConnectTarget'));
                   setStatus('error');
-                  message.error('VNC 连接失败: ' + (e?.detail?.reason || '无法连接到目标服务器'));
+                  message.error(t('nextRPA.vnc.connectFailedMsg', { reason: e?.detail?.reason || t('nextRPA.vnc.cannotConnectTarget') }));
                 } else {
                   setStatus('disconnected');
                 }
@@ -134,10 +136,10 @@ const NextRPATab: React.FC<NextRPATabProps> = ({ appConfig }) => {
               }}
               onSecurityFailure={(e: any) => {
                 console.log('[NextRPATab] VNC security failure:', e);
-                setErrorMsg('安全验证失败: ' + (e?.detail?.reason || ''));
+                setErrorMsg(t('nextRPA.vnc.securityFailure', { reason: e?.detail?.reason || '' }));
                 setStatus('error');
                 setLoading(false);
-                message.error('VNC 安全验证失败');
+                message.error(t('nextRPA.vnc.securityFailureMsg'));
               }}
             />
             {/* 透明遮罩层 - 捕获点击事件 */}
@@ -166,13 +168,13 @@ const NextRPATab: React.FC<NextRPATabProps> = ({ appConfig }) => {
                 onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
                 onMouseLeave={(e) => (e.currentTarget.style.opacity = '0')}
               >
-                <span style={{ color: '#fff', fontSize: 14 }}>点击进入交互模式</span>
+                <span style={{ color: '#fff', fontSize: 14 }}>{t('nextRPA.vnc.clickToInteract')}</span>
               </div>
             </div>
           </div>
         ) : (
           <div style={{ width: '100%', aspectRatio: '16/9', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--custom-hover-bg)' }}>
-            <span style={{ color: 'var(--custom-text-secondary)' }}>等待连接...</span>
+            <span style={{ color: 'var(--custom-text-secondary)' }}>{t('nextRPA.vnc.waitingConnection')}</span>
           </div>
         )}
       </Card>
@@ -184,7 +186,7 @@ const NextRPATab: React.FC<NextRPATabProps> = ({ appConfig }) => {
 
       {/* Modal - 可交互 */}
       <Modal
-        title="VNC 控制台"
+        title={t('nextRPA.vnc.console')}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         width="85vw"

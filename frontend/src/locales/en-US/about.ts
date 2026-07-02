@@ -78,6 +78,7 @@ export default {
   'about.feature.unlimited_memory': 'Unlimited Memory',
   // Error messages
   'about.error.licenseExpired': 'License expired, please reactivate',
+  'about.error.licenseInvalidOrExpired': 'License invalid or expired',
   'about.error.cannotGetLicense': 'Cannot get license information, please check if the system is activated',
   'about.error.notActivated': 'System not activated, please activate license to use all features',
   'about.error.systemKeyFailed': 'Failed to get system key, please check system configuration',
@@ -87,4 +88,8 @@ export default {
   'about.error.uploadFileFirst': 'Please upload license file first',
   'about.error.jsonOnly': 'Only JSON format license files are allowed',
   'about.error.fileTooLarge': 'License file must be smaller than 2MB',
+  'about.expiredDialog.title': 'License Expired',
+  'about.expiredDialog.content': 'Your license has expired or is invalid, and system features will be limited. Please go to the authorization page to activate the system.',
+  'about.expiredDialog.okText': 'Go to Authorization Page',
+  'about.error.licenseNotFound': 'No license information found',
 };

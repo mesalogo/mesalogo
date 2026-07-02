@@ -92,8 +92,8 @@ const RoleManagement = () => {
           try {
             await updateRoleCapabilities(newRoleId, selectedCapabilities);
           } catch (error) {
-            console.error('新角色能力绑定失败:', error);
-            message.warning('角色创建成功，但部分能力绑定失败');
+            console.error('New role capability binding failed:', error);
+            message.warning(t('roleManagement.partialCapabilityBindFailed'));
           }
 
           if (selectedKnowledges.length > 0) {
@@ -117,8 +117,8 @@ const RoleManagement = () => {
       setModalVisible(false);
       await fetchRoles();
     } catch (error) {
-      console.error('保存角色失败:', error);
-      message.error('保存角色失败，请检查表单内容');
+      console.error('Failed to save role:', error);
+      message.error(t('roleManagement.saveFailedCheckForm'));
     }
   };
 
@@ -126,10 +126,10 @@ const RoleManagement = () => {
     try {
       if (currentRole && currentRole.source === 'external') {
         await updateRole(currentRole.id, apiValues);
-        message.success('外部智能体更新成功');
+        message.success(t('roleManagement.externalUpdateSuccess'));
       } else {
         await createRole(apiValues);
-        message.success('外部智能体导入成功');
+        message.success(t('roleManagement.externalImportSuccess'));
       }
       setImportModalVisible(false);
       await fetchRoles();

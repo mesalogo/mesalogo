@@ -193,7 +193,7 @@ export default function MessageInput({
             <Mentions
               value={userMessage}
               onChange={setUserMessage}
-              placeholder={isSummarizing ? t('conversation.summarizing') : (isResponding ? "当前智能体正在响应中..." : "输入消息，使用 @ 提及智能体...")}
+              placeholder={isSummarizing ? t('conversation.summarizing') : (isResponding ? t('conversation.agentResponding') : t('conversation.inputPlaceholder'))}
               autoSize={{ minRows: 3, maxRows: 6 }}
               disabled={task.status !== 'active' || isSummarizing}
               options={agentOptions}

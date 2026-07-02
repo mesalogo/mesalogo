@@ -6,25 +6,25 @@ import { settingsAPI } from '../../../../services/api/settings';
 
 // 定义主要时区列表
 const getTimezoneOptions = (t) => [
-  { value: 'Asia/Shanghai', label: t ? t('timezone.asia.shanghai') : '亚洲/上海 (GMT+8)' },
-  { value: 'Asia/Hong_Kong', label: t ? t('timezone.asia.hongkong') : '亚洲/香港 (GMT+8)' },
-  { value: 'Asia/Tokyo', label: t ? t('timezone.asia.tokyo') : '亚洲/东京 (GMT+9)' },
-  { value: 'Asia/Singapore', label: t ? t('timezone.asia.singapore') : '亚洲/新加坡 (GMT+8)' },
-  { value: 'Europe/London', label: t ? t('timezone.europe.london') : '欧洲/伦敦 (GMT+0/+1)' },
-  { value: 'Europe/Paris', label: t ? t('timezone.europe.paris') : '欧洲/巴黎 (GMT+1/+2)' },
-  { value: 'Europe/Berlin', label: t ? t('timezone.europe.berlin') : '欧洲/柏林 (GMT+1/+2)' },
-  { value: 'America/New_York', label: t ? t('timezone.america.newyork') : '美洲/纽约 (GMT-5/-4)' },
-  { value: 'America/Los_Angeles', label: t ? t('timezone.america.losangeles') : '美洲/洛杉矶 (GMT-8/-7)' },
-  { value: 'America/Chicago', label: t ? t('timezone.america.chicago') : '美洲/芝加哥 (GMT-6/-5)' },
-  { value: 'Australia/Sydney', label: t ? t('timezone.australia.sydney') : '澳洲/悉尼 (GMT+10/+11)' },
-  { value: 'Pacific/Auckland', label: t ? t('timezone.pacific.auckland') : '太平洋/奥克兰 (GMT+12/+13)' },
-  { value: 'UTC', label: t ? t('timezone.utc') : '协调世界时 (UTC)' }
+  { value: 'Asia/Shanghai', label: t('timezone.asia.shanghai') },
+  { value: 'Asia/Hong_Kong', label: t('timezone.asia.hongkong') },
+  { value: 'Asia/Tokyo', label: t('timezone.asia.tokyo') },
+  { value: 'Asia/Singapore', label: t('timezone.asia.singapore') },
+  { value: 'Europe/London', label: t('timezone.europe.london') },
+  { value: 'Europe/Paris', label: t('timezone.europe.paris') },
+  { value: 'Europe/Berlin', label: t('timezone.europe.berlin') },
+  { value: 'America/New_York', label: t('timezone.america.newyork') },
+  { value: 'America/Los_Angeles', label: t('timezone.america.losangeles') },
+  { value: 'America/Chicago', label: t('timezone.america.chicago') },
+  { value: 'Australia/Sydney', label: t('timezone.australia.sydney') },
+  { value: 'Pacific/Auckland', label: t('timezone.pacific.auckland') },
+  { value: 'UTC', label: t('timezone.utc') }
 ];
 
 // 定义平台语言选项
 const getLanguageOptions = (t) => [
-  { value: 'zh-CN', label: t ? t('language.chinese') : '中文 (简体)', flag: '🇨🇳' },
-  { value: 'en-US', label: t ? t('language.english') : 'English', flag: '🇺🇸' }
+  { value: 'zh-CN', label: t('language.chinese'), flag: '🇨🇳' },
+  { value: 'en-US', label: t('language.english'), flag: '🇺🇸' }
 ];
 
 const BasicSettings = ({ color, initialValues }: any) => {

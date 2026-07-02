@@ -76,8 +76,8 @@ const MainLayout = ({ children }) => {
       message.success(t('user.logoutSuccess'));
       navigate('/login');
     } catch (error) {
-      console.error('登出失败:', error);
-      message.error('登出失败，请稍后再试');
+      console.error('Logout failed:', error);
+      message.error(t('user.logoutFailed'));
     }
   };
 
@@ -86,7 +86,7 @@ const MainLayout = ({ children }) => {
   };
 
   const handleChangePasswordSuccess = () => {
-    message.success('密码修改成功');
+    message.success(t('user.passwordChangeSuccess'));
   };
 
   const isAdmin = useMemo(() => {
@@ -151,9 +151,9 @@ const MainLayout = ({ children }) => {
             </Title>
           </div>
         </div>
-        <Space>
+        <Space align="center" size={8}>
           <JobCenterButton />
-          <LanguageSwitcher />
+          <LanguageSwitcher size="middle" />
           <ThemeSwitch />
           <LayoutSwitcher />
           <Dropdown
@@ -176,8 +176,9 @@ const MainLayout = ({ children }) => {
             }}
             placement="bottomRight"
           >
-            <Space style={{ cursor: 'pointer' }}>
+            <Space align="center" style={{ cursor: 'pointer' }}>
               <Avatar
+                size={32}
                 style={{
                   backgroundColor: '#1677ff',
                 }}

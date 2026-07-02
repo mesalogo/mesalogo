@@ -37,7 +37,7 @@ const DefaultModelModal = ({
   
   return (
     <Modal
-      title="设置默认模型"
+      title={t('modelConfig.defaultModal.title')}
       open={visible}
       onOk={onOk}
       onCancel={onCancel}

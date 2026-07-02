@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card, Tag, Button, Typography } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 const { Title } = Typography;
 
@@ -8,9 +9,10 @@ const { Title } = Typography;
  * 用于筛选行动空间
  */
 const TagFilter = ({ industryTags, scenarioTags, selectedTagIds, onTagClick, onClear }: any) => {
+  const { t } = useTranslation();
   return (
     <Card style={{ marginBottom: 16 }}>
-      <Title level={5} style={{ marginBottom: 12 }}>行业标签</Title>
+      <Title level={5} style={{ marginBottom: 12 }}>{t('tagFilter.industryTags')}</Title>
       <div style={{ marginBottom: 16 }}>
         {industryTags.map(tag => (
           <Tag
@@ -35,7 +37,7 @@ const TagFilter = ({ industryTags, scenarioTags, selectedTagIds, onTagClick, onC
         ))}
       </div>
 
-      <Title level={5} style={{ marginBottom: 12 }}>场景标签</Title>
+      <Title level={5} style={{ marginBottom: 12 }}>{t('tagFilter.scenarioTags')}</Title>
       <div style={{ marginBottom: 16 }}>
         {scenarioTags.map(tag => (
           <Tag
@@ -62,7 +64,7 @@ const TagFilter = ({ industryTags, scenarioTags, selectedTagIds, onTagClick, onC
 
       {selectedTagIds.length > 0 && (
         <Button type="link" onClick={onClear} style={{ padding: 0 }}>
-          清除筛选
+          {t('tagFilter.clearFilter')}
         </Button>
       )}
     </Card>

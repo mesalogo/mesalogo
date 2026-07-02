@@ -44,7 +44,7 @@ export default function MessageList({
       }}>
       {messages.length === 0 ? (
         <Empty
-          description="暂无消息"
+          description={t('conversation.noMessages')}
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           style={{ margin: 'auto' }}
         />
@@ -111,15 +111,15 @@ export default function MessageList({
                   if (agent) {
                     return agent.role_name ? `${agent.name} [${agent.role_name}]` : agent.name;
                   }
-                  return `智能体-${streamingAgentId}`;
+                  return t('conversation.agentPrefix', { id: streamingAgentId });
                 }
-                return '系统';
+                return t('conversation.systemLabel');
               })()}
             </Text>
 
             <div style={{ display: 'flex', alignItems: 'center', marginLeft: '8px' }}>
               {isResponding && (
-                <Tag color="red">可随时中断</Tag>
+                <Tag color="red">{t('conversation.canInterrupt')}</Tag>
               )}
             </div>
 
@@ -141,7 +141,7 @@ export default function MessageList({
                 color: 'grey'
               }}>
                 <SyncOutlined spin style={{ marginRight: '8px' }} />
-                等待回应...
+                {t('conversation.waitingResponse')}
               </div>
             )}
           </div>

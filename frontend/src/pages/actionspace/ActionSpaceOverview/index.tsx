@@ -55,78 +55,80 @@ const ActionSpaceOverview = () => {
 
   const handleDeleteSpace = (space) => {
     Modal.confirm({
-      title: t('actionSpace.confirmDelete') || '确认删除',
+      title: t('actionSpace.confirmDelete'),
       icon: <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />,
       content: (
         <div>
-          <p>{t('actionSpace.deleteWarning', { name: space.name }) || `确定要删除行动空间 "${space.name}" 吗？`}</p>
-          <p><b>{t('message.warning') || '警告'}：</b>{t('actionSpace.deleteWarningDetail') || '删除操作不可恢复'}</p>
+          <p>{t('actionSpace.deleteWarning', { name: space.name })}</p>
+          <p><b>{t('message.warning')}：</b>{t('actionSpace.deleteWarningDetail')}</p>
           <ul>
-            <li>{t('actionSpace.deleteItems.basic') || '基本信息'}</li>
-            <li>{t('actionSpace.deleteItems.rulesets') || '规则集'}</li>
-            <li>{t('actionSpace.deleteItems.roles') || '角色配置'}</li>
-            <li>{t('actionSpace.deleteItems.environment') || '环境变量'}</li>
-            <li>{t('actionSpace.deleteItems.roleConfig') || '角色关联'}</li>
-            <li>{t('actionSpace.deleteItems.supervisor') || '监督者配置'}</li>
+            <li>{t('actionSpace.deleteItems.basic')}</li>
+            <li>{t('actionSpace.deleteItems.rulesets')}</li>
+            <li>{t('actionSpace.deleteItems.roles')}</li>
+            <li>{t('actionSpace.deleteItems.environment')}</li>
+            <li>{t('actionSpace.deleteItems.roleConfig')}</li>
+            <li>{t('actionSpace.deleteItems.supervisor')}</li>
           </ul>
-          <p><b>{t('actionSpace.note') || '注意'}：</b>{t('actionSpace.deleteNote') || '关联的行动任务不会被删除'}</p>
+          <p><b>{t('actionSpace.note')}：</b>{t('actionSpace.deleteNote')}</p>
         </div>
       ),
-      okText: '确认删除',
+      okText: t('actionSpace.deleteConfirmOk'),
       okType: 'danger',
-      cancelText: '取消',
+      cancelText: t('common.cancel'),
       onOk: async () => {
         try {
           await actionSpaceAPI.delete(space.id);
-          message.success('行动空间删除成功');
+          message.success(t('actionSpace.deleteSuccess'));
           await refetch();
         } catch (error) {
-          console.error('删除行动空间失败:', error);
-          
-          // 处理特定错误信息
-          if (error.response?.data?.error) {
-            const errorMsg = error.response.data.error;
-            const relatedTasks = error.response.data.related_tasks;
+          console.error('Failed to delete action space:', error);
 
-            if (errorMsg.includes('关联的行动任务') && relatedTasks) {
-              Modal.info({
-                title: '无法删除行动空间',
-                icon: <ExclamationCircleOutlined style={{ color: '#faad14' }} />,
-                content: (
-                  <div>
-                    <p>行动空间 <strong>"{space.name}"</strong> 无法删除，因为存在以下关联的行动任务：</p>
-                    <div style={{ marginTop: 12, marginBottom: 12, maxHeight: '300px', overflowY: 'auto' }}>
-                      {relatedTasks.map(task => (
-                        <Card key={task.id} style={{ marginBottom: 8 }}>
-                          <div>
-                            <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
-                              {task.title}
-                            </div>
-                            <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)' }}>
-                              ID: {task.id} | 状态: {task.status === 'active' ? '进行中' : task.status === 'completed' ? '已完成' : task.status}
-                            </div>
+          const relatedTasks = error.response?.data?.related_tasks;
+          if (error.response?.data?.error && relatedTasks) {
+            Modal.info({
+              title: t('actionSpace.cannotDeleteTitle'),
+              icon: <ExclamationCircleOutlined style={{ color: '#faad14' }} />,
+              content: (
+                <div>
+                  <p>{t('actionSpace.cannotDeleteContent', { name: space.name })}</p>
+                  <div style={{ marginTop: 12, marginBottom: 12, maxHeight: '300px', overflowY: 'auto' }}>
+                    {relatedTasks.map(task => (
+                      <Card key={task.id} style={{ marginBottom: 8 }}>
+                        <div>
+                          <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
+                            {task.title}
                           </div>
-                        </Card>
-                      ))}
-                    </div>
-                    <div style={{ backgroundColor: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: '6px', padding: '12px', marginTop: 16 }}>
-                      <p style={{ margin: 0, fontWeight: 'bold', color: '#52c41a' }}>建议操作：</p>
-                      <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
-                        <li>先完成或删除相关的行动任务</li>
-                        <li>或者将行动任务迁移到其他行动空间</li>
-                        <li>可以在任务管理页面中处理这些任务</li>
-                      </ul>
-                    </div>
+                          <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)' }}>
+                            ID: {task.id} | {t('actionSpace.cannotDeleteTaskStatus', {
+                              status: task.status === 'active'
+                                ? t('actionSpace.taskStatus.active')
+                                : task.status === 'completed'
+                                  ? t('actionSpace.taskStatus.completed')
+                                  : task.status
+                            })}
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
                   </div>
-                ),
-                okText: '我知道了',
-                width: 600
-              });
-            } else {
-              message.error(`删除行动空间失败: ${errorMsg}`);
-            }
+                  <div style={{ backgroundColor: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: '6px', padding: '12px', marginTop: 16 }}>
+                    <p style={{ margin: 0, fontWeight: 'bold', color: '#52c41a' }}>{t('actionSpace.suggestionTitle')}</p>
+                    <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
+                      <li>{t('actionSpace.suggestion1')}</li>
+                      <li>{t('actionSpace.suggestion2')}</li>
+                      <li>{t('actionSpace.suggestion3')}</li>
+                    </ul>
+                  </div>
+                </div>
+              ),
+              okText: t('actionSpace.gotIt'),
+              width: 600
+            });
           } else {
-            message.error('删除行动空间失败');
+            const errorMsg = error.response?.data?.error;
+            message.error(errorMsg
+              ? t('actionSpace.deleteFailedWithReason', { reason: errorMsg })
+              : t('actionSpace.deleteFailed'));
           }
         }
       }
@@ -136,48 +138,48 @@ const ActionSpaceOverview = () => {
   // 渲染表格视图的列配置
   const tableColumns = [
     {
-      title: '名称',
+      title: t('spaceOverview.col.name'),
       dataIndex: 'name',
       key: 'name',
       width: 180,
       fixed: 'left' as const,
     },
     {
-      title: '描述',
+      title: t('spaceOverview.col.description'),
       dataIndex: 'description',
       key: 'description',
       width: 200,
       ellipsis: true,
     },
     {
-      title: '来源',
+      title: t('spaceOverview.col.source'),
       dataIndex: 'created_by',
       key: 'resource_source',
       width: 100,
       render: (created_by, record) => {
         if (!created_by) {
           return (
-            <Tooltip title="系统资源，所有用户可见可用">
-              <Tag icon={<GlobalOutlined />} color="blue">系统</Tag>
+            <Tooltip title={t('spaceOverview.source.systemTooltip')}>
+              <Tag icon={<GlobalOutlined />} color="blue">{t('spaceOverview.source.system')}</Tag>
             </Tooltip>
           );
         }
         if (record.is_shared) {
           return (
-            <Tooltip title="用户共享资源，所有用户可见可用">
-              <Tag icon={<TeamOutlined />} color="green">共享</Tag>
+            <Tooltip title={t('spaceOverview.source.sharedTooltip')}>
+              <Tag icon={<TeamOutlined />} color="green">{t('spaceOverview.source.shared')}</Tag>
             </Tooltip>
           );
         }
         return (
-          <Tooltip title="私有资源，仅创建者可见">
-            <Tag icon={<LockOutlined />} color="orange">私有</Tag>
+          <Tooltip title={t('spaceOverview.source.privateTooltip')}>
+            <Tag icon={<LockOutlined />} color="orange">{t('spaceOverview.source.private')}</Tag>
           </Tooltip>
         );
       },
     },
     {
-      title: '标签',
+      title: t('spaceOverview.col.tags'),
       dataIndex: 'tags',
       key: 'tags',
       width: 150,
@@ -194,34 +196,34 @@ const ActionSpaceOverview = () => {
       ),
     },
     {
-      title: '规则集',
+      title: t('spaceOverview.col.ruleSets'),
       dataIndex: 'rule_sets',
       key: 'rule_sets',
       width: 100,
       render: (ruleSets) => <>{(ruleSets || []).length}</>,
     },
     {
-      title: '行动任务数',
+      title: t('spaceOverview.col.actionTaskCount'),
       dataIndex: 'action_tasks',
       key: 'action_tasks',
       width: 120,
       render: (actionTasks) => <>{(actionTasks || []).length}</>,
     },
     {
-      title: '创建时间',
+      title: t('spaceOverview.col.createdAt'),
       dataIndex: 'created_at',
       key: 'created_at',
       width: 180,
       render: (date) => date ? new Date(date).toLocaleString() : '-',
     },
     {
-      title: '操作',
+      title: t('spaceOverview.col.actions'),
       key: 'action',
       width: 150,
       fixed: 'right' as const,
       render: (_, record) => (
         <Space>
-          <Tooltip title="查看详情">
+          <Tooltip title={t('spaceOverview.action.viewDetail')}>
             <Button
               type="text"
               icon={<InfoCircleOutlined />}
@@ -232,11 +234,10 @@ const ActionSpaceOverview = () => {
               }}
             />
           </Tooltip>
-          <Tooltip title="删除">
+          <Tooltip title={t('spaceOverview.action.delete')}>
             <Button
               type="text"
               icon={<DeleteOutlined />}
-             
               danger
               onClick={(e) => {
                 e.stopPropagation();
@@ -260,10 +261,10 @@ const ActionSpaceOverview = () => {
       }}>
         <div>
           <Title level={4} style={{ margin: 0, marginBottom: '8px' }}>
-            {t('actionSpace.title') || '行动空间管理'}
+            {t('actionSpace.title')}
           </Title>
           <Text type="secondary">
-            {t('actionSpace.subtitle') || '创建和管理行动空间'}
+            {t('actionSpace.subtitle')}
           </Text>
         </div>
         <Button
@@ -271,7 +272,7 @@ const ActionSpaceOverview = () => {
           icon={<PlusOutlined />}
           onClick={() => setIsCreateModalVisible(true)}
         >
-          {t('actionSpace.create') || '创建行动空间'}
+          {t('actionSpace.create')}
         </Button>
       </div>
 
@@ -283,20 +284,22 @@ const ActionSpaceOverview = () => {
             onClick={() => setTagsVisible(!tagsVisible)}
             type={selectedTagIds.length > 0 ? 'primary' : 'default'}
           >
-            按标签筛选 {selectedTagIds.length > 0 ? `(${selectedTagIds.length})` : ''}
+            {selectedTagIds.length > 0
+              ? t('spaceOverview.filterByTagCount', { count: selectedTagIds.length })
+              : t('spaceOverview.filterByTag')}
           </Button>
           <Button
             icon={<TagsOutlined />}
             onClick={() => setIsTagManagementVisible(true)}
           >
-            标签管理
+            {t('spaceOverview.tagManagement')}
           </Button>
           <Segmented
             value={viewMode}
             onChange={setViewMode}
             options={[
-              { label: '卡片视图', value: 'card', icon: <AppstoreOutlined /> },
-              { label: '列表视图', value: 'table', icon: <OrderedListOutlined /> }
+              { label: t('spaceOverview.viewMode.card'), value: 'card', icon: <AppstoreOutlined /> },
+              { label: t('spaceOverview.viewMode.table'), value: 'table', icon: <OrderedListOutlined /> }
             ]}
           />
         </Space>
@@ -363,7 +366,7 @@ const ActionSpaceOverview = () => {
               >
                 <div style={{ textAlign: 'center', padding: '80px 0' }}>
                   <PlusOutlined style={{ fontSize: '32px', color: '#91caff' }} />
-                  <p style={{ marginTop: 8 }}>创建行动空间</p>
+                  <p style={{ marginTop: 8 }}>{t('actionSpace.create')}</p>
                 </div>
               </Card>
             </Col>
@@ -400,7 +403,7 @@ const ActionSpaceOverview = () => {
             pagination={{
               defaultPageSize: 10,
               pageSizeOptions: [10, 50, 100],
-              showTotal: (total) => `共 ${total} 个行动空间`,
+              showTotal: (total) => t('spaceOverview.paginationTotal', { total }),
               showSizeChanger: true,
               showQuickJumper: true,
               position: ['bottomRight']

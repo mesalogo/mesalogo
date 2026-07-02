@@ -184,12 +184,12 @@ const ExecutionMonitoring: React.FC<ExecutionMonitoringProps> = ({
       width: 100,
       render: (status: string) => {
         const statusConfig: Record<string, { color: any; text: string }> = {
-          queued: { color: 'default', text: t('parallelLab.monitor.status.queued', '排队中') },
+          queued: { color: 'default', text: t('parallelLab.monitor.status.queued') },
           pending: { color: 'warning', text: t('parallelLab.monitor.status.pending') },
           running: { color: 'processing', text: t('parallelLab.monitor.status.running') },
           completed: { color: 'success', text: t('parallelLab.monitor.status.completed') },
           failed: { color: 'error', text: t('parallelLab.monitor.status.failed') },
-          stopped: { color: 'warning', text: t('parallelLab.monitor.status.stopped', '已停止') }
+          stopped: { color: 'warning', text: t('parallelLab.monitor.status.stopped') }
         };
         const config = statusConfig[status] || { color: 'default', text: status };
         return <Badge status={config.color} text={config.text} />;
@@ -206,7 +206,7 @@ const ExecutionMonitoring: React.FC<ExecutionMonitoringProps> = ({
           onClick={() => navigate(`/action-tasks/detail/${record.action_task_id}`)}
           disabled={!record.action_task_id}
         >
-          {record.action_task_id ? t('parallelLab.monitor.details') : t('parallelLab.monitor.status.queued', '排队中')}
+          {record.action_task_id ? t('parallelLab.monitor.details') : t('parallelLab.monitor.status.queued')}
         </Button>
       )
     }
@@ -376,7 +376,7 @@ const ExecutionMonitoring: React.FC<ExecutionMonitoringProps> = ({
             </Col>
             <Col flex="1">
               <Statistic
-                title={t('parallelLab.monitor.status.stopped', '已停止')}
+                title={t('parallelLab.monitor.status.stopped')}
                 value={iterationStats[experiment.id]?.stopped ?? 0}
                 styles={{ content: { color: (iterationStats[experiment.id]?.stopped ?? 0) > 0 ? '#faad14' : undefined } }}
               />

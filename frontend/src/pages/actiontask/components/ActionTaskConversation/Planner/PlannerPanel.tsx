@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, Tag, Space, Typography, Empty } from 'antd';
 import { 
   DownOutlined, 
@@ -16,23 +17,17 @@ const { Text, Title } = Typography;
  * 使用 React.memo 优化渲染性能
  */
 const PlannerPanel = React.memo(({ plan }: any) => {
+  const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(true);
 
-  console.log('[PlannerPanel] 渲染，plan 值:', plan);
-
-  // 如果没有计划，不显示
   if (!plan) {
-    console.log('[PlannerPanel] 没有计划，不显示面板');
     return null;
   }
 
-  // 防御性检查：确保数据格式正确
   if (typeof plan !== 'object' || !plan.title) {
     console.error('[PlannerPanel] Invalid plan data:', plan);
     return null;
   }
-
-  console.log('[PlannerPanel] 显示计划面板，标题:', plan.title, '状态:', plan.status);
 
   const { 
     title, 
@@ -52,11 +47,10 @@ const PlannerPanel = React.memo(({ plan }: any) => {
     completed: <CheckCircleOutlined style={{ color: '#52c41a' }} />
   };
 
-  // 状态文本映射
   const statusTexts = {
-    pending: '待完成',
-    completed: '已完成',
-    active: '进行中'
+    pending: t('planner.status.pending'),
+    completed: t('planner.status.completed'),
+    active: t('planner.status.active')
   };
 
   // 状态颜色映射
@@ -91,7 +85,7 @@ const PlannerPanel = React.memo(({ plan }: any) => {
             📋 {title}
           </Text>
           <Text type="secondary" style={{ fontSize: '13px' }}>
-            {completed_count}/{total_count} 已完成
+            {completed_count}/{total_count} {t('planner.completedCount')}
           </Text>
         </Space>
         
@@ -106,7 +100,7 @@ const PlannerPanel = React.memo(({ plan }: any) => {
           {safeItems.length === 0 ? (
             <Empty 
               image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description="暂无任务"
+              description={t('planner.noTasks')}
               style={{ margin: '16px 0' }}
             />
           ) : (

@@ -24,6 +24,7 @@ import {
   FileTextOutlined,
   CloseOutlined
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { MarkdownRenderer } from '../actiontask/components/ConversationExtraction';
 import WorkspaceEditor from './WorkspaceEditor';
 import { workspaceAPI } from '../../services/api/workspace';
@@ -42,6 +43,7 @@ const { Text, Title } = Typography;
  * @param {Function} [props.onCreateTemplate] - 创建模板时的回调（可选）
  */
 const WorkspaceTemplateTab = ({ selectedWorkspace, onSelectMemory, onDelete, onCreateTemplate }: any = {}) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [templates, setTemplates] = useState([]);
   const [treeData, setTreeData] = useState([]);
@@ -83,7 +85,7 @@ const WorkspaceTemplateTab = ({ selectedWorkspace, onSelectMemory, onDelete, onC
         title: (
           <Space>
             <TeamOutlined style={{ color: '#722ed1', fontSize: '14px' }} />
-            <Text strong>共享工作空间模板</Text>
+            <Text strong>{t('workspace.template.sharedCategory')}</Text>
             <Text type="secondary">({sharedTemplates.length})</Text>
           </Space>
         ),
@@ -105,7 +107,7 @@ const WorkspaceTemplateTab = ({ selectedWorkspace, onSelectMemory, onDelete, onC
         title: (
           <Space>
             <UserOutlined style={{ color: '#52c41a', fontSize: '14px' }} />
-            <Text strong>智能体工作空间模板</Text>
+            <Text strong>{t('workspace.template.agentCategory')}</Text>
             <Text type="secondary">({agentTemplates.length})</Text>
           </Space>
         ),
@@ -126,7 +128,7 @@ const WorkspaceTemplateTab = ({ selectedWorkspace, onSelectMemory, onDelete, onC
     ];
 
     setTreeData(treeNodes);
-  }, [templates, getTemplateDisplayName]);
+  }, [templates, getTemplateDisplayName, t]);
 
   useEffect(() => {
     buildTreeData();
@@ -137,11 +139,11 @@ const WorkspaceTemplateTab = ({ selectedWorkspace, onSelectMemory, onDelete, onC
     try {
       setLoading(true);
       const templateList = await workspaceAPI.getWorkspaceTemplates();
-      console.log('加载的模板列表:', templateList); // 调试信息
+      console.log('Loaded template list:', templateList); // 调试信息
       setTemplates(templateList);
     } catch (error) {
-      console.error('加载工作空间模板失败:', error);
-      message.error('加载工作空间模板失败');
+      console.error('Failed to load workspace templates:', error);
+      message.error(t('workspace.template.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -169,7 +171,7 @@ const WorkspaceTemplateTab = ({ selectedWorkspace, onSelectMemory, onDelete, onC
       setEditMode(false);
     } else if (data.type === 'template') {
       // 点击模板节点时，选中该模板
-      console.log('选中的模板:', data.template); // 调试信息
+      console.log('Selected template:', data.template); // 调试信息
       setSelectedKeys([nodeKey]);
       setSelectedTemplate(data.template);
       setTemplateTitle(getTemplateDisplayName(data.template)); // 更新标题状态
@@ -212,12 +214,12 @@ const WorkspaceTemplateTab = ({ selectedWorkspace, onSelectMemory, onDelete, onC
   // 保存模板
   const handleSaveTemplate = async () => {
     if (!templateTitle.trim()) {
-      message.error('模板标题不能为空');
+      message.error(t('workspace.template.titleRequired'));
       return;
     }
 
     if (!templateContent.trim()) {
-      message.error('模板内容不能为空');
+      message.error(t('workspace.template.contentRequired'));
       return;
     }
 
@@ -236,7 +238,7 @@ const WorkspaceTemplateTab = ({ selectedWorkspace, onSelectMemory, onDelete, onC
           name: templateTitle,
           content: templateContent
         });
-        message.success('模板更新成功');
+        message.success(t('workspace.template.updateSuccess'));
       } else {
         // 创建新模板
         await workspaceAPI.createNewWorkspaceTemplate({
@@ -245,14 +247,14 @@ const WorkspaceTemplateTab = ({ selectedWorkspace, onSelectMemory, onDelete, onC
           description: '',
           category: 'agent' // 默认分类，后续可以添加选择器
         });
-        message.success('模板创建成功');
+        message.success(t('workspace.template.createSuccess'));
       }
 
       setEditMode(false);
       loadTemplates(); // 重新加载模板列表
     } catch (error) {
-      console.error('保存模板失败:', error);
-      message.error('保存模板失败');
+      console.error('Failed to save template:', error);
+      message.error(t('workspace.template.saveFailed'));
     }
   };
 
@@ -262,14 +264,14 @@ const WorkspaceTemplateTab = ({ selectedWorkspace, onSelectMemory, onDelete, onC
 
     try {
       await workspaceAPI.deleteWorkspaceTemplate(selectedTemplate.id);
-      message.success('模板删除成功');
+      message.success(t('workspace.template.deleteSuccess'));
       setSelectedTemplate(null);
       setSelectedKeys([]);
       setEditMode(false);
       loadTemplates(); // 重新加载模板列表
     } catch (error) {
-      console.error('删除模板失败:', error);
-      message.error('删除模板失败');
+      console.error('Failed to delete template:', error);
+      message.error(t('workspace.template.deleteFailed'));
     }
   };
 
@@ -289,13 +291,12 @@ const WorkspaceTemplateTab = ({ selectedWorkspace, onSelectMemory, onDelete, onC
           title={
             <Space>
               <FolderOutlined />
-              工作空间模板分类
-              <Tooltip title="刷新">
+              {t('workspace.template.categoryTitle')}
+              <Tooltip title={t('workspace.template.refresh')}>
                 <Button
                   type="text"
                   icon={<ReloadOutlined />}
                   onClick={handleRefresh}
-                 
                 />
               </Tooltip>
             </Space>
@@ -306,7 +307,7 @@ const WorkspaceTemplateTab = ({ selectedWorkspace, onSelectMemory, onDelete, onC
           <div className="tree-container" style={{ padding: '16px' }}>
             {treeData.length === 0 ? (
               <Empty
-                description="暂无工作空间模板"
+                description={t('workspace.template.noTemplates')}
                 style={{ marginTop: '50px' }}
               />
             ) : (
@@ -333,15 +334,14 @@ const WorkspaceTemplateTab = ({ selectedWorkspace, onSelectMemory, onDelete, onC
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Space>
                 <FileTextOutlined />
-                工作空间模板内容
+                {t('workspace.template.contentTitle')}
               </Space>
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
                 onClick={handleCreateTemplate}
-               
               >
-                新建模板
+                {t('workspace.template.createBtn')}
               </Button>
             </div>
           }
@@ -359,7 +359,7 @@ const WorkspaceTemplateTab = ({ selectedWorkspace, onSelectMemory, onDelete, onC
                       icon={<SaveOutlined />}
                       onClick={handleSaveTemplate}
                     >
-                      保存
+                      {t('workspace.template.save')}
                     </Button>
                     <Button
                       icon={<CloseOutlined />}
@@ -372,7 +372,7 @@ const WorkspaceTemplateTab = ({ selectedWorkspace, onSelectMemory, onDelete, onC
                         }
                       }}
                     >
-                      取消
+                      {t('workspace.template.cancel')}
                     </Button>
                   </Space>
                 ) : (
@@ -381,14 +381,14 @@ const WorkspaceTemplateTab = ({ selectedWorkspace, onSelectMemory, onDelete, onC
                       icon={<EditOutlined />}
                       onClick={handleEditTemplate}
                     >
-                      编辑
+                      {t('workspace.template.edit')}
                     </Button>
                     <Button
                       danger
                       icon={<DeleteOutlined />}
                       onClick={handleDeleteTemplate}
                     >
-                      删除
+                      {t('workspace.template.delete')}
                     </Button>
                   </Space>
                 )}
@@ -398,7 +398,7 @@ const WorkspaceTemplateTab = ({ selectedWorkspace, onSelectMemory, onDelete, onC
               <div style={{ marginBottom: 16 }}>
                 {editMode ? (
                   <Input
-                    placeholder="模板标题"
+                    placeholder={t('workspace.template.titlePlaceholder')}
                     value={templateTitle}
                     onChange={(e) => setTemplateTitle(e.target.value)}
                   />
@@ -423,7 +423,7 @@ const WorkspaceTemplateTab = ({ selectedWorkspace, onSelectMemory, onDelete, onC
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
               <FileTextOutlined style={{ fontSize: '48px', color: 'var(--custom-border)', marginBottom: '16px' }} />
-              <Text type="secondary">选择一个工作空间模板查看详情，或点击"新建模板"创建新模板</Text>
+              <Text type="secondary">{t('workspace.template.selectHint')}</Text>
             </div>
           )}
         </Card>

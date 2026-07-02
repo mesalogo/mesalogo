@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { App, Card, Button, Table, Space, Tag, Modal, Typography, Tooltip } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, GlobalOutlined, TeamOutlined, LockOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
 import RuleEditModal from './RuleEditModal';
 
@@ -19,6 +20,7 @@ const RulesListTab = ({
   onLoadRoles,
   onLoadEnvironmentVariables
 }) => {
+  const { t } = useTranslation();
   const { message, modal } = App.useApp();
   const [ruleModalVisible, setRuleModalVisible] = useState(false);
   const [editingRule, setEditingRule] = useState(null);
@@ -26,11 +28,11 @@ const RulesListTab = ({
   // 当规则编辑弹窗显示时，加载角色和环境变量数据
   useEffect(() => {
     if (ruleModalVisible) {
-      console.log('规则编辑弹窗显示，检查数据加载状态');
+      console.log('Rule edit modal shown, checking data load state');
       
       // 如果角色数据为空，加载角色数据
       if (roles.length === 0 && onLoadRoles) {
-        console.log('加载角色数据');
+        console.log('Loading role data');
         onLoadRoles();
       }
       
@@ -38,7 +40,7 @@ const RulesListTab = ({
       if (environmentVariables.internal.length === 0 && 
           environmentVariables.external.length === 0 && 
           onLoadEnvironmentVariables) {
-        console.log('加载环境变量数据');
+        console.log('Loading environment variable data');
         onLoadEnvironmentVariables();
       }
     }
@@ -56,19 +58,19 @@ const RulesListTab = ({
 
   const handleDeleteRule = async (ruleId) => {
     modal.confirm({
-      title: '确认删除',
-      content: '确定要删除这条规则吗？删除后无法恢复。',
-      okText: '确认',
-      cancelText: '取消',
+      title: t('rulesList.deleteConfirmTitle'),
+      content: t('rulesList.deleteConfirmContent'),
+      okText: t('rulesList.deleteConfirmOk'),
+      cancelText: t('rulesList.deleteConfirmCancel'),
       okType: 'danger',
       onOk: async () => {
         try {
           await actionSpaceAPI.deleteRule(ruleId, null);
-          message.success('规则删除成功');
+          message.success(t('rulesList.deleteSuccess'));
           onRefresh(true);
         } catch (error) {
-          console.error('删除规则失败:', error);
-          message.error('删除规则失败');
+          console.error('Failed to delete rule:', error);
+          message.error(t('rulesList.deleteFailed'));
         }
       }
     });
@@ -76,7 +78,7 @@ const RulesListTab = ({
 
   const columns = [
     {
-      title: '规则名称',
+      title: t('rulesList.col.name'),
       dataIndex: 'name',
       key: 'name',
       width: 200,
@@ -84,23 +86,23 @@ const RulesListTab = ({
       ellipsis: true,
     },
     {
-      title: '类型',
+      title: t('rulesList.col.type'),
       dataIndex: 'type',
       key: 'type',
       width: 120,
       render: (type) => (
         <Tag color={type === 'llm' ? 'green' : 'blue'}>
-          {type === 'llm' ? '自然语言' : '逻辑规则'}
+          {type === 'llm' ? t('ruleSets.ruleType.llm') : t('ruleSets.ruleType.logic')}
         </Tag>
       ),
       filters: [
-        { text: '自然语言规则', value: 'llm' },
-        { text: '逻辑规则', value: 'logic' },
+        { text: t('rulesList.filter.llm'), value: 'llm' },
+        { text: t('rulesList.filter.logic'), value: 'logic' },
       ],
       onFilter: (value, record) => record.type === value,
     },
     {
-      title: '来源',
+      title: t('rulesList.col.source'),
       dataIndex: 'created_by',
       key: 'resource_source',
       width: 100,
@@ -108,8 +110,8 @@ const RulesListTab = ({
         // 系统资源：created_by 为 null
         if (!created_by) {
           return (
-            <Tooltip title="系统资源，所有用户可见可用">
-              <Tag icon={<GlobalOutlined />} color="blue">系统</Tag>
+            <Tooltip title={t('ruleSets.source.systemTooltip')}>
+              <Tag icon={<GlobalOutlined />} color="blue">{t('ruleSets.source.system')}</Tag>
             </Tooltip>
           );
         }
@@ -117,23 +119,23 @@ const RulesListTab = ({
         // 用户共享资源：created_by 有值且 is_shared 为 true
         if (record.is_shared) {
           return (
-            <Tooltip title="用户共享资源，所有用户可见可用">
-              <Tag icon={<TeamOutlined />} color="green">共享</Tag>
+            <Tooltip title={t('ruleSets.source.sharedTooltip')}>
+              <Tag icon={<TeamOutlined />} color="green">{t('ruleSets.source.shared')}</Tag>
             </Tooltip>
           );
         }
 
         // 私有资源：created_by 有值且 is_shared 为 false
         return (
-          <Tooltip title="私有资源，仅创建者可见">
-            <Tag icon={<LockOutlined />} color="orange">私有</Tag>
+          <Tooltip title={t('ruleSets.source.privateTooltip')}>
+            <Tag icon={<LockOutlined />} color="orange">{t('ruleSets.source.private')}</Tag>
           </Tooltip>
         );
       },
       filters: [
-        { text: '系统资源', value: 'system' },
-        { text: '共享资源', value: 'shared' },
-        { text: '私有资源', value: 'private' },
+        { text: t('rulesList.filter.system'), value: 'system' },
+        { text: t('rulesList.filter.shared'), value: 'shared' },
+        { text: t('rulesList.filter.private'), value: 'private' },
       ],
       onFilter: (value, record) => {
         if (value === 'system') return !record.created_by;
@@ -143,7 +145,7 @@ const RulesListTab = ({
       },
     },
     {
-      title: '所属规则集',
+      title: t('rulesList.col.ruleSets'),
       dataIndex: 'rule_sets',
       key: 'rule_sets',
       width: 150,
@@ -156,7 +158,7 @@ const RulesListTab = ({
               </Tag>
             ))
           ) : (
-            <Text type="secondary">未分配</Text>
+            <Text type="secondary">{t('rulesList.unassigned')}</Text>
           )}
         </>
       ),
@@ -164,23 +166,23 @@ const RulesListTab = ({
       onFilter: (value, record) => record.rule_sets?.some(rs => String(rs.id) === value),
     },
     {
-      title: '状态',
+      title: t('rulesList.col.status'),
       dataIndex: 'is_active',
       key: 'is_active',
       width: 80,
       render: isActive => (
         <Tag color={isActive === false ? 'error' : 'success'}>
-          {isActive === false ? '禁用' : '启用'}
+          {isActive === false ? t('rulesList.status.disabled') : t('rulesList.status.enabled')}
         </Tag>
       ),
       filters: [
-        { text: '已启用', value: true },
-        { text: '已禁用', value: false },
+        { text: t('rulesList.filter.enabled'), value: true },
+        { text: t('rulesList.filter.disabled'), value: false },
       ],
       onFilter: (value, record) => record.is_active === value,
     },
     {
-      title: '规则内容',
+      title: t('rulesList.col.content'),
       dataIndex: 'content',
       key: 'content',
       width: 300,
@@ -199,7 +201,7 @@ const RulesListTab = ({
       ),
     },
     {
-      title: '操作',
+      title: t('rulesList.col.actions'),
       key: 'action',
       width: 100,
       fixed: 'right' as const,
@@ -209,14 +211,12 @@ const RulesListTab = ({
             type="text"
             icon={<EditOutlined />}
             onClick={() => showEditRuleModal(record)}
-           
           />
           <Button
             type="text"
             danger
             icon={<DeleteOutlined />}
             onClick={() => handleDeleteRule(record.id)}
-           
           />
         </Space>
       ),
@@ -226,7 +226,7 @@ const RulesListTab = ({
   return (
     <>
       <Card
-        title="规则列表"
+        title={t('rulesList.cardTitle')}
         extra={
           <Button
             type="primary"
@@ -234,7 +234,7 @@ const RulesListTab = ({
             onClick={showAddRuleModal}
             disabled={loading}
           >
-            添加规则
+            {t('rulesList.addRule')}
           </Button>
         }
       >
@@ -247,7 +247,7 @@ const RulesListTab = ({
             pageSize: 10,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`
+            showTotal: (total, range) => t('rulesList.paginationTotal', { start: range[0], end: range[1], total })
           }}
           size="middle"
           scroll={{ x: 'max-content' }}

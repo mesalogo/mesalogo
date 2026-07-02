@@ -118,7 +118,7 @@ const AssistantSettings = ({
           style={{ marginBottom: '16px' }}
         >
           <Select
-            placeholder="选择辅助生成模型"
+            placeholder={t('assistantSettings.selectModel')}
             allowClear
             showSearch
             filterOption={(input, option) =>
@@ -128,7 +128,7 @@ const AssistantSettings = ({
               // 默认模型选项
               {
                 value: 'default',
-                label: `默认文本生成模型${defaultModels?.text_model ? ` (${defaultModels.text_model.name})` : ''}`,
+                label: t('assistantSettings.defaultTextModel', { suffix: defaultModels?.text_model ? ` (${defaultModels.text_model.name})` : '' }),
                 isDefault: true,
                 model: defaultModels?.text_model
               },
@@ -143,7 +143,7 @@ const AssistantSettings = ({
                   // 加载状态或模拟数据
                   {
                     value: 'loading',
-                    label: '加载中...',
+                    label: t('assistantSettings.loading'),
                     isDefault: false,
                     model: null,
                     disabled: true
@@ -153,15 +153,15 @@ const AssistantSettings = ({
             ]}
             optionRender={(option) => {
               if (option.data.disabled) {
-                return <span>加载中...</span>;
+                return <span>{t('assistantSettings.loading')}</span>;
               }
 
               if (option.data.isDefault) {
                 return (
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontWeight: 'bold' }}>默认文本生成模型</span>
-                      <Tag color="blue">默认</Tag>
+                      <span style={{ fontWeight: 'bold' }}>{t('assistantSettings.defaultTextModelName')}</span>
+                      <Tag color="blue">{t('assistantSettings.defaultTag')}</Tag>
                     </div>
                     {option.data.model && (
                       <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)' }}>

@@ -83,13 +83,13 @@ const OneClickModal = ({ visible, onCancel, onSuccess }) => {
   const fetchGlobalSettings = async () => {
     try {
       const settings = await settingsAPI.getSettings();
-      console.log('获取到的设置:', settings); // 调试日志
+      console.log('Fetched settings:', settings); // 调试日志
       setGlobalSettings({
         enableAssistantGeneration: settings.enable_assistant_generation !== undefined ? settings.enable_assistant_generation : true,
         assistantGenerationModel: settings.assistant_generation_model || 'default'
       });
     } catch (error) {
-      console.error('获取全局设置失败:', error);
+      console.error('Failed to fetch global settings:', error);
       // 使用默认值
       setGlobalSettings({
         enableAssistantGeneration: true,
@@ -192,7 +192,7 @@ const OneClickModal = ({ visible, onCancel, onSuccess }) => {
         throw new Error(response.error || t('oneClick.role.generateFailed'));
       }
     } catch (error) {
-      console.error('角色生成失败:', error);
+      console.error('Role generation failed:', error);
       const errorMessage = error.response?.data?.error || error.message || t('oneClick.role.generateFailed');
       setError(errorMessage);
       message.error(`${t('oneClick.role.generateFailed')}: ${errorMessage}`);
@@ -216,7 +216,7 @@ const OneClickModal = ({ visible, onCancel, onSuccess }) => {
         throw new Error(response.error || t('oneClick.actionSpace.generateFailed'));
       }
     } catch (error) {
-      console.error('行动空间生成失败:', error);
+      console.error('Action space generation failed:', error);
       const errorMessage = error.response?.data?.error || error.message || t('oneClick.actionSpace.generateFailed');
       setError(errorMessage);
       message.error(`${t('oneClick.actionSpace.generateFailed')}: ${errorMessage}`);
@@ -244,7 +244,7 @@ const OneClickModal = ({ visible, onCancel, onSuccess }) => {
         throw new Error(response.error || t('oneClick.rules.generateFailed'));
       }
     } catch (error) {
-      console.error('规则生成失败:', error);
+      console.error('Rules generation failed:', error);
       const errorMessage = error.response?.data?.error || error.message || t('oneClick.rules.generateFailed');
       setError(errorMessage);
       message.error(`${t('oneClick.rules.generateFailed')}: ${errorMessage}`);
@@ -273,7 +273,7 @@ const OneClickModal = ({ visible, onCancel, onSuccess }) => {
         throw new Error(response.error || t('oneClick.task.generateFailed'));
       }
     } catch (error) {
-      console.error('任务生成失败:', error);
+      console.error('Task generation failed:', error);
       const errorMessage = error.response?.data?.error || error.message || t('oneClick.task.generateFailed');
       setError(errorMessage);
       message.error(`${t('oneClick.task.generateFailed')}: ${errorMessage}`);
@@ -296,7 +296,7 @@ const OneClickModal = ({ visible, onCancel, onSuccess }) => {
         task: generatedData.task
       };
 
-      console.log('发送的数据结构:', dataToSend);
+      console.log('Payload being sent:', dataToSend);
 
       const response = await oneClickGenerationAPI.createAll(dataToSend);
 
@@ -308,7 +308,7 @@ const OneClickModal = ({ visible, onCancel, onSuccess }) => {
         throw new Error(response.error || t('oneClick.createFailed'));
       }
     } catch (error) {
-      console.error('创建失败:', error);
+      console.error('Creation failed:', error);
       const errorMessage = error.response?.data?.error || error.message || t('oneClick.createFailed');
       setError(errorMessage);
       message.error(`${t('oneClick.createFailed')}: ${errorMessage}`);
@@ -328,7 +328,7 @@ const OneClickModal = ({ visible, onCancel, onSuccess }) => {
 
       // 检查辅助生成功能是否启用
       if (!globalSettings.enableAssistantGeneration) {
-        message.warning('辅助生成功能未启用，请在系统设置中开启');
+        message.warning(t('oneClick.assistantNotEnabled'));
         return;
       }
 
@@ -417,21 +417,20 @@ const OneClickModal = ({ visible, onCancel, onSuccess }) => {
 
     return (
       <Card
-        title={`${t('oneClick.role.generated')} (${generatedData.roles.length}个)`}
+        title={`${t('oneClick.role.generated')} (${generatedData.roles.length})`}
         extra={
           <Space>
             <Button
               type="link"
               icon={<EditOutlined />}
-             
               onClick={() => handleEdit('roles')}
             >
-              编辑
+              {t('oneClick.editBtn')}
             </Button>
             <Button type="link" icon={<RedoOutlined />} onClick={() => {
               setGeneratedData(prev => ({ ...prev, roles: null }));
             }}>
-              重新生成
+              {t('oneClick.regenerateBtn')}
             </Button>
           </Space>
         }
@@ -446,21 +445,19 @@ const OneClickModal = ({ visible, onCancel, onSuccess }) => {
                 <Button
                   type="link"
                   icon={<DeleteOutlined />}
-                 
                   danger
                   onClick={() => handleDeleteRole(index)}
                   title={t('oneClick.role.delete')}
                 />
               )
             }
-           
             style={{ marginBottom: 12 }}
           >
             <Descriptions column={1}>
               <Descriptions.Item label={t('oneClick.role.description')}>
                 {role.description}
               </Descriptions.Item>
-              <Descriptions.Item label="系统提示词">
+              <Descriptions.Item label={t('oneClick.role.systemPromptLabel')}>
                 <div style={{
                   maxHeight: 120,
                   overflow: 'auto',
@@ -507,24 +504,23 @@ const OneClickModal = ({ visible, onCancel, onSuccess }) => {
             <Button
               type="link"
               icon={<EditOutlined />}
-             
               onClick={() => handleEdit('actionSpace')}
             >
-              编辑
+              {t('oneClick.editBtn')}
             </Button>
             <Button type="link" icon={<RedoOutlined />} onClick={() => {
               setGeneratedData(prev => ({ ...prev, actionSpace: null }));
             }}>
-              重新生成
+              {t('oneClick.regenerateBtn')}
             </Button>
           </Space>
         }
       >
         <Descriptions bordered column={1}>
-          <Descriptions.Item label="空间名称">
+          <Descriptions.Item label={t('oneClick.actionSpace.nameLabel')}>
             {generatedData.actionSpace.name}
           </Descriptions.Item>
-          <Descriptions.Item label="空间描述">
+          <Descriptions.Item label={t('oneClick.actionSpace.descLabel')}>
             {generatedData.actionSpace.description}
           </Descriptions.Item>
         </Descriptions>
@@ -554,21 +550,20 @@ const OneClickModal = ({ visible, onCancel, onSuccess }) => {
 
     return (
       <Card
-        title={`${t('oneClick.rules.generated')} (${generatedData.rules.length}个)`}
+        title={`${t('oneClick.rules.generated')} (${generatedData.rules.length})`}
         extra={
           <Space>
             <Button
               type="link"
               icon={<EditOutlined />}
-             
               onClick={() => handleEdit('rules')}
             >
-              编辑
+              {t('oneClick.editBtn')}
             </Button>
             <Button type="link" icon={<RedoOutlined />} onClick={() => {
               setGeneratedData(prev => ({ ...prev, rules: null }));
             }}>
-              重新生成
+              {t('oneClick.regenerateBtn')}
             </Button>
           </Space>
         }
@@ -583,21 +578,19 @@ const OneClickModal = ({ visible, onCancel, onSuccess }) => {
                 <Button
                   type="link"
                   icon={<DeleteOutlined />}
-                 
                   danger
                   onClick={() => handleDeleteRule(index)}
                   title={t('oneClick.rules.delete')}
                 />
               )
             }
-           
             style={{ marginBottom: 8 }}
           >
             <Descriptions column={1}>
-              <Descriptions.Item label="类型">
+              <Descriptions.Item label={t('oneClick.rules.typeLabel')}>
 {t('oneClick.rules.type')}
               </Descriptions.Item>
-              <Descriptions.Item label="内容">
+              <Descriptions.Item label={t('oneClick.rules.contentLabel')}>
                 <div style={{
                   maxHeight: 100,
                   overflow: 'auto',
@@ -643,15 +636,14 @@ const OneClickModal = ({ visible, onCancel, onSuccess }) => {
             <Button
               type="link"
               icon={<EditOutlined />}
-             
               onClick={() => handleEdit('task')}
             >
-              编辑
+              {t('oneClick.editBtn')}
             </Button>
             <Button type="link" icon={<RedoOutlined />} onClick={() => {
               setGeneratedData(prev => ({ ...prev, task: null }));
             }}>
-              重新生成
+              {t('oneClick.regenerateBtn')}
             </Button>
           </Space>
         }
@@ -679,7 +671,7 @@ const OneClickModal = ({ visible, onCancel, onSuccess }) => {
 
   return (
     <Modal
-      title="一键创建"
+      title={t('oneClick.modalTitle')}
       open={visible}
       onCancel={handleCancel}
       width={900}
@@ -697,7 +689,7 @@ const OneClickModal = ({ visible, onCancel, onSuccess }) => {
       {/* 错误提示 */}
       {error && (
         <Alert
-          message="生成失败"
+          message={t('oneClick.generateFailedAlert')}
           description={error}
           type="error"
           showIcon
@@ -724,12 +716,12 @@ const OneClickModal = ({ visible, onCancel, onSuccess }) => {
         borderTop: '1px solid var(--custom-border)'
       }}>
         <Space>
-          <Button onClick={handleCancel}>取消</Button>
+          <Button onClick={handleCancel}>{t('oneClick.cancelBtn')}</Button>
           <Button
             onClick={handlePrev}
             disabled={currentStep === 0 || loading}
           >
-            上一步
+            {t('oneClick.prevBtn')}
           </Button>
           <Button
             type="primary"

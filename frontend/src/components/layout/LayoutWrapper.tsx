@@ -1,5 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import { Spin } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { useLayout, LAYOUT_TYPES } from '../../contexts/LayoutContext';
 import MainLayout from './MainLayout';
 
@@ -11,11 +12,12 @@ const ModernLayout = lazy(() => import('./ModernLayout'));
  * 根据用户选择的样式渲染对应的布局组件
  */
 const LayoutWrapper = ({ children }) => {
+  const { t } = useTranslation();
   const { layoutType } = useLayout();
 
   // 加载占位组件
   const LoadingFallback = () => (
-    <Spin size="large" tip="加载中..." spinning={true}>
+    <Spin size="large" tip={t('loading')} spinning={true}>
       <div style={{ 
         display: 'flex', 
         alignItems: 'center', 

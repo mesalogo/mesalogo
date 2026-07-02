@@ -135,7 +135,7 @@ const GeneralSettingsPage = () => {
       // 验证配置完整性
       const validation = validateProviderConfig(currentProvider, currentConfig);
       if (!validation.valid) {
-        message.warning(`配置不完整：${validation.error}`);
+        message.warning(t('vectorDB.test.configIncomplete', { error: validation.error }));
         return;
       }
 
@@ -147,16 +147,16 @@ const GeneralSettingsPage = () => {
       // 开始测试
       setTestConnectionLoading(true);
 
-      console.log(`开始测试${providerDisplayName}连接...`, { provider: currentProvider, config: currentConfig });
+      console.log(`Starting ${providerDisplayName} connection test...`, { provider: currentProvider, config: currentConfig });
 
       // 模拟步骤进度（因为后端是一次性返回结果）
-      updateTestStep(0, 'process', '正在验证配置参数...');
+      updateTestStep(0, 'process', t('vectorDB.test.validatingConfig'));
 
       // 短暂延迟以显示步骤
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      updateTestStep(0, 'finish', '配置验证完成', 0.5);
-      updateTestStep(1, 'process', '正在连接数据库...');
+      updateTestStep(0, 'finish', t('vectorDB.test.configValidated'), 0.5);
+      updateTestStep(1, 'process', t('vectorDB.test.connectingDb'));
 
       await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -178,7 +178,7 @@ const GeneralSettingsPage = () => {
         if (connResult) {
           updateTestStep(1, connResult.passed ? 'finish' : 'error', connResult.message);
           if (connResult.passed) {
-            updateTestStep(2, 'process', '正在测试向量操作...');
+            updateTestStep(2, 'process', t('vectorDB.test.testingVectorOps'));
             await new Promise(resolve => setTimeout(resolve, 300));
           }
         }
@@ -193,7 +193,7 @@ const GeneralSettingsPage = () => {
       // 完成测试
       finishTest(result.success, result.message, result.info);
 
-      console.log(`${providerDisplayName}测试结果:`, result);
+      console.log(`${providerDisplayName} test result:`, result);
 
     } catch (error) {
       const currentProvider = settings?.vector_db_provider || 'aliyun';

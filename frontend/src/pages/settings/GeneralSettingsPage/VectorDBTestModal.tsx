@@ -13,20 +13,20 @@ import { useTranslation } from 'react-i18next';
  */
 export const getTestSteps = (t) => [
   {
-    title: t ? t('vectorDB.test.configValidation') : '配置验证',
-    description: t ? t('vectorDB.test.configValidation.desc') : '验证向量数据库配置参数',
+    title: t('vectorDB.test.configValidation'),
+    description: t('vectorDB.test.configValidation.desc'),
     icon: <SettingOutlined />,
     key: 'config_validation'
   },
   {
-    title: t ? t('vectorDB.test.connectionTest') : '连接测试',
-    description: t ? t('vectorDB.test.connectionTest.desc') : '测试数据库连接是否正常',
+    title: t('vectorDB.test.connectionTest'),
+    description: t('vectorDB.test.connectionTest.desc'),
     icon: <LoadingOutlined />,
     key: 'connection_test'
   },
   {
-    title: t ? t('vectorDB.test.vectorOperations') : '向量操作',
-    description: t ? t('vectorDB.test.vectorOperations.desc') : '测试向量存储和搜索功能',
+    title: t('vectorDB.test.vectorOperations'),
+    description: t('vectorDB.test.vectorOperations.desc'),
     icon: <CheckCircleOutlined />,
     key: 'vector_operations'
   }
@@ -51,9 +51,9 @@ export const showDetailedTestResult = (providerDisplayName, result, t, modal) =>
   detailContent.push('📋 ' + t('vectorDB.test.layeredResults') + ':');
 
   const levels = [
-    { key: 'config_validation', name: '配置验证', icon: '⚙️' },
-    { key: 'connection_test', name: '连接测试', icon: '🔗' },
-    { key: 'vector_operations', name: '向量操作', icon: '🔍' }
+    { key: 'config_validation', name: t('vectorDB.test.configValidation'), icon: '⚙️' },
+    { key: 'connection_test', name: t('vectorDB.test.connectionTest'), icon: '🔗' },
+    { key: 'vector_operations', name: t('vectorDB.test.vectorOperations'), icon: '🔍' }
   ];
 
   levels.forEach(level => {
@@ -67,42 +67,42 @@ export const showDetailedTestResult = (providerDisplayName, result, t, modal) =>
   // 嵌入模型信息
   if (embedding_model) {
     detailContent.push('');
-    detailContent.push('🤖 嵌入模型信息:');
-    detailContent.push(`  模型名称: ${embedding_model.name}`);
-    detailContent.push(`  提供商: ${embedding_model.provider}`);
+    detailContent.push('🤖 ' + t('vectorDB.test.embeddingModelInfo') + ':');
+    detailContent.push(`  ${t('vectorDB.test.modelName')}: ${embedding_model.name}`);
+    detailContent.push(`  ${t('vectorDB.test.provider')}: ${embedding_model.provider}`);
   }
 
   // 性能指标
   if (performance_metrics && Object.keys(performance_metrics).length > 0) {
     detailContent.push('');
-    detailContent.push('📊 性能指标:');
+    detailContent.push('📊 ' + t('vectorDB.test.performanceMetrics') + ':');
 
     if (performance_metrics.vector_dimension) {
-      detailContent.push(`  向量维度: ${performance_metrics.vector_dimension}`);
+      detailContent.push(`  ${t('vectorDB.test.vectorDimension')}: ${performance_metrics.vector_dimension}`);
     }
     if (performance_metrics.embedding_time) {
-      detailContent.push(`  嵌入耗时: ${performance_metrics.embedding_time.toFixed(1)}ms`);
+      detailContent.push(`  ${t('vectorDB.test.embeddingTime')}: ${performance_metrics.embedding_time.toFixed(1)}ms`);
     }
     if (performance_metrics.similarity_score !== undefined) {
       // 显示更精确的相似度分数
       const score = performance_metrics.similarity_score;
       if (Math.abs(score) < 0.0001) {
-        detailContent.push(`  相似度分数: ${score.toExponential(2)}`);
+        detailContent.push(`  ${t('vectorDB.test.similarityScore')}: ${score.toExponential(2)}`);
       } else {
-        detailContent.push(`  相似度分数: ${score.toFixed(4)}`);
+        detailContent.push(`  ${t('vectorDB.test.similarityScore')}: ${score.toFixed(4)}`);
       }
     }
     if (performance_metrics.distance_score !== undefined) {
-      detailContent.push(`  原始距离: ${performance_metrics.distance_score.toFixed(4)}`);
+      detailContent.push(`  ${t('vectorDB.test.distanceScore')}: ${performance_metrics.distance_score.toFixed(4)}`);
     }
     if (performance_metrics.search_results_count !== undefined) {
-      detailContent.push(`  搜索结果数: ${performance_metrics.search_results_count}`);
+      detailContent.push(`  ${t('vectorDB.test.searchResultsCount')}: ${performance_metrics.search_results_count}`);
     }
   }
 
   // 使用Modal显示详细信息
   modal.info({
-    title: `${providerDisplayName} 测试详情`,
+    title: t('vectorDB.test.detailTitle', { provider: providerDisplayName }),
     content: (
       <div style={{ whiteSpace: 'pre-line', fontFamily: 'monospace', fontSize: '13px' }}>
         {detailContent.join('\n')}
@@ -129,12 +129,12 @@ export const VectorDBTestModal = ({
 
   return (
     <Modal
-      title={`${providerName} 连接测试`}
+      title={t('vectorDB.test.connectionTitle', { provider: providerName })}
       open={visible}
       onCancel={onClose}
       footer={[
         <Button key="close" onClick={onClose}>
-          关闭
+          {t('vectorDB.test.close')}
         </Button>,
         result && result.info && result.info.test_levels && (
           <Button
@@ -142,7 +142,7 @@ export const VectorDBTestModal = ({
             type="primary"
             onClick={onShowDetail}
           >
-            查看详情
+            {t('vectorDB.test.viewDetail')}
           </Button>
         )
       ]}
@@ -206,15 +206,15 @@ export const VectorDBTestModal = ({
             {result.info && result.info.performance_metrics && (
               <div style={{ marginTop: '12px' }}>
                 <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)', marginBottom: '4px' }}>
-                  性能指标:
+                  {t('vectorDB.test.performanceMetrics')}:
                 </div>
                 {Object.entries(result.info.performance_metrics).map(([key, value]: [string, any]) => (
                   <div key={key} style={{ fontSize: '12px', color: 'var(--custom-text-secondary)' }}>
-                    {key === 'embedding_time' && `嵌入耗时: ${Number(value).toFixed(1)}ms`}
-                    {key === 'vector_dimension' && `向量维度: ${value}`}
-                    {key === 'similarity_score' && `相似度分数: ${Math.abs(Number(value)) < 0.0001 ? Number(value).toExponential(2) : Number(value).toFixed(4)}`}
-                    {key === 'distance_score' && `原始距离: ${Number(value).toFixed(4)}`}
-                    {key === 'search_results_count' && `搜索结果数: ${value}`}
+                    {key === 'embedding_time' && `${t('vectorDB.test.embeddingTime')}: ${Number(value).toFixed(1)}ms`}
+                    {key === 'vector_dimension' && `${t('vectorDB.test.vectorDimension')}: ${value}`}
+                    {key === 'similarity_score' && `${t('vectorDB.test.similarityScore')}: ${Math.abs(Number(value)) < 0.0001 ? Number(value).toExponential(2) : Number(value).toFixed(4)}`}
+                    {key === 'distance_score' && `${t('vectorDB.test.distanceScore')}: ${Number(value).toFixed(4)}`}
+                    {key === 'search_results_count' && `${t('vectorDB.test.searchResultsCount')}: ${value}`}
                   </div>
                 ))}
               </div>

@@ -18,15 +18,15 @@ const { Text, Title } = Typography;
 const PartitionWorkspaceTab = () => {
   const { message, modal } = App.useApp();
   const { t } = useTranslation();
-  const [selectedItem, setSelectedItem] = useState(null); // 选中的项目（任务或目录）
+  const [selectedItem, setSelectedItem] = useState(null); // Selected item (task or directory)
   const [workspaceFiles, setWorkspaceFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isViewerVisible, setIsViewerVisible] = useState(false);
   const [activeTab, setActiveTab] = useState('workspace');
-  const [currentPath, setCurrentPath] = useState(''); // 当前浏览的路径
-  const [breadcrumbs, setBreadcrumbs] = useState([]); // 面包屑导航
-  const [agentInfo, setAgentInfo] = useState({}); // 智能体信息缓存
+  const [currentPath, setCurrentPath] = useState(''); // Current browsing path
+  const [breadcrumbs, setBreadcrumbs] = useState([]); // Breadcrumb navigation
+  const [agentInfo, setAgentInfo] = useState({}); // Agent info cache
 
   // 监听选中项变化，清理状态
   useEffect(() => {
@@ -45,7 +45,7 @@ const PartitionWorkspaceTab = () => {
     try {
       // 获取任务的智能体信息
       const agents = await actionTaskAPI.getAgents(task.id);
-      console.log('获取到的智能体信息:', agents);
+      console.log('Fetched agent info:', agents);
       const agentMap = {};
       agents.forEach(agent => {
         agentMap[agent.id] = {
@@ -53,10 +53,10 @@ const PartitionWorkspaceTab = () => {
           role_name: agent.role_name
         };
       });
-      console.log('处理后的智能体映射:', agentMap);
+      console.log('Processed agent map:', agentMap);
       setAgentInfo(agentMap);
     } catch (error) {
-      console.error('获取智能体信息失败:', error);
+      console.error('Failed to fetch agent info:', error);
     }
   };
 
@@ -66,7 +66,7 @@ const PartitionWorkspaceTab = () => {
       setWorkspaceFiles([]);
       setBreadcrumbs([]);
       setCurrentPath('');
-      setAgentInfo({}); // 清理智能体信息
+      setAgentInfo({}); // Clear agent info
       return;
     }
 
@@ -76,7 +76,7 @@ const PartitionWorkspaceTab = () => {
       let currentAgentInfo = agentInfo;
 
       if (item.type === 'action_task') {
-        // ActionTask类型，使用原有的API
+        // ActionTask type, use the existing API
         const task = item.data;
 
         // 检查是否需要重新加载智能体信息
@@ -86,9 +86,9 @@ const PartitionWorkspaceTab = () => {
 
         if (needReloadAgentInfo) {
           await loadAgentInfo(task);
-          // 重新获取任务的智能体信息，确保我们有最新的数据
+          // Re-fetch task agent info to ensure we have the latest data
           const agents = await actionTaskAPI.getAgents(task.id);
-          const agentMap = { _taskId: task.id }; // 添加任务ID标记
+          const agentMap = { _taskId: task.id }; // Tag with the task ID
           agents.forEach(agent => {
             agentMap[agent.id] = {
               name: agent.name,
@@ -101,12 +101,12 @@ const PartitionWorkspaceTab = () => {
 
         data = await workspaceAPI.getWorkspaceFiles(task.id, path);
       } else if (item.type === 'custom_directory') {
-        // 自定义目录类型，使用新的API
+        // Custom directory type, use the new API
         data = await workspaceAPI.getWorkspaceDirectoryFiles(item.path, path);
-        // 自定义目录不需要智能体信息
+        // Custom directories don't need agent info
         currentAgentInfo = {};
       } else if (item.type === 'root') {
-        // 根目录浏览：支持目录和文件，以及子目录导航
+        // Root directory browsing: supports directories, files, and subdirectory navigation
         if (!path) {
           const root = await workspaceAPI.getWorkspaceRootDirectories();
           data = {
@@ -130,26 +130,26 @@ const PartitionWorkspaceTab = () => {
         throw new Error(t('workspace.unknownType'));
       }
 
-      console.log('正在加载工作空间文件，类型:', item.type, '路径:', path);
-      console.log('API返回数据:', data);
+      console.log('Loading workspace files, type:', item.type, 'path:', path);
+      console.log('API response data:', data);
 
-      // 统一处理所有文件数据，使用当前的智能体信息
+      // Uniformly process all file data using the current agent info
       const processedFiles = processFileData(data, currentAgentInfo);
 
-      // 设置当前路径和面包屑导航
+      // Set the current path and breadcrumb navigation
       setCurrentPath(path);
 
-      // 构建面包屑导航
+      // Build breadcrumb navigation
       const rootName = item.type === 'action_task' ? item.data.title :
-                      item.type === 'root' ? '根目录' :
+                      item.type === 'root' ? t('workspace.rootDirectoryName') :
                       item.data.name;
 
       if (path) {
-        // 子目录：添加面包屑导航
+        // Subdirectory: append breadcrumb navigation
         const pathParts = path.split('/');
         const breadcrumbs = [{ name: rootName, path: '' }];
 
-        // 构建面包屑路径
+        // Build the breadcrumb path
         let currentPath = '';
         pathParts.forEach((part) => {
           currentPath = currentPath ? `${currentPath}/${part}` : part;
@@ -161,17 +161,17 @@ const PartitionWorkspaceTab = () => {
 
         setBreadcrumbs(breadcrumbs);
       } else {
-        // 根目录
+        // Root directory
         setBreadcrumbs([{ name: rootName, path: '' }]);
       }
 
-      console.log('处理后的文件列表:', processedFiles);
+      console.log('Processed file list:', processedFiles);
       setWorkspaceFiles(processedFiles);
 
-      // 后端已经提供了文件大小，不需要前端异步加载
+      // The backend already provides file sizes; no async loading needed on the frontend
 
     } catch (error) {
-      console.error('加载工作空间文件失败:', error);
+      console.error('Failed to load workspace files:', error);
       message.error(t('workspace.loadFailed'));
       setWorkspaceFiles([]);
     } finally {
@@ -183,13 +183,13 @@ const PartitionWorkspaceTab = () => {
   const handleItemSelect = (item) => {
     setSelectedItem(item);
     setSelectedFile(null);
-    loadWorkspaceFiles(item, ''); // 加载根目录
+    loadWorkspaceFiles(item, ''); // Load the root directory
   };
 
   // 处理目录点击
   const handleDirectoryClick = (directory) => {
     if (directory.isDirectory) {
-      // 构建新的路径：当前路径 + 目录名
+      // Build the new path: current path + directory name
       const newPath = currentPath ? `${currentPath}/${directory.file_name}` : directory.file_name;
       loadWorkspaceFiles(selectedItem, newPath);
     }
@@ -209,19 +209,19 @@ const PartitionWorkspaceTab = () => {
   // 删除文件
   const handleDeleteFile = (file) => {
     modal.confirm({
-      title: '确认删除',
-      content: `确定要删除文件 "${file.file_name}" 吗？此操作不可恢复。`,
-      okText: '删除',
+      title: t('workspace.deleteConfirmTitle'),
+      content: t('workspace.deleteConfirmContent', { name: file.file_name }),
+      okText: t('workspace.deleteConfirmOk'),
       okType: 'danger',
-      cancelText: '取消',
+      cancelText: t('workspace.deleteConfirmCancel'),
       onOk: async () => {
         try {
           await workspaceAPI.deleteWorkspaceFile(file.file_path);
-          message.success('文件删除成功');
-          loadWorkspaceFiles(selectedItem, currentPath); // 重新加载当前目录
+          message.success(t('workspace.deleteFileSuccess'));
+          loadWorkspaceFiles(selectedItem, currentPath); // Reload the current directory
         } catch (error) {
-          console.error('删除文件失败:', error);
-          message.error('删除文件失败');
+          console.error('Failed to delete file:', error);
+          message.error(t('workspace.deleteFileFailed'));
         }
       }
     });
@@ -240,33 +240,33 @@ const PartitionWorkspaceTab = () => {
       return false;
     }
 
-    // 检查文件大小（10MB限制）
+    // Check file size (10MB limit)
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
-      message.error('文件大小不能超过10MB');
+      message.error(t('workspace.uploadFileSizeLimit'));
       return false;
     }
 
     try {
       const result = await workspaceAPI.uploadWorkspaceFile(selectedItem.data.id, currentPath, file);
       if (result.success) {
-        message.success('文件上传成功');
-        loadWorkspaceFiles(selectedItem, currentPath); // 重新加载当前目录
+        message.success(t('workspace.uploadFileSuccess'));
+        loadWorkspaceFiles(selectedItem, currentPath); // Reload the current directory
       } else {
-        message.error(result.error || '文件上传失败');
+        message.error(result.error || t('workspace.uploadFileFailed'));
       }
     } catch (error) {
-      console.error('文件上传失败:', error);
-      message.error('文件上传失败');
+      console.error('Failed to upload file:', error);
+      message.error(t('workspace.uploadFileFailed'));
     }
 
-    return false; // 阻止默认上传行为
+    return false; // Prevent the default upload behavior
   };
 
   // 文件列表的列定义
   const columns = [
     {
-      title: '文件名',
+      title: t('workspace.col.fileName'),
       dataIndex: 'file_name',
       key: 'file_name',
       width: '50%',
@@ -320,21 +320,21 @@ const PartitionWorkspaceTab = () => {
       )
     },
     {
-      title: '大小',
+      title: t('workspace.col.size'),
       dataIndex: 'size',
       key: 'size',
       width: '20%',
       render: (text, record) => record.isDirectory ? '' : text
     },
     {
-      title: '修改时间',
+      title: t('workspace.col.modifiedAt'),
       dataIndex: 'updated_at',
       key: 'updated_at',
       width: '20%',
       render: (text) => new Date(text).toLocaleString()
     },
     {
-      title: '操作',
+      title: t('workspace.col.actions'),
       key: 'actions',
       width: '10%',
       render: (_, record) => (
@@ -345,16 +345,15 @@ const PartitionWorkspaceTab = () => {
               icon={<EyeOutlined />}
               style={{ color: '#1677ff' }}
               onClick={() => handleViewFile(record)}
-              title="查看"
+              title={t('workspace.action.view')}
             />
 
             <Button
               type="text"
               icon={<DeleteOutlined />}
-             
               danger
               onClick={() => handleDeleteFile(record)}
-              title="删除"
+              title={t('workspace.action.delete')}
             />
           </Space>
         )
@@ -421,9 +420,8 @@ const PartitionWorkspaceTab = () => {
                               >
                                 <Button
                                   type="text"
-                                 
                                   icon={<UploadOutlined />}
-                                  title="上传文件到当前目录"
+                                  title={t('workspace.action.uploadToCurrentDir')}
                                   style={{ color: '#1677ff' }}
                                 >
                                 </Button>
@@ -431,11 +429,10 @@ const PartitionWorkspaceTab = () => {
                             )}
                             <Button
                               type="text"
-                             
                               icon={<ReloadOutlined />}
                               onClick={() => loadWorkspaceFiles(selectedItem, currentPath)}
                               loading={loading}
-                              title="刷新"
+                              title={t('workspace.action.refresh')}
                               style={{ color: '#1677ff' }}
                             />
                           </Space>
@@ -521,8 +518,8 @@ const PartitionWorkspaceTab = () => {
           setSelectedFile(null);
         }}
         onSave={() => {
-          message.success('文件保存成功');
-          loadWorkspaceFiles(selectedItem, currentPath); // 重新加载当前目录
+          message.success(t('workspace.saveFileSuccess'));
+          loadWorkspaceFiles(selectedItem, currentPath); // Reload the current directory
         }}
       />
     </div>

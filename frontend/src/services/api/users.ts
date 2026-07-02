@@ -2,6 +2,7 @@
  * 用户管理API服务
  */
 import api from './axios';
+import i18n from '../../locales';
 
 const API_BASE_URL = api.defaults.baseURL || '';
 
@@ -27,7 +28,7 @@ const handleResponse = async (response) => {
   } else {
     return {
       success: false,
-      message: data.error || data.message || '请求失败',
+      message: data.error || data.message || i18n.t('message.requestFailed'),
       status: response.status
     };
   }
@@ -54,10 +55,10 @@ export const userAPI = {
       
       return await handleResponse(response);
     } catch (error) {
-      console.error('获取用户列表失败:', error);
+      console.error('Failed to fetch user list:', error);
       return {
         success: false,
-        message: '网络错误，请检查网络连接'
+        message: i18n.t('error.networkError')
       };
     }
   },
@@ -75,10 +76,10 @@ export const userAPI = {
       
       return await handleResponse(response);
     } catch (error) {
-      console.error('获取用户详情失败:', error);
+      console.error('Failed to fetch user detail:', error);
       return {
         success: false,
-        message: '网络错误，请检查网络连接'
+        message: i18n.t('error.networkError')
       };
     }
   },
@@ -97,10 +98,10 @@ export const userAPI = {
       
       return await handleResponse(response);
     } catch (error) {
-      console.error('创建用户失败:', error);
+      console.error('Failed to create user:', error);
       return {
         success: false,
-        message: '网络错误，请检查网络连接'
+        message: i18n.t('error.networkError')
       };
     }
   },
@@ -120,10 +121,10 @@ export const userAPI = {
       
       return await handleResponse(response);
     } catch (error) {
-      console.error('更新用户失败:', error);
+      console.error('Failed to update user:', error);
       return {
         success: false,
-        message: '网络错误，请检查网络连接'
+        message: i18n.t('error.networkError')
       };
     }
   },
@@ -141,10 +142,10 @@ export const userAPI = {
 
       return await handleResponse(response);
     } catch (error) {
-      console.error('获取删除预览失败:', error);
+      console.error('Failed to fetch delete preview:', error);
       return {
         success: false,
-        message: '网络错误，请检查网络连接'
+        message: i18n.t('error.networkError')
       };
     }
   },
@@ -162,10 +163,10 @@ export const userAPI = {
 
       return await handleResponse(response);
     } catch (error) {
-      console.error('删除用户失败:', error);
+      console.error('Failed to delete user:', error);
       return {
         success: false,
-        message: '网络错误，请检查网络连接'
+        message: i18n.t('error.networkError')
       };
     }
   },
@@ -186,10 +187,10 @@ export const userAPI = {
       
       return await handleResponse(response);
     } catch (error) {
-      console.error('重置密码失败:', error);
+      console.error('Failed to reset password:', error);
       return {
         success: false,
-        message: '网络错误，请检查网络连接'
+        message: i18n.t('error.networkError')
       };
     }
   },
@@ -210,10 +211,10 @@ export const userAPI = {
       
       return await handleResponse(response);
     } catch (error) {
-      console.error('切换用户状态失败:', error);
+      console.error('Failed to toggle user status:', error);
       return {
         success: false,
-        message: '网络错误，请检查网络连接'
+        message: i18n.t('error.networkError')
       };
     }
   },
@@ -230,10 +231,10 @@ export const userAPI = {
       
       return await handleResponse(response);
     } catch (error) {
-      console.error('获取当前用户信息失败:', error);
+      console.error('Failed to fetch current user info:', error);
       return {
         success: false,
-        message: '网络错误，请检查网络连接'
+        message: i18n.t('error.networkError')
       };
     }
   },
@@ -250,10 +251,10 @@ export const userAPI = {
       
       return await handleResponse(response);
     } catch (error) {
-      console.error('获取用户权限失败:', error);
+      console.error('Failed to fetch user permissions:', error);
       return {
         success: false,
-        message: '网络错误，请检查网络连接'
+        message: i18n.t('error.networkError')
       };
     }
   },
@@ -272,10 +273,10 @@ export const userAPI = {
       
       return await handleResponse(response);
     } catch (error) {
-      console.error('更新资料失败:', error);
+      console.error('Failed to update profile:', error);
       return {
         success: false,
-        message: '网络错误，请检查网络连接'
+        message: i18n.t('error.networkError')
       };
     }
   },
@@ -296,10 +297,10 @@ export const userAPI = {
       
       return await handleResponse(response);
     } catch (error) {
-      console.error('修改密码失败:', error);
+      console.error('Failed to change password:', error);
       return {
         success: false,
-        message: '网络错误，请检查网络连接'
+        message: i18n.t('error.networkError')
       };
     }
   }

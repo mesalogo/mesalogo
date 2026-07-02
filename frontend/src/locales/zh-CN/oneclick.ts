@@ -119,4 +119,18 @@ export default {
   'oneClick.edit.task.desc': '任务描述',
   'oneClick.edit.task.descPlaceholder': '请输入任务描述',
   'oneClick.edit.task.descRequired': '请输入任务描述',
+
+  // ----- OneClickModal 附加文案 -----
+  'oneClick.modalTitle': '一键创建',
+  'oneClick.assistantNotEnabled': '辅助生成功能未启用，请在系统设置中开启',
+  'oneClick.editBtn': '编辑',
+  'oneClick.regenerateBtn': '重新生成',
+  'oneClick.role.systemPromptLabel': '系统提示词',
+  'oneClick.actionSpace.nameLabel': '空间名称',
+  'oneClick.actionSpace.descLabel': '空间描述',
+  'oneClick.rules.typeLabel': '类型',
+  'oneClick.rules.contentLabel': '内容',
+  'oneClick.generateFailedAlert': '生成失败',
+  'oneClick.cancelBtn': '取消',
+  'oneClick.prevBtn': '上一步',
 };

@@ -12,6 +12,7 @@ import {
 } from '@ant-design/icons';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useTranslation } from 'react-i18next';
 
 const { Text, Paragraph } = Typography;
 
@@ -86,6 +87,7 @@ const AgentResultItem: React.FC<{
   index: number;
   defaultExpanded?: boolean;
 }> = ({ result, index, defaultExpanded = true }) => {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(defaultExpanded);
   const isSuccess = result.status === 'success';
   const color = getAgentColor(result.agent_name);
@@ -136,15 +138,15 @@ const AgentResultItem: React.FC<{
         <Space size={8}>
           {isSuccess ? (
             <Tag icon={<CheckCircleOutlined />} color="success" style={{ fontSize: '11px', margin: 0 }}>
-              成功
+              {t('subAgentResult.success')}
             </Tag>
           ) : (
             <Tag icon={<CloseCircleOutlined />} color="error" style={{ fontSize: '11px', margin: 0 }}>
-              失败
+              {t('subAgentResult.failed')}
             </Tag>
           )}
           {result.elapsed_seconds !== undefined && (
-            <Tooltip title="执行耗时">
+            <Tooltip title={t('subAgentResult.executionTime')}>
               <Tag icon={<ClockCircleOutlined />} style={{ fontSize: '11px', margin: 0 }}>
                 {formatTime(result.elapsed_seconds)}
               </Tag>
@@ -164,7 +166,7 @@ const AgentResultItem: React.FC<{
         }}>
           <div className="markdown-content">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {result.response || '（无内容）'}
+              {result.response || t('subAgentResult.noContent')}
             </ReactMarkdown>
           </div>
         </div>
@@ -182,6 +184,7 @@ const SubAgentResultCard: React.FC<SubAgentResultCardProps> = ({
   toolResult,
   status
 }) => {
+  const { t } = useTranslation();
   const args = safeParse(toolArguments);
   const resultData = safeParse(toolResult);
 
@@ -239,14 +242,14 @@ const SubAgentResultCard: React.FC<SubAgentResultCardProps> = ({
   // 提取调用描述
   let callerDescription = '';
   if (toolName === 'invoke_agent') {
-    callerDescription = `→ ${args?.target_agent_name || '未知'}`;
+    callerDescription = `→ ${args?.target_agent_name || t('subAgentResult.unknown')}`;
   } else if (toolName === 'invoke_agents') {
     // invocations 可能被 LLM 双重序列化为 JSON 字符串
     const rawInvocations = args?.invocations;
     const invocations = Array.isArray(rawInvocations) ? rawInvocations : safeParse(rawInvocations) || [];
     const invArray = Array.isArray(invocations) ? invocations : [];
     const targets = invArray.map((inv: any) => inv.target_agent_name).join(', ');
-    callerDescription = `→ [${targets || '未知'}]`;
+    callerDescription = `→ [${targets || t('subAgentResult.unknown')}]`;
   }
 
   // 如果是 list_available_agents，简单展示
@@ -259,8 +262,8 @@ const SubAgentResultCard: React.FC<SubAgentResultCardProps> = ({
         title={
           <Space>
             <TeamOutlined style={{ color: '#1677ff' }} />
-            <Text strong style={{ fontSize: '13px' }}>可调用的智能体</Text>
-            <Tag color="blue">{agents.length} 个</Tag>
+            <Text strong style={{ fontSize: '13px' }}>{t('subAgentResult.availableAgents')}</Text>
+            <Tag color="blue">{t('subAgentResult.agentCount', { count: agents.length })}</Tag>
           </Space>
         }
         style={{
@@ -294,30 +297,30 @@ const SubAgentResultCard: React.FC<SubAgentResultCardProps> = ({
         <Space>
           <TeamOutlined style={{ color: '#1677ff' }} />
           <Text strong style={{ fontSize: '13px' }}>
-            {isParallel ? 'SubAgent 并行调用' : 'SubAgent 调用'}
+            {isParallel ? t('subAgentResult.parallelInvocation') : t('subAgentResult.invocation')}
           </Text>
           <Text type="secondary" style={{ fontSize: '12px' }}>
             {callerDescription}
           </Text>
           {isLoading ? (
             <Tag icon={<LoadingOutlined />} color="processing" style={{ fontSize: '11px', margin: 0 }}>
-              调用中...
+              {t('subAgentResult.invoking')}
             </Tag>
           ) : hasResults ? (
             <>
               {allSuccess ? (
                 <Tag icon={<CheckCircleOutlined />} color="success" style={{ fontSize: '11px', margin: 0 }}>
-                  全部成功
+                  {t('subAgentResult.allSuccess')}
                 </Tag>
               ) : (
                 <Tag icon={<CloseCircleOutlined />} color="warning" style={{ fontSize: '11px', margin: 0 }}>
-                  部分失败
+                  {t('subAgentResult.partialFailed')}
                 </Tag>
               )}
             </>
           ) : null}
           {totalElapsed !== undefined && (
-            <Tooltip title={isParallel ? '总耗时（并行执行）' : '执行耗时'}>
+            <Tooltip title={isParallel ? t('subAgentResult.totalTimeParallel') : t('subAgentResult.executionTime')}>
               <Tag icon={<ClockCircleOutlined />} style={{ fontSize: '11px', margin: 0 }}>
                 {formatTime(totalElapsed)}
               </Tag>
@@ -363,13 +366,13 @@ const SubAgentResultCard: React.FC<SubAgentResultCardProps> = ({
             <Spin indicator={<LoadingOutlined style={{ fontSize: 20 }} spin />} />
             <div style={{ marginTop: '8px' }}>
               <Text type="secondary" style={{ fontSize: '12px' }}>
-                正在调用 SubAgent，请稍候...
+                {t('subAgentResult.invokingWait')}
               </Text>
             </div>
           </div>
         ) : (
           <Text type="secondary" style={{ fontSize: '12px' }}>
-            暂无结果
+            {t('subAgentResult.noResults')}
           </Text>
         )
       )}

@@ -11,12 +11,13 @@ import {
   LeftOutlined,
   RightOutlined,
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 const { Text } = Typography;
 
 interface NodeTypeConfig {
   type: string;
-  label: string;
+  labelKey: string;
   icon: React.ReactNode;
   color: string;
   bgColor: string;
@@ -25,49 +26,49 @@ interface NodeTypeConfig {
 const nodeTypeConfigs: NodeTypeConfig[] = [
   {
     type: 'start',
-    label: '开始',
+    labelKey: 'orchNode.start',
     icon: <PlayCircleOutlined />,
     color: '#52c41a',
     bgColor: '#f6ffed',
   },
   {
     type: 'end',
-    label: '结束',
+    labelKey: 'orchNode.end',
     icon: <StopOutlined />,
     color: '#ff4d4f',
     bgColor: '#fff2f0',
   },
   {
     type: 'agent',
-    label: '智能体',
+    labelKey: 'orchNode.agent',
     icon: <UserOutlined />,
     color: '#1677ff',
     bgColor: '#e6f4ff',
   },
   {
     type: 'task',
-    label: '任务',
+    labelKey: 'orchNode.task',
     icon: <FileTextOutlined />,
     color: '#722ed1',
     bgColor: '#f9f0ff',
   },
   {
     type: 'knowledge',
-    label: '知识库',
+    labelKey: 'orchNode.knowledge',
     icon: <BookOutlined />,
     color: '#fa8c16',
     bgColor: '#fff7e6',
   },
   {
     type: 'api',
-    label: 'API调用',
+    labelKey: 'orchNode.api',
     icon: <ApiOutlined />,
     color: '#13c2c2',
     bgColor: '#e6fffb',
   },
   {
     type: 'condition',
-    label: '条件判断',
+    labelKey: 'orchNode.condition',
     icon: <BranchesOutlined />,
     color: '#eb2f96',
     bgColor: '#fff0f6',
@@ -80,6 +81,7 @@ interface NodePaletteProps {
 }
 
 const NodePalette: React.FC<NodePaletteProps> = ({ collapsed = false, onCollapse }) => {
+  const { t } = useTranslation();
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
     event.dataTransfer.setData('application/reactflow', nodeType);
     event.dataTransfer.effectAllowed = 'move';
@@ -123,7 +125,7 @@ const NodePalette: React.FC<NodePaletteProps> = ({ collapsed = false, onCollapse
           <RightOutlined style={{ fontSize: 12, color: 'var(--custom-text-secondary)' }} />
         </div>
         {nodeTypeConfigs.map((config) => (
-          <Tooltip key={config.type} title={config.label} placement="right">
+          <Tooltip key={config.type} title={t(config.labelKey)} placement="right">
             <div
               draggable
               onDragStart={(e) => onDragStart(e, config.type)}
@@ -178,7 +180,7 @@ const NodePalette: React.FC<NodePaletteProps> = ({ collapsed = false, onCollapse
           alignItems: 'center',
         }}
       >
-        <Text strong style={{ fontSize: 13 }}>节点面板</Text>
+        <Text strong style={{ fontSize: 13 }}>{t('orchNode.palette')}</Text>
         <div
           onClick={() => onCollapse?.(true)}
           style={{
@@ -228,7 +230,7 @@ const NodePalette: React.FC<NodePaletteProps> = ({ collapsed = false, onCollapse
               }}
             >
               <span style={{ color: config.color, fontSize: 18 }}>{config.icon}</span>
-              <Text style={{ color: config.color, fontSize: 13, fontWeight: 500 }}>{config.label}</Text>
+              <Text style={{ color: config.color, fontSize: 13, fontWeight: 500 }}>{t(config.labelKey)}</Text>
             </div>
           ))}
         </div>

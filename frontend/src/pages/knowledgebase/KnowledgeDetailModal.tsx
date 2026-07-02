@@ -9,11 +9,13 @@ import TestSearchModal from './components/TestSearchModal';
 import LightRAGDocumentManager from './components/LightRAGDocumentManager';
 import LightRAGQueryTest from './components/LightRAGQueryTest';
 import LightRAGRetrievalSettings from './components/LightRAGRetrievalSettings';
+import { useTranslation } from 'react-i18next';
 import knowledgeAPI from '../../services/api/knowledge';
 
 // Tabs TabPane is deprecated, we'll use items prop instead
 
 const KnowledgeDetailModal = ({ visible, knowledgeId, onClose }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [knowledgeData, setKnowledgeData] = useState(null);
   const [activeTab, setActiveTab] = useState('documents');
@@ -36,7 +38,7 @@ const KnowledgeDetailModal = ({ visible, knowledgeId, onClose }) => {
         setKnowledgeData(response.data);
       }
     } catch (error) {
-      console.error('获取知识库信息失败:', error);
+      console.error('Failed to get knowledge base info:', error);
     } finally {
       setLoading(false);
     }
@@ -78,7 +80,7 @@ const KnowledgeDetailModal = ({ visible, knowledgeId, onClose }) => {
           vector_weight: searchConfig.vector_weight !== undefined ? searchConfig.vector_weight : 0.7
         });
         
-        console.log('测试查询使用最新配置:', {
+        console.log('Test query using latest config:', {
           top_k: retrieval.top_k,
           score_threshold: retrieval.score_threshold,
           search_mode: searchConfig.search_mode,
@@ -88,7 +90,7 @@ const KnowledgeDetailModal = ({ visible, knowledgeId, onClose }) => {
         setTestQueryModalVisible(true);
       }
     } catch (error) {
-      console.error('获取最新配置失败:', error);
+      console.error('Failed to get latest config:', error);
       // 降级：使用当前缓存的数据
       const settings = knowledgeData?.settings || {};
       const retrieval = settings.retrieval || {};
@@ -120,7 +122,7 @@ const KnowledgeDetailModal = ({ visible, knowledgeId, onClose }) => {
       return [
         {
           key: 'documents',
-          label: <span><CloudOutlined />文档管理</span>,
+          label: <span><CloudOutlined />{t('kbDetail.documentManagement')}</span>,
           children: (
             <LightRAGDocumentManager 
               knowledgeId={knowledgeId}
@@ -130,7 +132,7 @@ const KnowledgeDetailModal = ({ visible, knowledgeId, onClose }) => {
         },
         {
           key: 'retrieval',
-          label: <span><SettingOutlined />检索配置</span>,
+          label: <span><SettingOutlined />{t('kbDetail.retrievalConfig')}</span>,
           children: (
             <LightRAGRetrievalSettings 
               knowledgeId={knowledgeId}
@@ -140,7 +142,7 @@ const KnowledgeDetailModal = ({ visible, knowledgeId, onClose }) => {
         },
         {
           key: 'query',
-          label: <span><SearchOutlined />查询测试</span>,
+          label: <span><SearchOutlined />{t('kbDetail.queryTest')}</span>,
           children: (
             <LightRAGQueryTest 
               knowledgeId={knowledgeId}
@@ -151,7 +153,7 @@ const KnowledgeDetailModal = ({ visible, knowledgeId, onClose }) => {
         },
         {
           key: 'access',
-          label: <span><LockOutlined />访问控制</span>,
+          label: <span><LockOutlined />{t('kbDetail.accessControl')}</span>,
           children: <AccessControl knowledgeId={knowledgeId} />
         }
       ];
@@ -160,7 +162,7 @@ const KnowledgeDetailModal = ({ visible, knowledgeId, onClose }) => {
       return [
         {
           key: 'documents',
-          label: <span><FileTextOutlined />文档管理</span>,
+          label: <span><FileTextOutlined />{t('kbDetail.documentManagement')}</span>,
           children: (
             <DocumentManager 
               selectedKnowledgeId={knowledgeId}
@@ -169,12 +171,12 @@ const KnowledgeDetailModal = ({ visible, knowledgeId, onClose }) => {
         },
         {
           key: 'chunking',
-          label: <span><BlockOutlined />分段设置</span>,
+          label: <span><BlockOutlined />{t('kbDetail.chunkSettings')}</span>,
           children: <ChunkSettings knowledgeId={knowledgeId} />
         },
         {
           key: 'retrieval',
-          label: <span><SearchOutlined />检索配置</span>,
+          label: <span><SearchOutlined />{t('kbDetail.retrievalConfig')}</span>,
           children: (
             <RetrievalSettings 
               knowledgeId={knowledgeId} 
@@ -184,7 +186,7 @@ const KnowledgeDetailModal = ({ visible, knowledgeId, onClose }) => {
         },
         {
           key: 'access',
-          label: <span><LockOutlined />访问控制</span>,
+          label: <span><LockOutlined />{t('kbDetail.accessControl')}</span>,
           children: <AccessControl knowledgeId={knowledgeId} />
         }
       ];
@@ -193,7 +195,7 @@ const KnowledgeDetailModal = ({ visible, knowledgeId, onClose }) => {
 
   return (
     <Modal
-      title={knowledgeData?.name || '知识库详情'}
+      title={knowledgeData?.name || t('kbDetail.title')}
       open={visible}
       onCancel={handleClose}
       width={1200}
@@ -212,7 +214,7 @@ const KnowledgeDetailModal = ({ visible, knowledgeId, onClose }) => {
               onClick={handleOpenTestQuery}
               type="primary"
             >
-              测试查询
+              {t('kbDetail.testQuery')}
             </Button>
           )
         }

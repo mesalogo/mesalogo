@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Result, Button, Spin } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { setupAPI, SetupDefaults } from '../../services/api/setup';
 import SetupWizard from '../../pages/setup/SetupWizard';
 
@@ -14,6 +15,7 @@ import SetupWizard from '../../pages/setup/SetupWizard';
 type Phase = 'checking' | 'setup' | 'ready' | 'error';
 
 const SetupGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation();
   const [phase, setPhase] = useState<Phase>('checking');
   const [defaults, setDefaults] = useState<SetupDefaults | undefined>(undefined);
 
@@ -35,7 +37,7 @@ const SetupGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   if (phase === 'checking') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Spin size="large" tip="正在连接后端…">
+        <Spin size="large" tip={t('setupGate.connecting')}>
           <div style={{ width: 1, height: 1 }} />
         </Spin>
       </div>
@@ -47,9 +49,9 @@ const SetupGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Result
           status="warning"
-          title="无法连接到后端服务"
-          subTitle="请确认后端已启动，然后重试。"
-          extra={<Button type="primary" onClick={check}>重试</Button>}
+          title={t('setupGate.cannotConnect')}
+          subTitle={t('setupGate.cannotConnectDesc')}
+          extra={<Button type="primary" onClick={check}>{t('setupGate.retry')}</Button>}
         />
       </div>
     );

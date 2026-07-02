@@ -78,6 +78,7 @@ export default {
   'about.feature.unlimited_memory': '无限记忆',
   // Error messages
   'about.error.licenseExpired': '许可证已过期，请重新激活',
+  'about.error.licenseInvalidOrExpired': '许可证无效或已过期',
   'about.error.cannotGetLicense': '无法获取许可证信息，请检查系统是否已激活',
   'about.error.notActivated': '系统未激活，请激活许可证以使用所有功能',
   'about.error.systemKeyFailed': '获取系统密钥失败，请检查系统配置',
@@ -87,4 +88,8 @@ export default {
   'about.error.uploadFileFirst': '请先上传许可证文件',
   'about.error.jsonOnly': '只能上传JSON格式的许可证文件',
   'about.error.fileTooLarge': '许可证文件必须小于2MB',
+  'about.expiredDialog.title': '许可证已过期',
+  'about.expiredDialog.content': '您的许可证已过期或无效，系统功能将受到限制。请前往授权页面激活系统。',
+  'about.expiredDialog.okText': '前往授权页面',
+  'about.error.licenseNotFound': '未找到任何许可证信息',
 };

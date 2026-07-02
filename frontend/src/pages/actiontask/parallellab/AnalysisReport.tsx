@@ -125,7 +125,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({ experiments }) => {
     const metricNames = Object.keys(allResults[0]?.metrics || {});
     
     // 构建 CSV 头
-    const headers = ['运行#', ...paramNames, ...metricNames];
+    const headers = [t('parallelLab.report.runColumn'), ...paramNames, ...metricNames];
     
     // 构建数据行
     const rows = allResults.map((r, i) => [

@@ -8,6 +8,7 @@ import {
   RobotOutlined, RollbackOutlined, EditOutlined,
   DatabaseOutlined, MessageOutlined, HistoryOutlined
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { agentAPI } from '../../../services/api/agent';
 import AgentVariables from '../../../components/agent/AgentVariables';
 
@@ -15,6 +16,7 @@ const { Title, Text } = Typography;
 const { TabPane } = Tabs;
 
 const AgentDetail = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -31,8 +33,8 @@ const AgentDetail = () => {
       const response = await agentAPI.get(id);
       setAgent(response);
     } catch (error) {
-      console.error('获取代理详情失败:', error);
-      message.error('获取代理详情失败');
+      console.error('Failed to fetch agent details:', error);
+      message.error(t('agentDetail.fetchFailed'));
       // 导航回上一页
       navigate(-1);
     } finally {
@@ -62,17 +64,17 @@ const AgentDetail = () => {
         <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Space>
             <Button icon={<RollbackOutlined />} onClick={handleBack} disabled={true}>
-              返回
+              {t('agentDetail.back')}
             </Button>
             <Title level={4} style={{ margin: 0 }}>
               <Space>
                 <Avatar icon={<RobotOutlined />} style={{ backgroundColor: '#1677ff' }} />
-                加载中...
+                {t('agentDetail.loading')}
               </Space>
             </Title>
           </Space>
           <Button type="primary" icon={<EditOutlined />} disabled={true}>
-            编辑代理
+            {t('agentDetail.editAgent')}
           </Button>
         </div>
 
@@ -90,7 +92,7 @@ const AgentDetail = () => {
             gap: '12px'
           }}>
             <Spin size="large" />
-            <div style={{ color: '#1677ff', fontSize: '14px' }}>加载代理详情</div>
+            <div style={{ color: '#1677ff', fontSize: '14px' }}>{t('agentDetail.loadingDetail')}</div>
           </div>
 
           {/* 页面框架 - 完全透明背景 */}
@@ -101,19 +103,19 @@ const AgentDetail = () => {
 
             <Tabs defaultActiveKey="variables">
               <TabPane
-                tab={<span><DatabaseOutlined />代理变量</span>}
+                tab={<span><DatabaseOutlined />{t('agentDetail.tab.variables')}</span>}
                 key="variables"
               >
                 <div style={{ minHeight: '200px' }} />
               </TabPane>
               <TabPane
-                tab={<span><MessageOutlined />消息记录</span>}
+                tab={<span><MessageOutlined />{t('agentDetail.tab.messages')}</span>}
                 key="messages"
               >
                 <div style={{ minHeight: '200px' }} />
               </TabPane>
               <TabPane
-                tab={<span><HistoryOutlined />活动历史</span>}
+                tab={<span><HistoryOutlined />{t('agentDetail.tab.history')}</span>}
                 key="history"
               >
                 <div style={{ minHeight: '200px' }} />
@@ -128,9 +130,9 @@ const AgentDetail = () => {
   if (!agent) {
     return (
       <div style={{ textAlign: 'center', marginTop: '100px' }}>
-        <Title level={3}>未找到代理</Title>
+        <Title level={3}>{t('agentDetail.notFound')}</Title>
         <Button onClick={handleBack} icon={<RollbackOutlined />}>
-          返回列表
+          {t('agentDetail.backToList')}
         </Button>
       </div>
     );
@@ -141,7 +143,7 @@ const AgentDetail = () => {
       <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Space>
           <Button icon={<RollbackOutlined />} onClick={handleBack}>
-            返回
+            {t('agentDetail.back')}
           </Button>
           <Title level={4} style={{ margin: 0 }}>
             <Space>
@@ -151,16 +153,16 @@ const AgentDetail = () => {
           </Title>
         </Space>
         <Button type="primary" icon={<EditOutlined />} onClick={handleEdit}>
-          编辑代理
+          {t('agentDetail.editAgent')}
         </Button>
       </div>
 
       <Card style={{ marginBottom: '20px' }}>
-        <Descriptions title="代理基本信息" bordered column={2}>
-          <Descriptions.Item label="ID">{agent.id}</Descriptions.Item>
-          <Descriptions.Item label="名称">{agent.name}</Descriptions.Item>
-          <Descriptions.Item label="角色">{agent.role?.name || '未设置'}</Descriptions.Item>
-          <Descriptions.Item label="状态">
+        <Descriptions title={t('agentDetail.basicInfoTitle')} bordered column={2}>
+          <Descriptions.Item label={t('agentDetail.field.id')}>{agent.id}</Descriptions.Item>
+          <Descriptions.Item label={t('agentDetail.field.name')}>{agent.name}</Descriptions.Item>
+          <Descriptions.Item label={t('agentDetail.field.role')}>{agent.role?.name || t('agentDetail.roleNotSet')}</Descriptions.Item>
+          <Descriptions.Item label={t('agentDetail.field.status')}>
             <Tag color={
               agent.status === 'active' ? 'success' :
               agent.status === 'idle' ? 'default' :
@@ -168,15 +170,15 @@ const AgentDetail = () => {
               'error'
             }>
               {
-                agent.status === 'active' ? '活跃' :
-                agent.status === 'idle' ? '空闲' :
-                agent.status === 'busy' ? '忙碌' :
-                '离线'
+                agent.status === 'active' ? t('agentDetail.status.active') :
+                agent.status === 'idle' ? t('agentDetail.status.idle') :
+                agent.status === 'busy' ? t('agentDetail.status.busy') :
+                t('agentDetail.status.offline')
               }
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="描述" span={2}>
-            {agent.description || '无描述'}
+          <Descriptions.Item label={t('agentDetail.field.description')} span={2}>
+            {agent.description || t('agentDetail.noDescription')}
           </Descriptions.Item>
         </Descriptions>
 
@@ -184,38 +186,38 @@ const AgentDetail = () => {
 
         <Row gutter={16}>
           <Col span={8}>
-            <Statistic title="总会话数" value={agent.conversation_count || 0} />
+            <Statistic title={t('agentDetail.stat.totalConversations')} value={agent.conversation_count || 0} />
           </Col>
           <Col span={8}>
-            <Statistic title="总消息数" value={agent.message_count || 0} />
+            <Statistic title={t('agentDetail.stat.totalMessages')} value={agent.message_count || 0} />
           </Col>
           <Col span={8}>
-            <Statistic title="平均响应时间" value={agent.avg_response_time || 0} suffix="ms" />
+            <Statistic title={t('agentDetail.stat.avgResponseTime')} value={agent.avg_response_time || 0} suffix="ms" />
           </Col>
         </Row>
       </Card>
 
       <Tabs activeKey={activeTab} onChange={setActiveTab}>
         <TabPane
-          tab={<span><DatabaseOutlined />代理变量</span>}
+          tab={<span><DatabaseOutlined />{t('agentDetail.tab.variables')}</span>}
           key="variables"
         >
           <AgentVariables agentId={id} />
         </TabPane>
         <TabPane
-          tab={<span><MessageOutlined />消息记录</span>}
+          tab={<span><MessageOutlined />{t('agentDetail.tab.messages')}</span>}
           key="messages"
         >
           <Card>
-            <Text>暂无消息记录</Text>
+            <Text>{t('agentDetail.noMessages')}</Text>
           </Card>
         </TabPane>
         <TabPane
-          tab={<span><HistoryOutlined />活动历史</span>}
+          tab={<span><HistoryOutlined />{t('agentDetail.tab.history')}</span>}
           key="history"
         >
           <Card>
-            <Text>暂无活动历史</Text>
+            <Text>{t('agentDetail.noHistory')}</Text>
           </Card>
         </TabPane>
       </Tabs>

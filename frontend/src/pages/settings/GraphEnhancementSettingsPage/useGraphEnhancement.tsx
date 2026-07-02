@@ -1,10 +1,12 @@
 import { useState, useCallback } from 'react';
 import { App } from 'antd';
+import { useTranslation } from 'react-i18next';
 import graphEnhancementAPI from '../../../services/api/graphEnhancement';
 import { modelConfigAPI } from '../../../services/api/model';
 
 export const useGraphEnhancement = () => {
   const { message } = App.useApp();
+  const { t } = useTranslation();
   
   // 配置管理
   const [config, setConfig] = useState(null);
@@ -40,16 +42,16 @@ export const useGraphEnhancement = () => {
         setConfig(configData);
         return configData;
       } else {
-        message.error(result.message || '获取配置失败');
+        message.error(result.message || t('graphHook.getConfigFailed'));
         return null;
       }
     } catch (error) {
-      message.error('获取配置失败: ' + error.message);
+      message.error(t('graphHook.getConfigFailedDetail', { error: error.message }));
       return null;
     } finally {
       setLoading(false);
     }
-  }, [message]);
+  }, [message, t]);
 
   // 保存配置
   const saveConfig = useCallback(async (values) => {
@@ -58,21 +60,21 @@ export const useGraphEnhancement = () => {
       const result = await graphEnhancementAPI.saveConfig(values);
 
       if (result.success) {
-        message.success('配置保存成功');
+        message.success(t('graphHook.saveConfigSuccess'));
         setConfig(values);
         await loadStatus();
         return true;
       } else {
-        message.error(result.message || '配置保存失败');
+        message.error(result.message || t('graphHook.saveConfigFailed'));
         return false;
       }
     } catch (error) {
-      message.error('配置保存失败: ' + error.message);
+      message.error(t('graphHook.saveConfigFailedDetail', { error: error.message }));
       return false;
     } finally {
       setLoading(false);
     }
-  }, [message]);
+  }, [message, t]);
 
   // 加载状态
   const loadStatus = useCallback(async () => {
@@ -84,7 +86,7 @@ export const useGraphEnhancement = () => {
       }
       return null;
     } catch (error) {
-      console.error('获取状态失败:', error);
+      console.error('Failed to get status:', error);
       return null;
     }
   }, []);
@@ -151,7 +153,7 @@ export const useGraphEnhancement = () => {
 
       return configs;
     } catch (error) {
-      console.error('加载模型配置失败:', error);
+      console.error('Failed to load model configs:', error);
       return [];
     }
   }, []);
@@ -163,21 +165,16 @@ export const useGraphEnhancement = () => {
 
       // 验证操作类型
       if (!['start', 'stop'].includes(action)) {
-        message.error('未知的服务操作');
+        message.error(t('graphHook.unknownServiceAction'));
         return false;
       }
 
-      const actionText = {
-        'start': '启动',
-        'stop': '停止'
-      }[action];
-
-      message.info(`正在${actionText}Graphiti服务...`);
+      message.info(action === 'start' ? t('graphHook.startingService') : t('graphHook.stoppingService'));
 
       const result = await graphEnhancementAPI.controlService({ action });
 
       if (result.success) {
-        message.success(`Graphiti服务${actionText}成功`);
+        message.success(action === 'start' ? t('graphHook.startSuccess') : t('graphHook.stopSuccess'));
 
         // 如果是启动服务，等待一段时间让服务完全启动
         if (action === 'start') {
@@ -191,13 +188,13 @@ export const useGraphEnhancement = () => {
         throw new Error(result.message);
       }
     } catch (error) {
-      console.error('服务控制失败:', error);
-      message.error(`服务控制失败: ${error.message || '未知错误'}`);
+      console.error('Service control failed:', error);
+      message.error(t('graphHook.serviceControlFailed', { error: error.message || t('graphHook.unknownError') }));
       return false;
     } finally {
       setLoading(false);
     }
-  }, [message, loadStatus]);
+  }, [message, t, loadStatus]);
 
   // 清空数据
   const clearGraph = useCallback(async () => {
@@ -206,20 +203,20 @@ export const useGraphEnhancement = () => {
       const result = await graphEnhancementAPI.clearGraph();
 
       if (result.success) {
-        message.success('数据清空成功');
+        message.success(t('graphHook.clearDataSuccess'));
         await loadStatus();
         return true;
       } else {
-        message.error(result.message || '数据清空失败');
+        message.error(result.message || t('graphHook.clearDataFailed'));
         return false;
       }
     } catch (error) {
-      message.error('数据清空失败: ' + error.message);
+      message.error(t('graphHook.clearDataFailedDetail', { error: error.message }));
       return false;
     } finally {
       setClearLoading(false);
     }
-  }, [message, loadStatus]);
+  }, [message, t, loadStatus]);
 
   // 手动构建社区
   const buildCommunities = useCallback(async () => {
@@ -228,19 +225,19 @@ export const useGraphEnhancement = () => {
       const result = await graphEnhancementAPI.buildCommunities();
 
       if (result.success) {
-        message.success(result.message || '社区构建请求已发送');
+        message.success(result.message || t('graphHook.communityBuildSent'));
         return true;
       } else {
-        message.error(result.message || '社区构建请求失败');
+        message.error(result.message || t('graphHook.communityBuildFailed'));
         return false;
       }
     } catch (error) {
-      message.error('社区构建请求失败: ' + error.message);
+      message.error(t('graphHook.communityBuildFailedDetail', { error: error.message }));
       return false;
     } finally {
       setBuildingCommunities(false);
     }
-  }, [message]);
+  }, [message, t]);
 
   // 测试查询
   const testQuery = useCallback(async (queryData) => {
@@ -250,16 +247,16 @@ export const useGraphEnhancement = () => {
 
       if (result.success) {
         setTestResult(result.data);
-        message.success('查询测试成功');
+        message.success(t('graphHook.queryTestSuccess'));
         return result.data;
       } else {
-        message.error(result.message || '查询测试失败');
+        message.error(result.message || t('graphHook.queryTestFailed'));
         setTestResult(null);
         return null;
       }
     } catch (error) {
-      console.error('查询测试失败:', error);
-      let errorMessage = '查询测试失败';
+      console.error('Query test failed:', error);
+      let errorMessage = t('graphHook.queryTestFailed');
 
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
@@ -268,7 +265,7 @@ export const useGraphEnhancement = () => {
       } else if (typeof error === 'string') {
         errorMessage = error;
       } else {
-        errorMessage = '未知错误，请检查网络连接';
+        errorMessage = t('graphHook.unknownErrorCheckNetwork');
       }
 
       message.error(errorMessage);
@@ -277,7 +274,7 @@ export const useGraphEnhancement = () => {
     } finally {
       setLoading(false);
     }
-  }, [message]);
+  }, [message, t]);
 
   return {
     // 状态

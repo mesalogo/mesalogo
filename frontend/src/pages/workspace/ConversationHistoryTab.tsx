@@ -22,6 +22,7 @@ import {
   ReloadOutlined,
   RobotOutlined
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { actionTaskAPI } from '../../services/api/actionTask';
 import conversationAPI from '../../services/api/conversation';
 import ConversationExtraction from '../actiontask/components/ConversationExtraction';
@@ -36,6 +37,7 @@ const { Option } = Select;
  * 可以按照不同的行动任务查看不同会话历史记录
  */
 const ConversationHistoryTab = () => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [actionTasks, setActionTasks] = useState([]);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
@@ -77,8 +79,8 @@ const ConversationHistoryTab = () => {
       const filtered = (data || []).filter(task => !task.is_experiment_clone);
       setActionTasks(filtered);
     } catch (error) {
-      console.error('获取行动任务失败:', error);
-      message.error('获取行动任务列表失败');
+      console.error('Failed to load action tasks:', error);
+      message.error(t('convHistory.loadTasksFailed'));
     } finally {
       setLoading(false);
     }
@@ -97,8 +99,8 @@ const ConversationHistoryTab = () => {
         setSelectedConversationId(null);
       }
     } catch (error) {
-      console.error('获取会话列表失败:', error);
-      message.error('获取会话列表失败');
+      console.error('Failed to load conversations:', error);
+      message.error(t('convHistory.loadConversationsFailed'));
       setConversations([]);
       setSelectedConversationId(null);
     } finally {
@@ -112,8 +114,8 @@ const ConversationHistoryTab = () => {
       const data = await conversationAPI.getConversationMessages(taskId, conversationId);
       setMessages(data || []);
     } catch (error) {
-      console.error('获取会话消息失败:', error);
-      message.error('获取会话消息失败');
+      console.error('Failed to load messages:', error);
+      message.error(t('convHistory.loadMessagesFailed'));
       setMessages([]);
     } finally {
       setMessagesLoading(false);
@@ -147,7 +149,7 @@ const ConversationHistoryTab = () => {
   const renderMessageItem = (msg, index) => {
     const isHuman = msg.role === 'human';
     const agentId = msg.agent?.id || msg.agent_id;
-    const agentName = msg.agent?.name || msg.agent_name || '智能体';
+    const agentName = msg.agent?.name || msg.agent_name || t('convHistory.defaultAgentName');
 
     return (
       <div
@@ -184,14 +186,14 @@ const ConversationHistoryTab = () => {
               />
             )}
             <Text strong style={{ color: isHuman ? '#1677ff' : '#52c41a' }}>
-              {isHuman ? '用户' : agentName}
+              {isHuman ? t('convHistory.user') : agentName}
             </Text>
             <Tag
               color={isHuman ? 'blue' : 'green'}
              
               style={{ marginLeft: '8px' }}
             >
-              {isHuman ? '用户消息' : '智能体回复'}
+              {isHuman ? t('convHistory.userMessage') : t('convHistory.agentReply')}
             </Tag>
           </div>
           <Text type="secondary" style={{ fontSize: '12px' }}>
@@ -211,17 +213,17 @@ const ConversationHistoryTab = () => {
     <div>
       <div style={{ marginBottom: 16 }}>
         <Text type="secondary">
-          查看不同行动任务的会话历史记录，包括智能体对话内容和思考过程。
+          {t('convHistory.pageDesc')}
         </Text>
       </div>
 
       {/* 任务和会话选择器 */}
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={12}>
-          <Text strong style={{ display: 'block', marginBottom: 8 }}>选择行动任务：</Text>
+          <Text strong style={{ display: 'block', marginBottom: 8 }}>{t('convHistory.selectTask')}</Text>
           <Select
             style={{ width: '100%' }}
-            placeholder="请选择行动任务"
+            placeholder={t('convHistory.selectTaskPlaceholder')}
             value={selectedTaskId}
             onChange={handleTaskChange}
             loading={loading}
@@ -237,10 +239,10 @@ const ConversationHistoryTab = () => {
           </Select>
         </Col>
         <Col span={12}>
-          <Text strong style={{ display: 'block', marginBottom: 8 }}>选择会话：</Text>
+          <Text strong style={{ display: 'block', marginBottom: 8 }}>{t('convHistory.selectConversation')}</Text>
           <Select
             style={{ width: '100%' }}
-            placeholder="请选择会话"
+            placeholder={t('convHistory.selectConversationPlaceholder')}
             value={selectedConversationId}
             onChange={handleConversationChange}
             loading={loading}
@@ -250,7 +252,7 @@ const ConversationHistoryTab = () => {
               <Option key={conv.id} value={conv.id}>
                 <Space>
                   <Text>{conv.title}</Text>
-                  <Text type="secondary">({conv.message_count}条消息)</Text>
+                  <Text type="secondary">{t('convHistory.messageCount', { count: conv.message_count })}</Text>
                 </Space>
               </Option>
             ))}
@@ -266,7 +268,7 @@ const ConversationHistoryTab = () => {
             onClick={handleRefresh}
             loading={messagesLoading}
           >
-            刷新消息
+            {t('convHistory.refreshMessages')}
           </Button>
         </div>
       )}
@@ -295,13 +297,13 @@ const ConversationHistoryTab = () => {
           </div>
         ) : (
           <Empty
-            description="该会话暂无消息记录"
+            description={t('convHistory.noMessages')}
             image={Empty.PRESENTED_IMAGE_SIMPLE}
           />
         )
       ) : (
         <Empty
-          description="请先选择行动任务和会话"
+          description={t('convHistory.selectFirst')}
           image={Empty.PRESENTED_IMAGE_SIMPLE}
         />
       )}

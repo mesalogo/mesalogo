@@ -2,6 +2,7 @@
  * 实体应用市场API服务
  */
 import api from './api/axios';
+import i18n from '../locales';
 
 // VNC 代理服务
 export const vncProxyService = {
@@ -60,7 +61,7 @@ export const marketService = {
       const response = await api.get('/market/apps', { params });
       return response.data;
     } catch (error) {
-      throw new Error(`获取应用列表失败: ${error.message}`);
+      throw new Error(i18n.t('marketSvc.getAppsFailed', { error: error.message }));
     }
   },
 
@@ -74,7 +75,7 @@ export const marketService = {
       const response = await api.get(`/market/apps/${appId}`);
       return response.data;
     } catch (error) {
-      throw new Error(`获取应用详情失败: ${error.message}`);
+      throw new Error(i18n.t('marketSvc.getAppDetailFailed', { error: error.message }));
     }
   },
 
@@ -91,7 +92,7 @@ export const marketService = {
       });
       return response.data;
     } catch (error) {
-      throw new Error(`切换应用状态失败: ${error.message}`);
+      throw new Error(i18n.t('marketSvc.toggleAppFailed', { error: error.message }));
     }
   },
 
@@ -105,7 +106,7 @@ export const marketService = {
       const response = await api.post(`/market/apps/${appId}/launch`);
       return response.data;
     } catch (error) {
-      throw new Error(`启动应用失败: ${error.message}`);
+      throw new Error(i18n.t('marketSvc.launchAppFailed', { error: error.message }));
     }
   },
 
@@ -118,7 +119,7 @@ export const marketService = {
       const response = await api.get('/market/categories');
       return response.data;
     } catch (error) {
-      throw new Error(`获取分类列表失败: ${error.message}`);
+      throw new Error(i18n.t('marketSvc.getCategoriesFailed', { error: error.message }));
     }
   },
 
@@ -132,7 +133,7 @@ export const marketService = {
       const response = await api.post('/market/apps', appData);
       return response.data;
     } catch (error) {
-      throw new Error(`创建应用失败: ${error.message}`);
+      throw new Error(i18n.t('marketSvc.createAppFailed', { error: error.message }));
     }
   },
 
@@ -147,7 +148,7 @@ export const marketService = {
       const response = await api.put(`/market/apps/${appId}`, appData);
       return response.data;
     } catch (error) {
-      throw new Error(`更新应用失败: ${error.message}`);
+      throw new Error(i18n.t('marketSvc.updateAppFailed', { error: error.message }));
     }
   },
 
@@ -161,7 +162,7 @@ export const marketService = {
       const response = await api.delete(`/market/apps/${appId}`);
       return response.data;
     } catch (error) {
-      throw new Error(`删除应用失败: ${error.message}`);
+      throw new Error(i18n.t('marketSvc.deleteAppFailed', { error: error.message }));
     }
   },
 
@@ -178,7 +179,7 @@ export const marketService = {
       });
       return response.data;
     } catch (error) {
-      throw new Error(`绑定应用到行动空间失败: ${error.message}`);
+      throw new Error(i18n.t('marketSvc.bindAppFailed', { error: error.message }));
     }
   },
 
@@ -192,7 +193,7 @@ export const marketService = {
       const response = await api.get(`/market/apps/${appId}/bound-spaces`);
       return response.data;
     } catch (error) {
-      throw new Error(`获取应用绑定空间失败: ${error.message}`);
+      throw new Error(i18n.t('marketSvc.getBoundSpacesFailed', { error: error.message }));
     }
   },
 
@@ -205,7 +206,7 @@ export const marketService = {
       const response = await api.get('/market/action-spaces');
       return response.data;
     } catch (error) {
-      throw new Error(`获取行动空间列表失败: ${error.message}`);
+      throw new Error(i18n.t('marketSvc.getActionSpacesFailed', { error: error.message }));
     }
   },
 
@@ -219,7 +220,7 @@ export const marketService = {
       const response = await api.get(`/market/action-spaces/${spaceId}/apps`);
       return response.data;
     } catch (error) {
-      throw new Error(`获取行动空间应用失败: ${error.message}`);
+      throw new Error(i18n.t('marketSvc.getActionSpaceAppsFailed', { error: error.message }));
     }
   },
 
@@ -236,7 +237,7 @@ export const marketService = {
       });
       return response.data;
     } catch (error) {
-      throw new Error(`更新应用配置失败: ${error.message}`);
+      throw new Error(i18n.t('marketSvc.updateAppConfigFailed', { error: error.message }));
     }
   }
 };

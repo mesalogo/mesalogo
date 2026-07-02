@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, Typography, Button, Input, Form, Space, Radio } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text } = Typography;
 
@@ -132,18 +133,18 @@ const styles: Record<string, StyleConfig> = {
   },
 };
 
-const styleNames: Record<string, string> = {
-  darkTech: '1. 深色科技风',
-  purpleBlue: '2. 紫蓝渐变',
-  minimalWhite: '3. 极简白色',
-  glassmorphism: '4. 玻璃拟态',
-  warmGradient: '5. 暖色渐变',
-  deepBlue: '6. 深蓝专业',
-  animatedGradient: '7. 动态渐变',
-  meshAnimation: '8. 网格动画',
-  aurora: '9. 极光效果',
-  particles: '10. 粒子背景',
-};
+const styleKeys = [
+  'darkTech',
+  'purpleBlue',
+  'minimalWhite',
+  'glassmorphism',
+  'warmGradient',
+  'deepBlue',
+  'animatedGradient',
+  'meshAnimation',
+  'aurora',
+  'particles',
+];
 
 const AnimatedBackground: React.FC<{ type: string }> = ({ type }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -302,6 +303,7 @@ const AnimatedBackground: React.FC<{ type: string }> = ({ type }) => {
 };
 
 const LoginDemo: React.FC = () => {
+  const { t } = useTranslation();
   const [currentStyle, setCurrentStyle] = useState<string>('darkTech');
   const style = styles[currentStyle];
   const isDark = ['darkTech', 'glassmorphism', 'deepBlue', 'meshAnimation', 'aurora', 'particles'].includes(currentStyle);
@@ -349,14 +351,14 @@ const LoginDemo: React.FC = () => {
           overflowY: 'auto',
           zIndex: 10
         }}>
-          <Title level={4} style={{ marginBottom: 24 }}>选择背景风格</Title>
+          <Title level={4} style={{ marginBottom: 24 }}>{t('loginDemo.selectBackground')}</Title>
           <Radio.Group 
             value={currentStyle} 
             onChange={(e) => setCurrentStyle(e.target.value)}
             style={{ width: '100%' }}
           >
        <Space direction="vertical" style={{ width: '100%' }}>
-              {Object.entries(styleNames).map(([key, name]) => (
+              {styleKeys.map((key) => (
                 <Radio.Button 
                   key={key} 
                   value={key}
@@ -377,7 +379,7 @@ const LoginDemo: React.FC = () => {
                       background: styles[key].background,
                       border: '1px solid #ddd'
                     }} />
-                    {name}
+                    {t(`loginDemo.style.${key}`)}
                   </div>
                 </Radio.Button>
               ))}
@@ -385,8 +387,8 @@ const LoginDemo: React.FC = () => {
           </Radio.Group>
           
           <div style={{ marginTop: 32, padding: 16, background: 'var(--custom-hover-bg)', borderRadius: 8 }}>
-            <Text strong>当前选择: </Text>
-            <Text>{styleNames[currentStyle]}</Text>
+            <Text strong>{t('loginDemo.currentSelection')}</Text>
+            <Text>{t(`loginDemo.style.${currentStyle}`)}</Text>
           </div>
         </div>
 
@@ -426,14 +428,14 @@ const LoginDemo: React.FC = () => {
                 margin: 0,
                 transition: 'color 0.3s ease'
               }}>
-                欢迎回来
+                {t('loginDemo.welcomeBack')}
               </Title>
               <Text style={{ 
                 color: style.subtitleColor,
                 fontSize: 16,
                 transition: 'color 0.3s ease'
               }}>
-                登录您的账户以继续
+                {t('loginDemo.loginToContinue')}
               </Text>
             </div>
 
@@ -451,7 +453,7 @@ const LoginDemo: React.FC = () => {
                 <Form.Item>
                   <Input
                     prefix={<UserOutlined style={{ color: iconColor }} />}
-                    placeholder="用户名"
+                    placeholder={t('loginDemo.username')}
                     size="large"
                     style={inputStyle}
                   />
@@ -459,7 +461,7 @@ const LoginDemo: React.FC = () => {
                 <Form.Item>
                   <Input.Password
                     prefix={<LockOutlined style={{ color: iconColor }} />}
-                    placeholder="密码"
+                    placeholder={t('loginDemo.password')}
                     size="large"
                     style={inputStyle}
                   />
@@ -478,7 +480,7 @@ const LoginDemo: React.FC = () => {
                       fontSize: 16
                     }}
                   >
-                    登录
+                    {t('loginDemo.login')}
                   </Button>
                 </Form.Item>
               </Form>

@@ -47,15 +47,15 @@ const WorkspaceManagement = () => {
             label: (
               <span>
                 <ApartmentOutlined style={{ color: '#722ed1' }} />
-                记忆图谱
+                {t('wsManagement.memoryGraph')}
               </span>
             ),
             children: (
               <div style={{ padding: '40px', textAlign: 'center' }}>
                 <ApartmentOutlined style={{ fontSize: '48px', color: '#722ed1', marginBottom: '16px' }} />
-                <Typography.Title level={4}>记忆图谱</Typography.Title>
+                <Typography.Title level={4}>{t('wsManagement.memoryGraph')}</Typography.Title>
                 <Typography.Text type="secondary">
-                  基于Graphiti的记忆图谱功能正在开发中，将提供智能体记忆的图形化展示和管理功能。
+                  {t('wsManagement.memoryGraphDesc')}
                 </Typography.Text>
               </div>
             )

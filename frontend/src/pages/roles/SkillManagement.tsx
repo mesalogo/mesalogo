@@ -189,7 +189,7 @@ const SkillManagement = () => {
 
   const columns = [
     {
-      title: t('skills.name', '名称'),
+      title: t('skills.name'),
       dataIndex: 'name',
       key: 'name',
       render: (text, record) => (
@@ -201,14 +201,14 @@ const SkillManagement = () => {
       )
     },
     {
-      title: t('skills.description', '描述'),
+      title: t('skills.description'),
       dataIndex: 'description',
       key: 'description',
       ellipsis: true,
       width: 300,
     },
     {
-      title: t('skills.status', '状态'),
+      title: t('skills.status'),
       dataIndex: 'enabled',
       key: 'enabled',
       width: 100,
@@ -223,7 +223,7 @@ const SkillManagement = () => {
       )
     },
     {
-      title: t('skills.securityLevel', '安全等级'),
+      title: t('skills.securityLevel'),
       dataIndex: 'security_level',
       key: 'security_level',
       width: 100,
@@ -234,7 +234,7 @@ const SkillManagement = () => {
       }
     },
     {
-      title: t('skills.actions', '操作'),
+      title: t('skills.actions'),
       key: 'actions',
       width: 200,
       render: (_, record) => (
@@ -260,19 +260,19 @@ const SkillManagement = () => {
           <div>
             <Title level={4} style={{ margin: 0, marginBottom: '8px' }}>
               <ThunderboltOutlined style={{ marginRight: 8 }} />
-              {t('skills.title', '技能管理')}
+              {t('skills.title')}
             </Title>
             <Text type="secondary">{t('skillMgmt.subtitle')}</Text>
           </div>
           <Space>
             <Button icon={<SyncOutlined spin={syncing} />} onClick={handleSync} loading={syncing}>
-              {t('skills.sync', '同步文件系统')}
+              {t('skills.sync')}
             </Button>
             <Upload beforeUpload={handleImportPreview} showUploadList={false} accept=".zip">
-              <Button icon={<UploadOutlined />}>{t('skills.import', '导入技能')}</Button>
+              <Button icon={<UploadOutlined />}>{t('skills.import')}</Button>
             </Upload>
             <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateModalVisible(true)}>
-              {t('skills.create', '新建技能')}
+              {t('skills.create')}
             </Button>
           </Space>
         </div>
@@ -285,13 +285,13 @@ const SkillManagement = () => {
           rowKey="id"
           loading={loading}
           pagination={{ pageSize: 10 }}
-          locale={{ emptyText: <Empty description={t('skills.empty', '暂无技能，点击"新建技能"或"导入技能"开始')} /> }}
+          locale={{ emptyText: <Empty description={t('skills.empty')} /> }}
         />
       </Card>
 
       {/* create modal */}
       <Modal
-        title={t('skills.createTitle', '新建技能')}
+        title={t('skills.createTitle')}
         open={createModalVisible}
         onOk={handleCreate}
         onCancel={() => { setCreateModalVisible(false); createForm.resetFields(); }}

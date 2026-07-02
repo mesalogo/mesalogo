@@ -1,6 +1,7 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { BranchesOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 interface ConditionNodeProps {
   data: {
@@ -13,6 +14,7 @@ interface ConditionNodeProps {
 }
 
 const ConditionNode: React.FC<ConditionNodeProps> = ({ data, selected }) => {
+  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -50,7 +52,7 @@ const ConditionNode: React.FC<ConditionNodeProps> = ({ data, selected }) => {
         >
           <BranchesOutlined style={{ color: '#eb2f96', fontSize: 16 }} />
         </div>
-        <div style={{ fontWeight: 600, color: '#eb2f96', fontSize: 13 }}>条件判断</div>
+        <div style={{ fontWeight: 600, color: '#eb2f96', fontSize: 13 }}>{t('orchNode.condition')}</div>
       </div>
       <div
         style={{
@@ -62,12 +64,12 @@ const ConditionNode: React.FC<ConditionNodeProps> = ({ data, selected }) => {
           marginBottom: 8,
         }}
       >
-        {data?.condition?.substring(0, 30) || '配置条件...'}
+        {data?.condition?.substring(0, 30) || t('orchNode.configCondition')}
         {data?.condition && data.condition.length > 30 ? '...' : ''}
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
-        <span style={{ color: '#52c41a', fontWeight: 500 }}>✓ {data?.true_label || '是'}</span>
-        <span style={{ color: '#ff4d4f', fontWeight: 500 }}>✗ {data?.false_label || '否'}</span>
+        <span style={{ color: '#52c41a', fontWeight: 500 }}>✓ {data?.true_label || t('orchNode.conditionTrue')}</span>
+        <span style={{ color: '#ff4d4f', fontWeight: 500 }}>✗ {data?.false_label || t('orchNode.conditionFalse')}</span>
       </div>
       <Handle
         type="source"

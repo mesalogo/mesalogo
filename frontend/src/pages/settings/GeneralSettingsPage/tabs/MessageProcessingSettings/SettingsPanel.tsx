@@ -44,7 +44,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ form, mode, color, onValu
         />
       </Tooltip>
       {disabled && (
-        <Tooltip title="此参数仅在隔离模式下生效">
+        <Tooltip title={t('msgProc.disabledInDefaultMode')}>
           <ExclamationCircleOutlined
             style={{
               marginLeft: '6px',
@@ -68,19 +68,19 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ form, mode, color, onValu
     >
       {/* 历史消息设置 */}
       <div style={{ fontSize: '13px', fontWeight: 500, color, marginBottom: '12px' }}>
-        历史消息
+        {t('msgProc.historySection')}
       </div>
       
       <Form.Item
         name="maxHistoryLength"
         label={renderLabel(
           <ClockCircleOutlined />,
-          '历史消息长度',
-          '控制从数据库获取的历史消息条数。建议：20-50条'
+          t('msgProc.maxHistoryLength'),
+          t('msgProc.maxHistoryLengthTooltip')
         )}
         style={{ marginBottom: '12px' }}
       >
-        <InputNumber min={0} max={100} style={{ width: '100%' }} addonAfter="条" />
+        <InputNumber min={0} max={100} style={{ width: '100%' }} addonAfter={t('msgProc.unit.messages')} />
       </Form.Item>
 
       <div style={{ display: 'flex', gap: '16px', marginBottom: '12px' }}>
@@ -88,8 +88,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ form, mode, color, onValu
           name="autoSummarize"
           label={renderLabel(
             <FileTextOutlined />,
-            '自动总结',
-            '消息数超限时自动总结上下文，避免硬截断丢失信息'
+            t('msgProc.autoSummarize'),
+            t('msgProc.autoSummarizeTooltip')
           )}
           valuePropName="checked"
           style={{ marginBottom: 0, flex: 1 }}
@@ -101,8 +101,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ form, mode, color, onValu
           name="autoSummarizeAutonomous"
           label={renderLabel(
             <FileTextOutlined />,
-            '自主任务总结',
-            '自主任务中是否自动总结上下文'
+            t('msgProc.autoSummarizeAutonomous'),
+            t('msgProc.autoSummarizeAutonomousTooltip')
           )}
           valuePropName="checked"
           style={{ marginBottom: 0, flex: 1 }}
@@ -115,27 +115,27 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ form, mode, color, onValu
 
       {/* 工具调用设置 */}
       <div style={{ fontSize: '13px', fontWeight: 500, color, marginBottom: '12px' }}>
-        工具调用
+        {t('msgProc.toolCallSection')}
       </div>
 
       <Form.Item
         name="toolResultMaxLength"
         label={renderLabel(
           <ToolOutlined />,
-          '工具结果最大长度',
-          '截断历史消息中的工具返回结果。0表示不截断。建议：1500-3000字符'
+          t('msgProc.toolResultMaxLength'),
+          t('msgProc.toolResultMaxLengthTooltip')
         )}
         style={{ marginBottom: '12px' }}
       >
-        <InputNumber min={0} max={10000} style={{ width: '100%' }} addonAfter="字符" />
+        <InputNumber min={0} max={10000} style={{ width: '100%' }} addonAfter={t('msgProc.unit.chars')} />
       </Form.Item>
 
       <Form.Item
         name="toolCallContextRounds"
         label={renderLabel(
           <ToolOutlined />,
-          '工具上下文轮数',
-          '工具执行后再次调用LLM时，保留的工具调用历史轮数。每轮=1次tool_call+tool_result'
+          t('msgProc.toolCallContextRounds'),
+          t('msgProc.toolCallContextRoundsTooltip')
         )}
         style={{ marginBottom: '12px' }}
       >
@@ -143,7 +143,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ form, mode, color, onValu
           min={1} 
           max={10} 
           style={{ width: '100%' }} 
-          addonAfter="轮" 
+          addonAfter={t('msgProc.unit.rounds')} 
         />
       </Form.Item>
 
@@ -152,8 +152,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ form, mode, color, onValu
           name="splitToolCalls"
           label={renderLabel(
             <ToolOutlined />,
-            '拆分工具调用',
-            '将工具调用拆分为独立的assistant+tool消息（仅隔离模式生效）',
+            t('msgProc.splitToolCalls'),
+            t('msgProc.splitToolCallsTooltip'),
             isIsolationOnly
           )}
           valuePropName="checked"
@@ -166,8 +166,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ form, mode, color, onValu
           name="compressToolDefinitions"
           label={renderLabel(
             <ThunderboltOutlined />,
-            '压缩工具定义',
-            '压缩工具Schema以节省Token（约70%），但会影响LLM对工具的理解'
+            t('msgProc.compressToolDefinitions'),
+            t('msgProc.compressToolDefinitionsTooltip')
           )}
           valuePropName="checked"
           style={{ marginBottom: 0, flex: 1 }}
@@ -214,7 +214,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ form, mode, color, onValu
 
       {/* 其他设置 */}
       <div style={{ fontSize: '13px', fontWeight: 500, color, marginBottom: '12px' }}>
-        其他
+        {t('msgProc.otherSection')}
       </div>
 
       <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
@@ -222,8 +222,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ form, mode, color, onValu
           name="includeThinking"
           label={renderLabel(
             <BulbOutlined />,
-            '包含思考内容',
-            '是否在上下文中包含LLM的思考过程（<thinking>标签内容）'
+            t('msgProc.includeThinking'),
+            t('msgProc.includeThinkingTooltip')
           )}
           valuePropName="checked"
           style={{ marginBottom: 0 }}
@@ -235,8 +235,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ form, mode, color, onValu
           name="streamingEnabled"
           label={renderLabel(
             <ThunderboltOutlined />,
-            '流式输出',
-            '是否启用流式输出，实时显示LLM响应'
+            t('msgProc.streamingEnabled'),
+            t('msgProc.streamingEnabledTooltip')
           )}
           valuePropName="checked"
           style={{ marginBottom: 0 }}

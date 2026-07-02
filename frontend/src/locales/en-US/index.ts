@@ -27,6 +27,7 @@ import oneclick from './oneclick';
 import users from './users';
 import account from './account';
 import history from './history';
+import setup from './setup';
 
 export const namespaces = {
   common: common,
@@ -52,6 +53,7 @@ export const namespaces = {
   users: users,
   account: account,
   history: history,
+  setup: setup,
 };
 
 const merged = {
@@ -78,6 +80,7 @@ const merged = {
   ...users,
   ...account,
   ...history,
+  ...setup,
 };
 
 export default merged;

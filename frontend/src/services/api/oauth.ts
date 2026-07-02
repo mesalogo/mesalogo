@@ -1,4 +1,5 @@
 import api from './axios';
+import i18n from '../../locales';
 
 export interface OAuthProvider {
   id: string;
@@ -72,10 +73,10 @@ export const oauthAPI = {
       });
       return response.data;
     } catch (error: any) {
-      console.error('OAuth回调处理失败:', error);
+      console.error('OAuth callback handling failed:', error);
       return {
         status: 'error',
-        message: error.response?.data?.message || 'OAuth认证失败'
+        message: error.response?.data?.message || i18n.t('oauth.authFailed')
       };
     }
   },
@@ -88,7 +89,7 @@ export const oauthAPI = {
       const response = await api.get('/oauth/accounts');
       return response.data.accounts || [];
     } catch (error) {
-      console.error('获取已绑定OAuth账户失败:', error);
+      console.error('Failed to get linked OAuth accounts:', error);
       return [];
     }
   },
@@ -104,10 +105,10 @@ export const oauthAPI = {
         message: response.data.message
       };
     } catch (error: any) {
-      console.error('解绑OAuth账户失败:', error);
+      console.error('Failed to unlink OAuth account:', error);
       return {
         success: false,
-        message: error.response?.data?.message || '解绑失败'
+        message: error.response?.data?.message || i18n.t('oauth.unbindFailed')
       };
     }
   }

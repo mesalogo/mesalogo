@@ -1,6 +1,7 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { ApiOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 interface ApiNodeProps {
   data: {
@@ -13,6 +14,7 @@ interface ApiNodeProps {
 }
 
 const ApiNode: React.FC<ApiNodeProps> = ({ data, selected }) => {
+  const { t } = useTranslation();
   const method = data?.method || 'GET';
 
   const methodColors: Record<string, string> = {
@@ -59,7 +61,7 @@ const ApiNode: React.FC<ApiNodeProps> = ({ data, selected }) => {
         >
           <ApiOutlined style={{ color: '#13c2c2', fontSize: 16 }} />
         </div>
-        <div style={{ fontWeight: 600, color: '#13c2c2', fontSize: 13 }}>API调用</div>
+        <div style={{ fontWeight: 600, color: '#13c2c2', fontSize: 13 }}>{t('orchNode.api')}</div>
       </div>
       <div
         style={{
@@ -85,7 +87,7 @@ const ApiNode: React.FC<ApiNodeProps> = ({ data, selected }) => {
           {method}
         </span>
         <span style={{ color: 'var(--custom-text-secondary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {data?.url?.substring(0, 18) || '配置URL...'}
+          {data?.url?.substring(0, 18) || t('orchNode.configUrl')}
           {data?.url && data.url.length > 18 ? '...' : ''}
         </span>
       </div>

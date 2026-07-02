@@ -43,8 +43,8 @@ const LightRAGRetrievalSettings: React.FC<LightRAGRetrievalSettingsProps> = ({ k
         });
       }
     } catch (error) {
-      console.error('获取 LightRAG 检索配置失败:', error);
-      message.error('获取检索配置失败');
+      console.error('Failed to fetch LightRAG retrieval configuration:', error);
+      message.error(t('lightragRetrieval.fetchFailed'));
     } finally {
       setLoading(false);
     }
@@ -62,16 +62,16 @@ const LightRAGRetrievalSettings: React.FC<LightRAGRetrievalSettingsProps> = ({ k
       });
       
       if (response.success) {
-        message.success('LightRAG 检索配置保存成功');
+        message.success(t('lightragRetrieval.saveSuccess'));
         if (onSettingsSaved) {
           onSettingsSaved();
         }
       } else {
-        message.error(response.message || '保存失败');
+        message.error(response.message || t('lightragRetrieval.saveFailedDefault'));
       }
     } catch (error) {
-      console.error('保存 LightRAG 检索配置失败:', error);
-      message.error('保存检索配置失败');
+      console.error('Failed to save LightRAG retrieval configuration:', error);
+      message.error(t('lightragRetrieval.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -94,7 +94,7 @@ const LightRAGRetrievalSettings: React.FC<LightRAGRetrievalSettingsProps> = ({ k
         title={
           <Space>
             <SearchOutlined />
-            <span>LightRAG 检索配置</span>
+            <span>{t('lightragRetrieval.cardTitle')}</span>
           </Space>
         }
         extra={
@@ -103,7 +103,7 @@ const LightRAGRetrievalSettings: React.FC<LightRAGRetrievalSettingsProps> = ({ k
             onClick={handleSave}
             loading={saving}
           >
-            保存配置
+            {t('lightragRetrieval.saveConfig')}
           </Button>
         }
         loading={loading}
@@ -118,8 +118,8 @@ const LightRAGRetrievalSettings: React.FC<LightRAGRetrievalSettingsProps> = ({ k
           }}
         >
           <Alert
-            message="LightRAG 检索说明"
-            description="LightRAG 使用知识图谱增强的检索方式，支持多种查询模式。配置将在 Agent 查询知识库时自动应用。"
+            message={t('lightragRetrieval.infoTitle')}
+            description={t('lightragRetrieval.infoDesc')}
             type="info"
             showIcon
             style={{ marginBottom: 24 }}
@@ -129,14 +129,14 @@ const LightRAGRetrievalSettings: React.FC<LightRAGRetrievalSettingsProps> = ({ k
           <Divider>
             <Space>
               <ThunderboltOutlined />
-              <Text strong>查询模式</Text>
+              <Text strong>{t('lightragRetrieval.queryModeDivider')}</Text>
             </Space>
           </Divider>
 
           <Form.Item
             name="query_mode"
-            label="默认查询模式"
-            tooltip="选择 LightRAG 的默认查询模式，不同模式适用于不同场景"
+            label={t('lightragRetrieval.queryModeLabel')}
+            tooltip={t('lightragRetrieval.queryModeTooltip')}
           >
             <Radio.Group onChange={(e) => setQueryMode(e.target.value)}>
               <Space direction="vertical">
@@ -144,35 +144,35 @@ const LightRAGRetrievalSettings: React.FC<LightRAGRetrievalSettingsProps> = ({ k
                   <Space>
                     {getModeIcon('naive')}
                     <Text strong>Naive</Text>
-                    <Text type="secondary">- 简单检索，直接匹配，速度最快</Text>
+                    <Text type="secondary">{t('lightragRetrieval.mode.naiveDesc')}</Text>
                   </Space>
                 </Radio>
                 <Radio value="local">
                   <Space>
                     {getModeIcon('local')}
                     <Text strong>Local</Text>
-                    <Text type="secondary">- 局部检索，基于实体邻域，适合具体问题</Text>
+                    <Text type="secondary">{t('lightragRetrieval.mode.localDesc')}</Text>
                   </Space>
                 </Radio>
                 <Radio value="global">
                   <Space>
                     {getModeIcon('global')}
                     <Text strong>Global</Text>
-                    <Text type="secondary">- 全局检索，基于社区摘要，适合宏观问题</Text>
+                    <Text type="secondary">{t('lightragRetrieval.mode.globalDesc')}</Text>
                   </Space>
                 </Radio>
                 <Radio value="hybrid">
                   <Space>
                     {getModeIcon('hybrid')}
                     <Text strong>Hybrid</Text>
-                    <Text type="secondary">- 混合检索，结合局部和全局（推荐）</Text>
+                    <Text type="secondary">{t('lightragRetrieval.mode.hybridDesc')}</Text>
                   </Space>
                 </Radio>
                 <Radio value="mix">
                   <Space>
                     {getModeIcon('mix')}
                     <Text strong>Mix</Text>
-                    <Text type="secondary">- 综合模式，图谱+向量混合检索</Text>
+                    <Text type="secondary">{t('lightragRetrieval.mode.mixDesc')}</Text>
                   </Space>
                 </Radio>
               </Space>
@@ -185,7 +185,7 @@ const LightRAGRetrievalSettings: React.FC<LightRAGRetrievalSettingsProps> = ({ k
           <Title level={5}>
             <Space>
               <NumberOutlined />
-              检索参数
+              {t('lightragRetrieval.paramsTitle')}
             </Space>
           </Title>
 
@@ -193,17 +193,17 @@ const LightRAGRetrievalSettings: React.FC<LightRAGRetrievalSettingsProps> = ({ k
             name="top_k"
             label={
               <Space>
-                <Text strong>Top-K</Text>
-                <Text type="secondary">(返回结果数量)</Text>
+                <Text strong>{t('lightragRetrieval.topKLabel')}</Text>
+                <Text type="secondary">{t('lightragRetrieval.topKSuffix')}</Text>
               </Space>
             }
-            tooltip="控制检索时返回的最相关结果数量"
+            tooltip={t('lightragRetrieval.topKTooltip')}
           >
             <InputNumber
               min={1}
               max={50}
               style={{ width: '200px' }}
-              placeholder="请输入 Top-K 值"
+              placeholder={t('lightragRetrieval.topKPlaceholder')}
             />
           </Form.Item>
 
@@ -211,16 +211,16 @@ const LightRAGRetrievalSettings: React.FC<LightRAGRetrievalSettingsProps> = ({ k
             name="response_type"
             label={
               <Space>
-                <Text strong>响应类型</Text>
-                <Text type="secondary">(回答格式)</Text>
+                <Text strong>{t('lightragRetrieval.responseTypeLabel')}</Text>
+                <Text type="secondary">{t('lightragRetrieval.responseTypeSuffix')}</Text>
               </Space>
             }
-            tooltip="控制 LightRAG 生成回答的格式"
+            tooltip={t('lightragRetrieval.responseTypeTooltip')}
           >
             <Select style={{ width: '300px' }}>
-              <Select.Option value="Multiple Paragraphs">多段落 (Multiple Paragraphs)</Select.Option>
-              <Select.Option value="Single Paragraph">单段落 (Single Paragraph)</Select.Option>
-              <Select.Option value="List">列表形式 (List)</Select.Option>
+              <Select.Option value="Multiple Paragraphs">{t('lightragRetrieval.responseType.multipleParagraphs')} (Multiple Paragraphs)</Select.Option>
+              <Select.Option value="Single Paragraph">{t('lightragRetrieval.responseType.singleParagraph')} (Single Paragraph)</Select.Option>
+              <Select.Option value="List">{t('lightragRetrieval.responseType.list')} (List)</Select.Option>
             </Select>
           </Form.Item>
 
@@ -234,14 +234,14 @@ const LightRAGRetrievalSettings: React.FC<LightRAGRetrievalSettingsProps> = ({ k
           }}>
             <Text type="secondary" style={{ fontSize: '13px' }}>
               <div style={{ marginBottom: '8px' }}>
-                <Text strong>💡 查询模式说明</Text>
+                <Text strong>{t('lightragRetrieval.modeExplainTitle')}</Text>
               </div>
               <ul style={{ margin: 0, paddingLeft: '20px', lineHeight: '1.8' }}>
-                <li><Text strong>Naive：</Text>纯向量检索，速度最快，适合简单查询</li>
-                <li><Text strong>Local：</Text>基于实体的图谱检索，适合查询具体实体相关信息</li>
-                <li><Text strong>Global：</Text>基于关系的图谱检索，适合查询宏观概念和关系</li>
-                <li><Text strong>Hybrid：</Text>结合 Local 和 Global，平衡精确性和全面性（推荐）</li>
-                <li><Text strong>Mix：</Text>图谱+向量混合检索，综合多种策略</li>
+                <li><Text strong>Naive：</Text>{t('lightragRetrieval.modeExplain.naive')}</li>
+                <li><Text strong>Local：</Text>{t('lightragRetrieval.modeExplain.local')}</li>
+                <li><Text strong>Global：</Text>{t('lightragRetrieval.modeExplain.global')}</li>
+                <li><Text strong>Hybrid：</Text>{t('lightragRetrieval.modeExplain.hybrid')}</li>
+                <li><Text strong>Mix：</Text>{t('lightragRetrieval.modeExplain.mix')}</li>
               </ul>
             </Text>
           </div>

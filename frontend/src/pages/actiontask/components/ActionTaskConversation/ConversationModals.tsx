@@ -102,7 +102,7 @@ export default function ConversationModals({
                   {!hasDefaultModel
                     ? t('conversation.noDefaultModelHint')
                     : (!activeConversationId || messages.length === 0)
-                      ? '当前会话无消息，无法总结'
+                      ? t('conversation.noMessagesToSummarize')
                       : t('conversation.summaryHint')
                   }
                 </Text>

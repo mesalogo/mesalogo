@@ -171,14 +171,14 @@ const ModelFormModal = ({
                       <div>
                         <div style={{ fontWeight: 'bold' }}>
                           {model.name}
-                          {model.remote_model && <Tag color="blue" style={{ marginLeft: 8, fontSize: '10px' }}>云端</Tag>}
+                          {model.remote_model && <Tag color="blue" style={{ marginLeft: 8, fontSize: '10px' }}>{t('modelConfig.form.remoteModel')}</Tag>}
                         </div>
                         {model.details && (
                           <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)' }}>
-                            {model.details.parameter_size && `参数: ${model.details.parameter_size}`}
-                            {model.details.quantization_level && ` | 量化: ${model.details.quantization_level}`}
-                            {model.details.family && ` | 系列: ${model.details.family}`}
-                            {model.size > 1000 && ` | 大小: ${(model.size / 1024 / 1024 / 1024).toFixed(1)}GB`}
+                            {model.details.parameter_size && t('modelConfig.form.paramLabel', { value: model.details.parameter_size })}
+                            {model.details.quantization_level && t('modelConfig.form.quantLabel', { value: model.details.quantization_level })}
+                            {model.details.family && t('modelConfig.form.familyLabel', { value: model.details.family })}
+                            {model.size > 1000 && t('modelConfig.form.sizeLabelGb', { value: (model.size / 1024 / 1024 / 1024).toFixed(1) })}
                           </div>
                         )}
                       </div>
@@ -224,17 +224,17 @@ const ModelFormModal = ({
                           )}
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)' }}>
-                          {model.meta?.n_params && `参数: ${(model.meta.n_params / 1e9).toFixed(1)}B`}
-                          {model.meta?.n_ctx && ` | 上下文: ${(model.meta.n_ctx / 1024).toFixed(0)}K`}
-                          {model.meta?.size && ` | 大小: ${(model.meta.size / 1024 / 1024).toFixed(0)}MB`}
-                          {model.replicas !== undefined && ` | 副本: ${model.ready_replicas || 0}/${model.replicas}`}
-                          {model.backend && ` | 后端: ${model.backend}`}
+                          {model.meta?.n_params && t('modelConfig.form.paramsLabelB', { value: (model.meta.n_params / 1e9).toFixed(1) })}
+                          {model.meta?.n_ctx && t('modelConfig.form.contextLabelK', { value: (model.meta.n_ctx / 1024).toFixed(0) })}
+                          {model.meta?.size && t('modelConfig.form.sizeLabelMb', { value: (model.meta.size / 1024 / 1024).toFixed(0) })}
+                          {model.replicas !== undefined && t('modelConfig.form.replicasLabel', { ready: model.ready_replicas || 0, total: model.replicas })}
+                          {model.backend && t('modelConfig.form.backendLabel', { value: model.backend })}
                         </div>
                         {(model.meta?.support_vision || model.meta?.support_tool_calls || model.meta?.support_reasoning) && (
                           <div style={{ fontSize: '11px', marginTop: '2px' }}>
-                            {model.meta.support_vision && <Tag color="purple" style={{ fontSize: '10px' }}>👁️视觉</Tag>}
-                            {model.meta.support_tool_calls && <Tag color="geekblue" style={{ fontSize: '10px' }}>🔧工具</Tag>}
-                            {model.meta.support_reasoning && <Tag color="gold" style={{ fontSize: '10px' }}>🧠推理</Tag>}
+                            {model.meta.support_vision && <Tag color="purple" style={{ fontSize: '10px' }}>{t('modelConfig.form.visionTag')}</Tag>}
+                            {model.meta.support_tool_calls && <Tag color="geekblue" style={{ fontSize: '10px' }}>{t('modelConfig.form.toolsTag')}</Tag>}
+                            {model.meta.support_reasoning && <Tag color="gold" style={{ fontSize: '10px' }}>{t('modelConfig.form.reasoningTag')}</Tag>}
                           </div>
                         )}
                       </div>
@@ -274,7 +274,7 @@ const ModelFormModal = ({
                         <div style={{ fontWeight: 'bold' }}>{model.id}</div>
                         {model.display_name && model.display_name !== model.id && (
                           <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)' }}>
-                            显示名称: {model.display_name}
+                            {t('modelConfig.form.displayNameLabel', { value: model.display_name })}
                           </div>
                         )}
                       </div>
@@ -319,8 +319,8 @@ const ModelFormModal = ({
                         )}
                         {model.inputTokenLimit && (
                           <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)' }}>
-                            输入限制: {model.inputTokenLimit.toLocaleString()} tokens
-                            {model.outputTokenLimit && ` | 输出限制: ${model.outputTokenLimit.toLocaleString()} tokens`}
+                            {t('modelConfig.form.inputLimitLabel', { value: model.inputTokenLimit.toLocaleString() })}
+                            {model.outputTokenLimit && t('modelConfig.form.outputLimitLabel', { value: model.outputTokenLimit.toLocaleString() })}
                           </div>
                         )}
                       </div>
@@ -360,12 +360,12 @@ const ModelFormModal = ({
                         <div style={{ fontWeight: 'bold' }}>{model.id}</div>
                         {model.object && (
                           <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)' }}>
-                            类型: {model.object}
+                            {t('modelConfig.form.typeLabel', { value: model.object })}
                           </div>
                         )}
                         {model.owned_by && (
                           <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)' }}>
-                            提供商: {model.owned_by}
+                            {t('modelConfig.form.ownedByLabel', { value: model.owned_by })}
                           </div>
                         )}
                       </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { App, Card, Form, Input, Button, Space, Typography, Alert, Empty, Tabs, Spin } from 'antd';
 import { SaveOutlined, InfoCircleOutlined, LockOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import ChunkSettings from './components/ChunkSettings';
 import knowledgeAPI from '../../services/api/knowledge';
 
@@ -8,6 +9,7 @@ const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 const KnowledgeSettings = ({ selectedKnowledgeId: propKnowledgeId }) => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -42,10 +44,10 @@ const KnowledgeSettings = ({ selectedKnowledgeId: propKnowledgeId }) => {
           description: response.data.description || '',
         });
       } else {
-        message.error('获取知识库信息失败: ' + response.message);
+        message.error(t('knowledgeSettings.fetchFailed', { reason: response.message }));
       }
     } catch (error) {
-      message.error('获取知识库信息失败: ' + error.message);
+      message.error(t('knowledgeSettings.fetchFailed', { reason: error.message }));
     } finally {
       setLoading(false);
     }
@@ -57,13 +59,13 @@ const KnowledgeSettings = ({ selectedKnowledgeId: propKnowledgeId }) => {
       setSaving(true);
       const response = await knowledgeAPI.update(selectedKnowledgeId, values);
       if (response.success) {
-        message.success('保存成功');
+        message.success(t('knowledgeSettings.saveSuccess'));
         fetchKnowledgeData(); // 刷新数据
       } else {
-        message.error('保存失败: ' + response.message);
+        message.error(t('knowledgeSettings.saveFailed', { reason: response.message }));
       }
     } catch (error) {
-      message.error('保存失败: ' + error.message);
+      message.error(t('knowledgeSettings.saveFailed', { reason: error.message }));
     } finally {
       setSaving(false);
     }
@@ -76,7 +78,7 @@ const KnowledgeSettings = ({ selectedKnowledgeId: propKnowledgeId }) => {
         title={
           <Space>
             <InfoCircleOutlined />
-            <span>基本信息</span>
+            <span>{t('knowledgeSettings.basicInfoTitle')}</span>
           </Space>
         }
         extra={
@@ -86,7 +88,7 @@ const KnowledgeSettings = ({ selectedKnowledgeId: propKnowledgeId }) => {
             loading={saving}
             onClick={() => basicForm.submit()}
           >
-            保存
+            {t('knowledgeSettings.save')}
           </Button>
         }
       >
@@ -97,25 +99,25 @@ const KnowledgeSettings = ({ selectedKnowledgeId: propKnowledgeId }) => {
         >
           <Form.Item
             name="name"
-            label="知识库名称"
+            label={t('knowledgeSettings.nameLabel')}
             rules={[
-              { required: true, message: '请输入知识库名称' },
-              { max: 100, message: '名称不能超过100个字符' }
+              { required: true, message: t('knowledgeSettings.nameRequired') },
+              { max: 100, message: t('knowledgeSettings.nameMaxLength') }
             ]}
           >
-            <Input placeholder="请输入知识库名称" />
+            <Input placeholder={t('knowledgeSettings.namePlaceholder')} />
           </Form.Item>
 
           <Form.Item
             name="description"
-            label="描述"
+            label={t('knowledgeSettings.descriptionLabel')}
             rules={[
-              { max: 500, message: '描述不能超过500个字符' }
+              { max: 500, message: t('knowledgeSettings.descriptionMaxLength') }
             ]}
           >
             <TextArea
               rows={4}
-              placeholder="请输入知识库描述（可选）"
+              placeholder={t('knowledgeSettings.descriptionPlaceholder')}
               showCount
               maxLength={500}
             />
@@ -124,15 +126,15 @@ const KnowledgeSettings = ({ selectedKnowledgeId: propKnowledgeId }) => {
           {knowledgeData && (
             <>
               <Alert
-                message="知识库信息"
+                message={t('knowledgeSettings.infoTitle')}
                 description={
                   <Space orientation="vertical" style={{ width: '100%' }}>
                     <Text type="secondary">ID: {knowledgeData.id}</Text>
                     <Text type="secondary">
-                      创建时间: {knowledgeData.created_at ? new Date(knowledgeData.created_at).toLocaleString() : '-'}
+                      {t('knowledgeSettings.createdAt', { value: knowledgeData.created_at ? new Date(knowledgeData.created_at).toLocaleString() : '-' })}
                     </Text>
                     <Text type="secondary">
-                      更新时间: {knowledgeData.updated_at ? new Date(knowledgeData.updated_at).toLocaleString() : '-'}
+                      {t('knowledgeSettings.updatedAt', { value: knowledgeData.updated_at ? new Date(knowledgeData.updated_at).toLocaleString() : '-' })}
                     </Text>
                   </Space>
                 }
@@ -154,13 +156,13 @@ const KnowledgeSettings = ({ selectedKnowledgeId: propKnowledgeId }) => {
         title={
           <Space>
             <LockOutlined />
-            <span>访问控制</span>
+            <span>{t('knowledgeSettings.accessControlTitle')}</span>
           </Space>
         }
       >
         <Alert
-          message="功能开发中"
-          description="访问控制功能正在开发中，敬请期待。将支持：权限管理、用户分享、团队协作等功能。"
+          message={t('knowledgeSettings.featureInDev')}
+          description={t('knowledgeSettings.featureInDevDesc')}
           type="info"
           showIcon
         />
@@ -175,9 +177,9 @@ const KnowledgeSettings = ({ selectedKnowledgeId: propKnowledgeId }) => {
         <Empty
           description={
             <Space orientation="vertical" align="center">
-              <Text type="secondary">请先选择一个知识库</Text>
+              <Text type="secondary">{t('knowledgeSettings.selectFirst')}</Text>
               <Text type="secondary" style={{ fontSize: 12 }}>
-                从知识库列表中选择一个知识库后，即可查看和修改其设置
+                {t('knowledgeSettings.selectFirstHint')}
               </Text>
             </Space>
           }
@@ -190,7 +192,7 @@ const KnowledgeSettings = ({ selectedKnowledgeId: propKnowledgeId }) => {
   if (loading && !knowledgeData) {
     return (
       <Card>
-        <Spin tip="加载中..." />
+        <Spin tip={t('knowledgeSettings.loading')} />
       </Card>
     );
   }
@@ -214,17 +216,17 @@ const KnowledgeSettings = ({ selectedKnowledgeId: propKnowledgeId }) => {
         items={[
           {
             key: 'basic',
-            label: '基本设置',
+            label: t('knowledgeSettings.tab.basic'),
             children: renderBasicSettings()
           },
           {
             key: 'chunking',
-            label: '分段设置',
+            label: t('knowledgeSettings.tab.chunking'),
             children: <ChunkSettings knowledgeId={selectedKnowledgeId} />
           },
           {
             key: 'access',
-            label: '访问控制',
+            label: t('knowledgeSettings.tab.access'),
             children: renderAccessControl()
           }
         ]}

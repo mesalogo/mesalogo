@@ -8,6 +8,7 @@ import {
   ThunderboltOutlined,
   CalendarOutlined
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text } = Typography;
 
@@ -33,6 +34,7 @@ const gridCardBodyStyle = {
  * 使用 React.memo 优化性能，避免不必要的重新渲染
  */
 const ActionSpaceCard = React.memo(({ space, onClick, onDelete }: any) => {
+  const { t } = useTranslation();
   const handleCardClick = (e: any) => {
     // 防止删除按钮触发卡片点击
     const deleteButton = (e.target as HTMLElement).closest('[data-action="delete"]');
@@ -49,7 +51,7 @@ const ActionSpaceCard = React.memo(({ space, onClick, onDelete }: any) => {
       style={gridCardStyle}
       styles={{ body: gridCardBodyStyle }}
       actions={[
-        <Tooltip title="详情">
+        <Tooltip title={t('spaceCard.detail')}>
           <InfoCircleOutlined
             style={{ color: '#1677ff' }}
             onClick={(e) => {
@@ -58,7 +60,7 @@ const ActionSpaceCard = React.memo(({ space, onClick, onDelete }: any) => {
             }}
           />
         </Tooltip>,
-        <Tooltip title="删除">
+        <Tooltip title={t('spaceCard.delete')}>
           <DeleteOutlined
             style={{ color: '#ff4d4f' }}
             data-action="delete"
@@ -134,26 +136,26 @@ const ActionSpaceCard = React.memo(({ space, onClick, onDelete }: any) => {
           <Space orientation="vertical" style={{ width: '100%' }}>
             <div>
               <FileTextOutlined style={{ marginRight: 8, color: '#1677ff' }} />
-              <Text type="secondary">规则集：</Text>
+              <Text type="secondary">{t('spaceCard.ruleSets')}</Text>
               <Text strong style={{ color: '#1677ff' }}>
-                {(space.rule_sets || []).length}个
+                {t('spaceCard.count', { count: (space.rule_sets || []).length })}
               </Text>
             </div>
             <div>
               <TeamOutlined style={{ marginRight: 8 }} />
-              <Text type="secondary">角色：</Text>
-              <Text>{(space.roles || []).length}个</Text>
+              <Text type="secondary">{t('spaceCard.roles')}</Text>
+              <Text>{t('spaceCard.count', { count: (space.roles || []).length })}</Text>
             </div>
             <div>
               <ThunderboltOutlined style={{ marginRight: 8, color: '#52c41a' }} />
-              <Text type="secondary">行动任务：</Text>
-              <Text>{(space.action_tasks || []).length}个</Text>
+              <Text type="secondary">{t('spaceCard.actionTasks')}</Text>
+              <Text>{t('spaceCard.count', { count: (space.action_tasks || []).length })}</Text>
             </div>
             <div>
               <CalendarOutlined style={{ marginRight: 8 }} />
-              <Text type="secondary">创建于：</Text>
+              <Text type="secondary">{t('spaceCard.createdAt')}</Text>
               <Text>
-              {space.created_at ? new Date(space.created_at).toLocaleString() : '未知'}
+              {space.created_at ? new Date(space.created_at).toLocaleString() : t('spaceCard.unknown')}
               </Text>
             </div>
           </Space>

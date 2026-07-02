@@ -10,6 +10,7 @@
  * 4. 因此前端定期检查的频率可以较低，主要用于长时间无操作的场景
  */
 import { licenseAPI } from './api/license';
+import i18n from '../locales';
 
 // 检查间隔（毫秒）- 大幅增加间隔，减少不必要的检查
 const CHECK_INTERVAL = 30 * 60 * 1000; // 30分钟（从5分钟改为30分钟）
@@ -61,7 +62,7 @@ class LicenseChecker {
       this.checkLicense();
     }, CHECK_INTERVAL);
 
-    console.log(`许可证检查服务已启动，检查间隔: ${CHECK_INTERVAL / 60000}分钟`);
+    console.log(`License checker service started, check interval: ${CHECK_INTERVAL / 60000} minutes`);
   }
 
   /**
@@ -71,7 +72,7 @@ class LicenseChecker {
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
-      console.log('许可证检查服务已停止');
+      console.log('License checker service stopped');
     }
   }
 
@@ -84,21 +85,21 @@ class LicenseChecker {
     // 检查用户是否已登录，如果未登录则不检查license
     const authToken = localStorage.getItem('authToken');
     if (!authToken) {
-      console.log('License检查器: 用户未登录，跳过许可证检查');
+      console.log('License checker: user not logged in, skipping license check');
       return true; // 返回true避免触发license过期逻辑
     }
 
     // 检查当前是否在登录页面，如果是则不检查license
     const currentPath = window.location.pathname;
     if (currentPath === '/login') {
-      console.log('License检查器: 当前在登录页面，跳过许可证检查');
+      console.log('License checker: currently on login page, skipping license check');
       return true; // 返回true避免触发license过期逻辑
     }
 
     // 如果距离上次检查不到10分钟且不是强制检查，使用缓存结果
     const now = Date.now();
     if (!forceCheck && now - lastCheckTime < 600000 && licenseStatus.lastChecked > 0) {
-      console.log('License检查器: 使用缓存的许可证状态');
+      console.log('License checker: using cached license status');
       return licenseStatus.isValid;
     }
 
@@ -118,14 +119,14 @@ class LicenseChecker {
 
       return true;
     } catch (error) {
-      console.error('许可证检查失败:', error);
+      console.error('License check failed:', error);
 
       // 更新许可证状态
       licenseStatus = {
         isValid: false,
         data: null,
         lastChecked: now,
-        error: error.response?.data?.message || '许可证无效或已过期'
+        error: error.response?.data?.message || i18n.t('about.error.licenseInvalidOrExpired')
       };
 
       lastCheckTime = now;
@@ -214,18 +215,18 @@ export const startLicenseChecker = (performInitialCheck = true) => {
         // 检查当前是否在授权页面或登录页面
         const currentPath = window.location.pathname;
         if (currentPath === '/settings/about' || currentPath === '/login') {
-          console.log('License检查器: 当前在授权页面或登录页面，跳过初始检查');
+          console.log('License checker: currently on activation or login page, skipping initial check');
           return; // 已经在授权页面或登录页面，不需要检查
         }
 
         // 检查是否有认证token，如果没有token说明用户未登录，不需要检查license
         const authToken = localStorage.getItem('authToken');
         if (!authToken) {
-          console.log('License检查器: 用户未登录，跳过初始检查');
+          console.log('License checker: user not logged in, skipping initial check');
           return;
         }
 
-        console.log('License检查器: 执行初始许可证检查');
+        console.log('License checker: performing initial license check');
         // 使用强制检查参数，确保获取最新的许可证状态
         const isValid = await checker.checkLicense(true);
 
@@ -241,7 +242,7 @@ export const startLicenseChecker = (performInitialCheck = true) => {
           });
         }
       } catch (error) {
-        console.error('初始许可证检查失败:', error);
+        console.error('Initial license check failed:', error);
       } finally {
         // 标记为已执行初始检查
         hasPerformedInitialCheck = true;

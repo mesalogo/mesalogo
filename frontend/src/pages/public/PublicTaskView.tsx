@@ -288,7 +288,7 @@ const PublicTaskView = () => {
       } else if (err.response?.status === 404) {
         setError(t('public.shareNotFound'));
       } else {
-        setError(err.response?.data?.error || '加载失败，请稍后重试');
+        setError(err.response?.data?.error || t('public.loadFailedRetry'));
       }
     } finally {
       setLoading(false);
@@ -321,9 +321,9 @@ const PublicTaskView = () => {
           }}
         >
           <LockOutlined style={{ fontSize: 48, color: '#1677ff', marginBottom: 16 }} />
-          <Title level={3}>需要访问密码</Title>
+          <Title level={3}>{t('public.needPassword')}</Title>
           <Paragraph type="secondary">
-            此分享受密码保护，请输入访问密码
+            {t('public.needPasswordDesc')}
           </Paragraph>
           
           <form onSubmit={(e) => { e.preventDefault(); handlePasswordSubmit(); }} style={{ marginTop: 24 }}>
@@ -342,7 +342,7 @@ const PublicTaskView = () => {
               loading={verifying}
               block
             >
-              验证访问
+              {t('public.verify')}
             </Button>
           </form>
         </Card>
@@ -355,7 +355,7 @@ const PublicTaskView = () => {
     return (
       <div className="public-task-container">
         <div style={{ textAlign: 'center', padding: '100px 0' }}>
-          <Spin size="large" tip="加载中..." />
+          <Spin size="large" tip={t('public.loading')} />
         </div>
       </div>
     );
@@ -433,7 +433,7 @@ const PublicTaskView = () => {
         </Space>
         <Space>
           <Tag color="blue" icon={<EyeOutlined />}>
-            公开访问
+            {t('public.publicAccess')}
           </Tag>
         </Space>
       </div>
@@ -663,20 +663,20 @@ const PublicTaskView = () => {
                 >
                   <div style={{ marginBottom: 8 }}>
                     <Text type="secondary" style={{ fontSize: '12px' }}>
-                      任务的规则配置
+                      {t('public.rulesConfigDesc')}
                     </Text>
                   </div>
                   {task && <ActionTaskRules task={task} />}
                 </Card>
 
                 <Card
-                  title={<><EyeOutlined /> 监督会话</>}
+                  title={<><EyeOutlined /> {t('public.supervisorChat')}</>}
                   style={{ marginBottom: 16 }}
                   styles={{ body: { padding: '12px 16px' } }}
                 >
                   <div style={{ marginBottom: 8 }}>
                     <Text type="secondary" style={{ fontSize: '12px' }}>
-                      监督者与用户的交互会话记录
+                      {t('public.supervisorChatDesc')}
                     </Text>
                   </div>
                   {task && <ActionTaskSupervisor task={task} onTaskMessagesRefresh={() => {}} onSupervisorIntervention={() => {}} />}

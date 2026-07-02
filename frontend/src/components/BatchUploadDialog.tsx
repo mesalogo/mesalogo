@@ -195,7 +195,7 @@ const BatchUploadDialog = ({
   // 单个文件上传
   const uploadSingleFile = async (queueItem) => {
     if (!selectedKnowledgeBaseId) {
-      throw new Error('请先选择知识库');
+      throw new Error(t('batchUpload.selectKbFirst'));
     }
 
     // 更新状态为上传中

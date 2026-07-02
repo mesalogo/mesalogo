@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { App } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
 import { api as apiInstance } from '../../../services/api/index';
 
@@ -15,6 +16,7 @@ const isCacheExpired = (lastFetchTime) => {
 };
 
 export const useActionRulesData = (activeTab) => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const [ruleSets, setRuleSets] = useState([]);
   const [allRules, setAllRules] = useState([]);
@@ -51,8 +53,8 @@ export const useActionRulesData = (activeTab) => {
       lastFetchRuleSetsTime = Date.now();
       setRuleSets(processedRuleSets);
     } catch (error) {
-      console.error('获取规则集列表失败:', error);
-      message.error('获取规则集列表失败');
+      console.error('Failed to get rule set list:', error);
+      message.error(t('rulesData.fetchRuleSetsFailed'));
     } finally {
       setLoading(false);
     }
@@ -73,8 +75,8 @@ export const useActionRulesData = (activeTab) => {
       setAllRules(rulesData);
       setRulesLoaded(true);
     } catch (error) {
-      console.error('获取规则列表失败:', error);
-      message.error('获取规则列表失败');
+      console.error('Failed to get rule list:', error);
+      message.error(t('rulesData.fetchRulesFailed'));
     } finally {
       setRulesLoading(false);
     }
@@ -103,8 +105,8 @@ export const useActionRulesData = (activeTab) => {
 
       setRoles(rolesData);
     } catch (error) {
-      console.error('获取角色列表失败:', error);
-      message.error('获取角色列表失败');
+      console.error('Failed to get role list:', error);
+      message.error(t('rulesData.fetchRolesFailed'));
     } finally {
       setRolesLoading(false);
     }

@@ -39,35 +39,35 @@ const DeleteUserModal = ({ visible, user, onCancel, onConfirm }: any) => {
       if (response.success && response.data) {
         onConfirm(response.data);
       } else {
-        console.error('删除用户失败:', response.message);
+        console.error('Failed to delete user:', response.message);
       }
     } catch (error) {
-      console.error('删除用户失败:', error);
+      console.error('Failed to delete user:', error);
     } finally {
       setDeleting(false);
     }
   };
 
   const renderResourceCount = (resource: any) => {
-    if (!resource) return '0 个';
+    if (!resource) return t('userManagement.itemCount', { count: 0 });
     
     const { count, private: privateCount, shared: sharedCount } = resource;
     
     if (count === 0) {
-      return '0 个';
+      return t('userManagement.itemCount', { count: 0 });
     }
     
     return (
       <Space>
-        <span>{count} 个</span>
+        <span>{t('userManagement.itemCount', { count })}</span>
         {privateCount > 0 && (
           <Tag icon={<LockOutlined />} color="orange">
-            私有: {privateCount}
+            {t('userManagement.privateCount', { count: privateCount })}
           </Tag>
         )}
         {sharedCount > 0 && (
           <Tag icon={<TeamOutlined />} color="green">
-            共享: {sharedCount}
+            {t('userManagement.sharedCount', { count: sharedCount })}
           </Tag>
         )}
       </Space>

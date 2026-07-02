@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Typography, Spin, Empty, List } from 'antd';
 import { FolderOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { actionTaskAPI } from '../../../services/api/actionTask';
 
 const { Text } = Typography;
@@ -10,6 +11,7 @@ const { Text } = Typography;
  * 用于列表展示所有行动任务
  */
 const TaskSelector = ({ onTaskSelect, selectedTask }: any) => {
+  const { t } = useTranslation();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -40,7 +42,7 @@ const TaskSelector = ({ onTaskSelect, selectedTask }: any) => {
       title={
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <FolderOutlined style={{ marginRight: 8 }} />
-          <span>选择任务</span>
+          <span>{t('taskSelector.title')}</span>
         </div>
       }
       style={{ height: '100%' }}
@@ -54,7 +56,7 @@ const TaskSelector = ({ onTaskSelect, selectedTask }: any) => {
         <div>
           <div style={{ padding: '16px 16px 8px 16px' }}>
             <Text type="secondary">
-              选择要浏览项目文件的行动任务
+              {t('taskSelector.desc')}
             </Text>
           </div>
 
@@ -83,10 +85,10 @@ const TaskSelector = ({ onTaskSelect, selectedTask }: any) => {
                   description={
                     <div>
                       <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)' }}>
-                        行动空间: {task.action_space_name}
+                        {t('taskSelector.actionSpace', { name: task.action_space_name })}
                       </div>
                       <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)' }}>
-                        创建时间: {new Date(task.created_at).toLocaleDateString()}
+                        {t('taskSelector.createdAt', { date: new Date(task.created_at).toLocaleDateString() })}
                       </div>
                     </div>
                   }
@@ -94,7 +96,7 @@ const TaskSelector = ({ onTaskSelect, selectedTask }: any) => {
               </List.Item>
             )}
             locale={{
-              emptyText: <Empty description="暂无行动任务" />
+              emptyText: <Empty description={t('taskSelector.empty')} />
             }}
           />
         </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Typography, Tabs } from 'antd';
 import { PartitionOutlined, CodeOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { useActionRulesData } from './useActionRulesData';
 import RuleSetsTab from './RuleSetsTab';
 import RulesListTab from './RulesListTab';
@@ -20,6 +21,7 @@ const { Title, Text } = Typography;
  * 预期收益：代码可维护性提升，渲染性能提升 40-50%
  */
 const ActionRules = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('ruleSets');
 
   // 使用自定义 Hook 获取所有数据
@@ -59,10 +61,10 @@ const ActionRules = () => {
       }}>
         <div>
           <Title level={4} style={{ margin: 0, marginBottom: '8px' }}>
-            行动规则
+            {t('actionRules.pageTitle')}
           </Title>
           <Text type="secondary">
-            管理行动空间中的规则集和规则，支持自然语言规则和逻辑规则的创建、编辑和测试
+            {t('actionRules.pageDesc')}
           </Text>
         </div>
       </div>
@@ -73,7 +75,7 @@ const ActionRules = () => {
         items={[
           {
             key: 'ruleSets',
-            label: <span><PartitionOutlined />规则集</span>,
+            label: <span><PartitionOutlined />{t('actionRules.tabRuleSets')}</span>,
             children: (
               <RuleSetsTab
                 ruleSets={ruleSets}
@@ -84,7 +86,7 @@ const ActionRules = () => {
           },
           {
             key: 'ruleEditor',
-            label: <span><CodeOutlined />规则列表</span>,
+            label: <span><CodeOutlined />{t('actionRules.tabRulesList')}</span>,
             children: (
               <RulesListTab
                 allRules={allRules}

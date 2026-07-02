@@ -14,6 +14,7 @@ import {
   VideoCameraOutlined,
   AudioOutlined
 } from '@ant-design/icons';
+import i18n from '../locales';
 
 /**
  * 根据文件扩展名获取对应的图标
@@ -127,20 +128,20 @@ export const getDisplayName = (fileName, isDirectory = false, agentInfo = {}) =>
       if (agent && agent.name && agent.role_name) {
         return `${agent.name}[${agent.role_name}]`;
       }
-      return `智能体 ${agentId.substring(0, 8)}...`; // 显示UUID前8位加省略号
+      return i18n.t('wsFile.agentSubtitle', { id: agentId.substring(0, 8) }); // 显示UUID前8位加省略号
     }
     return null; // 其他目录不显示副标题
   }
 
   // 根据文件名设置显示名称
   if (fileName === 'ProjectIndex.md') {
-    return '项目索引';
+    return i18n.t('wsFile.projectIndex');
   } else if (fileName === 'ProjectSummary.md') {
-    return '项目总结';
+    return i18n.t('wsFile.projectSummary');
   } else if (fileName === 'AgentWorkspace.md') {
-    return '智能体工作空间';
+    return i18n.t('wsFile.agentWorkspace');
   } else if (fileName.startsWith('AgentWorkspace_')) {
-    return fileName.replace('AgentWorkspace_', '').replace('.md', '') + ' 的工作空间';
+    return i18n.t('wsFile.workspaceOf', { name: fileName.replace('AgentWorkspace_', '').replace('.md', '') });
   }
   // 对于其他文件，返回null表示不显示副标题
   return null;

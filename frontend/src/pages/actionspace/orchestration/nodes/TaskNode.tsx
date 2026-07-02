@@ -1,6 +1,7 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { FileTextOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 interface TaskNodeProps {
   data: {
@@ -11,6 +12,7 @@ interface TaskNodeProps {
 }
 
 const TaskNode: React.FC<TaskNodeProps> = ({ data, selected }) => {
+  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -48,7 +50,7 @@ const TaskNode: React.FC<TaskNodeProps> = ({ data, selected }) => {
         >
           <FileTextOutlined style={{ color: '#722ed1', fontSize: 16 }} />
         </div>
-        <div style={{ fontWeight: 600, color: '#722ed1', fontSize: 13 }}>任务</div>
+        <div style={{ fontWeight: 600, color: '#722ed1', fontSize: 13 }}>{t('orchNode.task')}</div>
       </div>
       <div
         style={{
@@ -60,7 +62,7 @@ const TaskNode: React.FC<TaskNodeProps> = ({ data, selected }) => {
           lineHeight: 1.4,
         }}
       >
-        {data?.instruction?.substring(0, 40) || '配置指令...'}
+        {data?.instruction?.substring(0, 40) || t('orchNode.configInstruction')}
         {data?.instruction && data.instruction.length > 40 ? '...' : ''}
       </div>
       <Handle

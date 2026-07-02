@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { App, Card, Button, Table, Space, Tooltip, Tag, Modal, List, Checkbox, Spin, Typography } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
 import RuleSetModal from './RuleSetModal';
 
@@ -10,6 +11,7 @@ const { Text } = Typography;
  * 规则集管理 Tab
  */
 const RuleSetsTab = ({ ruleSets, loading, onRefresh }: any) => {
+  const { t } = useTranslation();
   const { message, modal } = App.useApp();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingRuleSet, setEditingRuleSet] = useState(null);
@@ -36,19 +38,19 @@ const RuleSetsTab = ({ ruleSets, loading, onRefresh }: any) => {
 
   const handleDelete = async (id) => {
     modal.confirm({
-      title: '确认删除',
-      content: '确定要删除这个规则集吗？删除后无法恢复。',
-      okText: '确认',
-      cancelText: '取消',
+      title: t('ruleSets.deleteConfirmTitle'),
+      content: t('ruleSets.deleteConfirmContent'),
+      okText: t('ruleSets.deleteConfirmOk'),
+      cancelText: t('ruleSets.deleteConfirmCancel'),
       okType: 'danger',
       onOk: async () => {
         try {
           await actionSpaceAPI.deleteRuleSet(id);
-          message.success('规则集删除成功');
+          message.success(t('ruleSets.deleteSuccess'));
           onRefresh(true);
         } catch (error) {
-          console.error('删除规则集失败:', error);
-          message.error('删除规则集失败');
+          console.error('Failed to delete rule set:', error);
+          message.error(t('ruleSets.deleteFailed'));
         }
       }
     });
@@ -66,8 +68,8 @@ const RuleSetsTab = ({ ruleSets, loading, onRefresh }: any) => {
       setAssociatedRuleIds(associatedIds);
       setSelectedRuleIds([...associatedIds]);
     } catch (error) {
-      console.error('获取规则关联数据失败:', error);
-      message.error('获取规则关联数据失败');
+      console.error('Failed to fetch rule association data:', error);
+      message.error(t('ruleSets.fetchAssociationFailed'));
     } finally {
       setAssociationLoading(false);
     }
@@ -100,15 +102,15 @@ const RuleSetsTab = ({ ruleSets, loading, onRefresh }: any) => {
       setAssociatedRuleIds([...selectedRuleIds]);
 
       if (toAdd.length > 0 || toRemove.length > 0) {
-        message.success(`规则关联更新成功：新增 ${toAdd.length} 条，移除 ${toRemove.length} 条`);
+        message.success(t('ruleSets.associationUpdateSuccess', { added: toAdd.length, removed: toRemove.length }));
       } else {
-        message.info('没有变更需要保存');
+        message.info(t('ruleSets.noChangesToSave'));
       }
 
       handleCloseAssociationModal();
     } catch (error) {
-      console.error('保存规则关联失败:', error);
-      message.error('保存规则关联失败');
+      console.error('Failed to save rule association:', error);
+      message.error(t('ruleSets.saveAssociationFailed'));
     } finally {
       setAssociationSaving(false);
     }
@@ -133,7 +135,7 @@ const RuleSetsTab = ({ ruleSets, loading, onRefresh }: any) => {
 
   const columns = [
     {
-      title: '规则集名称',
+      title: t('ruleSets.col.name'),
       dataIndex: 'name',
       key: 'name',
       width: 200,
@@ -141,60 +143,60 @@ const RuleSetsTab = ({ ruleSets, loading, onRefresh }: any) => {
       ellipsis: true,
     },
     {
-      title: '描述',
+      title: t('ruleSets.col.description'),
       dataIndex: 'description',
       key: 'description',
       width: 300,
       render: (description) => (
         <div style={{ maxHeight: '60px', overflow: 'hidden' }}>
           <Text style={{ fontSize: '12px', lineHeight: '1.4' }}>
-            {description || '暂无描述'}
+            {description || t('ruleSets.noDescription')}
           </Text>
         </div>
       ),
     },
     {
-      title: '来源',
+      title: t('ruleSets.col.source'),
       dataIndex: 'created_by',
       key: 'resource_source',
       width: 100,
       render: (created_by, record) => {
         if (!created_by) {
           return (
-            <Tooltip title="系统资源，所有用户可见可用">
-              <Tag icon={<InfoCircleOutlined />} color="blue">系统</Tag>
+            <Tooltip title={t('ruleSets.source.systemTooltip')}>
+              <Tag icon={<InfoCircleOutlined />} color="blue">{t('ruleSets.source.system')}</Tag>
             </Tooltip>
           );
         }
         if (record.is_shared) {
           return (
-            <Tooltip title="用户共享资源，所有用户可见可用">
-              <Tag icon={<InfoCircleOutlined />} color="green">共享</Tag>
+            <Tooltip title={t('ruleSets.source.sharedTooltip')}>
+              <Tag icon={<InfoCircleOutlined />} color="green">{t('ruleSets.source.shared')}</Tag>
             </Tooltip>
           );
         }
         return (
-          <Tooltip title="私有资源，仅创建者可见">
-            <Tag icon={<InfoCircleOutlined />} color="orange">私有</Tag>
+          <Tooltip title={t('ruleSets.source.privateTooltip')}>
+            <Tag icon={<InfoCircleOutlined />} color="orange">{t('ruleSets.source.private')}</Tag>
           </Tooltip>
         );
       },
     },
     {
-      title: '规则数量',
+      title: t('ruleSets.col.ruleCount'),
       key: 'rule_count',
       dataIndex: 'rule_count',
       width: 100,
       align: 'center' as const,
       render: (ruleCount) => (
         <Tag color="blue">
-          {Number.isInteger(ruleCount) ? ruleCount : 0} 条
+          {t('ruleSets.ruleCountUnit', { count: Number.isInteger(ruleCount) ? ruleCount : 0 })}
         </Tag>
       ),
       sorter: (a, b) => (a.rule_count || 0) - (b.rule_count || 0),
     },
     {
-      title: '关联行动空间',
+      title: t('ruleSets.col.relatedSpaces'),
       key: 'related_spaces',
       dataIndex: 'related_spaces',
       width: 200,
@@ -207,34 +209,32 @@ const RuleSetsTab = ({ ruleSets, loading, onRefresh }: any) => {
               </Tag>
             ))
           ) : (
-            <Text type="secondary">未关联</Text>
+            <Text type="secondary">{t('ruleSets.noRelatedSpaces')}</Text>
           )}
         </>
       ),
     },
     {
-      title: '操作',
+      title: t('ruleSets.col.actions'),
       key: 'action',
       width: 100,
       fixed: 'right' as const,
       render: (_, record) => (
         <Space>
-          <Tooltip title="关联规则">
+          <Tooltip title={t('ruleSets.action.associateRules')}>
             <Button
               type="text"
               icon={<EditOutlined />}
               onClick={() => handleEdit(record)}
-             
             />
           </Tooltip>
           {!record.internal && (
-            <Tooltip title="删除规则集">
+            <Tooltip title={t('ruleSets.action.deleteRuleSet')}>
               <Button
                 type="text"
                 danger
                 icon={<DeleteOutlined />}
                 onClick={() => handleDelete(record.id)}
-               
               />
             </Tooltip>
           )}
@@ -246,10 +246,10 @@ const RuleSetsTab = ({ ruleSets, loading, onRefresh }: any) => {
   return (
     <>
       <Card
-        title="规则集管理"
+        title={t('ruleSets.cardTitle')}
         extra={
           <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-            新建规则集
+            {t('ruleSets.createBtn')}
           </Button>
         }
       >
@@ -262,7 +262,7 @@ const RuleSetsTab = ({ ruleSets, loading, onRefresh }: any) => {
             pageSize: 10,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`
+            showTotal: (total, range) => t('ruleSets.paginationTotal', { start: range[0], end: range[1], total })
           }}
           size="middle"
           scroll={{ x: 'max-content' }}
@@ -282,19 +282,19 @@ const RuleSetsTab = ({ ruleSets, loading, onRefresh }: any) => {
 
       {/* 规则关联 Modal */}
       <Modal
-        title={`编辑规则集"${currentRuleSet?.name}"的规则关联`}
+        title={t('ruleSets.associationModalTitle', { name: currentRuleSet?.name })}
         open={ruleAssociationModalVisible}
         onOk={handleSaveRuleAssociation}
         onCancel={handleCancelAssociation}
         confirmLoading={associationSaving}
         width={800}
-        okText="保存"
-        cancelText="取消"
+        okText={t('ruleSets.save')}
+        cancelText={t('ruleSets.cancel')}
       >
         <Spin spinning={associationLoading}>
           <div style={{ marginBottom: 16 }}>
             <Text type="secondary">
-              选择需要关联到此规则集的规则（共 {selectedRuleIds.length} 条规则已选择）
+              {t('ruleSets.associationHint', { count: selectedRuleIds.length })}
             </Text>
           </div>
           <List
@@ -311,7 +311,7 @@ const RuleSetsTab = ({ ruleSets, loading, onRefresh }: any) => {
                     <Space>
                       <Text strong>{rule.name}</Text>
                       <Tag color={rule.type === 'llm' ? 'green' : 'blue'}>
-                        {rule.type === 'llm' ? '自然语言' : '逻辑规则'}
+                        {rule.type === 'llm' ? t('ruleSets.ruleType.llm') : t('ruleSets.ruleType.logic')}
                       </Tag>
                     </Space>
                   </Checkbox>

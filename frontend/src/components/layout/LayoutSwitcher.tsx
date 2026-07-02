@@ -29,7 +29,7 @@ const LayoutSwitcher = () => {
           minWidth: '160px',
           gap: '12px'
         }}>
-          <span>{t('layout.classic') || '经典样式'}</span>
+          <span>{t('layout.classic')}</span>
           {layoutType === LAYOUT_TYPES.CLASSIC && (
             <CheckOutlined style={{ color: '#1677ff' }} />
           )}
@@ -48,7 +48,7 @@ const LayoutSwitcher = () => {
           minWidth: '160px',
           gap: '12px'
         }}>
-          <span>{t('layout.modern') || '现代样式'}</span>
+          <span>{t('layout.modern')}</span>
           {layoutType === LAYOUT_TYPES.MODERN && (
             <CheckOutlined style={{ color: '#1677ff' }} />
           )}
@@ -64,7 +64,7 @@ const LayoutSwitcher = () => {
       placement="bottomRight"
       trigger={['click']}
     >
-      <Tooltip title={t('layout.switchStyle') || '切换菜单样式'} placement="bottom">
+      <Tooltip title={t('layout.switchStyle')} placement="bottom">
         <Button
           type="text"
           icon={<LayoutOutlined />}

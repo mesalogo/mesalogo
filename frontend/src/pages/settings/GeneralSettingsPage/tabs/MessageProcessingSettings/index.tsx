@@ -123,15 +123,15 @@ const MessageProcessingSettings: React.FC<MessageProcessingSettingsProps> = ({ c
       <Card
         title={
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span>实时预览</span>
+            <span>{t('msgProcessing.livePreview')}</span>
             <Select
               value={mode}
               onChange={setMode}
               size="small"
               style={{ width: 180 }}
               options={[
-                { value: 'default', label: '默认模式' },
-                { value: 'isolation', label: '隔离模式 (isolation)' }
+                { value: 'default', label: t('msgProcessing.defaultMode') },
+                { value: 'isolation', label: t('msgProcessing.isolationMode') }
               ]}
             />
           </div>
@@ -148,7 +148,7 @@ const MessageProcessingSettings: React.FC<MessageProcessingSettingsProps> = ({ c
 
       {/* 右侧：参数设置 */}
       <Card
-        title="参数设置"
+        title={t('msgProcessing.paramSettings')}
         style={{ flex: 1, minWidth: 320 }}
         bodyStyle={{ padding: '12px 16px' }}
       >

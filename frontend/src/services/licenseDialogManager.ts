@@ -4,8 +4,8 @@
  * 用于管理许可证过期对话框的显示，确保同一时间只显示一个对话框
  */
 import { Modal } from 'antd';
+import i18n from '../locales';
 
-// 存储当前对话框状态
 let dialogState = {
   isShowing: false,
   modalInstance: null,
@@ -21,7 +21,7 @@ let dialogState = {
 export const showLicenseExpiredDialog = (onOk) => {
   // 如果当前已有对话框显示，保存回调但不显示新对话框
   if (dialogState.isShowing) {
-    console.log('许可证过期对话框已在显示中，保存回调但不显示新对话框');
+    console.log('License expired dialog already showing, saving callback without showing a new dialog');
     if (typeof onOk === 'function') {
       dialogState.pendingRedirect = onOk;
     }
@@ -31,10 +31,9 @@ export const showLicenseExpiredDialog = (onOk) => {
   // 如果距离上次显示不到10秒，不再显示新对话框
   const now = Date.now();
   if (now - dialogState.lastShownTime < 10000) {
-    console.log('距离上次显示许可证过期对话框时间过短，忽略新的显示请求');
-    // 如果有回调函数，直接执行跳转
+    console.log('Too soon since last license expired dialog, ignoring the new show request');
     if (typeof onOk === 'function') {
-      console.log('直接执行跳转回调...');
+      console.log('Executing redirect callback directly...');
       onOk();
     }
     return false;
@@ -52,9 +51,9 @@ export const showLicenseExpiredDialog = (onOk) => {
   try {
     // 创建并显示对话框
     const modal = Modal.error({
-      title: '许可证已过期',
-      content: '您的许可证已过期或无效，系统功能将受到限制。请前往授权页面激活系统。',
-      okText: '前往授权页面',
+      title: i18n.t('about.expiredDialog.title'),
+      content: i18n.t('about.expiredDialog.content'),
+      okText: i18n.t('about.expiredDialog.okText'),
       onOk: () => {
         // 获取并清除回调函数
         const callback = dialogState.pendingRedirect;
@@ -83,13 +82,12 @@ export const showLicenseExpiredDialog = (onOk) => {
     // 存储对话框实例
     dialogState.modalInstance = modal;
     
-    console.log('许可证过期对话框已创建');
+    console.log('License expired dialog created');
   } catch (error) {
-    console.error('创建对话框失败:', error);
-    // 如果对话框创建失败，直接执行跳转
+    console.error('Failed to create dialog:', error);
     dialogState.isShowing = false;
     if (typeof onOk === 'function') {
-      console.log('对话框创建失败，直接跳转...');
+      console.log('Dialog creation failed, redirecting directly...');
       onOk();
     }
   }

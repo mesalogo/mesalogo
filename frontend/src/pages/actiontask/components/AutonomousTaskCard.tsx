@@ -82,8 +82,8 @@ const AutonomousTaskCard = ({ task, activeConversationId, refreshKey }) => {
         const activeTasksList = response.autonomous_tasks?.filter(t => t.status === 'active') || [];
         setActiveTasks(activeTasksList);
       } catch (error) {
-        console.error('获取自主任务失败:', error);
-        message.error(t('autonomous.card.loadFailed', { defaultValue: '获取自主任务失败' }) + ': ' + error.message);
+        console.error('Failed to fetch autonomous tasks:', error);
+        message.error(t('autonomous.card.loadFailed') + ': ' + error.message);
       } finally {
         setLoading(false);
         setIsUpdating(false);
@@ -106,13 +106,13 @@ const AutonomousTaskCard = ({ task, activeConversationId, refreshKey }) => {
 
     // 只有当存在活动任务时才启动定时刷新
     if (activeTasks.length === 0) {
-      console.log('自主行动卡片: 没有活动任务，跳过自动刷新');
+      console.log('AutonomousTaskCard: no active tasks, skipping auto-refresh');
       return;
     }
 
-    console.log(`自主行动卡片: 启动自动刷新，当前有 ${activeTasks.length} 个活动任务`);
+    console.log(`AutonomousTaskCard: starting auto-refresh, currently ${activeTasks.length} active task(s)`);
     const interval = setInterval(() => {
-      console.log('自主行动卡片: 执行定时自动刷新');
+      console.log('AutonomousTaskCard: running scheduled auto-refresh');
       // 自动刷新时使用平滑动画
       fetchAutonomousTasks(true);
     }, 30000); // 每30秒刷新一次
@@ -133,7 +133,7 @@ const AutonomousTaskCard = ({ task, activeConversationId, refreshKey }) => {
 
     // 如果从没有活动任务变为有活动任务，立即刷新一次
     if (prevCount === 0 && currentCount > 0) {
-      console.log('自主行动卡片: 检测到新的活动任务，立即刷新');
+      console.log('AutonomousTaskCard: detected a new active task, refreshing immediately');
       fetchAutonomousTasks(true);
     }
 
@@ -183,32 +183,32 @@ const AutonomousTaskCard = ({ task, activeConversationId, refreshKey }) => {
     const end = endTime ? new Date(endTime) : new Date();
     const duration = Math.floor((end.getTime() - start.getTime()) / 1000); // 秒
 
-    if (duration < 60) return `${duration}秒`;
-    if (duration < 3600) return `${Math.floor(duration / 60)}分${duration % 60}秒`;
-    return `${Math.floor(duration / 3600)}时${Math.floor((duration % 3600) / 60)}分`;
+    if (duration < 60) return t('autonomous.card.durationSeconds', { seconds: duration });
+    if (duration < 3600) return t('autonomous.card.durationMinutesSeconds', { minutes: Math.floor(duration / 60), seconds: duration % 60 });
+    return t('autonomous.card.durationHoursMinutes', { hours: Math.floor(duration / 3600), minutes: Math.floor((duration % 3600) / 60) });
   };
 
   // 渲染执行记录详情
   const renderExecutionDetails = (execution) => {
     return (
       <Descriptions column={1}>
-        <Descriptions.Item label="执行类型">
-          {execution.execution_type === 'manual' ? '手动触发' : execution.execution_type}
+        <Descriptions.Item label={t('autonomous.card.executionType')}>
+          {execution.execution_type === 'manual' ? t('autonomous.card.executionTypeManual') : execution.execution_type}
         </Descriptions.Item>
-        <Descriptions.Item label="触发源">
+        <Descriptions.Item label={t('autonomous.card.triggerSource')}>
           {execution.trigger_source || '-'}
         </Descriptions.Item>
-        <Descriptions.Item label="开始时间">
+        <Descriptions.Item label={t('autonomous.card.startTime')}>
           {execution.start_time ? new Date(execution.start_time).toLocaleString() : '-'}
         </Descriptions.Item>
-        <Descriptions.Item label="结束时间">
-          {execution.end_time ? new Date(execution.end_time).toLocaleString() : '进行中'}
+        <Descriptions.Item label={t('autonomous.card.endTime')}>
+          {execution.end_time ? new Date(execution.end_time).toLocaleString() : t('autonomous.card.inProgress')}
         </Descriptions.Item>
-        <Descriptions.Item label="执行时长">
+        <Descriptions.Item label={t('autonomous.card.executionDuration')}>
           {formatDuration(execution.start_time, execution.end_time)}
         </Descriptions.Item>
         {execution.result && (
-          <Descriptions.Item label="执行结果">
+          <Descriptions.Item label={t('autonomous.card.executionResult')}>
 
               {typeof execution.result === 'object' ?
                 execution.result.message || JSON.stringify(execution.result) :
@@ -217,7 +217,7 @@ const AutonomousTaskCard = ({ task, activeConversationId, refreshKey }) => {
           </Descriptions.Item>
         )}
         {execution.error_message && (
-          <Descriptions.Item label="错误信息">
+          <Descriptions.Item label={t('autonomous.card.errorMessage')}>
             <Text type="danger" style={{ fontSize: '12px' }}>
               {execution.error_message}
             </Text>
@@ -236,7 +236,7 @@ const AutonomousTaskCard = ({ task, activeConversationId, refreshKey }) => {
     // 找到要停止的任务，获取其所属的会话ID
     const targetTask = autonomousTasks.find(t => t.id === autonomousTaskId);
     if (!targetTask) {
-      message.error(t('autonomous.card.taskNotFound', { defaultValue: '未找到要停止的任务' }));
+      message.error(t('autonomous.card.taskNotFound'));
       return;
     }
 
@@ -250,7 +250,7 @@ const AutonomousTaskCard = ({ task, activeConversationId, refreshKey }) => {
       // 刷新数据，使用动画效果
       await fetchAutonomousTasks(true);
     } catch (error) {
-      console.error('停止自主任务失败:', error);
+      console.error('Failed to stop autonomous task:', error);
       message.error(t('autonomous.card.stopFailed') + ': ' + error.message);
     } finally {
       // 从停止中的任务集合中移除
@@ -295,23 +295,23 @@ const AutonomousTaskCard = ({ task, activeConversationId, refreshKey }) => {
         </div>
 
         <Descriptions column={1}>
-          <Descriptions.Item label="所属会话">
+          <Descriptions.Item label={t('autonomous.card.belongingConversation')}>
             <Text style={{ fontSize: '12px' }}>
-              {activeTask.conversation?.name || `会话 ${activeTask.conversation_id}`}
+              {activeTask.conversation?.name || t('autonomous.card.conversationFallback', { id: activeTask.conversation_id })}
             </Text>
           </Descriptions.Item>
-          <Descriptions.Item label="创建时间">
+          <Descriptions.Item label={t('autonomous.card.createdAtLabel')}>
             {new Date(activeTask.created_at).toLocaleString()}
           </Descriptions.Item>
           {config.rounds && (
-            <Descriptions.Item label="轮数设置">
-              {config.rounds} 轮
+            <Descriptions.Item label={t('autonomous.card.roundsSetting')}>
+              {t('autonomous.card.roundsUnit', { count: config.rounds })}
             </Descriptions.Item>
           )}
           {config.topic && (
-            <Descriptions.Item label="主题">
+            <Descriptions.Item label={t('autonomous.card.topic')}>
               <Paragraph
-                ellipsis={{ rows: 2, expandable: true, symbol: '展开' }}
+                ellipsis={{ rows: 2, expandable: true, symbol: t('autonomous.card.expandSymbol') }}
                 style={{ margin: 0, fontSize: '12px' }}
               >
                 {config.topic}
@@ -319,7 +319,7 @@ const AutonomousTaskCard = ({ task, activeConversationId, refreshKey }) => {
             </Descriptions.Item>
           )}
           {latestExecution && (
-            <Descriptions.Item label="执行时长">
+            <Descriptions.Item label={t('autonomous.card.executionDuration')}>
               {formatDuration(latestExecution.start_time, latestExecution.end_time)}
             </Descriptions.Item>
           )}
@@ -389,7 +389,7 @@ const AutonomousTaskCard = ({ task, activeConversationId, refreshKey }) => {
             }}>
               <HistoryOutlined style={{ marginRight: 4, color: 'var(--custom-text-secondary)' }} />
               <Text type="secondary" style={{ fontSize: '12px' }}>
-                近期行动记录（最近5条）
+                {t('autonomous.card.recentRecords')}
               </Text>
             </div>
 
@@ -417,7 +417,7 @@ const AutonomousTaskCard = ({ task, activeConversationId, refreshKey }) => {
                           color: 'var(--custom-text-secondary)'
                         }}
                       >
-                        所属会话：{autonomousTask.conversation?.name || `会话 ${autonomousTask.conversation_id}`}
+                        {t('autonomous.card.belongingConversation')}：{autonomousTask.conversation?.name || t('autonomous.card.conversationFallback', { id: autonomousTask.conversation_id })}
                       </Text>
                     </div>
 
@@ -437,9 +437,11 @@ const AutonomousTaskCard = ({ task, activeConversationId, refreshKey }) => {
                               color: 'var(--custom-text-secondary)'
                             }}
                           >
-                            主题：{autonomousTask.config.topic.length > 10
-                              ? `${autonomousTask.config.topic.substring(0, 10)}...`
-                              : autonomousTask.config.topic}
+                            {t('autonomous.card.topicPrefix', {
+                              topic: autonomousTask.config.topic.length > 10
+                                ? `${autonomousTask.config.topic.substring(0, 10)}...`
+                                : autonomousTask.config.topic
+                            })}
                           </Text>
                         </Tooltip>
                       </div>
@@ -454,7 +456,7 @@ const AutonomousTaskCard = ({ task, activeConversationId, refreshKey }) => {
                             key: autonomousTask.id,
                             label: (
                               <Text style={{ fontSize: '12px' }}>
-                                执行详情 ({autonomousTask.executions.length} 次执行)
+                                {t('autonomous.card.executionDetails', { count: autonomousTask.executions.length })}
                               </Text>
                             ),
                             children: (
@@ -471,7 +473,7 @@ const AutonomousTaskCard = ({ task, activeConversationId, refreshKey }) => {
                                   >
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                                       <Text style={{ fontSize: '11px', fontWeight: 'bold' }}>
-                                        执行 #{execution.id}
+                                        {t('autonomous.card.executionNumber', { id: execution.id })}
                                       </Text>
                                       {getStatusTag(execution.status)}
                                     </div>

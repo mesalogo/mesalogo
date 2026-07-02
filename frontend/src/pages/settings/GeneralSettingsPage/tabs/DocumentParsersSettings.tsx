@@ -11,7 +11,7 @@ const DOCUMENT_PARSERS_META = [
   {
     name: 'mineru',
     display_name: 'MinerU',
-    description: '基于AI的多格式文档解析工具，支持PDF、Word、PowerPoint、Excel、图片等格式',
+    description: 'docParser.mineruDesc',
     status: 'available',
     supported_formats: ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', '.jpg', '.jpeg', '.png'],
     config_fields: [
@@ -48,16 +48,16 @@ const DOCUMENT_PARSERS_META = [
         label: 'settings.extraArgs',
         type: 'textarea',
         placeholder: '--source modelscope',
-        tooltip: '额外的命令行参数，例如：--source modelscope',
+        tooltip: 'docParser.extraArgsTooltip',
         showWhen: (config) => config?.backend_type === 'local'
       },
-      { name: 'timeout', label: 'settings.timeout', type: 'number', placeholder: '300', addonAfter: '秒' }
+      { name: 'timeout', label: 'settings.timeout', type: 'number', placeholder: '300', addonAfter: 'docParser.secondsUnit' }
     ]
   },
   {
     name: 'paddleocr_vl',
     display_name: 'PaddleOCR-VL',
-    description: '百度 PaddlePaddle 团队开发的超轻量级视觉语言模型（采用远程服务架构），专门用于多语言文档解析，支持109种语言',
+    description: 'docParser.paddleocrDesc',
     status: 'available',
     supported_formats: ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', '.jpg', '.jpeg', '.png', '.bmp', '.tiff'],
     config_fields: [
@@ -75,28 +75,28 @@ const DOCUMENT_PARSERS_META = [
           { value: 'vllm-server', label: 'vLLM Server' }
         ],
         defaultValue: 'vllm-server',
-        tooltip: '推理后端类型（目前仅支持 vLLM Server）'
+        tooltip: 'docParser.vlBackendTooltip'
       },
       {
         name: 'server_url',
         label: 'settings.serverUrl',
         type: 'input',
         placeholder: 'http://127.0.0.1:8118/v1',
-        tooltip: '远程 vLLM 服务地址'
+        tooltip: 'docParser.serverUrlTooltip'
       },
       {
         name: 'extra_args',
         label: 'settings.extraArgs',
         type: 'textarea',
         placeholder: '--use_doc_orientation_classify True --use_doc_unwarp True',
-        tooltip: '额外的命令行参数，例如：--use_doc_orientation_classify True --use_doc_unwarp True'
+        tooltip: 'docParser.extraArgsPaddleTooltip'
       },
       {
         name: 'timeout',
         label: 'settings.timeout',
         type: 'number',
         placeholder: '120',
-        addonAfter: '秒'
+        addonAfter: 'docParser.secondsUnit'
       }
     ]
   }
@@ -142,7 +142,7 @@ const DocumentParsersConfig = ({ color, renderLabel }: any) => {
             <Input
               type="number"
               placeholder="120"
-              addonAfter="秒"
+              addonAfter={t('docParser.secondsUnit')}
             />
           </Form.Item>
         </Space>
@@ -182,7 +182,7 @@ const DocumentParsersConfig = ({ color, renderLabel }: any) => {
           {currentParser && (
             <>
               <div style={{ fontSize: 12, color: 'var(--custom-text-secondary)', marginBottom: 12 }}>
-                {currentParser.description}
+                {t(currentParser.description)}
               </div>
 
               {currentParser.config_fields.map(field => {
@@ -199,7 +199,7 @@ const DocumentParsersConfig = ({ color, renderLabel }: any) => {
                     key={field.name}
                     label={t(field.label)}
                     name={[`document_parser_${currentParser.name}_config`, field.name]}
-                    tooltip={field.tooltip}
+                    tooltip={field.tooltip ? t(field.tooltip) : undefined}
                     style={{ marginBottom: '8px' }}
                   >
                     {field.type === 'select' ? (
@@ -215,7 +215,7 @@ const DocumentParsersConfig = ({ color, renderLabel }: any) => {
                         type="number"
                         placeholder={field.placeholder}
                         disabled={currentParser.status !== 'available'}
-                        addonAfter={field.addonAfter}
+                        addonAfter={field.addonAfter ? t(field.addonAfter) : undefined}
                       />
                     ) : field.type === 'textarea' ? (
                       <Input.TextArea

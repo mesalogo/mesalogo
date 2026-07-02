@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { App, Modal, Button, Typography, Spin } from 'antd';
 import { CloseOutlined, CheckCircleOutlined, UploadOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import api from '../../../services/api/axios';
 
 const { Text } = Typography;
@@ -72,6 +73,7 @@ const ImageUploadModal = ({
   onRemoveImage,
   disabled = false
 }) => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -88,8 +90,8 @@ const ImageUploadModal = ({
           setFormatInfo(response.data.data);
         }
       } catch (error) {
-        console.error('获取格式信息失败:', error);
-        setError('无法获取支持的格式信息，请刷新页面重试');
+        console.error('Failed to get format info:', error);
+        setError(t('imageUpload.getFormatFailed'));
       }
     };
 
@@ -136,14 +138,14 @@ const ImageUploadModal = ({
           if (onImageUpload) {
             await onImageUpload(imageData);
           }
-          message.success('图片上传成功');
+          message.success(t('imageUpload.uploadSuccess'));
         } else {
-          setError(result.message || '图像处理失败');
-          message.error(result.message || '图片上传失败');
+          setError(result.message || t('imageUpload.processFailed'));
+          message.error(result.message || t('imageUpload.uploadFailed'));
         }
       }
     } catch (err) {
-      const errorMsg = err.response?.data?.message || err.message || '上传失败';
+      const errorMsg = err.response?.data?.message || err.message || t('imageUpload.uploadFailedGeneric');
       setError(errorMsg);
       message.error(errorMsg);
     } finally {
@@ -196,13 +198,13 @@ const ImageUploadModal = ({
 
   return (
     <Modal
-      title="图片上传"
+      title={t('imageUpload.title')}
       open={visible}
       onCancel={onCancel}
       width={600}
       footer={[
         <Button key="cancel" onClick={onCancel}>
-          取消
+          {t('cancel')}
         </Button>,
         <Button 
           key="confirm" 
@@ -210,7 +212,7 @@ const ImageUploadModal = ({
           onClick={handleConfirm}
           disabled={attachedImages.length === 0}
         >
-          确定 ({attachedImages.length})
+          {t('imageUpload.confirm', { count: attachedImages.length })}
         </Button>
       ]}
     >
@@ -247,13 +249,13 @@ const ImageUploadModal = ({
               <UploadOutlined style={{ fontSize: '32px', color: dragActive ? '#1677ff' : 'var(--custom-text-secondary)' }} />
             )}
             <div style={{ fontSize: '16px', color: 'var(--custom-text)' }}>
-              {uploading ? '上传中...' : (dragActive ? '释放文件' : '点击或拖拽上传图片')}
+              {uploading ? t('imageUpload.uploading') : (dragActive ? t('imageUpload.releaseFile') : t('imageUpload.clickOrDrag'))}
             </div>
             <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)' }}>
               {formatInfo ? (
-                `支持 ${formatInfo.formats.join(', ').toUpperCase()} 格式，最大 ${formatInfo.max_size_mb}MB`
+                t('imageUpload.formatHint', { formats: formatInfo.formats.join(', ').toUpperCase(), size: formatInfo.max_size_mb })
               ) : (
-                '加载格式信息中...'
+                t('imageUpload.loadingFormat')
               )}
             </div>
           </div>
@@ -286,7 +288,7 @@ const ImageUploadModal = ({
             borderBottom: '1px solid var(--custom-border)'
           }}>
             <Text strong>
-              已选择的图片 ({attachedImages.length})
+              {t('imageUpload.selectedImages', { count: attachedImages.length })}
             </Text>
           </div>
           

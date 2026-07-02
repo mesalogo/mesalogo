@@ -69,9 +69,9 @@ const ActionTaskRules = forwardRef(({ task }: ActionTaskRulesProps, ref) => {
 
       setRuleTriggers(response.triggers || []);
       setTriggersPagination(response.pagination || {});
-      console.log('加载规则触发记录成功:', response);
+      console.log('Successfully loaded rule trigger records:', response);
     } catch (error) {
-      console.error('加载规则触发记录失败:', error);
+      console.error('Failed to load rule trigger records:', error);
       message.error(t('rules.card.loadingTriggers'));
     } finally {
       setLoadingTriggers(false);
@@ -80,7 +80,7 @@ const ActionTaskRules = forwardRef(({ task }: ActionTaskRulesProps, ref) => {
 
   // 初始化时获取规则数据
   useEffect(() => {
-    console.log('ActionTaskRules组件接收到任务数据:', task);
+    console.log('ActionTaskRules component received task data:', task);
     if (task?.id) {
       loadRuleTriggers();
     }
@@ -96,7 +96,7 @@ const ActionTaskRules = forwardRef(({ task }: ActionTaskRulesProps, ref) => {
       setAvailableRules(rules);
       // 默认选择所有激活的规则
       setSelectedRules(rules.filter(rule => rule.is_active).map(rule => rule.id));
-      console.log('加载任务规则成功:', rules);
+      console.log('Successfully loaded task rules:', rules);
     } catch (error) {
       message.error(t('rules.load.failed') + ': ' + error.message);
     } finally {
@@ -115,9 +115,9 @@ const ActionTaskRules = forwardRef(({ task }: ActionTaskRulesProps, ref) => {
       if (agents.length > 0 && !selectedSupervisor) {
         setSelectedSupervisor(agents[0].id);
       }
-      console.log('加载监督者智能体成功:', agents);
+      console.log('Successfully loaded supervisor agents:', agents);
     } catch (error) {
-      console.error('加载监督者智能体失败:', error);
+      console.error('Failed to load supervisor agents:', error);
       // 不显示错误消息，因为可能没有监督者
     }
   };
@@ -170,8 +170,8 @@ const ActionTaskRules = forwardRef(({ task }: ActionTaskRulesProps, ref) => {
       }
 
       // 如果使用当前任务上下文但获取失败，提供默认场景
-      if (checkScenario === 'current' && context.includes('无法获取')) {
-        context = `默认测试场景：当前时间 ${new Date().toLocaleString()}，正在进行规则合规性检查。`;
+      if (checkScenario === 'current' && context === t('apiSvc.contextFailed')) {
+        context = t('rules.check.defaultScenarioText', { time: new Date().toLocaleString() });
         message.info(t('rules.check.usingDefaultScenario'));
       }
 
@@ -197,16 +197,16 @@ const ActionTaskRules = forwardRef(({ task }: ActionTaskRulesProps, ref) => {
                 rule_name: rule.name,
                 rule_type: 'logic',
                 passed: false,
-                message: '规则检查无结果',
-                details: '规则测试返回了空结果'
+                message: t('rules.check.noResultMessage'),
+                details: t('rules.check.noResultDetails')
               }])
           .catch(error => ([{
             rule_id: rule.id,
             rule_name: rule.name,
             rule_type: 'logic',
             passed: false,
-            message: '规则检查出错',
-            details: error.message || '未知错误'
+            message: t('rules.check.errorMessage'),
+            details: error.message || t('rules.check.unknownError')
           }]))
       ));
 
@@ -220,16 +220,16 @@ const ActionTaskRules = forwardRef(({ task }: ActionTaskRulesProps, ref) => {
                 rule_name: rule.name,
                 rule_type: 'llm',
                 passed: false,
-                message: '规则检查无结果',
-                details: '规则测试返回了空结果'
+                message: t('rules.check.noResultMessage'),
+                details: t('rules.check.noResultDetails')
               }])
           .catch(error => ([{
             rule_id: rule.id,
             rule_name: rule.name,
             rule_type: 'llm',
             passed: false,
-            message: '规则检查出错',
-            details: error.message || '未知错误'
+            message: t('rules.check.errorMessage'),
+            details: error.message || t('rules.check.unknownError')
           }]))
       ));
 
@@ -257,9 +257,9 @@ const ActionTaskRules = forwardRef(({ task }: ActionTaskRulesProps, ref) => {
 
         // 刷新触发记录显示
         loadRuleTriggers();
-        console.log('规则触发记录创建完成');
+        console.log('Rule trigger record creation complete');
       } catch (error) {
-        console.error('创建规则触发记录失败:', error);
+        console.error('Failed to create rule trigger record:', error);
         // 不影响主要功能，只记录错误
       }
 
@@ -273,7 +273,7 @@ const ActionTaskRules = forwardRef(({ task }: ActionTaskRulesProps, ref) => {
         message.warning(t('rules.check.noResults'));
       }
     } catch (error) {
-      console.error('规则检查失败:', error);
+      console.error('Rule check failed:', error);
       message.error(t('rules.check.failed') + '：' + (error.message || t('message.unknownError')));
     } finally {
       setChecking(false);

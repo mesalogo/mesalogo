@@ -52,6 +52,7 @@ export const NAMESPACES = [
   'users',
   'account',
   'history',
+  'setup',
 ] as const;
 
 /**

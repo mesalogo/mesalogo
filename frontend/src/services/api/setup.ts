@@ -1,4 +1,5 @@
 import api from './axios';
+import i18n from '../../locales';
 
 /**
  * 首启引导（Setup）相关 API
@@ -47,7 +48,7 @@ export const setupAPI = {
       const res = await api.post('/setup/test-db', { database_uri });
       return { success: !!res.data?.success };
     } catch (error: any) {
-      return { success: false, error: error?.response?.data?.error || error?.message || '连接失败' };
+      return { success: false, error: error?.response?.data?.error || error?.message || i18n.t('setup.connectionFailed') };
     }
   },
 
@@ -57,7 +58,7 @@ export const setupAPI = {
       const res = await api.post('/setup/test-redis', { redis_url });
       return { success: !!res.data?.success };
     } catch (error: any) {
-      return { success: false, error: error?.response?.data?.error || error?.message || '连接失败' };
+      return { success: false, error: error?.response?.data?.error || error?.message || i18n.t('setup.connectionFailed') };
     }
   },
 
@@ -67,7 +68,7 @@ export const setupAPI = {
       const res = await api.post('/setup/save', payload);
       return { success: !!res.data?.success };
     } catch (error: any) {
-      return { success: false, error: error?.response?.data?.error || error?.message || '保存失败' };
+      return { success: false, error: error?.response?.data?.error || error?.message || i18n.t('setup.saveFailed') };
     }
   },
 };

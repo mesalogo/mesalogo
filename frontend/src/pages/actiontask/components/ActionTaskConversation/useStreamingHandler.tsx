@@ -113,7 +113,7 @@ export default function useStreamingHandler({
         setTimeout(() => onMessagesUpdated(messagesData), 0);
       }
     } catch (error) {
-      console.error('刷新消息列表失败:', error);
+      console.error('Failed to refresh message list:', error);
     }
   };
 
@@ -144,13 +144,13 @@ export default function useStreamingHandler({
     if (meta) {
       // 连接建立
       if (meta.connectionStatus === 'connected') {
-        console.log('流式连接已建立');
+        console.log('Streaming connection established');
         setSendingMessage(false);
         setIsResponding(true);
       }
       // 连接错误
       else if (meta.connectionStatus === 'error') {
-        console.error('流式连接错误:', meta.error);
+        console.error('Streaming connection error:', meta.error);
 
         if (meta.agentId && task.agents) {
           const agent = task.agents.find(a =>
@@ -190,7 +190,7 @@ export default function useStreamingHandler({
       }
       // 连接完成
       else if (meta.connectionStatus === 'done') {
-        console.log('流式连接完成:', meta.responseObj);
+        console.log('Streaming connection done:', meta.responseObj);
 
         // 先刷新缓冲区中的剩余内容
         const bufferedContent = streamingBufferRef.current;
@@ -216,7 +216,7 @@ export default function useStreamingHandler({
         }
 
         if (isSupervisorIntervention) {
-          console.log('监督者干预完成，刷新消息列表');
+          console.log('Supervisor intervention done, refreshing message list');
           actionTaskAPI.getTaskMessages(task.id, activeConversationId)
             .then(messagesData => {
               updateMessages(messagesData);
@@ -227,13 +227,13 @@ export default function useStreamingHandler({
               }
             })
             .catch(error => {
-              console.error('刷新监督者干预消息失败:', error);
+              console.error('Failed to refresh supervisor intervention messages:', error);
               if (meta.responseObj && meta.responseObj.response) {
                 const completeResponse = meta.responseObj.response;
                 const agentResponse = {
                   id: completeResponse.id || `stream-${Date.now()}`,
                   role: 'assistant',
-                  content: finalStreamContent || completeResponse.content || '无内容',
+                  content: finalStreamContent || completeResponse.content || t('message.noContent'),
                   timestamp: completeResponse.timestamp || new Date().toISOString(),
                   agent_name: completeResponse.agent_name,
                   agent_id: completeResponse.agent_id,
@@ -257,7 +257,7 @@ export default function useStreamingHandler({
             const agentResponse = {
               id: completeResponse.id || `stream-${Date.now()}`,
               role: 'assistant',
-              content: finalStreamContent || completeResponse.content || '无内容',
+              content: finalStreamContent || completeResponse.content || t('message.noContent'),
               timestamp: completeResponse.timestamp || new Date().toISOString(),
               agent_name: completeResponse.agent_name,
               agent_id: completeResponse.agent_id,
@@ -292,7 +292,7 @@ export default function useStreamingHandler({
 
       // 处理单个智能体完成事件
       else if (meta.connectionStatus === 'agentDone') {
-        console.log('单个智能体完成:', meta.responseObj);
+        console.log('Single agent done:', meta.responseObj);
 
         // 先刷新缓冲区中的剩余内容
         const bufferedContent = streamingBufferRef.current;
@@ -309,7 +309,7 @@ export default function useStreamingHandler({
           const agentResponse = {
             id: completeResponse.id || `stream-${Date.now()}`,
             role: 'assistant',
-            content: finalStreamContent || completeResponse.content || '无内容',
+            content: finalStreamContent || completeResponse.content || t('message.noContent'),
             timestamp: completeResponse.timestamp || new Date().toISOString(),
             agent_name: completeResponse.agent_name,
             agent_id: completeResponse.agent_id,
@@ -334,22 +334,22 @@ export default function useStreamingHandler({
 
         const isMultiAgentScenario = targetAgentIds.length > 1 || (targetAgentIds.length === 0 && task.agents?.length > 1);
         if (!isAutoDiscussing && !isMultiAgentScenario) {
-          console.log('单智能体场景，完全清理流式状态');
+          console.log('Single-agent scenario, fully clearing streaming state');
           setStreamingAgentId(null);
           setIsResponding(false);
           setSendingMessage(false);
         } else {
-          console.log('多智能体场景，等待下一个智能体');
+          console.log('Multi-agent scenario, waiting for next agent');
         }
       }
 
       // 处理工具调用结果处理通知
       if (meta.type === 'processingToolResults') {
-        console.log('处理工具调用结果:', meta);
+        console.log('Processing tool call results:', meta);
         const processingMessage = {
           id: `processing-tools-${Date.now()}`,
           role: 'system',
-          content: meta.message || '正在处理工具调用结果，继续生成回复...',
+          content: meta.message || t('streaming.processingToolResults'),
           timestamp: new Date().toISOString(),
           isTemporary: true
         };
@@ -359,21 +359,21 @@ export default function useStreamingHandler({
 
       // 处理工具结果处理状态变更
       if (meta.type === 'toolResultsProcessing') {
-        console.log('工具结果处理状态:', meta);
+        console.log('Tool result processing status:', meta);
         if (meta.status === 'starting') {
-          message.info(meta.message || '处理工具调用结果完成，正在生成最终回复...');
+          message.info(meta.message || t('streaming.generatingFinalReply'));
           if (meta.isContinuation) {
             setIsResponding(true);
           }
         } else if (meta.status === 'completed') {
-          console.log('工具调用结果处理完成');
+          console.log('Tool call result processing done');
           setIsResponding(true);
         }
       }
 
       // 处理智能体信息事件
       if (meta.type === 'agentInfo') {
-        console.log('智能体信息:', meta);
+        console.log('Agent info:', meta);
         if (meta.agentId) {
           setStreamingAgentId(String(meta.agentId));
           setSendingMessage(false);
@@ -398,7 +398,7 @@ export default function useStreamingHandler({
           });
         }
 
-        const turnPrompt = meta.turnPrompt || `轮到智能体回应`;
+        const turnPrompt = meta.turnPrompt || t('streaming.agentTurnPrompt');
         if (meta.responseOrder && meta.totalAgents) {
           message.info(`${turnPrompt} (${meta.responseOrder}/${meta.totalAgents})`);
         } else {
@@ -408,7 +408,7 @@ export default function useStreamingHandler({
 
       // 处理智能体取消完成事件
       if (meta.connectionStatus === 'agentDone' && meta.responseObj && meta.responseObj.response && meta.responseObj.response.is_cancelled) {
-        console.log('智能体取消完成:', meta);
+        console.log('Agent cancellation done:', meta);
 
         // 先刷新缓冲区中的剩余内容
         const bufferedContent = streamingBufferRef.current;
@@ -461,12 +461,12 @@ export default function useStreamingHandler({
 
         const isMultiAgentScenario = targetAgentIds.length > 1 || (targetAgentIds.length === 0 && task.agents?.length > 1);
         if (!isAutoDiscussing && !isMultiAgentScenario) {
-          console.log('智能体取消完成 - 单智能体场景，完全清理流式状态');
+          console.log('Agent cancellation done - single-agent scenario, fully clearing streaming state');
           setStreamingAgentId(null);
           setIsResponding(false);
           setSendingMessage(false);
         } else {
-          console.log('智能体取消完成 - 多智能体场景，等待下一个智能体');
+          console.log('Agent cancellation done - multi-agent scenario, waiting for next agent');
         }
 
         message.info(t('autoTask.agentInterrupted'));
@@ -476,7 +476,7 @@ export default function useStreamingHandler({
       if (meta.type === 'thinking') {
         setIsObserving(true);
         if (meta.agentId) {
-          console.log(`设置流式智能体ID: ${meta.agentId}, 类型: ${typeof meta.agentId}`);
+          console.log(`Setting streaming agent ID: ${meta.agentId}, type: ${typeof meta.agentId}`);
           setStreamingAgentId(String(meta.agentId));
           setSendingMessage(false);
         }
@@ -484,18 +484,18 @@ export default function useStreamingHandler({
 
       // 处理智能体响应顺序信息
       if (meta.responseOrder) {
-        console.log(`智能体响应顺序: ${meta.responseOrder}`);
+        console.log(`Agent response order: ${meta.responseOrder}`);
       }
     }
 
     // 检测工具调用结果
     if (isToolCallResult(content)) {
-      console.log('检测到工具调用结果内容:', content.substring(0, 100));
+      console.log('Detected tool call result content:', content.substring(0, 100));
       triggerVariablesRefresh(onUserMessageSent);
       
       // 检测plan工具调用，刷新计划
       if (isPlanToolResult && isPlanToolResult(content) && loadActivePlan) {
-        console.log('[Planner] 检测到plan工具调用，刷新计划');
+        console.log('[Planner] Detected plan tool call, refreshing plan');
         loadActivePlan(activeConversationId);
       }
     }
@@ -515,33 +515,33 @@ export default function useStreamingHandler({
    * 处理自动讨论响应
    */
   const handleAutoDiscussionResponse = (content, meta) => {
-    console.log('自动讨论收到数据:', { content, meta });
+    console.log('Auto discussion received data:', { content, meta });
 
     if (meta) {
-      console.log('自动讨论meta详情:', JSON.stringify(meta));
+      console.log('Auto discussion meta detail:', JSON.stringify(meta));
 
       // 检查是否包含工具调用结果
       if (isToolCallResultMeta(meta)) {
-        console.log('自动讨论中检测到工具调用结果:', meta);
+        console.log('Detected tool call result in auto discussion:', meta);
         triggerVariablesRefresh(onUserMessageSent);
         
         // 检测plan工具调用，刷新计划（通过meta.toolName检测）
         if (loadActivePlan && meta.toolName && 
             (meta.toolName === 'create_plan' || meta.toolName === 'update_plan_item' || meta.toolName === 'get_plan')) {
-          console.log('[Planner] 自动讨论中检测到plan工具调用，刷新计划');
+          console.log('[Planner] Detected plan tool call in auto discussion, refreshing plan');
           loadActivePlan(activeConversationId);
         }
       }
 
       // 连接建立
       if (meta.connectionStatus === 'connected') {
-        console.log('自动讨论流式连接已建立');
+        console.log('Auto discussion streaming connection established');
         setIsResponding(true);
       }
       // 连接错误
       else if (meta.connectionStatus === 'error') {
-        console.error('自动讨论流式连接错误:', meta.error);
-        message.error(`自动讨论错误: ${meta.error}`);
+        console.error('Auto discussion streaming connection error:', meta.error);
+        message.error(t('streaming.autoDiscussError', { error: meta.error }));
         setStreamingAgentId(null);
         setIsResponding(false);
         setCurrentDiscussionRound(0);
@@ -557,8 +557,8 @@ export default function useStreamingHandler({
       }
       // 连接完成
       else if (meta.connectionStatus === 'done') {
-        console.log('自动讨论流式连接完成 - 收到done状态:', meta);
-        message.success(meta.message || '自动讨论已完成');
+        console.log('Auto discussion streaming done - received done status:', meta);
+        message.success(meta.message || t('streaming.autoDiscussCompleted'));
 
         try {
           // 先刷新缓冲区中的剩余内容
@@ -575,9 +575,9 @@ export default function useStreamingHandler({
             const agentResponse = {
               id: completeResponse.id || `stream-${Date.now()}`,
               role: 'assistant',
-              content: finalStreamContent || completeResponse.content || '无内容',
+              content: finalStreamContent || completeResponse.content || t('message.noContent'),
               timestamp: completeResponse.timestamp || new Date().toISOString(),
-              agent_name: completeResponse.agent_name || (task?.current_agent?.name ?? '助手'),
+              agent_name: completeResponse.agent_name || (task?.current_agent?.name ?? t('streaming.defaultAssistantName')),
               agent_id: completeResponse.agent_id || task?.current_agent?.id || null,
               agent: completeResponse.agent || task?.current_agent || null,
               response_order: completeResponse.response_order || null,
@@ -599,7 +599,7 @@ export default function useStreamingHandler({
             }
           }
         } catch (e) {
-          console.warn('自动讨论 done 阶段追加最终消息时出错:', e);
+          console.warn('Error appending final message during auto discussion done phase:', e);
         }
 
         setCurrentDiscussionRound(0);
@@ -630,14 +630,14 @@ export default function useStreamingHandler({
 
       // 处理轮次信息
       if (meta.roundInfo) {
-        console.log('轮次信息:', meta.roundInfo);
+        console.log('Round info:', meta.roundInfo);
         setCurrentDiscussionRound(meta.roundInfo.current || 0);
         setCurrentDiscussionTotalRounds(meta.roundInfo.total || 0);
 
         const roundMessage = {
           id: `round-${Date.now()}`,
           role: 'system',
-          content: `开始第${meta.roundInfo.current || 0}/${meta.roundInfo.total || 0}轮讨论`,
+          content: t('streaming.roundStart', { current: meta.roundInfo.current || 0, total: meta.roundInfo.total || 0 }),
           timestamp: new Date().toISOString()
         };
         updateMessages(prev => {
@@ -650,13 +650,13 @@ export default function useStreamingHandler({
           return updatedMessages;
         });
 
-        message.info(`开始第${meta.roundInfo.current || 0}/${meta.roundInfo.total || 0}轮讨论`);
+        message.info(t('streaming.roundStart', { current: meta.roundInfo.current || 0, total: meta.roundInfo.total || 0 }));
       }
 
       // 处理智能体信息
       if (meta.type === 'agentInfo') {
-        console.log('智能体信息:', meta);
-        const turnPrompt = meta.turnPrompt || `轮到智能体行动`;
+        console.log('Agent info:', meta);
+        const turnPrompt = meta.turnPrompt || t('streaming.agentActionPrompt');
         const agentId = meta.agentId;
         const agentName = meta.agentName;
 
@@ -703,7 +703,7 @@ export default function useStreamingHandler({
 
       // 处理自动讨论中的消息
       if (meta.message) {
-        console.log('收到系统消息:', meta.message);
+        console.log('Received system message:', meta.message);
 
         const systemMessage: any = {
           id: meta.message.id || `system-${Date.now()}`,
@@ -724,7 +724,7 @@ export default function useStreamingHandler({
 
       // 处理智能体完成响应事件
       if (meta.connectionStatus === 'agentDone' && meta.responseObj && meta.responseObj.response) {
-        console.log('智能体响应完成:', meta.responseObj.response);
+        console.log('Agent response done:', meta.responseObj.response);
 
         setCurrentStreamingResponse('');
         currentStreamingResponseRef.current = '';
@@ -758,12 +758,12 @@ export default function useStreamingHandler({
     // 处理实际内容（流式返回的内容）- 使用缓冲区减少渲染次数
     if (content) {
       if (isToolCallResult(content)) {
-        console.log('自动讨论内容中检测到工具调用结果:', content.substring(0, 100));
+        console.log('Detected tool call result in auto discussion content:', content.substring(0, 100));
         triggerVariablesRefresh(onUserMessageSent);
         
         // 检测plan工具调用，刷新计划
         if (isPlanToolResult && isPlanToolResult(content) && loadActivePlan) {
-          console.log('[Planner] 自动讨论内容中检测到plan工具调用，刷新计划');
+          console.log('[Planner] Detected plan tool call in auto discussion content, refreshing plan');
           loadActivePlan(activeConversationId);
         }
       }
@@ -789,7 +789,7 @@ export default function useStreamingHandler({
   useEffect(() => {
     const checkStreamingState = () => {
       if (currentStreamingResponse && (!isResponding || !streamingAgentId)) {
-        console.log('检测到异常的流式状态，执行清理:', {
+        console.log('Detected abnormal streaming state, cleaning up:', {
           hasStreamingResponse: !!currentStreamingResponse,
           isResponding,
           streamingAgentId

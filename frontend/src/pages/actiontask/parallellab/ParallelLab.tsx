@@ -51,10 +51,10 @@ const ParallelLab = () => {
       }));
       setActionSpaces(formatted);
     } catch (error) {
-      console.error('加载行动空间失败:', error);
-      message.error('加载行动空间失败');
+      console.error('Failed to load action spaces:', error);
+      message.error(t('parallelLab.msg.loadSpacesFailed'));
     }
-  }, []);
+  }, [t]);
 
   // 加载实验列表
   const loadExperiments = useCallback(async () => {
@@ -87,10 +87,10 @@ const ParallelLab = () => {
         setExperiments(exps);
       }
     } catch (error) {
-      console.error('加载实验列表失败:', error);
-      message.error('加载实验列表失败');
+      console.error('Failed to load experiment list:', error);
+      message.error(t('parallelLab.msg.loadExperimentsFailed'));
     }
-  }, []);
+  }, [t]);
 
   // 初始加载
   useEffect(() => {
@@ -127,7 +127,7 @@ const ParallelLab = () => {
             }));
           }
         } catch (error) {
-          console.error('获取实验状态失败:', error);
+          console.error('Failed to get experiment status:', error);
         }
       }
     }, 10000); // 每10秒轮询一次
@@ -138,7 +138,7 @@ const ParallelLab = () => {
   // 创建并行实验
   const handleCreateExperiment = async (config?: any) => {
     if (!selectedSpace || !experimentConfig.name) {
-      message.warning('请选择行动空间并填写实验名称');
+      message.warning(t('parallelLab.msg.selectSpaceAndName'));
       return;
     }
 
@@ -161,7 +161,7 @@ const ParallelLab = () => {
 
       const response = await parallelExperimentApi.createExperiment(expConfig);
       if (response.success) {
-        message.success('实验创建成功');
+        message.success(t('parallelLab.msg.createSuccess'));
         // 重新加载实验列表
         await loadExperiments();
         // 重置表单
@@ -176,7 +176,7 @@ const ParallelLab = () => {
         setActiveTab('monitoring');
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || '创建实验失败');
+      message.error(error.response?.data?.error || t('parallelLab.msg.createFailed'));
     } finally {
       setLoading(false);
     }
@@ -187,11 +187,11 @@ const ParallelLab = () => {
     try {
       const response = await parallelExperimentApi.stopExperiment(experimentId);
       if (response.success) {
-        message.success('实验已停止');
+        message.success(t('parallelLab.msg.stopSuccess'));
         await loadExperiments();
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || '停止实验失败');
+      message.error(error.response?.data?.error || t('parallelLab.msg.stopFailed'));
     }
   };
 
@@ -200,11 +200,11 @@ const ParallelLab = () => {
     try {
       const response = await parallelExperimentApi.pauseExperiment(experimentId);
       if (response.success) {
-        message.success('实验已暂停');
+        message.success(t('parallelLab.msg.pauseSuccess'));
         await loadExperiments();
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || '暂停实验失败');
+      message.error(error.response?.data?.error || t('parallelLab.msg.pauseFailed'));
     }
   };
 
@@ -213,11 +213,11 @@ const ParallelLab = () => {
     try {
       const response = await parallelExperimentApi.resumeExperiment(experimentId);
       if (response.success) {
-        message.success('实验已恢复');
+        message.success(t('parallelLab.msg.resumeSuccess'));
         await loadExperiments();
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || '恢复实验失败');
+      message.error(error.response?.data?.error || t('parallelLab.msg.resumeFailed'));
     }
   };
 
@@ -226,11 +226,11 @@ const ParallelLab = () => {
     try {
       const response = await parallelExperimentApi.cloneExperiment(experimentId, newName);
       if (response.success) {
-        message.success('实验复制成功');
+        message.success(t('parallelLab.msg.copySuccess'));
         await loadExperiments();
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || '复制实验失败');
+      message.error(error.response?.data?.error || t('parallelLab.msg.copyFailed'));
     }
   };
 
@@ -239,11 +239,11 @@ const ParallelLab = () => {
     try {
       const response = await parallelExperimentApi.deleteExperiment(experimentId);
       if (response.success) {
-        message.success('实验已删除');
+        message.success(t('parallelLab.msg.deleteSuccess'));
         await loadExperiments();
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || '删除实验失败');
+      message.error(error.response?.data?.error || t('parallelLab.msg.deleteFailed'));
     }
   };
 
@@ -252,10 +252,10 @@ const ParallelLab = () => {
     try {
       const response = await parallelExperimentApi.createBestTask(experimentId);
       if (response.success) {
-        message.success('已使用最佳参数创建任务');
+        message.success(t('parallelLab.msg.createTaskWithBestParams'));
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || '创建任务失败');
+      message.error(error.response?.data?.error || t('parallelLab.msg.createTaskFailed'));
     }
   };
 

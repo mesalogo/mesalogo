@@ -1,4 +1,5 @@
 import api from './axios';
+import i18n from '../../locales';
 
 /**
  * 认证相关API服务
@@ -23,15 +24,15 @@ export const authAPI = {
         };
       } else {
         // 业务逻辑失败
-        console.error('登录失败:', response.data.message);
+        console.error('Login failed:', response.data.message);
         return {
           success: false,
           errorType: 'credentials',
-          message: response.data.message || '登录失败，请稍后再试'
+          message: response.data.message || i18n.t('auth.loginFailed')
         };
       }
     } catch (error) {
-      console.error('登录请求失败:', error);
+      console.error('Login request failed:', error);
       
       // 区分不同类型的错误
       if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
@@ -77,12 +78,12 @@ export const authAPI = {
       localStorage.removeItem('authToken');
       return { success: true };
     } catch (error) {
-      console.error('登出请求失败:', error);
+      console.error('Logout request failed:', error);
       // 即使API请求失败，也清除本地存储的认证信息
       localStorage.removeItem('authToken');
       return {
         success: false,
-        message: error.response?.data?.message || '登出失败'
+        message: error.response?.data?.message || i18n.t('user.logoutFailed')
       };
     }
   },
@@ -121,16 +122,16 @@ export const authAPI = {
           // 检查是否有token
           const token = localStorage.getItem('authToken');
           if (!token) {
-            console.log('getCurrentUser: 无token，返回未认证状态');
+            console.log('getCurrentUser: no token, returning unauthenticated state');
             return {
               success: false,
-              message: '未登录'
+              message: i18n.t('auth.notLoggedIn')
             };
           }
 
-          console.log('getCurrentUser: 发送请求获取用户信息');
+          console.log('getCurrentUser: sending request to fetch user info');
           const response = await api.get('/auth/user');
-          console.log('getCurrentUser: 获取用户信息成功:', response.data);
+          console.log('getCurrentUser: user info fetched successfully:', response.data);
 
           const result = {
             success: true,
@@ -143,17 +144,17 @@ export const authAPI = {
 
           return result;
         } catch (error) {
-          console.error('获取用户信息失败:', error);
+          console.error('Failed to get user info:', error);
 
           // 如果是401或403错误，清除token
           if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-            console.log('getCurrentUser: 认证失败，清除token');
+            console.log('getCurrentUser: authentication failed, clearing token');
             localStorage.removeItem('authToken');
           }
 
           return {
             success: false,
-            message: error.response?.data?.message || '获取用户信息失败'
+            message: error.response?.data?.message || i18n.t('auth.getUserInfoFailed')
           };
         } finally {
           // 清除promise引用
@@ -194,7 +195,7 @@ export const authAPI = {
       // 检查是否有token
       const token = localStorage.getItem('authToken');
       if (!token) {
-        console.log('validateToken: 无token，直接返回false');
+        console.log('validateToken: no token, returning false');
         return false;
       }
 
@@ -205,11 +206,11 @@ export const authAPI = {
 
       // 如果缓存未过期，直接返回缓存结果
       if (now - lastValidation.timestamp < CACHE_DURATION) {
-        console.log('validateToken: 使用缓存结果:', lastValidation.result);
+        console.log('validateToken: using cached result:', lastValidation.result);
         return lastValidation.result;
       }
 
-      console.log('validateToken: 发送验证请求');
+      console.log('validateToken: sending validation request');
 
       // 创建新的验证请求
       lastValidation.promise = (async () => {
@@ -217,7 +218,7 @@ export const authAPI = {
           const response = await api.get('/auth/validate');
           const result = response.data.valid;
 
-          console.log('validateToken: 验证结果:', result);
+          console.log('validateToken: validation result:', result);
 
           // 更新缓存
           lastValidation.timestamp = now;
@@ -225,17 +226,17 @@ export const authAPI = {
 
           // 如果token无效，清除token
           if (!result) {
-            console.log('validateToken: token无效，清除token');
+            console.log('validateToken: token invalid, clearing token');
             localStorage.removeItem('authToken');
           }
 
           return result;
         } catch (error) {
-          console.error('验证token失败:', error);
+          console.error('Failed to validate token:', error);
 
           // 如果是401或403错误，清除token
           if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-            console.log('validateToken: 认证失败，清除token');
+            console.log('validateToken: authentication failed, clearing token');
             localStorage.removeItem('authToken');
           }
 
@@ -262,13 +263,13 @@ export const authAPI = {
       });
       return {
         success: true,
-        message: response.data.message || '密码修改成功'
+        message: response.data.message || i18n.t('user.passwordChangeSuccess')
       };
     } catch (error) {
-      console.error('修改密码请求失败:', error);
+      console.error('Change password request failed:', error);
       return {
         success: false,
-        message: error.response?.data?.message || '修改密码失败，请稍后再试'
+        message: error.response?.data?.message || i18n.t('auth.changePasswordFailed')
       };
     }
   }

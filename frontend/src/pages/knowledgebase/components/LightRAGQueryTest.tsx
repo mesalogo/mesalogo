@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card, Input, Button, Select, Space, Alert, Spin, Typography, Tag, Divider, InputNumber } from 'antd';
 import { SearchOutlined, ThunderboltOutlined, GlobalOutlined, AimOutlined, BranchesOutlined, MergeCellsOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import knowledgeAPI from '../../../services/api/knowledge';
 import { MarkdownRenderer } from '../../actiontask/components/ConversationExtraction';
 
@@ -19,6 +20,7 @@ const LightRAGQueryTest: React.FC<LightRAGQueryTestProps> = ({
   defaultMode = 'mix',
   enableModeSelection = true,
 }) => {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState(defaultMode);
   const [topK, setTopK] = useState(10);
@@ -28,7 +30,7 @@ const LightRAGQueryTest: React.FC<LightRAGQueryTestProps> = ({
 
   const handleQuery = async () => {
     if (!query.trim()) {
-      setError('请输入查询内容');
+      setError(t('lightragQueryTest.enterQuery'));
       return;
     }
 
@@ -46,11 +48,11 @@ const LightRAGQueryTest: React.FC<LightRAGQueryTestProps> = ({
       if (response.success) {
         setResult(response.data);
       } else {
-        setError(response.message || '查询失败');
+        setError(response.message || t('lightragQueryTest.queryFailed'));
       }
     } catch (err: any) {
-      console.error('查询失败:', err);
-      setError(err.message || '查询失败');
+      console.error('Query failed:', err);
+      setError(err.message || t('lightragQueryTest.queryFailed'));
     } finally {
       setLoading(false);
     }
@@ -69,11 +71,11 @@ const LightRAGQueryTest: React.FC<LightRAGQueryTestProps> = ({
 
   const getModeDescription = (m: string) => {
     switch (m) {
-      case 'naive': return '纯向量检索，速度最快';
-      case 'local': return '基于实体的图谱检索';
-      case 'global': return '基于关系的图谱检索';
-      case 'hybrid': return '实体+关系混合检索';
-      case 'mix': return '图谱+向量混合检索（推荐）';
+      case 'naive': return t('lightragQueryTest.mode.naiveDesc');
+      case 'local': return t('lightragQueryTest.mode.localDesc');
+      case 'global': return t('lightragQueryTest.mode.globalDesc');
+      case 'hybrid': return t('lightragQueryTest.mode.hybridDesc');
+      case 'mix': return t('lightragQueryTest.mode.mixDesc');
       default: return '';
     }
   };
@@ -81,20 +83,20 @@ const LightRAGQueryTest: React.FC<LightRAGQueryTestProps> = ({
   return (
     <div>
       <Alert
-        message="LightRAG 查询测试"
-        description="支持多种查询模式，可以根据不同场景选择最合适的检索策略。"
+        message={t('lightragQueryTest.alertTitle')}
+        description={t('lightragQueryTest.alertDesc')}
         type="info"
         showIcon
         style={{ marginBottom: 16 }}
       />
 
-      <Card title="查询配置" style={{ marginBottom: 16 }}>
+      <Card title={t('lightragQueryTest.configTitle')} style={{ marginBottom: 16 }}>
         <Space direction="vertical" style={{ width: '100%' }} size="middle">
           <div>
-            <Text strong>查询内容</Text>
+            <Text strong>{t('lightragQueryTest.queryContent')}</Text>
             <TextArea
               rows={4}
-              placeholder="请输入查询内容..."
+              placeholder={t('lightragQueryTest.queryPlaceholder')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               style={{ marginTop: 8 }}
@@ -104,7 +106,7 @@ const LightRAGQueryTest: React.FC<LightRAGQueryTestProps> = ({
           <div style={{ display: 'flex', gap: 16, alignItems: 'flex-end' }}>
             {enableModeSelection && (
               <div style={{ flex: 1 }}>
-                <Text strong>查询模式</Text>
+                <Text strong>{t('lightragQueryTest.queryMode')}</Text>
                 <Select
                   value={mode}
                   onChange={setMode}
@@ -163,7 +165,7 @@ const LightRAGQueryTest: React.FC<LightRAGQueryTestProps> = ({
             loading={loading}
             block
           >
-            查询
+            {t('lightragQueryTest.queryBtn')}
           </Button>
         </Space>
       </Card>
@@ -173,7 +175,7 @@ const LightRAGQueryTest: React.FC<LightRAGQueryTestProps> = ({
           <div style={{ textAlign: 'center', padding: '40px 0' }}>
             <Spin size="large" />
             <div style={{ marginTop: 16 }}>
-              <Text type="secondary">正在查询中...</Text>
+              <Text type="secondary">{t('lightragQueryTest.querying')}</Text>
             </div>
           </div>
         </Card>
@@ -181,7 +183,7 @@ const LightRAGQueryTest: React.FC<LightRAGQueryTestProps> = ({
 
       {error && (
         <Alert
-          message="查询失败"
+          message={t('lightragQueryTest.queryFailed')}
           description={error}
           type="error"
           showIcon
@@ -191,14 +193,14 @@ const LightRAGQueryTest: React.FC<LightRAGQueryTestProps> = ({
       )}
 
       {result && !loading && (
-        <Card title="查询结果">
+        <Card title={t('lightragQueryTest.resultTitle')}>
           <Space direction="vertical" style={{ width: '100%' }} size="middle">
             <div>
               <Space>
-                <Tag color="blue">模式: {result.mode || mode}</Tag>
-                <Tag color="green">耗时: {result.elapsed_time || '-'}ms</Tag>
+                <Tag color="blue">{t('lightragQueryTest.modeLabel', { mode: result.mode || mode })}</Tag>
+                <Tag color="green">{t('lightragQueryTest.elapsedLabel', { time: result.elapsed_time || '-' })}</Tag>
                 {result.sources_count && (
-                  <Tag color="purple">来源: {result.sources_count} 个</Tag>
+                  <Tag color="purple">{t('lightragQueryTest.sourcesLabel', { count: result.sources_count })}</Tag>
                 )}
               </Space>
             </div>
@@ -206,24 +208,24 @@ const LightRAGQueryTest: React.FC<LightRAGQueryTestProps> = ({
             <Divider />
 
             <div>
-              <Title level={5}>回答</Title>
+              <Title level={5}>{t('lightragQueryTest.answerTitle')}</Title>
               <Card style={{ backgroundColor: '#f5f5f5' }}>
-                <MarkdownRenderer content={result.result?.response || result.answer || result.response || '无结果'} />
+                <MarkdownRenderer content={result.result?.response || result.answer || result.response || t('lightragQueryTest.noResult')} />
               </Card>
             </div>
 
             {(result.result?.references || result.sources) && (result.result?.references?.length > 0 || result.sources?.length > 0) && (
               <div>
-                <Title level={5}>来源文档</Title>
+                <Title level={5}>{t('lightragQueryTest.sourceDocsTitle')}</Title>
                 <Space direction="vertical" style={{ width: '100%' }}>
                   {(result.result?.references || result.sources || []).map((source: any, index: number) => (
                     <Card key={index} size="small">
                       <Paragraph ellipsis={{ rows: 3, expandable: true }}>
-                        {source.content || source.text || source.file_path || '无内容'}
+                        {source.content || source.text || source.file_path || t('lightragQueryTest.noContent')}
                       </Paragraph>
                       {(source.metadata || source.file_path) && (
                         <Text type="secondary" style={{ fontSize: 12 }}>
-                          来源: {source.metadata?.source || source.metadata?.file_name || source.file_path || '未知'}
+                          {t('lightragQueryTest.sourceLabel', { value: source.metadata?.source || source.metadata?.file_name || source.file_path || t('lightragQueryTest.unknownSource') })}
                         </Text>
                       )}
                     </Card>

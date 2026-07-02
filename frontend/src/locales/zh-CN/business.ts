@@ -30,4 +30,8 @@ export default {
   knowledgeBase: '知识库',
   memoryManagement: '记忆管理',
   memoryPartition: '记忆分区',
+
+  // 角色选择器（示例组件）
+  'roleSelector.title': '选择角色',
+  'roleSelector.placeholder': '选择一个角色开始对话',
 };

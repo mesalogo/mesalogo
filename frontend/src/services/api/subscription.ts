@@ -2,6 +2,7 @@
  * 订阅管理API服务
  */
 import api from './axios';
+import i18n from '../../locales';
 
 const API_BASE_URL = api.defaults.baseURL || '';
 
@@ -33,7 +34,7 @@ const handleResponse = async <T = any>(response: Response): Promise<ApiResponse<
   } else {
     return {
       success: false,
-      message: data.error || data.message || '请求失败',
+      message: data.error || data.message || i18n.t('message.requestFailed'),
       status: response.status
     };
   }
@@ -145,8 +146,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('获取当前订阅失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to fetch current subscription:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   },
 
@@ -161,8 +162,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('获取计划列表失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to fetch plans:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   },
 
@@ -177,8 +178,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('获取用量失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to fetch usage:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   },
 
@@ -194,8 +195,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('检查配额失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to check quota:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   },
 
@@ -212,8 +213,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('获取计划列表失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to fetch plans:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   },
 
@@ -229,8 +230,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('创建计划失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to create plan:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   },
 
@@ -246,8 +247,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('更新计划失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to update plan:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   },
 
@@ -262,8 +263,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('删除计划失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to delete plan:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   },
 
@@ -278,8 +279,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('获取用户订阅失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to fetch user subscription:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   },
 
@@ -295,8 +296,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('更新用户订阅失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to update user subscription:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   },
 
@@ -312,8 +313,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('延长订阅失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to extend subscription:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   },
 
@@ -330,8 +331,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('获取支付历史失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to fetch payment history:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   },
 
@@ -346,8 +347,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('获取支付详情失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to fetch payment detail:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   },
 
@@ -367,8 +368,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('获取 Stripe 配置失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to fetch Stripe config:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   },
 
@@ -384,8 +385,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('更新 Stripe 配置失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to update Stripe config:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   },
 
@@ -400,8 +401,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('测试 Stripe 连接失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to test Stripe connection:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   },
 
@@ -425,8 +426,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('获取支付记录失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to fetch payment records:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   },
 
@@ -441,8 +442,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('获取支付详情失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to fetch payment detail:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   },
 
@@ -457,8 +458,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('获取支付统计失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to fetch payment stats:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   },
 
@@ -476,8 +477,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('创建支付会话失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to create checkout session:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   },
 
@@ -492,8 +493,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('获取支付状态失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to fetch checkout status:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   },
 
@@ -508,8 +509,8 @@ export const subscriptionAPI = {
       });
       return await handleResponse(response);
     } catch (error) {
-      console.error('获取 Publishable Key 失败:', error);
-      return { success: false, message: '网络错误' };
+      console.error('Failed to fetch publishable key:', error);
+      return { success: false, message: i18n.t('error.networkError') };
     }
   }
 };

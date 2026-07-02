@@ -53,8 +53,8 @@ const RagasEvaluation = () => {
   const mockEvaluations = [
     {
       id: 1,
-      name: '产品知识库评测-2024-01',
-      knowledgeBase: '产品知识库',
+      name: 'Product KB Evaluation-2024-01',
+      knowledgeBase: 'Product Knowledge Base',
       status: 'completed',
       createdAt: '2024-01-15 10:30:00',
       completedAt: '2024-01-15 11:45:00',
@@ -70,8 +70,8 @@ const RagasEvaluation = () => {
     },
     {
       id: 2,
-      name: '技术文档评测-2024-01',
-      knowledgeBase: '技术文档库',
+      name: 'Technical Docs Evaluation-2024-01',
+      knowledgeBase: 'Technical Docs Library',
       status: 'running',
       createdAt: '2024-01-16 09:15:00',
       progress: 65,
@@ -80,20 +80,20 @@ const RagasEvaluation = () => {
     },
     {
       id: 3,
-      name: '客服FAQ评测-2024-01',
-      knowledgeBase: '客服知识库',
+      name: 'Customer Service FAQ Evaluation-2024-01',
+      knowledgeBase: 'Customer Service Knowledge Base',
       status: 'failed',
       createdAt: '2024-01-14 14:20:00',
-      error: '测试数据格式错误',
+      error: 'Test data format error',
       testCases: 25,
     },
   ];
 
   const mockKnowledgeBases = [
-    { id: 1, name: '产品知识库' },
-    { id: 2, name: '技术文档库' },
-    { id: 3, name: '客服知识库' },
-    { id: 4, name: '法律法规库' },
+    { id: 1, name: 'Product Knowledge Base' },
+    { id: 2, name: 'Technical Docs Library' },
+    { id: 3, name: 'Customer Service Knowledge Base' },
+    { id: 4, name: 'Laws & Regulations Library' },
   ];
 
   useEffect(() => {

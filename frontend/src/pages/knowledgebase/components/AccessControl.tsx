@@ -1,20 +1,22 @@
 import React from 'react';
 import { Card, Alert, Space } from 'antd';
 import { LockOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 const AccessControl = ({ knowledgeId }) => {
+  const { t } = useTranslation();
   return (
     <Card
       title={
         <Space>
           <LockOutlined />
-          <span>访问控制</span>
+          <span>{t('accessControl.title')}</span>
         </Space>
       }
     >
       <Alert
-        message="功能开发中"
-        description="访问控制功能正在开发中，敬请期待。将支持：权限管理、用户分享、团队协作等功能。"
+        message={t('accessControl.wipTitle')}
+        description={t('accessControl.wipDesc')}
         type="info"
         showIcon
       />

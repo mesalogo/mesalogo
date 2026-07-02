@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Typography, Skeleton, Empty, List, Divider } from 'antd';
 import { FolderOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { actionTaskAPI } from '../../../services/api/actionTask';
 import { workspaceAPI } from '../../../services/api/workspace';
 
@@ -11,6 +12,7 @@ const { Text } = Typography;
  * 显示ActionTask任务和agent-workspace根目录下的其他目录
  */
 const WorkspaceNavigator = ({ onItemSelect, selectedItem }: any) => {
+  const { t } = useTranslation();
   const [tasks, setTasks] = useState([]);
   const [rootDirectories, setRootDirectories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -21,7 +23,7 @@ const WorkspaceNavigator = ({ onItemSelect, selectedItem }: any) => {
       const data = await actionTaskAPI.getAll();
       return data || [];
     } catch (error) {
-      console.error('加载任务列表失败:', error);
+      console.error('Failed to load task list:', error);
       return [];
     }
   };
@@ -32,7 +34,7 @@ const WorkspaceNavigator = ({ onItemSelect, selectedItem }: any) => {
       const data = await workspaceAPI.getWorkspaceRootDirectories();
       return data.items || [];
     } catch (error) {
-      console.error('加载workspace根目录失败:', error);
+      console.error('Failed to load workspace root directories:', error);
       return [];
     }
   };
@@ -49,7 +51,7 @@ const WorkspaceNavigator = ({ onItemSelect, selectedItem }: any) => {
       setTasks(tasksData);
       setRootDirectories(rootData);
     } catch (error) {
-      console.error('加载数据失败:', error);
+      console.error('Failed to load data:', error);
     } finally {
       setLoading(false);
     }
@@ -72,7 +74,7 @@ const WorkspaceNavigator = ({ onItemSelect, selectedItem }: any) => {
   const handleRootClick = () => {
     onItemSelect({
       type: 'root',
-      data: { name: '根目录', path: '' },
+      data: { name: t('wsNav.rootDirName'), path: '' },
       path: ''
     });
   };
@@ -85,7 +87,7 @@ const WorkspaceNavigator = ({ onItemSelect, selectedItem }: any) => {
       title={
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <FolderOutlined style={{ marginRight: 8 }} />
-          <span>工作空间导航</span>
+          <span>{t('wsNav.title')}</span>
         </div>
       }
       style={{ height: '100%' }}
@@ -108,7 +110,7 @@ const WorkspaceNavigator = ({ onItemSelect, selectedItem }: any) => {
             flexShrink: 0 // 防止被压缩
           }}>
             <Text type="secondary">
-              选择要浏览的工作空间
+              {t('wsNav.selectWorkspace')}
             </Text>
           </div>
 
@@ -123,7 +125,7 @@ const WorkspaceNavigator = ({ onItemSelect, selectedItem }: any) => {
           {tasks.length > 0 && (
             <>
               <div style={{ padding: '8px 16px', fontWeight: 600, fontSize: '14px', color: '#1677ff' }}>
-                行动任务工作空间
+                {t('wsNav.actionTaskWorkspace')}
               </div>
               <List
                 dataSource={tasks}
@@ -172,7 +174,7 @@ const WorkspaceNavigator = ({ onItemSelect, selectedItem }: any) => {
           <>
             <Divider style={{ margin: '12px 0' }} />
             <div style={{ padding: '8px 16px', fontWeight: 600, fontSize: '14px', color: 'var(--custom-text-secondary)' }}>
-              根目录
+              {t('wsNav.rootDirectory')}
             </div>
             <List.Item
               onClick={handleRootClick}
@@ -192,10 +194,10 @@ const WorkspaceNavigator = ({ onItemSelect, selectedItem }: any) => {
                     color: selectedItem?.type === 'root' ? 'var(--custom-text-secondary)' : 'inherit',
                     fontSize: '14px'
                   }}>
-                    根目录 ({rootVisibleItems.length})
+                    {t('wsNav.rootDirectoryCount', { count: rootVisibleItems.length })}
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--custom-text-secondary)' }}>
-                    查看根目录下的所有内容
+                    {t('wsNav.rootDirectoryDesc')}
                   </div>
                 </div>
               </div>
@@ -204,7 +206,7 @@ const WorkspaceNavigator = ({ onItemSelect, selectedItem }: any) => {
 
             {tasks.length === 0 && rootVisibleItems.length === 0 && (
               <div style={{ padding: '20px', textAlign: 'center' }}>
-                <Empty description="暂无工作空间" />
+                <Empty description={t('wsNav.noWorkspace')} />
               </div>
             )}
           </div>

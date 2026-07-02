@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Typography, Tabs } from 'antd';
 import { ShareAltOutlined, DatabaseOutlined, CloudOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import SharedEnvironmentVariables from './SharedEnvironmentVariables';
 import InternalEnvironmentVariables from './InternalEnvironmentVariables';
 import ExternalEnvironmentVariables from './ExternalEnvironmentVariables';
@@ -8,6 +9,7 @@ import ExternalEnvironmentVariables from './ExternalEnvironmentVariables';
 const { Title, Text } = Typography;
 
 const EnvironmentVariables = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('shared');
 
   return (
@@ -19,9 +21,9 @@ const EnvironmentVariables = () => {
         marginBottom: 16
       }}>
         <div>
-          <Title level={4} style={{ margin: 0, marginBottom: '8px' }}>环境变量</Title>
+          <Title level={4} style={{ margin: 0, marginBottom: '8px' }}>{t('envVarsPage.title')}</Title>
           <Text type="secondary">
-            管理共享环境变量、内部环境变量模板和外部环境变量同步配置
+            {t('envVarsPage.desc')}
           </Text>
         </div>
       </div>
@@ -32,17 +34,17 @@ const EnvironmentVariables = () => {
         items={[
           {
             key: 'shared',
-            label: <span><ShareAltOutlined />共享环境变量</span>,
+            label: <span><ShareAltOutlined />{t('envVarsPage.tabShared')}</span>,
             children: <SharedEnvironmentVariables />
           },
           {
             key: 'internal',
-            label: <span><DatabaseOutlined />内部环境变量</span>,
+            label: <span><DatabaseOutlined />{t('envVarsPage.tabInternal')}</span>,
             children: <InternalEnvironmentVariables />
           },
           {
             key: 'external',
-            label: <span><CloudOutlined />外部环境变量</span>,
+            label: <span><CloudOutlined />{t('envVarsPage.tabExternal')}</span>,
             children: <ExternalEnvironmentVariables />
           }
         ]}

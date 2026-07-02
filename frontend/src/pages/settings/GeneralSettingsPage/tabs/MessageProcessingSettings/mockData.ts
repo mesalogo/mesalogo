@@ -18,41 +18,41 @@ export const mockConversation: {
   systemPrompt: string;
   messages: MockMessage[];
 } = {
-  systemPrompt: "你是一位专业的法律顾问，擅长合同审查和法律咨询。你需要仔细分析用户提供的文档，识别潜在的法律风险，并提供专业的建议。",
+  systemPrompt: "You are a professional legal advisor, skilled in contract review and legal consulting. You need to carefully analyze the documents provided by the user, identify potential legal risks, and provide professional advice.",
   messages: [
     { 
       role: "user", 
-      content: "帮我查看一下工作目录的文件" 
+      content: "Help me view the files in the working directory" 
     },
     { 
       role: "agent", 
-      agentName: "法律顾问",
-      content: "好的，我来查看当前工作目录的文件列表。",
+      agentName: "Legal Advisor",
+      content: "Sure, let me view the file list of the current working directory.",
       toolCalls: [{
         name: "list_directory",
         arguments: { path: "/workspace" },
         result: "[FILE] contract_v1.docx\n[FILE] contract_v2.docx\n[FILE] legal_opinion.pdf\n[DIR] attachments\n[FILE] meeting_notes.md\n[FILE] client_requirements.txt\n[FILE] draft_agreement.docx\n[FILE] revision_history.xlsx"
       }],
-      contentAfterTool: "工作目录中有以下文件：\n- 2个合同文件 (contract_v1.docx, contract_v2.docx)\n- 1个法律意见书 (legal_opinion.pdf)\n- 1个附件目录\n- 其他辅助文件\n\n请问您需要我查看哪个文件？"
+      contentAfterTool: "The working directory contains the following files:\n- 2 contract files (contract_v1.docx, contract_v2.docx)\n- 1 legal opinion (legal_opinion.pdf)\n- 1 attachments directory\n- Other auxiliary files\n\nWhich file would you like me to review?"
     },
     { 
       role: "user", 
-      content: "读取 contract_v1.docx 的内容" 
+      content: "Read the content of contract_v1.docx" 
     },
     {
       role: "agent",
-      agentName: "法律顾问", 
-      content: "好的，我来读取合同文件。",
+      agentName: "Legal Advisor", 
+      content: "Sure, let me read the contract file.",
       toolCalls: [{
         name: "read_file",
         arguments: { path: "/workspace/contract_v1.docx" },
-        result: "# 合伙人协议\n\n## 第一条 总则\n\n本协议由以下各方签订，旨在明确合伙经营的基本原则和各方权利义务。本协议自签署之日起生效，有效期为五年。\n\n## 第二条 合伙人信息\n\n甲方：张三，身份证号：310xxx19800101xxxx，住址：上海市浦东新区xxx路xxx号\n乙方：李四，身份证号：310xxx19850515xxxx，住址：上海市徐汇区xxx路xxx号\n\n## 第三条 出资方式与比例\n\n甲方出资人民币100万元整，占股60%，出资方式为货币出资。\n乙方出资人民币50万元整，占股40%，出资方式为货币出资。\n全部出资应于本协议签署后30日内缴足。\n\n## 第四条 利润分配与亏损分担\n\n1. 利润按照出资比例分配，每季度结算一次。\n2. 亏损按照出资比例分担。\n3. 年度利润的20%作为公积金留存。\n\n## 第五条 合伙事务执行\n\n1. 合伙事务由甲方负责执行。\n2. 重大事项需经全体合伙人一致同意。\n3. 日常经营事项由执行合伙人自行决定。"
+        result: "# Partnership Agreement\n\n## Article 1 General Provisions\n\nThis agreement is entered into by the following parties to clarify the basic principles of the partnership and the rights and obligations of each party. This agreement takes effect from the date of signing and is valid for five years.\n\n## Article 2 Partner Information\n\nParty A: Zhang San, ID No.: 310xxx19800101xxxx, Address: xxx Road, Pudong New Area, Shanghai\nParty B: Li Si, ID No.: 310xxx19850515xxxx, Address: xxx Road, Xuhui District, Shanghai\n\n## Article 3 Contribution Method and Ratio\n\nParty A contributes RMB 1,000,000, holding 60% of shares, in the form of monetary contribution.\nParty B contributes RMB 500,000, holding 40% of shares, in the form of monetary contribution.\nAll contributions shall be fully paid within 30 days after signing this agreement.\n\n## Article 4 Profit Distribution and Loss Sharing\n\n1. Profits are distributed according to the contribution ratio and settled quarterly.\n2. Losses are shared according to the contribution ratio.\n3. 20% of annual profit is retained as reserve fund.\n\n## Article 5 Execution of Partnership Affairs\n\n1. Partnership affairs are executed by Party A.\n2. Major matters require unanimous consent of all partners.\n3. Daily operational matters are decided by the executing partner."
       }],
-      contentAfterTool: "这是一份合伙人协议，主要内容包括：\n1. 合伙人为张三和李四\n2. 出资比例为 60:40\n3. 利润按出资比例分配\n\n需要我对合同条款进行详细分析吗？"
+      contentAfterTool: "This is a partnership agreement. The main content includes:\n1. The partners are Zhang San and Li Si\n2. The contribution ratio is 60:40\n3. Profits are distributed according to the contribution ratio\n\nWould you like me to analyze the contract clauses in detail?"
     },
     { 
       role: "user", 
-      content: "分析一下这份合同有什么风险点" 
+      content: "Analyze what risk points this contract has" 
     }
   ]
 };
@@ -60,17 +60,17 @@ export const mockConversation: {
 export const mockToolDefinitions = [
   {
     name: "list_directory",
-    description: "列出指定目录下的所有文件和子目录，返回文件名、类型和大小信息",
+    description: "List all files and subdirectories under the specified directory, returning file name, type, and size information",
     parameters: {
       type: "object",
       properties: {
         path: {
           type: "string",
-          description: "要列出的目录路径，支持相对路径和绝对路径"
+          description: "The directory path to list, supporting both relative and absolute paths"
         },
         recursive: {
           type: "boolean",
-          description: "是否递归列出子目录内容",
+          description: "Whether to recursively list subdirectory contents",
           default: false
         }
       },
@@ -79,17 +79,17 @@ export const mockToolDefinitions = [
   },
   {
     name: "read_file",
-    description: "读取指定路径的文件内容，支持文本文件和二进制文件的读取操作",
+    description: "Read the content of the file at the specified path, supporting both text and binary file reading operations",
     parameters: {
       type: "object",
       properties: {
         path: {
           type: "string",
-          description: "要读取的文件的完整路径，支持相对路径和绝对路径"
+          description: "The full path of the file to read, supporting both relative and absolute paths"
         },
         encoding: {
           type: "string",
-          description: "文件编码格式，默认为utf-8",
+          description: "File encoding format, defaults to utf-8",
           default: "utf-8"
         }
       },

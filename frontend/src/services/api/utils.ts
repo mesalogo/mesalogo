@@ -1,6 +1,7 @@
 /**
  * API工具函数
  */
+import i18n from '../../locales';
 
 /**
  * 构建查询参数字符串
@@ -34,7 +35,7 @@ export const buildQueryString = (params) => {
  * @returns {string} 格式化的错误消息
  */
 export const extractErrorMessage = (error) => {
-  if (!error) return '未知错误';
+  if (!error) return i18n.t('error.unknownError');
   
   if (error.response) {
     // 服务器响应了，但状态码不在2xx范围内
@@ -46,13 +47,13 @@ export const extractErrorMessage = (error) => {
       if (data.detail) return `${status}: ${data.detail}`;
     }
     
-    return `${status}: ${error.message || '服务器错误'}`;
+    return `${status}: ${error.message || i18n.t('error.serverError')}`;
   } else if (error.request) {
     // 请求已发送但未收到响应
-    return '请求超时或服务器无响应';
+    return i18n.t('error.noResponse');
   } else {
     // 请求设置时出错
-    return error.message || '请求设置错误';
+    return error.message || i18n.t('error.requestSetup');
   }
 };
 

@@ -215,7 +215,7 @@ const ActionTaskConversation = forwardRef(({
     if (userMessage.trim()) {
       content.push({
         type: 'text',
-        text: userMessage.trim() // 去掉首尾空格和空行，保留中间的换行
+        text: userMessage.trim() // Trims leading/trailing whitespace while preserving internal newlines
       });
     }
 
@@ -298,7 +298,7 @@ const ActionTaskConversation = forwardRef(({
         modelToUse,
         generatePrompt,
         handleStreamResponse,
-        "你是一个专业的消息优化助手，擅长根据上下文和需求优化用户消息。",
+        t('assistant.optimizePromptSystem'),
         {
           temperature: 0.7,
           max_tokens: 1000
@@ -364,14 +364,14 @@ const ActionTaskConversation = forwardRef(({
         }
 
         await conversationAPI.cancelStreamingResponse(currentAgentId);
-        console.log(`已发送取消流式响应请求，智能体ID: ${currentAgentId || '无'}`);
+        console.log(`Sent cancel-streaming-response request, agent ID: ${currentAgentId || 'none'}`);
 
         const cancellationMessage = {
           id: `system-${Date.now()}`,
           role: 'system',
           content: agentInfo
-            ? `用户中断了智能体 ${agentInfo.name}${agentInfo.role_name ? ` [${agentInfo.role_name}]` : ''} 的响应`
-            : `用户中断了智能体的响应`,
+            ? t('message.userInterrupted', { name: agentInfo.name, role: agentInfo.role_name ? ` [${agentInfo.role_name}]` : '' })
+            : t('message.userInterruptedGeneric'),
           timestamp: new Date().toISOString()
         };
 
@@ -402,22 +402,22 @@ const ActionTaskConversation = forwardRef(({
         }
 
         if (isAutoDiscussing) {
-          message.success(`已成功中断智能体${agentInfo ? ` ${agentInfo.name}` : ''}，自主任务将继续下一个智能体`);
+          message.success(t('message.interruptSuccessAuto', { name: agentInfo ? ` ${agentInfo.name}` : '' }));
         } else {
-          message.success('已成功中断智能体响应');
+          message.success(t('message.interruptSuccess'));
         }
       } catch (error) {
-        console.error('取消流式响应出错:', error);
-        message.error('中断智能体响应时出错: ' + error.message);
+        console.error('Failed to cancel streaming response:', error);
+        message.error(t('message.interruptFailed') + ': ' + error.message);
       } finally {
         streamingHandler.setCurrentStreamingResponse('');
         streamingHandler.setIsObserving(false);
         const isMultiAgentScenario = targetAgentIds.length > 1 || (targetAgentIds.length === 0 && task.agents?.length > 1);
         if (!isAutoDiscussing && !isMultiAgentScenario) {
-          console.log('取消流式响应 - 单智能体场景，完全清理流式状态');
+          console.log('Cancel streaming response - single-agent scenario, fully clearing streaming state');
           streamingHandler.setStreamingAgentId(null);
         } else {
-          console.log('取消流式响应 - 多智能体场景，保持部分状态等待下一个智能体');
+          console.log('Cancel streaming response - multi-agent scenario, keeping partial state for the next agent');
         }
         streamingHandler.setSendingMessage(false);
       }
@@ -447,7 +447,7 @@ const ActionTaskConversation = forwardRef(({
       conversationData.updateMessages(prev => [...prev, userMsg]);
 
       setUserMessage('');
-      setTargetAgentIds([]); // 清空目标智能体列表
+      setTargetAgentIds([]); // Clear the target agent list
       streamingHandler.setCurrentStreamingResponse('');
       setAttachedImages([]);
       setShowImageUpload(false);
@@ -461,24 +461,24 @@ const ActionTaskConversation = forwardRef(({
           let currentConversationId = conversationData.activeConversationId;
 
           if (!currentConversationId) {
-            console.log('未选择会话，获取或创建默认会话');
+            console.log('No conversation selected, fetching or creating a default conversation');
 
             const conversations = await conversationAPI.getConversations(task.id);
 
             if (conversations && conversations.length > 0) {
               currentConversationId = conversations[0].id;
               conversationData.setActiveConversationId(currentConversationId);
-              console.log(`使用现有默认会话ID: ${currentConversationId}`);
+              console.log(`Using existing default conversation ID: ${currentConversationId}`);
             } else {
               const newConversation = await conversationAPI.createConversation(task.id, {
-                title: `${task.title || '行动任务'} - 默认会话`,
-                description: '自动创建的默认会话',
+                title: t('conversation.defaultConversationTitle', { title: task.title || t('conversation.defaultTaskTitleFallback') }),
+                description: t('conversation.defaultConversationDesc'),
                 mode: task.mode || 'sequential'
               });
 
               currentConversationId = newConversation.id;
               conversationData.setActiveConversationId(currentConversationId);
-              console.log(`创建并使用新默认会话ID: ${currentConversationId}`);
+              console.log(`Created and using new default conversation ID: ${currentConversationId}`);
 
               if (onConversationCreated) {
                 onConversationCreated(newConversation);
@@ -488,7 +488,7 @@ const ActionTaskConversation = forwardRef(({
             }
           }
 
-          console.log(`流式发送消息到会话:${currentConversationId}`, messageContent, targetAgentIds);
+          console.log(`Streaming message to conversation: ${currentConversationId}`, messageContent, targetAgentIds);
 
           const messageData = {
             content: messageContent.length === 1 && messageContent[0].type === 'text'
@@ -507,7 +507,7 @@ const ActionTaskConversation = forwardRef(({
             streamingHandler.handleStreamResponse
           );
         } catch (error) {
-          console.error('API发送消息失败:', error);
+          console.error('API failed to send message:', error);
 
           const currentAgentId = streamingHandler.streamingAgentId;
           let agentInfo = null;
@@ -520,9 +520,9 @@ const ActionTaskConversation = forwardRef(({
           const errorResponse: any = {
             id: `error-${Date.now()}`,
             role: 'system',
-            content: `错误: ${error.message || '未知错误'}。请检查网络连接或联系管理员。`,
+            content: t('message.apiError', { error: error.message || t('message.unknownError') }),
             timestamp: new Date().toISOString(),
-            thinking: `错误详情: ${error.stack || error.message}`
+            thinking: t('message.errorDetail', { detail: error.stack || error.message })
           };
 
           if (agentInfo) {
@@ -544,15 +544,15 @@ const ActionTaskConversation = forwardRef(({
             }, 0);
           }
 
-          message.error(`消息发送失败: ${error.message}`);
+          message.error(t('message.sendFailedWithReason', { reason: error.message }));
         }
       } else {
-        message.warning(`行动任务当前状态(${task.status})不允许发送消息`);
+        message.warning(t('message.taskStatusNotActive', { status: task.status }));
 
         const statusMessage = {
           id: `status-${Date.now()}`,
           role: 'system',
-          content: `当前任务状态为 "${task.status}"，无法发送消息。请先激活任务。`,
+          content: t('message.taskStatusMessage', { status: task.status }),
           timestamp: new Date().toISOString()
         };
 
@@ -565,8 +565,8 @@ const ActionTaskConversation = forwardRef(({
         }
       }
     } catch (error) {
-      console.error('发送消息错误:', error);
-      message.error('发送消息失败: ' + (error.message || '未知错误'));
+      console.error('Error sending message:', error);
+      message.error(t('message.sendFailedWithReason', { reason: error.message || t('message.unknownError') }));
       streamingHandler.setSendingMessage(false);
     }
   };
@@ -586,7 +586,7 @@ const ActionTaskConversation = forwardRef(({
     }
 
     try {
-      console.log('监督者干预：直接发送消息', {
+      console.log('Supervisor intervention: sending message directly', {
         content: messageContent,
         supervisorAgentId,
         conversationId: conversationData.activeConversationId
@@ -626,9 +626,9 @@ const ActionTaskConversation = forwardRef(({
         streamingHandler.handleStreamResponse
       );
 
-      console.log('监督者干预消息发送完成');
+      console.log('Supervisor intervention message sent');
     } catch (error) {
-      console.error('监督者干预发送失败:', error);
+      console.error('Failed to send supervisor intervention:', error);
       message.error(t('message.sendFailed') + ': ' + (error.message || t('message.unknownError')));
 
       streamingHandler.setSendingMessage(false);
@@ -656,7 +656,7 @@ const ActionTaskConversation = forwardRef(({
       const willGenerateSummary = enableSummary && conversationData.activeConversationId && conversationData.messages.length > 0;
       if (willGenerateSummary) {
         conversationData_new.source_conversation_id = conversationData.activeConversationId;
-        message.loading({ content: '正在生成会话总结...', key: 'createConversation', duration: 0 });
+        message.loading({ content: t('conversation.generatingSummary'), key: 'createConversation', duration: 0 });
       }
 
       const newConversation = await conversationAPI.createConversation(task.id, conversationData_new);
@@ -682,7 +682,7 @@ const ActionTaskConversation = forwardRef(({
           }, 0);
         }
       } catch (error) {
-        console.error('加载新会话消息失败:', error);
+        console.error('Failed to load new conversation messages:', error);
         conversationData.updateMessages([]);
       }
 
@@ -697,7 +697,7 @@ const ActionTaskConversation = forwardRef(({
 
       message.success(t('conversation.createSuccess'));
     } catch (error) {
-      console.error('创建会话失败:', error);
+      console.error('Failed to create conversation:', error);
       message.error(t('conversation.createFailed') + ': ' + error.message);
     } finally {
       setCreatingConversation(false);
@@ -709,13 +709,13 @@ const ActionTaskConversation = forwardRef(({
    */
   const showAutoDiscussModal = () => {
     if (!conversationData.activeConversationId) {
-      message.warning('请先选择或创建一个会话');
+      message.warning(t('autoTask.selectConversation'));
       return;
     }
 
     const currentConversation = conversationData.conversations.find(conv => conv.id === conversationData.activeConversationId);
     if (!currentConversation || currentConversation.agent_count < 1) {
-      message.warning('当前会话中智能体数量不足，自动讨论需要至少一个智能体');
+      message.warning(t('autoTask.insufficientAgents'));
       return;
     }
 
@@ -735,14 +735,14 @@ const ActionTaskConversation = forwardRef(({
       setAutoDiscussModalVisible(false);
 
       if (!conversationData.activeConversationId) {
-        message.warning('请先选择或创建一个会话');
+        message.warning(t('autoTask.selectConversation'));
         setStartingAutoDiscussion(false);
         return;
       }
 
       const currentConversation = conversationData.conversations.find(conv => conv.id === conversationData.activeConversationId);
       if (!currentConversation || currentConversation.agent_count < 1) {
-        message.warning('当前会话中智能体数量不足，自动讨论需要至少一个智能体');
+        message.warning(t('autoTask.insufficientAgents'));
         setStartingAutoDiscussion(false);
         return;
       }
@@ -795,8 +795,8 @@ const ActionTaskConversation = forwardRef(({
         );
       }
     } catch (error) {
-      console.error('启动自动讨论失败:', error);
-      message.error('启动自动讨论失败: ' + error.message);
+      console.error('Failed to start automatic discussion:', error);
+      message.error(t('autoTask.startFailedWithReason', { reason: error.message }));
       setIsAutoDiscussing(false);
 
       if (onRefreshAutonomousTaskCard) {
@@ -824,19 +824,19 @@ const ActionTaskConversation = forwardRef(({
         if (activeTasks.length > 0) {
           // 停止第一个活动的自主任务（调用 stop API）
           const activeTask = activeTasks[0];
-          console.log(`停止自主任务: autonomousTaskId=${activeTask.id}`);
+          console.log(`Stopping autonomous task: autonomousTaskId=${activeTask.id}`);
           await conversationAPI.stopAutonomousTask(
             task.id,
             conversationData.activeConversationId,
             activeTask.id
           );
-          console.log('停止自主任务成功');
+          console.log('Autonomous task stopped successfully');
         } else {
           // 没有找到活动任务，报错
-          throw new Error('未找到活动的自主任务');
+          throw new Error(t('autoTask.noActiveTaskFound'));
         }
 
-        message.info('已停止自动讨论');
+        message.info(t('autoTask.stopped'));
         setIsAutoDiscussing(false);
         streamingHandler.setCurrentDiscussionRound(0);
         streamingHandler.setCurrentDiscussionTotalRounds(0);
@@ -850,7 +850,7 @@ const ActionTaskConversation = forwardRef(({
         const cancelMessage = {
           id: `system-${Date.now()}`,
           role: 'system',
-          content: `用户手动停止了自动讨论`,
+          content: t('autoTask.stoppedByUser'),
           timestamp: new Date().toISOString()
         };
 
@@ -866,8 +866,8 @@ const ActionTaskConversation = forwardRef(({
           await conversationData.handleChangeConversation(conversationData.activeConversationId);
         }
       } catch (error) {
-        console.error('停止自动讨论失败:', error);
-        message.error('停止自动讨论失败: ' + error.message);
+        console.error('Failed to stop automatic discussion:', error);
+        message.error(t('autoTask.stopFailedWithReason', { reason: error.message }));
 
         setIsAutoDiscussing(false);
         streamingHandler.setCurrentDiscussionRound(0);

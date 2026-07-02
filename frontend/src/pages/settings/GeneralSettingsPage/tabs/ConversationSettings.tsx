@@ -112,7 +112,7 @@ const ConversationSettings = ({ color, initialValues }: any) => {
       <div style={{ display: 'flex', gap: '24px' }}>
         {/* 左侧：基础对话设置 */}
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '14px', fontWeight: 500, color, marginBottom: '16px' }}>基础设置</div>
+          <div style={{ fontSize: '14px', fontWeight: 500, color, marginBottom: '16px' }}>{t('convSettings.basicSection')}</div>
           
           <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap' }}>
             <Form.Item
@@ -122,7 +122,7 @@ const ConversationSettings = ({ color, initialValues }: any) => {
                 t('settings.maxHistoryLength'),
                 t('settings.maxHistoryLength.tooltip')
               )}
-              rules={[{ required: true, message: `请输入${t('settings.maxHistoryLength')}` }]}
+              rules={[{ required: true, message: t('convSettings.pleaseEnter', { field: t('settings.maxHistoryLength') }) }]}
               style={{ marginBottom: 0, minWidth: 120 }}
             >
               <InputNumber min={0} max={500} style={{ width: '100%' }} />
@@ -199,14 +199,14 @@ const ConversationSettings = ({ color, initialValues }: any) => {
 
         {/* 右侧：工具调用优化 */}
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '14px', fontWeight: 500, color, marginBottom: '16px' }}>工具调用优化</div>
+          <div style={{ fontSize: '14px', fontWeight: 500, color, marginBottom: '16px' }}>{t('convSettings.toolOptimizationSection')}</div>
           
           <Form.Item
             name="split_tool_calls_in_history"
             label={renderLabel(
               <ToolOutlined />,
               t('settings.splitToolCalls'),
-              '[仅隔离模式生效] 格式化历史消息时，将工具调用拆分为独立的assistant+tool消息。多Agent模式下历史消息在system prompt中以文本形式存在'
+              t('convSettings.splitToolCallsTooltip')
             )}
             valuePropName="checked"
             style={{ marginBottom: '16px' }}
@@ -218,34 +218,34 @@ const ConversationSettings = ({ color, initialValues }: any) => {
             name="tool_call_context_rounds"
             label={renderLabel(
               <ToolOutlined />,
-              '工具调用上下文轮数',
-              '[仅隔离模式生效] 工具执行后再次调用LLM时，保留的工具调用历史轮数（每轮=1次tool_call+tool_result）。多Agent模式下历史已在system prompt中压缩。[建议] 3-5轮'
+              t('convSettings.toolCallContextRounds'),
+              t('convSettings.toolCallContextRoundsTooltip')
             )}
-            rules={[{ required: true, message: '请输入工具调用上下文轮数' }]}
+            rules={[{ required: true, message: t('convSettings.enterToolCallContextRounds') }]}
             style={{ marginBottom: '16px' }}
           >
-            <InputNumber min={1} max={10} style={{ width: '100%' }} addonAfter="轮" />
+            <InputNumber min={1} max={10} style={{ width: '100%' }} addonAfter={t('convSettings.roundsUnit')} />
           </Form.Item>
 
           <Form.Item
             name="tool_result_max_length"
             label={renderLabel(
               <ToolOutlined />,
-              '工具结果最大长度',
-              '[两种模式都生效] 格式化历史消息时，截断工具返回结果的长度。0表示不截断。太短会丢失关键信息（代码、错误堆栈等）。[建议] 1500-3000字符'
+              t('convSettings.toolResultMaxLength'),
+              t('convSettings.toolResultMaxLengthTooltip')
             )}
-            rules={[{ required: true, message: '请输入工具结果最大长度' }]}
+            rules={[{ required: true, message: t('convSettings.enterToolResultMaxLength') }]}
             style={{ marginBottom: '16px' }}
           >
-            <InputNumber min={0} max={10000} style={{ width: '100%' }} addonAfter="字符" />
+            <InputNumber min={0} max={10000} style={{ width: '100%' }} addonAfter={t('convSettings.charsUnit')} />
           </Form.Item>
 
           <Form.Item
             name="compress_tool_definitions"
             label={renderLabel(
               <ThunderboltOutlined />,
-              '压缩工具定义',
-              '[两种模式都生效] 压缩tools字段中的工具Schema（截断描述到80字符、移除参数说明）。可节省约70% Token，但会影响LLM对工具的理解。[建议] 关闭'
+              t('convSettings.compressToolDefinitions'),
+              t('convSettings.compressToolDefinitionsTooltip')
             )}
             valuePropName="checked"
             style={{ marginBottom: 0 }}

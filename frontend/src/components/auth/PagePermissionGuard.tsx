@@ -1,6 +1,7 @@
 import React from 'react';
 import { Result, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { hasPermission, hasAnyPermission, hasAllPermissions } from '../../constants/permissions';
 
@@ -24,10 +25,12 @@ const PagePermissionGuard = ({
   children, 
   adminOnly = false,
   title = '403',
-  subTitle = '抱歉，您没有权限访问此页面。'
+  subTitle
 }) => {
+  const { t } = useTranslation();
   const { user, permissions, hasAdminPermission } = useAuth();
   const navigate = useNavigate();
+  const resolvedSubTitle = subTitle ?? t('permissionGuard.noAccess');
 
   // 如果用户未登录，这种情况应该由ProtectedRoute处理
   if (!user) {
@@ -35,10 +38,10 @@ const PagePermissionGuard = ({
       <Result
         status="403"
         title="401"
-        subTitle="请先登录系统。"
+        subTitle={t('permissionGuard.pleaseLogin')}
         extra={
           <Button type="primary" onClick={() => navigate('/login')}>
-            去登录
+            {t('permissionGuard.goToLogin')}
           </Button>
         }
       />
@@ -74,10 +77,10 @@ const PagePermissionGuard = ({
       <Result
         status="403"
         title={title}
-        subTitle={subTitle}
+        subTitle={resolvedSubTitle}
         extra={
           <Button type="primary" onClick={() => navigate('/home')}>
-            返回首页
+            {t('permissionGuard.backToHome')}
           </Button>
         }
       />

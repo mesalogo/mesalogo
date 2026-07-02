@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getAgentColor } from '../../utils/colorUtils';
 
 interface MinimapProps {
@@ -29,6 +30,7 @@ export default function Minimap({
   width = 80,
   visible = true,
 }: MinimapProps) {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
@@ -285,7 +287,7 @@ export default function Minimap({
         if (msg) {
           const time = new Date(msg.timestamp || msg.created_at).toLocaleString();
           setHoverTime(time);
-          const name = msg.agent_name || msg.agent?.name || (msg.role === 'human' ? '用户' : '系统');
+          const name = msg.agent_name || msg.agent?.name || (msg.role === 'human' ? t('conversation.userLabel') : t('conversation.systemLabel'));
           setHoverName(name);
         }
         break;
@@ -295,7 +297,7 @@ export default function Minimap({
     if (isDragging) {
       handleClick(e);
     }
-  }, [isDragging, handleClick, messages]);
+  }, [isDragging, handleClick, messages, t]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);

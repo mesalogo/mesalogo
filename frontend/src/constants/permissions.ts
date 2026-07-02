@@ -8,6 +8,7 @@
  * 3. 基于租户的系统，数据完全隔离
  * 4. 权限名称与后端 UserPermissionConstants 保持一致
  */
+import i18n from '../locales';
 
 // 用户角色常量
 export const USER_ROLES = {
@@ -153,18 +154,18 @@ export const hasAllPermissions = (userPermissions, requiredPermissions) => {
 };
 
 // 角色显示名称
-export const ROLE_DISPLAY_NAMES = {
-  [USER_ROLES.SUPER_ADMIN]: '超级管理员',
-  [USER_ROLES.REGULAR_USER]: '普通用户',
-  [USER_ROLES.VIEWER]: '只读用户'
-};
+export const getRoleDisplayNames = () => ({
+  [USER_ROLES.SUPER_ADMIN]: i18n.t('roleName.superAdmin'),
+  [USER_ROLES.REGULAR_USER]: i18n.t('roleName.regularUser'),
+  [USER_ROLES.VIEWER]: i18n.t('roleName.viewer')
+});
 
 // 角色描述
-export const ROLE_DESCRIPTIONS = {
-  [USER_ROLES.SUPER_ADMIN]: '拥有租户内所有权限的超级管理员',
-  [USER_ROLES.REGULAR_USER]: '普通用户，可以创建和管理自己的任务、行动空间',
-  [USER_ROLES.VIEWER]: '只读用户，只能查看自己创建的内容，不能进行修改操作'
-};
+export const getRoleDescriptions = () => ({
+  [USER_ROLES.SUPER_ADMIN]: i18n.t('roleDesc.superAdmin'),
+  [USER_ROLES.REGULAR_USER]: i18n.t('roleDesc.regularUser'),
+  [USER_ROLES.VIEWER]: i18n.t('roleDesc.viewer')
+});
 
 // 特殊权限控制辅助函数
 export const canEditUserRole = (currentUser, targetUser) => {

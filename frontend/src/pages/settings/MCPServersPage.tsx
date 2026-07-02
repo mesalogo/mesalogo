@@ -44,7 +44,7 @@ const MCPServersPage = () => {
     setLoadingTools(prev => ({ ...prev, [serverId]: true }));
     try {
       // 使用环境变量中的API URL
-      console.log(`正在获取服务器 ${serverId} 的工具列表${refresh ? '(强制刷新)' : ''}`);
+      console.log(`Fetching tools for server ${serverId}${refresh ? ' (force refresh)' : ''}`);
       // 添加refresh参数，指示后端是否强制刷新缓存
       const response = await api.post(`/mcp/tools/${serverId}`, { refresh });
 
@@ -56,7 +56,7 @@ const MCPServersPage = () => {
             ...prev,
             [serverId]: response.data
           }));
-          console.log(`获取到服务器 ${serverId} 的工具列表:`, response.data);
+          console.log(`Got tools for server ${serverId}:`, response.data);
         }
         // 如果响应含有tools属性，使用旧格式处理
         else if (response.data.tools) {
@@ -64,18 +64,18 @@ const MCPServersPage = () => {
             ...prev,
             [serverId]: response.data.tools
           }));
-          console.log(`获取到服务器 ${serverId} 的工具列表:`, response.data.tools);
+          console.log(`Got tools for server ${serverId}:`, response.data.tools);
         }
         else {
-          console.warn(`获取到的服务器 ${serverId} 的工具列表格式不支持:`, response.data);
+          console.warn(`Unsupported tools list format for server ${serverId}:`, response.data);
           message.warning(t('mcpServers.tools.formatUnsupported', { id: serverId }));
         }
       } else {
-        console.warn(`获取到的服务器 ${serverId} 的工具列表为空`);
+        console.warn(`Empty tools list for server ${serverId}`);
         message.warning(t('mcpServers.tools.empty', { id: serverId }));
       }
     } catch (error) {
-      console.error(`获取服务器 ${serverId} 的工具列表失败:`, error);
+      console.error(`Failed to get tools for server ${serverId}:`, error);
       message.error(t('mcpServers.tools.loadFailed', { id: serverId, error: error.message }));
     } finally {
       setLoadingTools(prev => ({ ...prev, [serverId]: false }));
@@ -101,10 +101,10 @@ const MCPServersPage = () => {
   const fetchServers = useCallback(async (refreshTools = true) => {
     setLoading(true);
     try {
-      console.log('正在请求MCP服务器列表');
+      console.log('Requesting MCP server list');
       const response = await api.get('/mcp/servers');
       setServers(sortServers(response.data));
-      console.log('获取到MCP服务器列表:', response.data);
+      console.log('Got MCP server list:', response.data);
 
       // 只有当明确要求刷新工具列表时才刷新
       // 这样在展开/收起工具时就不会触发不必要的刷新
@@ -114,8 +114,8 @@ const MCPServersPage = () => {
         });
       }
     } catch (error) {
-      console.error('获取MCP服务器列表失败:', error);
-      console.error('错误详情:', error.response || error.message);
+      console.error('Failed to get MCP server list:', error);
+      console.error('Error detail:', error.response || error.message);
       message.error(t('mcpServers.loadFailed'));
     } finally {
       setLoading(false);
@@ -146,7 +146,7 @@ const MCPServersPage = () => {
       // 检查API返回的状态
       if (response.data.status === "error") {
         // 如果返回错误状态，显示错误消息
-        console.error(`启用服务器失败:`, response.data.message);
+        console.error('Failed to enable server:', response.data.message);
         message.error(response.data.message || t('mcpServers.enableFailed', { id: serverId, error: t('common.unknown') }));
       } else {
         // 如果成功，显示成功消息
@@ -161,7 +161,7 @@ const MCPServersPage = () => {
         fetchServerTools(serverId);
       }
     } catch (error) {
-      console.error(`启用服务器请求失败:`, error);
+      console.error('Enable server request failed:', error);
       message.error(t('mcpServers.enableFailed', { id: serverId, error: error.message }));
     } finally {
       setOperatingServers(prev => {
@@ -181,7 +181,7 @@ const MCPServersPage = () => {
       // 检查API返回的状态
       if (response.data.status === "error") {
         // 如果返回错误状态，显示错误消息
-        console.error(`禁用服务器失败:`, response.data.message);
+        console.error('Failed to disable server:', response.data.message);
         message.warning(response.data.message || t('mcpServers.disableWarn', { id: serverId }));
       } else {
         // 如果成功，显示成功消息
@@ -196,7 +196,7 @@ const MCPServersPage = () => {
         fetchServerTools(serverId);
       }
     } catch (error) {
-      console.error(`禁用服务器请求失败:`, error);
+      console.error('Disable server request failed:', error);
       message.error(t('mcpServers.disableFailed', { id: serverId, error: error.message }));
     } finally {
       setOperatingServers(prev => {
@@ -218,7 +218,7 @@ const MCPServersPage = () => {
           message.success(t('mcpServers.deleteSuccess', { id: serverId }));
           fetchServers(false); // 刷新服务器列表，但不刷新工具列表
         } catch (error) {
-          console.error(`删除服务器失败:`, error);
+          console.error('Failed to delete server:', error);
           message.error(t('mcpServers.deleteFailed', { id: serverId, error: error.response?.data?.message || error.message }));
         }
       }
@@ -373,7 +373,7 @@ const MCPServersPage = () => {
       if (error.errorFields) {
         message.error(t('mcpServers.completeRequired'));
       } else {
-        console.error('保存服务器失败:', error);
+        console.error('Failed to save server:', error);
         message.error(t('mcpServers.saveServerFailed', { error: error.response?.data?.message || error.message }));
       }
     }
@@ -383,13 +383,13 @@ const MCPServersPage = () => {
   const openConfigEditor = async () => {
     try {
       // 获取完整的MCP配置文件内容
-      console.log('正在获取MCP配置文件');
+      console.log('Fetching MCP config file');
       const response = await api.get('/mcp/servers/config');
 
       if (response.data) {
         // 使用后端返回的完整配置
         setConfigContent(JSON.stringify(response.data, null, 2));
-        console.log('成功获取MCP配置文件');
+        console.log('Successfully fetched MCP config file');
       } else {
         // 如果后端没有返回配置，使用服务器列表生成临时配置
         const config = {
@@ -422,12 +422,12 @@ const MCPServersPage = () => {
         });
 
         setConfigContent(JSON.stringify(config, null, 2));
-        console.warn('后端未返回配置，使用临时配置');
+        console.warn('Backend returned no config, using temporary config');
       }
 
       setConfigVisible(true);
     } catch (error) {
-      console.error('获取MCP配置失败:', error);
+      console.error('Failed to get MCP config:', error);
       message.error(t('mcpServers.config.loadFailed', { error: error.message }));
 
       // 发生错误时，仍然打开模态框并使用临时配置
@@ -511,7 +511,7 @@ const MCPServersPage = () => {
       // 重新加载服务器列表，但不刷新工具列表
       fetchServers(false);
     } catch (error) {
-      console.error('保存MCP配置失败:', error);
+      console.error('Failed to save MCP config:', error);
       message.error(t('mcpServers.config.saveFailed', { error: error.response?.data?.message || error.message }));
     } finally {
       setSavingConfig(false);

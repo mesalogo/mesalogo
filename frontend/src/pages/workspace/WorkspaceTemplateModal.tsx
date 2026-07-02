@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Modal, Form, Input, Button } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 const { TextArea } = Input;
 
@@ -7,16 +8,17 @@ const { TextArea } = Input;
  * 创建工作空间模板对话框组件
  */
 const WorkspaceTemplateModal = ({ visible, onCancel, onSubmit, memory }: any) => {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
 
   useEffect(() => {
     if (visible && memory) {
       form.setFieldsValue({
-        templateName: `${memory.title} 模板`,
-        templateDescription: '基于现有项目文件创建的模板'
+        templateName: t('wsTemplate.defaultName', { title: memory.title }),
+        templateDescription: t('wsTemplate.defaultDescription')
       });
     }
-  }, [visible, memory, form]);
+  }, [visible, memory, form, t]);
 
   const handleSubmit = () => {
     form.validateFields().then(values => {
@@ -27,7 +29,7 @@ const WorkspaceTemplateModal = ({ visible, onCancel, onSubmit, memory }: any) =>
 
   return (
     <Modal
-      title="创建工作空间模板"
+      title={t('wsTemplate.title')}
       open={visible}
       onCancel={onCancel}
       footer={null}
@@ -39,24 +41,24 @@ const WorkspaceTemplateModal = ({ visible, onCancel, onSubmit, memory }: any) =>
       >
         <Form.Item
           name="templateName"
-          label="模板名称"
-          rules={[{ required: true, message: '请输入模板名称' }]}
+          label={t('wsTemplate.nameLabel')}
+          rules={[{ required: true, message: t('wsTemplate.nameRequired') }]}
         >
-          <Input placeholder="请输入模板名称" />
+          <Input placeholder={t('wsTemplate.namePlaceholder')} />
         </Form.Item>
         <Form.Item
           name="templateDescription"
-          label="模板描述"
+          label={t('wsTemplate.descriptionLabel')}
         >
-          <TextArea placeholder="请输入模板描述" rows={4} />
+          <TextArea placeholder={t('wsTemplate.descriptionPlaceholder')} rows={4} />
         </Form.Item>
         <Form.Item>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button style={{ marginRight: 8 }} onClick={onCancel}>
-              取消
+              {t('wsTemplate.cancel')}
             </Button>
             <Button type="primary" htmlType="submit">
-              创建
+              {t('wsTemplate.create')}
             </Button>
           </div>
         </Form.Item>

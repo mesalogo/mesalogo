@@ -112,16 +112,16 @@ const VectorDBSettings = ({
       const result = await vectorDatabaseAPI.testConnection('milvus', milvusConfig);
       
       if (result.success) {
-        message.success(`内置数据库连接测试成功！${result.message}`);
+        message.success(t('settings.builtinTestSuccess', { message: result.message }));
       } else {
-        message.error(`内置数据库连接测试失败: ${result.message}`);
+        message.error(t('settings.builtinTestFailed', { message: result.message }));
       }
     } catch (error) {
-      console.error('测试内置数据库连接失败:', error);
+      console.error('Test builtin database connection failed:', error);
       if (error.errorFields) {
-        message.error('请先填写完整的连接信息');
+        message.error(t('settings.testFillInfoFirst'));
       } else {
-        message.error(`测试失败: ${error.message || '未知错误'}`);
+        message.error(t('settings.vdbTestFailed', { error: error.message || t('settings.unknownError') }));
       }
     } finally {
       setBuiltinTestLoading(false);
@@ -136,7 +136,7 @@ const VectorDBSettings = ({
           label={renderLabel(
             <DatabaseOutlined />,
             t('settings.useBuiltinVectorDB'),
-            '使用内置向量数据库（Milvus），默认连接 localhost:19530。⚠️ 建议不要修改内置数据库的地址和端口配置，除非你知道自己在做什么。'
+            t('settings.useBuiltinVectorDB.detailTooltip')
           )}
           valuePropName="checked"
           style={{ marginBottom: '16px' }}
@@ -160,8 +160,8 @@ const VectorDBSettings = ({
                   name="builtin_vector_db_host"
                   label={renderLabel(
                     <ApiOutlined />,
-                    '内置数据库地址',
-                    'Milvus向量数据库地址'
+                    t('settings.builtinDbHost'),
+                    t('settings.builtinDbHostTooltip')
                   )}
                   style={{ marginBottom: '16px' }}
                 >
@@ -175,8 +175,8 @@ const VectorDBSettings = ({
                   name="builtin_vector_db_port"
                   label={renderLabel(
                     <ApiOutlined />,
-                    '内置数据库端口',
-                    'Milvus向量数据库端口'
+                    t('settings.builtinDbPort'),
+                    t('settings.builtinDbPortTooltip')
                   )}
                   style={{ marginBottom: '16px' }}
                 >
@@ -210,7 +210,7 @@ const VectorDBSettings = ({
                 style={{ marginBottom: '16px' }}
               >
                 <Select
-                  placeholder="选择向量数据库提供商"
+                  placeholder={t('settings.selectProvider')}
                   showSearch
                   optionFilterProp="label"
                   filterOption={(input: any, option: any) =>
@@ -219,8 +219,8 @@ const VectorDBSettings = ({
         
                   disabled={useBuiltinVectorDB}
                 >
-                  <Select.Option value="aliyun" label="阿里云 DashVector">
-                    阿里云 DashVector
+                  <Select.Option value="aliyun" label={t('settings.provider.aliyun')}>
+                    {t('settings.provider.aliyun')}
                   </Select.Option>
                   <Select.Option value="tidb" label="TiDB Cloud">
                     TiDB Cloud
@@ -261,8 +261,8 @@ const VectorDBSettings = ({
                   <Select.Option value="elasticsearch" label="Elasticsearch">
                     Elasticsearch
                   </Select.Option>
-                  <Select.Option value="custom" label="自定义">
-                    自定义
+                  <Select.Option value="custom" label={t('settings.provider.custom')}>
+                    {t('settings.provider.custom')}
                   </Select.Option>
                 </Select>
               </Form.Item>
@@ -284,7 +284,7 @@ const VectorDBSettings = ({
               onClick={handleTestBuiltinConnection}
               loading={builtinTestLoading}
             >
-              {builtinTestLoading ? t('settings.testing') : '测试连接'}
+              {builtinTestLoading ? t('settings.testing') : t('settings.testConnectionBtn')}
             </Button>
           ) : (
             // 外部数据库：显示配置和测试按钮

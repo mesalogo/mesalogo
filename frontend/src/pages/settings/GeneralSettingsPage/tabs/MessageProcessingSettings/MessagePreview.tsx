@@ -1,5 +1,6 @@
 import React from 'react';
 import { Tag, Tooltip } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { mockConversation, truncateToolResult, estimateTokens, MockMessage } from './mockData';
 
 interface MessagePreviewProps {
@@ -17,6 +18,7 @@ interface MessagePreviewProps {
 }
 
 const MessagePreview: React.FC<MessagePreviewProps> = ({ mode, settings, color }) => {
+  const { t } = useTranslation();
   const { systemPrompt, messages } = mockConversation;
   
   // 根据 maxHistoryLength 截取历史消息
@@ -62,14 +64,14 @@ const MessagePreview: React.FC<MessagePreviewProps> = ({ mode, settings, color }
               alignItems: 'center',
               gap: '8px'
             }}>
-              ## 对话历史 
+              {t('msgPreview.conversationHistory')} 
               <Tag color="orange" style={{ fontSize: '10px' }}>
-                {historyMessages.length}/{settings.maxHistoryLength}条
+                {t('msgPreview.historyCount', { count: historyMessages.length, max: settings.maxHistoryLength })}
               </Tag>
               {hiddenCount > 0 && (
-                <Tooltip title={`${hiddenCount}条早期消息已被截断`}>
+                <Tooltip title={t('msgPreview.earlyTruncatedTooltip', { count: hiddenCount })}>
                   <Tag color="red" style={{ fontSize: '10px' }}>
-                    -{hiddenCount}条
+                    {t('msgPreview.truncatedCount', { count: hiddenCount })}
                   </Tag>
                 </Tooltip>
               )}
@@ -141,7 +143,7 @@ const MessagePreview: React.FC<MessagePreviewProps> = ({ mode, settings, color }
             borderRadius: '6px',
             fontSize: '12px'
           }}>
-            {currentMessage?.content || '(当前消息)'}
+            {currentMessage?.content || t('msgPreview.currentMessage')}
           </div>
         </div>
       </>
@@ -201,7 +203,7 @@ const MessagePreview: React.FC<MessagePreviewProps> = ({ mode, settings, color }
           let content = msg.content;
           if (msg.toolCalls) {
             msg.toolCalls.forEach(tc => {
-              content += `\n[工具调用结果 - ${tc.name}]: ${formatToolResult(tc.result)}`;
+              content += `\n${t('msgPreview.toolCallResult', { name: tc.name, result: formatToolResult(tc.result) })}`;
             });
           }
           if (msg.contentAfterTool) {
@@ -245,7 +247,7 @@ const MessagePreview: React.FC<MessagePreviewProps> = ({ mode, settings, color }
               fontSize: '11px',
               padding: '4px'
             }}>
-              ... {hiddenCount}条消息已截断 ...
+              {t('msgPreview.messagesTruncated', { count: hiddenCount })}
             </div>
           )}
           
@@ -262,7 +264,7 @@ const MessagePreview: React.FC<MessagePreviewProps> = ({ mode, settings, color }
                 {msg.role}
                 {msg.toolCalls && ' + tool_calls'}
                 {msg.dimmed && (
-                  <Tooltip title={`超出 tool_call_context_rounds(${settings.toolCallContextRounds}) 限制`}>
+                  <Tooltip title={t('msgPreview.exceedRoundsTooltip', { rounds: settings.toolCallContextRounds })}>
                     <span style={{ marginLeft: '4px', color: '#faad14' }}>⚠</span>
                   </Tooltip>
                 )}
@@ -292,7 +294,7 @@ const MessagePreview: React.FC<MessagePreviewProps> = ({ mode, settings, color }
               fontSize: '11px',
               border: `1px solid ${color}`
             }}>
-              {currentMessage?.content || '(当前消息)'}
+              {currentMessage?.content || t('msgPreview.currentMessage')}
             </div>
           </div>
         </div>
@@ -334,7 +336,7 @@ const MessagePreview: React.FC<MessagePreviewProps> = ({ mode, settings, color }
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
-        <span>Token 估算</span>
+        <span>{t('msgPreview.tokenEstimate')}</span>
         <Tag color={color}>~{calculateTokenEstimate().toLocaleString()}</Tag>
       </div>
     </div>

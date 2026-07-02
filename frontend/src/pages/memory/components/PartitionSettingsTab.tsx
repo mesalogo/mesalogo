@@ -16,12 +16,14 @@ import {
   SaveOutlined,
   ReloadOutlined
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import api from '../../../services/api/axios';
 
 const { Text } = Typography;
 const { Option } = Select;
 
 const PartitionSettingsTab = ({ config, onConfigUpdate, loading }: any) => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
@@ -36,10 +38,10 @@ const PartitionSettingsTab = ({ config, onConfigUpdate, loading }: any) => {
       if (data.success) {
         setStrategies(data.data);
       } else {
-        console.error('加载分区策略失败:', data.message);
+        console.error(t('memory.config.loadStrategiesFailed', { reason: data.message }));
       }
     } catch (error) {
-      console.error('加载分区策略失败:', error);
+      console.error(t('memory.config.loadStrategiesFailed', { reason: error }));
     }
   };
 
@@ -68,7 +70,7 @@ const PartitionSettingsTab = ({ config, onConfigUpdate, loading }: any) => {
       const data = response.data;
 
       if (data.success) {
-        message.success('分区配置保存成功');
+        message.success(t('memory.config.saveSuccess'));
         // 如果返回了更新后的配置数据，直接更新表单
         if (data.data) {
           form.setFieldsValue({
@@ -79,11 +81,11 @@ const PartitionSettingsTab = ({ config, onConfigUpdate, loading }: any) => {
         }
         onConfigUpdate && onConfigUpdate();
       } else {
-        message.error(`保存失败: ${data.message}`);
+        message.error(t('memory.config.saveFailedWithReason', { reason: data.message }));
       }
     } catch (error) {
-      console.error('保存分区配置失败:', error);
-      message.error('保存分区配置失败');
+      console.error('Failed to save partition configuration:', error);
+      message.error(t('memory.config.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -99,23 +101,23 @@ const PartitionSettingsTab = ({ config, onConfigUpdate, loading }: any) => {
     <div>
       {/* 当前配置状态 */}
       <Card
-        title="当前配置状态"
+        title={t('memory.config.currentStatus')}
         style={{ marginBottom: '24px' }}
       >
         <Row gutter={16}>
           <Col span={6}>
             <div>
-              <Text type="secondary" style={{ fontSize: '12px' }}>图谱增强状态</Text>
+              <Text type="secondary" style={{ fontSize: '12px' }}>{t('memory.config.graphStatus')}</Text>
               <div style={{ marginTop: '4px' }}>
                 <Tag color={config?.enabled ? 'success' : 'error'}>
-                  {config?.enabled ? '已启用' : '未启用'}
+                  {config?.enabled ? t('memory.config.statusEnabled') : t('memory.config.statusDisabled')}
                 </Tag>
               </div>
             </div>
           </Col>
           <Col span={6}>
             <div>
-              <Text type="secondary" style={{ fontSize: '12px' }}>当前框架</Text>
+              <Text type="secondary" style={{ fontSize: '12px' }}>{t('memory.config.currentFramework')}</Text>
               <div style={{ marginTop: '4px' }}>
                 <Text strong>{config?.framework || 'N/A'}</Text>
               </div>
@@ -123,7 +125,7 @@ const PartitionSettingsTab = ({ config, onConfigUpdate, loading }: any) => {
           </Col>
           <Col span={6}>
             <div>
-              <Text type="secondary" style={{ fontSize: '12px' }}>分区策略</Text>
+              <Text type="secondary" style={{ fontSize: '12px' }}>{t('memory.config.partitionStrategy')}</Text>
               <div style={{ marginTop: '4px' }}>
                 <Text strong>
                   {strategies.find(s => s.key === config?.partition_strategy)?.name || config?.partition_strategy || 'N/A'}
@@ -133,12 +135,12 @@ const PartitionSettingsTab = ({ config, onConfigUpdate, loading }: any) => {
           </Col>
           <Col span={6}>
             <div>
-              <Text type="secondary" style={{ fontSize: '12px' }}>消息同步</Text>
+              <Text type="secondary" style={{ fontSize: '12px' }}>{t('memory.config.messageSync')}</Text>
               <div style={{ marginTop: '4px' }}>
                 <Tag color={config?.message_sync_strategy === 'disabled' ? 'default' : 'blue'}>
-                  {config?.message_sync_strategy === 'disabled' ? '已关闭' :
-                   config?.message_sync_strategy === 'message_complete' ? '消息完成' :
-                   config?.message_sync_strategy === 'round_complete' ? '轮次完成' : '未配置'}
+                  {config?.message_sync_strategy === 'disabled' ? t('memory.config.syncDisabled') :
+                   config?.message_sync_strategy === 'message_complete' ? t('memory.config.syncMessageComplete') :
+                   config?.message_sync_strategy === 'round_complete' ? t('memory.config.syncRoundComplete') : t('memory.config.syncNotConfigured')}
                 </Tag>
               </div>
             </div>
@@ -148,7 +150,7 @@ const PartitionSettingsTab = ({ config, onConfigUpdate, loading }: any) => {
         <Row gutter={16} style={{ marginTop: '16px' }}>
           <Col span={24}>
             <div>
-              <Text type="secondary" style={{ fontSize: '12px' }}>最后更新</Text>
+              <Text type="secondary" style={{ fontSize: '12px' }}>{t('memory.config.lastUpdate')}</Text>
               <div style={{ marginTop: '4px' }}>
                 <Text type="secondary">
                   {config?.updated_at ? new Date(config.updated_at).toLocaleString() : 'N/A'}
@@ -161,7 +163,7 @@ const PartitionSettingsTab = ({ config, onConfigUpdate, loading }: any) => {
 
       {/* 记忆配置 */}
       <Card
-        title="记忆配置"
+        title={t('memory.config.memoryConfig')}
         style={{ marginBottom: '24px' }}
         extra={
           <Space>
@@ -172,14 +174,14 @@ const PartitionSettingsTab = ({ config, onConfigUpdate, loading }: any) => {
               loading={saving}
               disabled={!config?.enabled}
             >
-              保存配置
+              {t('memory.config.saveConfig')}
             </Button>
             <Button
               icon={<ReloadOutlined />}
               onClick={() => form.resetFields()}
               disabled={saving}
             >
-              重置
+              {t('memory.config.reset')}
             </Button>
           </Space>
         }
@@ -194,12 +196,12 @@ const PartitionSettingsTab = ({ config, onConfigUpdate, loading }: any) => {
             <Col span={12}>
               <Form.Item
                 name="partition_strategy"
-                label="分区策略"
-                rules={[{ required: true, message: '请选择分区策略' }]}
-                extra="选择记忆数据的分区方式，影响智能体间的记忆共享范围"
+                label={t('memory.config.partitionStrategy')}
+                rules={[{ required: true, message: t('memory.config.selectStrategy') }]}
+                extra={t('memory.config.strategyHint')}
               >
                 <Select
-                  placeholder="选择记忆分区策略"
+                  placeholder={t('memory.config.selectStrategyPlaceholder')}
                   optionLabelProp="label"
                 >
                   {strategies.map(strategy => (
@@ -213,7 +215,7 @@ const PartitionSettingsTab = ({ config, onConfigUpdate, loading }: any) => {
                           <Text strong>{strategy.name}</Text>
                           {strategy.default && (
                             <Tag color="blue" style={{ marginLeft: 8 }}>
-                              推荐
+                              {t('common.recommended')}
                             </Tag>
                           )}
                         </div>
@@ -230,53 +232,53 @@ const PartitionSettingsTab = ({ config, onConfigUpdate, loading }: any) => {
             <Col span={12}>
               <Form.Item
                 name="message_sync_strategy"
-                label="消息自动同步策略"
-                rules={[{ required: true, message: '请选择消息同步策略' }]}
-                extra="控制何时将对话消息自动同步到图谱记忆"
+                label={t('memory.config.syncStrategy')}
+                rules={[{ required: true, message: t('memory.config.selectSyncStrategy') }]}
+                extra={t('memory.config.syncStrategyHint')}
               >
                 <Select
-                  placeholder="选择消息同步策略"
+                  placeholder={t('memory.config.selectSyncStrategy')}
                   optionLabelProp="label"
                 >
                   <Option
                     value="disabled"
-                    label="关闭"
+                    label={t('memory.config.syncDisabled')}
                   >
                     <div style={{ padding: '4px 0' }}>
                       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2px' }}>
-                        <Text strong>关闭</Text>
+                        <Text strong>{t('memory.config.syncDisabled')}</Text>
                         <Tag color="orange" style={{ marginLeft: 8 }}>
-                          默认
+                          {t('common.default')}
                         </Tag>
                       </div>
                       <Text type="secondary" style={{ fontSize: '12px' }}>
-                        不自动同步消息到图谱记忆
+                        {t('memory.config.syncDisabledDesc')}
                       </Text>
                     </div>
                   </Option>
                   <Option
                     value="message_complete"
-                    label="消息完成"
+                    label={t('memory.config.syncMessageComplete')}
                   >
                     <div style={{ padding: '4px 0' }}>
                       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2px' }}>
-                        <Text strong>消息完成</Text>
+                        <Text strong>{t('memory.config.syncMessageComplete')}</Text>
                       </div>
                       <Text type="secondary" style={{ fontSize: '12px' }}>
-                        每条智能体消息完成后立即同步
+                        {t('memory.config.syncMessageCompleteDesc')}
                       </Text>
                     </div>
                   </Option>
                   <Option
                     value="round_complete"
-                    label="轮次完成"
+                    label={t('memory.config.syncRoundComplete')}
                   >
                     <div style={{ padding: '4px 0' }}>
                       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2px' }}>
-                        <Text strong>轮次完成</Text>
+                        <Text strong>{t('memory.config.syncRoundComplete')}</Text>
                       </div>
                       <Text type="secondary" style={{ fontSize: '12px' }}>
-                        完整对话轮次（用户+智能体）完成后同步
+                        {t('memory.config.syncRoundCompleteDesc')}
                       </Text>
                     </div>
                   </Option>
@@ -287,8 +289,8 @@ const PartitionSettingsTab = ({ config, onConfigUpdate, loading }: any) => {
 
           {!config?.enabled && (
             <Alert
-              message="图谱增强未启用"
-              description="请先在图谱增强设置中启用图谱增强功能，才能配置分区策略。"
+              message={t('memory.config.graphNotEnabledTitle')}
+              description={t('memory.config.graphNotEnabledDesc')}
               type="warning"
               showIcon
             />

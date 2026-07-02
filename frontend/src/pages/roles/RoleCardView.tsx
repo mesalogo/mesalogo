@@ -19,6 +19,7 @@ import {
   TeamOutlined,
   LockOutlined
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 const { Text, Paragraph } = Typography;
 
@@ -37,6 +38,7 @@ const RoleCardView: React.FC<RoleCardViewProps> = ({
   onEdit,
   onDelete
 }) => {
+  const { t } = useTranslation();
   const getModelBadge = (model: string) => {
     const modelColors: Record<string, string> = {
       'gpt-4': 'cyan',
@@ -52,21 +54,21 @@ const RoleCardView: React.FC<RoleCardViewProps> = ({
   const getSourceTag = (created_by: any, is_shared: boolean) => {
     if (!created_by) {
       return (
-        <Tooltip title="系统资源，所有用户可见可用">
-          <Tag icon={<GlobalOutlined style={{ fontSize: '10px' }} />} color="blue" style={{ fontSize: '11px', margin: 0 }}>系统</Tag>
+        <Tooltip title={t('roleCard.source.systemTooltip')}>
+          <Tag icon={<GlobalOutlined style={{ fontSize: '10px' }} />} color="blue" style={{ fontSize: '11px', margin: 0 }}>{t('roleCard.source.system')}</Tag>
         </Tooltip>
       );
     }
     if (is_shared) {
       return (
-        <Tooltip title="用户共享资源，所有用户可见可用">
-          <Tag icon={<TeamOutlined style={{ fontSize: '10px' }} />} color="green" style={{ fontSize: '11px', margin: 0 }}>共享</Tag>
+        <Tooltip title={t('roleCard.source.sharedTooltip')}>
+          <Tag icon={<TeamOutlined style={{ fontSize: '10px' }} />} color="green" style={{ fontSize: '11px', margin: 0 }}>{t('roleCard.source.shared')}</Tag>
         </Tooltip>
       );
     }
     return (
-      <Tooltip title="私有资源，仅创建者可见">
-        <Tag icon={<LockOutlined style={{ fontSize: '10px' }} />} color="orange" style={{ fontSize: '11px', margin: 0 }}>私有</Tag>
+      <Tooltip title={t('roleCard.source.privateTooltip')}>
+        <Tag icon={<LockOutlined style={{ fontSize: '10px' }} />} color="orange" style={{ fontSize: '11px', margin: 0 }}>{t('roleCard.source.private')}</Tag>
       </Tooltip>
     );
   };
@@ -86,7 +88,7 @@ const RoleCardView: React.FC<RoleCardViewProps> = ({
         'dify': 'Dify',
         'fastgpt': 'FastGPT',
         'coze': 'Coze',
-        'custom': '自定义'
+        'custom': t('roleCard.platform.custom')
       };
       const label = platformLabels[platformType] || platformType;
       return (
@@ -100,7 +102,7 @@ const RoleCardView: React.FC<RoleCardViewProps> = ({
 
     if (role.model === null || role.model === undefined || role.model === '') {
       const defaultModel = models.find(m => m.is_default_text) || models.find(m => m.is_default);
-      const label = `默认文本生成${defaultModel ? ` (${defaultModel.name})` : ''}`;
+      const label = t('roleCard.defaultTextModel', { modelName: defaultModel ? t('roleCard.defaultModelSuffix', { name: defaultModel.name }) : '' });
       return (
         <Tooltip title={label}>
           <Tag color={getModelBadge(defaultModel?.model_id)} style={{ maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -111,7 +113,7 @@ const RoleCardView: React.FC<RoleCardViewProps> = ({
     }
 
     const modelConfig = models.find(m => m.id.toString() === role.model?.toString());
-    const label = role.model_name || modelConfig?.name || '默认';
+    const label = role.model_name || modelConfig?.name || t('roleCard.defaultModel');
     return (
       <Tooltip title={label}>
         <Tag color={getModelBadge(modelConfig?.model_id)} style={{ maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -138,7 +140,7 @@ const RoleCardView: React.FC<RoleCardViewProps> = ({
   if (roles.length === 0) {
     return (
       <Card>
-        <Empty description="暂无角色数据" />
+        <Empty description={t('roleCard.empty')} />
       </Card>
     );
   }
@@ -166,13 +168,13 @@ const RoleCardView: React.FC<RoleCardViewProps> = ({
             style={cardStyle}
             styles={{ body: cardBodyStyle }}
             actions={[
-              <Tooltip title="编辑" key="edit">
+              <Tooltip title={t('roleCard.action.edit')} key="edit">
                 <EditOutlined
                   style={{ color: '#1677ff' }}
                   onClick={() => onEdit(role)}
                 />
               </Tooltip>,
-              <Tooltip title="删除" key="delete">
+              <Tooltip title={t('roleCard.action.delete')} key="delete">
                 <DeleteOutlined
                   style={{ color: '#ff4d4f' }}
                   onClick={() => onDelete(role.id)}
@@ -190,7 +192,7 @@ const RoleCardView: React.FC<RoleCardViewProps> = ({
                   </Space>
                   <Space size={4}>
                     <Tag color={role.source === 'external' ? 'green' : 'blue'} style={{ fontSize: '11px', margin: 0 }}>
-                      {role.source === 'external' ? '外部' : '内部'}
+                      {role.source === 'external' ? t('roleCard.type.external') : t('roleCard.type.internal')}
                     </Tag>
                     {getSourceTag(role.created_by, role.is_shared)}
                   </Space>
@@ -241,7 +243,7 @@ const RoleCardView: React.FC<RoleCardViewProps> = ({
                   {/* 绑定能力 */}
                   <div>
                     <div style={{ marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Text type="secondary" style={{ fontSize: '12px' }}>能力</Text>
+                      <Text type="secondary" style={{ fontSize: '12px' }}>{t('roleCard.capabilities')}</Text>
                       {role.capabilities?.length > 0 && (
                         <Tag color="blue" style={{ fontSize: '11px', margin: 0, padding: '0 6px' }}>
                           {role.capabilities.length}
@@ -279,7 +281,7 @@ const RoleCardView: React.FC<RoleCardViewProps> = ({
                   {/* 绑定知识库 */}
                   <div>
                     <div style={{ marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Text type="secondary" style={{ fontSize: '12px' }}>知识库</Text>
+                      <Text type="secondary" style={{ fontSize: '12px' }}>{t('roleCard.knowledgeBases')}</Text>
                       {role.allKnowledges?.length > 0 && (
                         <Space size={4}>
                           {role.internalKnowledges?.length > 0 && (
@@ -332,7 +334,7 @@ const RoleCardView: React.FC<RoleCardViewProps> = ({
                   {/* 绑定技能 */}
                   <div>
                     <div style={{ marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Text type="secondary" style={{ fontSize: '12px' }}>技能</Text>
+                      <Text type="secondary" style={{ fontSize: '12px' }}>{t('roleCard.skills')}</Text>
                       {role.skills?.length > 0 && (
                         <Tag color="purple" style={{ fontSize: '11px', margin: 0, padding: '0 6px' }}>
                           {role.skills.length}

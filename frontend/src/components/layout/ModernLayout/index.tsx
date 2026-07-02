@@ -114,11 +114,11 @@ const ModernLayout = ({ children }) => {
   const handleLogout = async () => {
     try {
       await logout();
-      message.success(t('user.logoutSuccess') || '已成功登出');
+      message.success(t('user.logoutSuccess'));
       navigate('/login');
     } catch (error) {
       console.error('登出失败:', error);
-      message.error(t('user.logoutFailed') || '登出失败，请稍后再试');
+      message.error(t('user.logoutFailed'));
     }
   };
 
@@ -129,7 +129,7 @@ const ModernLayout = ({ children }) => {
 
   // 修改密码成功回调
   const handleChangePasswordSuccess = () => {
-    message.success(t('user.passwordChangeSuccess') || '密码修改成功');
+    message.success(t('user.passwordChangeSuccess'));
   };
 
   // 用户下拉菜单
@@ -219,11 +219,13 @@ const ModernLayout = ({ children }) => {
 
         {/* 右侧：操作按钮 */}
         <Space
+          className="modern-header-actions"
+          align="center"
+          size={8}
           style={{ marginLeft: 'auto' }}
-         
         >
           <JobCenterButton />
-          <LanguageSwitcher />
+          <LanguageSwitcher size="middle" />
           <ThemeSwitch />
           <LayoutSwitcher />
           <Dropdown
@@ -231,9 +233,9 @@ const ModernLayout = ({ children }) => {
             placement="bottomRight"
             trigger={['click']}
           >
-            <Space style={{ cursor: 'pointer' }}>
+            <Space align="center" style={{ cursor: 'pointer' }}>
               <Avatar
-               
+                size={32}
                 style={{ backgroundColor: '#1677ff' }}
                 icon={<UserOutlined />}
               />

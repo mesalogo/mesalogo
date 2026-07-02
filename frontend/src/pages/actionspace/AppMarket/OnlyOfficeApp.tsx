@@ -10,6 +10,7 @@ import {
 import {
   InfoCircleOutlined
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 const { Text } = Typography;
 
@@ -17,6 +18,7 @@ const { Text } = Typography;
  * OnlyOffice 在线办公应用配置组件
  */
 const OnlyOfficeApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
 
   // 获取服务器配置 - appConfig 是完整的app对象，server在顶层
@@ -53,7 +55,7 @@ const OnlyOfficeApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
         await onConfigChange(newConfig);
       }
     } catch (error) {
-      console.error('保存配置失败:', error);
+      console.error('Failed to save config:', error);
     }
   };
 
@@ -61,7 +63,7 @@ const OnlyOfficeApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
     <div>
       <div style={{ marginBottom: 16 }}>
         <Text type="secondary">
-          配置文档服务器的连接参数，确保后端服务和文档服务器正常运行
+          {t('onlyOffice.pageDesc')}
         </Text>
       </div>
 
@@ -74,15 +76,15 @@ const OnlyOfficeApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
           name="documentServerUrl"
           label={
             <Space>
-              <span>文档服务器URL</span>
-              <Tooltip title="OnlyOffice Document Server 的完整URL地址，例如 http://localhost:18080">
+              <span>{t('onlyOffice.documentServerUrl')}</span>
+              <Tooltip title={t('onlyOffice.documentServerUrlTooltip')}>
                 <InfoCircleOutlined style={{ color: '#1677ff' }} />
               </Tooltip>
             </Space>
           }
           rules={[
-            { required: true, message: '请输入文档服务器URL' },
-            { type: 'url', message: '请输入有效的URL' }
+            { required: true, message: t('onlyOffice.documentServerUrlRequired') },
+            { type: 'url', message: t('onlyOffice.urlInvalid') }
           ]}
         >
           <Input placeholder="http://localhost:18080" />
@@ -92,15 +94,15 @@ const OnlyOfficeApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
           name="backendBaseUrl"
           label={
             <Space>
-              <span>后端基础URL</span>
-              <Tooltip title="后端服务的基础URL，用于文档回调。Docker环境下通常使用 host.docker.internal">
+              <span>{t('onlyOffice.backendBaseUrl')}</span>
+              <Tooltip title={t('onlyOffice.backendBaseUrlTooltip')}>
                 <InfoCircleOutlined style={{ color: '#1677ff' }} />
               </Tooltip>
             </Space>
           }
           rules={[
-            { required: true, message: '请输入后端基础URL' },
-            { type: 'url', message: '请输入有效的URL' }
+            { required: true, message: t('onlyOffice.backendBaseUrlRequired') },
+            { type: 'url', message: t('onlyOffice.urlInvalid') }
           ]}
         >
           <Input placeholder="http://host.docker.internal:8080" />
@@ -110,25 +112,25 @@ const OnlyOfficeApp = ({ appConfig = {}, onConfigChange, onClose }: any) => {
           name="jwtSecret"
           label={
             <Space>
-              <span>JWT Secret（选填）</span>
-              <Tooltip title="用于文档服务器和后端之间的安全通信，如果文档服务器未启用JWT验证可留空">
+              <span>{t('onlyOffice.jwtSecret')}</span>
+              <Tooltip title={t('onlyOffice.jwtSecretTooltip')}>
                 <InfoCircleOutlined style={{ color: '#1677ff' }} />
               </Tooltip>
             </Space>
           }
         >
-          <Input.Password placeholder="输入JWT密钥（可选）" />
+          <Input.Password placeholder={t('onlyOffice.jwtSecretPlaceholder')} />
         </Form.Item>
 
         <div style={{ marginTop: 24, textAlign: 'right' }}>
           <Space>
             {onClose && (
               <Button onClick={onClose}>
-                关闭
+                {t('onlyOffice.close')}
               </Button>
             )}
             <Button type="primary" htmlType="submit">
-              保存配置
+              {t('onlyOffice.saveConfig')}
             </Button>
           </Space>
         </div>

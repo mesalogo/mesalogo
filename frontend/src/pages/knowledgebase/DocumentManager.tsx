@@ -475,7 +475,7 @@ const DocumentManager = ({ selectedKnowledgeId: propSelectedKnowledgeId }) => {
     const filePath = record.path || record.name;
     
     if (!knowledgeId) {
-      message.error('无法确定文件所属的知识库');
+      message.error(t('docManager.cannotDetermineKb'));
       return;
     }
 

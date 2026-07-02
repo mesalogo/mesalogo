@@ -47,21 +47,21 @@ const TaskAppTools = ({ task, appTabManager, onAppLaunched }) => {
       }
 
       if (!task.action_space_id) {
-        console.error('任务未关联行动空间，无法加载绑定的应用');
-        message.error('任务未关联行动空间，无法加载应用列表');
+        console.error('Task not associated with an action space, cannot load bound apps');
+        message.error(t('taskApp.noActionSpace'));
         setApps([]);
         return;
       }
 
-      console.log('正在加载行动空间绑定的应用，space_id:', task.action_space_id);
+      console.log('Loading apps bound to action space, space_id:', task.action_space_id);
       // 严格按照行动空间绑定关系获取应用
       const response = await marketService.getActionSpaceApps(task.action_space_id);
-      console.log('获取到的绑定应用列表:', response);
+      console.log('Bound apps list received:', response);
 
       setApps(response.apps || []);
     } catch (error) {
-      console.error('加载应用列表失败:', error);
-      message.error(`加载应用列表失败: ${error.message}`);
+      console.error('Failed to load app list:', error);
+      message.error(t('taskApp.loadAppsFailed', { error: error.message }));
       setApps([]);
     } finally {
       setLoading(false);
@@ -86,7 +86,7 @@ const TaskAppTools = ({ task, appTabManager, onAppLaunched }) => {
 
   // 渲染应用卡片
   const renderAppCard = (app) => {
-    const category = app.basic?.category || '未分类';
+    const category = app.basic?.category || t('taskApp.uncategorized');
     const iconColorMap = {
       '开发工具': '#007ACC',
       '建模工具': '#52C41A',
@@ -96,7 +96,7 @@ const TaskAppTools = ({ task, appTabManager, onAppLaunched }) => {
     };
     const iconColor = iconColorMap[category] || '#1677ff';
     const appIcon = getAppIcon(app.basic?.icon || 'appstore', iconColor, '20px');
-    const description = app.basic?.description || '暂无描述';
+    const description = app.basic?.description || t('taskApp.noDescription');
 
     return (
       <Col xs={24} sm={12} lg={12} key={app.id}>
@@ -134,7 +134,7 @@ const TaskAppTools = ({ task, appTabManager, onAppLaunched }) => {
             onClick={() => handleLaunchApp(app)}
            
           >
-            启动
+            {t('taskApp.launch')}
           </Button>
         </div>
       </Card>

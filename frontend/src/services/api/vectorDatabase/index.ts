@@ -1,5 +1,6 @@
 import api from '../axios';
 import tidbAPI from './tidb';
+import i18n from '../../../locales';
 
 /**
  * 通用向量数据库API服务
@@ -202,7 +203,7 @@ export const PROVIDER_CONFIG_RULES = {
  * 向量数据库提供商显示名称
  */
 export const PROVIDER_DISPLAY_NAMES = {
-  aliyun: '阿里云 DashVector',
+  aliyun: 'Aliyun DashVector',
   tidb: 'TiDB Cloud',
   'aws-opensearch': 'AWS OpenSearch',
   'aws-bedrock': 'AWS Bedrock Knowledge Base',
@@ -216,7 +217,7 @@ export const PROVIDER_DISPLAY_NAMES = {
   chroma: 'Chroma',
   milvus: 'Milvus',
   elasticsearch: 'Elasticsearch',
-  custom: '自定义'
+  custom: 'Custom'
 };
 
 /**
@@ -251,6 +252,8 @@ export const validateProviderConfig = (provider, config) => {
  * @returns {string} 显示名称
  */
 export const getProviderDisplayName = (provider) => {
+  if (provider === 'aliyun') return i18n.t('vectorDB.provider.aliyun');
+  if (provider === 'custom') return i18n.t('vectorDB.provider.custom');
   return PROVIDER_DISPLAY_NAMES[provider] || provider;
 };
 

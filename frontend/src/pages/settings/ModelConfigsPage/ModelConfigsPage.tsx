@@ -47,10 +47,10 @@ const ModelConfigsPage = () => {
   // 初始化测试表单默认值
   useEffect(() => {
     testForm.setFieldsValue({
-      prompt: "你好，你是谁？",
-      systemPrompt: "你是一个友好的助手，请用简洁明了的方式回答问题。在回答开始时请说'作为您的助手'。"
+      prompt: t('modelConfig.test.defaultPrompt'),
+      systemPrompt: t('modelConfig.test.defaultSystemPrompt')
     });
-  }, [testForm]);
+  }, [testForm, t]);
   
   // ==================== 事件处理函数 ====================
   
@@ -120,7 +120,7 @@ const ModelConfigsPage = () => {
     try {
       const values = await defaultForm.validateFields();
       if (!values.textModelId && !values.embeddingModelId && !values.rerankModelId) {
-        message.warning('请至少选择一个默认模型');
+        message.warning(t('modelConfig.setDefaultsAtLeastOne'));
         return;
       }
       
@@ -144,7 +144,7 @@ const ModelConfigsPage = () => {
       const values = await testForm.validateFields();
       
       if (!values.modelId) {
-        message.warning('请先选择要测试的模型');
+        message.warning(t('modelConfig.test.selectModelRequired'));
         return;
       }
       
@@ -157,7 +157,7 @@ const ModelConfigsPage = () => {
       );
       
       if (!selectedModel) {
-        throw new Error('未找到所选模型配置');
+        throw new Error(t('modelConfig.test.modelNotFound'));
       }
       
       let streamContent = '';
@@ -179,7 +179,7 @@ const ModelConfigsPage = () => {
           
           if (meta && meta.connectionStatus) {
             if (meta.connectionStatus === 'error' && meta.error) {
-              setTestResult(`测试失败: ${meta.error}`);
+              setTestResult(t('modelConfig.test.errorPrefix', { reason: meta.error }));
               setTestStatus('error');
             } else if (meta.connectionStatus === 'done') {
               setTestStatus('success');
@@ -191,13 +191,13 @@ const ModelConfigsPage = () => {
       
       if (!receivedFirstResponse && streamContent === '') {
         if (!testResult) {
-          setTestResult('测试完成，但未收到任何响应，请检查模型配置');
+          setTestResult(t('modelConfig.test.completedNoResponse'));
           setTestStatus('warning');
         }
       }
     } catch (error) {
-      console.error('测试LLM失败:', error);
-      setTestResult(`测试失败: ${error.message || '未知错误'}`);
+      console.error('Failed to test LLM:', error);
+      setTestResult(t('modelConfig.test.errorPrefix', { reason: error.message || t('modelConfig.test.unknownError') }));
       setTestStatus('error');
     } finally {
       setTestLoading(false);
@@ -220,8 +220,8 @@ const ModelConfigsPage = () => {
     setTestStatus('idle');
     
     testForm.setFieldsValue({
-      prompt: "你好，你是谁？",
-      systemPrompt: "你是一个友好的助手，请用简洁明了的方式回答问题。在回答开始时请说'作为您的助手'。"
+      prompt: t('modelConfig.test.defaultPrompt'),
+      systemPrompt: t('modelConfig.test.defaultSystemPrompt')
     });
   };
   
@@ -262,7 +262,7 @@ const ModelConfigsPage = () => {
       const apiKey = modelForm.getFieldValue('apiKey');
       
       if (!baseUrl) {
-        message.warning('请先输入API基础URL');
+        message.warning(t('modelConfig.baseUrlRequired'));
         return;
       }
       
@@ -272,33 +272,33 @@ const ModelConfigsPage = () => {
         await dataHook.fetchOllamaModels(baseUrl);
       } else if (provider === 'gpustack') {
         if (!apiKey) {
-          message.warning('GPUStack需要API密钥');
+          message.warning(t('modelConfig.gpustackApiKeyRequired'));
           return;
         }
         await dataHook.fetchGpustackModels(baseUrl, apiKey);
       } else if (provider === 'anthropic') {
         if (!apiKey) {
-          message.warning('Anthropic需要API密钥');
+          message.warning(t('modelConfig.anthropicApiKeyRequired'));
           return;
         }
         await dataHook.fetchAnthropicModels(baseUrl, apiKey);
       } else if (provider === 'google') {
         if (!apiKey) {
-          message.warning('Google需要API密钥');
+          message.warning(t('modelConfig.googleApiKeyRequired'));
           return;
         }
         await dataHook.fetchGoogleModels(baseUrl, apiKey);
       } else if (provider === 'xai') {
         if (!apiKey) {
-          message.warning('X.ai需要API密钥');
+          message.warning(t('modelConfig.xaiApiKeyRequired'));
           return;
         }
         await dataHook.fetchXaiModels(baseUrl, apiKey);
       } else {
-        message.info('此Provider无需测试连接');
+        message.info(t('modelConfig.noConnectionTestNeeded'));
       }
     } catch (error) {
-      message.error(`测试连接失败: ${error.message}`);
+      message.error(t('modelConfig.connectionTestFailedGeneric', { reason: error.message }));
     }
   };
   
@@ -336,7 +336,7 @@ const ModelConfigsPage = () => {
         });
         
         if (modalities.length > 2 || modalities.includes('image_input')) {
-          message.success('已根据模型名称自动识别模态');
+          message.success(t('modelConfig.autoDetectedModality'));
         }
       }
     } else if (provider === 'gpustack') {
@@ -397,7 +397,7 @@ const ModelConfigsPage = () => {
           contextWindow: contextWindow
         });
         
-        message.success('已根据模型信息自动填充模态和特性');
+        message.success(t('modelConfig.autoFilledModalityAndCapability'));
       }
     } else if (provider === 'anthropic') {
       const model = dataHook.anthropicModels.find(m => m.id === modelValue);
@@ -491,7 +491,7 @@ const ModelConfigsPage = () => {
         modelForm.resetFields();
       }
     } catch (error) {
-      console.error('保存模型失败:', error);
+      console.error('Failed to save model:', error);
     }
   };
   

@@ -2,6 +2,7 @@
  * 模板变量替换工具函数
  * 支持Jinja2风格的变量替换 {{variable}}
  */
+import i18n from '../locales';
 
 /**
  * 替换模板中的变量
@@ -75,7 +76,7 @@ export const validateTemplateVariables = (template, variables) => {
  */
 export const formatRolesForTemplate = (roles) => {
   if (!Array.isArray(roles) || roles.length === 0) {
-    return '无';
+    return i18n.t('ruleEdit.emptyRoles');
   }
 
   return roles.map(role => role.name || role).join('、');
@@ -128,7 +129,7 @@ export const getTemplateVariableInfo = (template, internalVars = [], externalVar
         label: internalVar.label || varName,
         description: internalVar.description || '',
         value: internalVar.value || '',
-        source: '内部变量'
+        source: i18n.t('ruleEdit.source.internal')
       });
       return;
     }
@@ -142,7 +143,7 @@ export const getTemplateVariableInfo = (template, internalVars = [], externalVar
         label: externalVar.label || varName,
         description: externalVar.description || '',
         value: externalVar.value || '',
-        source: '外部变量'
+        source: i18n.t('ruleEdit.source.external')
       });
       return;
     }
@@ -152,9 +153,9 @@ export const getTemplateVariableInfo = (template, internalVars = [], externalVar
       name: varName,
       type: 'unknown',
       label: varName,
-      description: '未定义的变量',
+      description: i18n.t('ruleEdit.undefinedVariable'),
       value: '',
-      source: '未知'
+      source: i18n.t('ruleEdit.source.unknown')
     });
   });
 

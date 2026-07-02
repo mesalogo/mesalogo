@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, useMemo, useCallback } from 'react';
 import { authAPI } from '../services/api/auth';
 import api from '../services/api/axios';
+import i18n from '../locales';
 
 // 创建两个独立的上下文：状态和操作分离
 const AuthStateContext = createContext<any>(null);
@@ -150,11 +151,11 @@ export const AuthProvider = ({ children }) => {
         return { success: false, message: result.message };
       }
     } catch (error) {
-      console.error('AuthContext: 登录请求失败:', error);
+      console.error('AuthContext: login request failed:', error);
       setLoading(false);
       return {
         success: false,
-        message: error.response?.data?.message || '登录失败，请稍后再试'
+        message: error.response?.data?.message || i18n.t('auth.loginFailed')
       };
     }
   }, []);
@@ -275,7 +276,7 @@ export const AuthProvider = ({ children }) => {
 export const useAuthState = () => {
   const context = useContext(AuthStateContext);
   if (!context) {
-    throw new Error('useAuthState必须在AuthProvider内部使用');
+    throw new Error('useAuthState must be used within an AuthProvider');
   }
   return context;
 };
@@ -284,7 +285,7 @@ export const useAuthState = () => {
 export const useAuthActions = () => {
   const context = useContext(AuthActionsContext);
   if (!context) {
-    throw new Error('useAuthActions必须在AuthProvider内部使用');
+    throw new Error('useAuthActions must be used within an AuthProvider');
   }
   return context;
 };

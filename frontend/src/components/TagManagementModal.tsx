@@ -15,6 +15,7 @@ import {
   Divider
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { actionSpaceAPI } from '../services/api/actionspace';
 
 const { Option } = Select;
@@ -26,6 +27,7 @@ const { Title } = Typography;
  * 支持标签的增删改查功能
  */
 const TagManagementModal = ({ visible, onCancel, onTagsChange }) => {
+  const { t } = useTranslation();
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingTag, setEditingTag] = useState(null);
@@ -40,8 +42,8 @@ const TagManagementModal = ({ visible, onCancel, onTagsChange }) => {
 
   // 标签类型选项
   const tagTypeOptions = [
-    { value: 'industry', label: '行业标签' },
-    { value: 'scenario', label: '场景标签' }
+    { value: 'industry', label: t('tagModal.type.industry') },
+    { value: 'scenario', label: t('tagModal.type.scenario') }
   ];
 
   // 加载标签列表
@@ -51,7 +53,7 @@ const TagManagementModal = ({ visible, onCancel, onTagsChange }) => {
       const tagsData = await actionSpaceAPI.getAllTags();
       setTags(tagsData);
     } catch (error) {
-      message.error('获取标签列表失败');
+      message.error(t('tagModal.fetchFailed'));
     } finally {
       setLoading(false);
     }
@@ -89,18 +91,18 @@ const TagManagementModal = ({ visible, onCancel, onTagsChange }) => {
   const handleDeleteTag = async (tagId) => {
     try {
       await actionSpaceAPI.deleteTag(tagId);
-      message.success('标签删除成功');
+      message.success(t('tagModal.deleteSuccess'));
       loadTags();
       // 通知父组件标签已更改
       if (onTagsChange) {
         onTagsChange();
       }
     } catch (error) {
-      const errorMsg = error.response?.data?.error || '删除标签失败';
+      const errorMsg = error.response?.data?.error || t('tagModal.deleteFailed');
       const associatedSpaces = error.response?.data?.associated_spaces;
 
       if (associatedSpaces && associatedSpaces.length > 0) {
-        message.error(`${errorMsg}：${associatedSpaces.join('、')}`);
+        message.error(t('tagModal.deleteFailedWithSpaces', { error: errorMsg, spaces: associatedSpaces.join('、') }));
       } else {
         message.error(errorMsg);
       }
@@ -143,11 +145,11 @@ const TagManagementModal = ({ visible, onCancel, onTagsChange }) => {
       if (editingTag) {
         // 更新标签
         await actionSpaceAPI.updateTag(editingTag.id, processedValues);
-        message.success('标签更新成功');
+        message.success(t('tagModal.updateSuccess'));
       } else {
         // 创建标签
         await actionSpaceAPI.createTag(processedValues);
-        message.success('标签创建成功');
+        message.success(t('tagModal.createSuccess'));
       }
 
       setIsFormVisible(false);
@@ -157,7 +159,7 @@ const TagManagementModal = ({ visible, onCancel, onTagsChange }) => {
         onTagsChange();
       }
     } catch (error) {
-      const errorMsg = error.response?.data?.error || (editingTag ? '更新标签失败' : '创建标签失败');
+      const errorMsg = error.response?.data?.error || (editingTag ? t('tagModal.updateFailed') : t('tagModal.createFailed'));
       message.error(errorMsg);
     }
   };
@@ -172,7 +174,7 @@ const TagManagementModal = ({ visible, onCancel, onTagsChange }) => {
   // 表格列定义
   const columns = [
     {
-      title: '标签名称',
+      title: t('tagModal.col.name'),
       dataIndex: 'name',
       key: 'name',
       render: (text, record) => (
@@ -182,7 +184,7 @@ const TagManagementModal = ({ visible, onCancel, onTagsChange }) => {
       )
     },
     {
-      title: '类型',
+      title: t('tagModal.col.type'),
       dataIndex: 'type',
       key: 'type',
       render: (type) => {
@@ -191,13 +193,13 @@ const TagManagementModal = ({ visible, onCancel, onTagsChange }) => {
       }
     },
     {
-      title: '描述',
+      title: t('tagModal.col.description'),
       dataIndex: 'description',
       key: 'description',
       ellipsis: true
     },
     {
-      title: '颜色',
+      title: t('tagModal.col.color'),
       dataIndex: 'color',
       key: 'color',
       width: 80,
@@ -214,33 +216,31 @@ const TagManagementModal = ({ visible, onCancel, onTagsChange }) => {
       )
     },
     {
-      title: '操作',
+      title: t('tagModal.col.actions'),
       key: 'action',
       width: 120,
       render: (_, record) => (
         <Space>
           <Button
             type="link"
-           
             icon={<EditOutlined />}
             onClick={() => handleEditTag(record)}
           >
-            编辑
+            {t('tagModal.action.edit')}
           </Button>
           <Popconfirm
-            title="确定要删除这个标签吗？"
-            description="删除后无法恢复，且正在使用此标签的行动空间将受到影响。"
+            title={t('tagModal.deleteConfirmTitle')}
+            description={t('tagModal.deleteConfirmDesc')}
             onConfirm={() => handleDeleteTag(record.id)}
-            okText="确定"
-            cancelText="取消"
+            okText={t('tagModal.deleteConfirmOk')}
+            cancelText={t('tagModal.deleteConfirmCancel')}
           >
             <Button
               type="link"
-             
               danger
               icon={<DeleteOutlined />}
             >
-              删除
+              {t('tagModal.action.delete')}
             </Button>
           </Popconfirm>
         </Space>
@@ -251,7 +251,7 @@ const TagManagementModal = ({ visible, onCancel, onTagsChange }) => {
   return (
     <>
       <Modal
-        title="标签管理"
+        title={t('tagModal.title')}
         open={visible}
         onCancel={onCancel}
         width={800}
@@ -259,7 +259,7 @@ const TagManagementModal = ({ visible, onCancel, onTagsChange }) => {
         styles={{ body: { height: 500, overflow: 'hidden' } }}
         footer={[
           <Button key="close" onClick={onCancel}>
-            关闭
+            {t('tagModal.close')}
           </Button>
         ]}
       >
@@ -270,7 +270,7 @@ const TagManagementModal = ({ visible, onCancel, onTagsChange }) => {
               icon={<PlusOutlined />}
               onClick={handleCreateTag}
             >
-              新建标签
+              {t('tagModal.createBtn')}
             </Button>
           </div>
 
@@ -290,7 +290,7 @@ const TagManagementModal = ({ visible, onCancel, onTagsChange }) => {
 
       {/* 标签编辑表单Modal */}
       <Modal
-        title={editingTag ? '编辑标签' : '新建标签'}
+        title={editingTag ? t('tagModal.form.editTitle') : t('tagModal.form.createTitle')}
         open={isFormVisible}
         onCancel={handleFormCancel}
         onOk={() => form.submit()}
@@ -303,21 +303,21 @@ const TagManagementModal = ({ visible, onCancel, onTagsChange }) => {
         >
           <Form.Item
             name="name"
-            label="标签名称"
+            label={t('tagModal.form.nameLabel')}
             rules={[
-              { required: true, message: '请输入标签名称' },
-              { max: 50, message: '标签名称不能超过50个字符' }
+              { required: true, message: t('tagModal.form.nameRequired') },
+              { max: 50, message: t('tagModal.form.nameMaxLength') }
             ]}
           >
-            <Input placeholder="输入标签名称" />
+            <Input placeholder={t('tagModal.form.namePlaceholder')} />
           </Form.Item>
 
           <Form.Item
             name="type"
-            label="标签类型"
-            rules={[{ required: true, message: '请选择标签类型' }]}
+            label={t('tagModal.form.typeLabel')}
+            rules={[{ required: true, message: t('tagModal.form.typeRequired') }]}
           >
-            <Select placeholder="选择标签类型">
+            <Select placeholder={t('tagModal.form.typePlaceholder')}>
               {tagTypeOptions.map(option => (
                 <Option key={option.value} value={option.value}>
                   {option.label}
@@ -328,11 +328,11 @@ const TagManagementModal = ({ visible, onCancel, onTagsChange }) => {
 
           <Form.Item
             name="description"
-            label="描述"
+            label={t('tagModal.form.descriptionLabel')}
           >
             <TextArea
               rows={3}
-              placeholder="输入标签描述（可选）"
+              placeholder={t('tagModal.form.descriptionPlaceholder')}
               maxLength={200}
               showCount
             />
@@ -340,13 +340,13 @@ const TagManagementModal = ({ visible, onCancel, onTagsChange }) => {
 
           <Form.Item
             name="color"
-            label="标签颜色"
-            rules={[{ required: true, message: '请选择标签颜色' }]}
+            label={t('tagModal.form.colorLabel')}
+            rules={[{ required: true, message: t('tagModal.form.colorRequired') }]}
           >
             <ColorPicker
               presets={[
                 {
-                  label: '推荐颜色',
+                  label: t('tagModal.form.colorPresetLabel'),
                   colors: colorOptions
                 }
               ]}

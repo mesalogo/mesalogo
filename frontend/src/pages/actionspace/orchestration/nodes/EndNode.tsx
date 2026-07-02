@@ -1,6 +1,7 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { StopOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 interface EndNodeProps {
   data: {
@@ -10,6 +11,7 @@ interface EndNodeProps {
 }
 
 const EndNode: React.FC<EndNodeProps> = ({ data, selected }) => {
+  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -48,11 +50,11 @@ const EndNode: React.FC<EndNodeProps> = ({ data, selected }) => {
         >
           <StopOutlined style={{ color: '#fff', fontSize: 14 }} />
         </div>
-        <span style={{ fontWeight: 600, color: '#cf1322', fontSize: 14 }}>结束</span>
+        <span style={{ fontWeight: 600, color: '#cf1322', fontSize: 14 }}>{t('orchNode.end')}</span>
       </div>
       {data?.summary && (
         <div style={{ fontSize: 11, color: 'var(--custom-text-secondary)', marginTop: 6 }}>
-          自动总结
+          {t('orchNode.autoSummary')}
         </div>
       )}
     </div>

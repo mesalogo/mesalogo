@@ -44,7 +44,7 @@ const ExternalKnowledge = () => {
             icon={<PlusOutlined />}
             onClick={handleCreateClick}
           >
-            {activeTab === 'providers' ? '添加提供商' : '添加知识库'}
+            {activeTab === 'providers' ? t('knowledgeBase.addProvider') : t('knowledgeBase.addKnowledgeBase')}
           </Button>
         </div>
       </div>

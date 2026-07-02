@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { App, Button, Space, Switch, Typography } from 'antd';
 import { SaveOutlined, ClearOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { Node, Edge } from '@xyflow/react';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
 import OrchestrationEditor from './OrchestrationEditor';
@@ -27,6 +28,7 @@ const OrchestrationTab: React.FC<OrchestrationTabProps> = ({
   roles,
 }) => {
   const orchestration = settings?.orchestration || { enabled: false, nodes: [], edges: [] };
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const [enabled, setEnabled] = useState(orchestration.enabled || false);
   const [nodes, setNodes] = useState<Node[]>(orchestration.nodes || []);
@@ -63,10 +65,10 @@ const OrchestrationTab: React.FC<OrchestrationTabProps> = ({
       };
       console.log('Saving orchestration:', saveData.settings.orchestration);
       await actionSpaceAPI.update(actionSpaceId, saveData);
-      message.success('编排配置已保存');
+      message.success(t('orchestration.saveSuccess'));
     } catch (error) {
-      console.error('保存失败:', error);
-      message.error('保存失败');
+      console.error('Save failed:', error);
+      message.error(t('orchestration.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -113,7 +115,7 @@ const OrchestrationTab: React.FC<OrchestrationTabProps> = ({
         newNode.data = { method: 'GET', url: '', headers: {}, body: {} };
         break;
       case 'condition':
-        newNode.data = { condition: '', condition_type: 'contains', true_label: '是', false_label: '否' };
+        newNode.data = { condition: '', condition_type: 'contains', true_label: t('orchestration.conditionTrueLabel'), false_label: t('orchestration.conditionFalseLabel') };
       break;
       case 'end':
         newNode.data = { summary: false };
@@ -121,7 +123,7 @@ const OrchestrationTab: React.FC<OrchestrationTabProps> = ({
     }
 
     setNodes((nds) => [...nds, newNode]);
-  }, []);
+  }, [t]);
 
   const handleNodesChange = useCallback((newNodes: Node[]) => {
     setNodes(newNodes);
@@ -149,15 +151,15 @@ const OrchestrationTab: React.FC<OrchestrationTabProps> = ({
         }}
       >
         <Space>
-          <Text style={{ fontSize: 13 }}>启用编排:</Text>
+          <Text style={{ fontSize: 13 }}>{t('orchestration.enableOrchestration')}</Text>
           <Switch checked={enabled} onChange={setEnabled} size="small" />
         </Space>
         <Space size={8}>
           <Button size="small" icon={<ClearOutlined />} onClick={handleClear}>
-            清空
+            {t('orchestration.clear')}
           </Button>
           <Button size="small" type="primary" icon={<SaveOutlined />} onClick={handleSave} loading={saving}>
-            保存
+            {t('orchestration.save')}
           </Button>
         </Space>
       </div>
