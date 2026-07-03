@@ -22,7 +22,7 @@ router = APIRouter()
 
 处理角色和权限相关的API请求
 """
-from app.models import UserRole, UserPermission, UserRoleAssignment, UserRolePermission
+from app.models import User, UserRole, UserPermission, UserRoleAssignment, UserRolePermission
 from app.extensions import db
 from app.services.user_permission_service import UserPermissionService
 
@@ -36,6 +36,8 @@ def get_user_roles():
         return {
             'user_roles': [role.to_dict() for role in user_roles]
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"获取用户角色列表失败: {str(e)}")
         raise HTTPException(status_code=500, detail={'error': '获取用户角色列表失败'})
@@ -68,6 +70,8 @@ async def create_user_role(request: Request):
             'user_role': user_role.to_dict()
         }, status_code=201)
 
+    except HTTPException:
+        raise
     except Exception as e:
         db.session.rollback()
         logger.error(f"创建用户角色失败: {str(e)}")
@@ -91,6 +95,8 @@ def get_user_permissions():
             'permissions': grouped_permissions,
             'all_permissions': [perm.to_dict() for perm in permissions]
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"获取用户权限列表失败: {str(e)}")
         raise HTTPException(status_code=500, detail={'error': '获取用户权限列表失败'})
@@ -111,6 +117,8 @@ def get_user_role_permissions(user_role_id):
             'user_role': user_role.to_dict(),
             'permissions': [perm.to_dict() for perm in role_permissions]
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"获取用户角色权限失败: {str(e)}")
         raise HTTPException(status_code=500, detail={'error': '获取用户角色权限失败'})
@@ -146,6 +154,8 @@ async def assign_permissions_to_user_role(user_role_id, request: Request):
 
         return {'message': '权限分配成功'}
 
+    except HTTPException:
+        raise
     except Exception as e:
         db.session.rollback()
         logger.error(f"分配权限失败: {str(e)}")
@@ -160,6 +170,8 @@ def get_user_assigned_roles(user_id):
             'user_id': user_id,
             'roles': user_roles
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"获取用户角色失败: {str(e)}")
         raise HTTPException(status_code=500, detail={'error': '获取用户角色失败'})
@@ -174,7 +186,6 @@ async def assign_role_to_user(user_id, request: Request, current_user=Depends(ge
         user_role_id = data['user_role_id']
 
         # 获取目标用户
-        from app.models import User
         target_user = User.query.get(user_id)
         if not target_user:
             raise HTTPException(status_code=404, detail={'error': '用户不存在'})
@@ -189,6 +200,8 @@ async def assign_role_to_user(user_id, request: Request, current_user=Depends(ge
         else:
             raise HTTPException(status_code=500, detail={'error': '角色分配失败'})
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"分配角色失败: {str(e)}")
         raise HTTPException(status_code=500, detail={'error': '分配角色失败'})
@@ -212,6 +225,8 @@ def remove_role_from_user(user_id, user_role_id, current_user=Depends(get_curren
         else:
             raise HTTPException(status_code=500, detail={'error': '角色移除失败'})
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"移除角色失败: {str(e)}")
         raise HTTPException(status_code=500, detail={'error': '移除角色失败'})
@@ -232,6 +247,8 @@ def get_user_all_permissions(user_id):
             'permissions': permissions,
             'menu_permissions': menu_permissions
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"获取用户权限失败: {str(e)}")
         raise HTTPException(status_code=500, detail={'error': '获取用户权限失败'})
@@ -251,6 +268,8 @@ def get_current_user_permissions(current_user=Depends(get_current_user)):
             'menu_permissions': menu_permissions,
             'is_admin': current_user.is_admin
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"获取当前用户权限失败: {str(e)}")
         raise HTTPException(status_code=500, detail={'error': '获取当前用户权限失败'})
@@ -264,6 +283,8 @@ def initialize_permissions():
         UserPermissionService.initialize_default_role_permissions()
 
         return {'message': '权限系统初始化成功'}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"初始化权限系统失败: {str(e)}")
         raise HTTPException(status_code=500, detail={'error': '初始化权限系统失败'})
