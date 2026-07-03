@@ -92,7 +92,15 @@ class ConnectionManager:
         """
         with self._lock:
             if request_id not in self._active_connections:
-                logger.info(f"[连接管理器] 连接不存在: {request_id}")
+                # 取消先于注册到达（如多轮工具调用间隙点了停止）。不能静默丢弃：
+                # 设置 pending tombstone，让 worker 下一次 should_interrupt()
+                # 轮询时发现取消。下次 register_connection 会用新 Event 覆盖，
+                # cleanup_old_connections 会回收孤立标志。
+                # 详见 docs/agents/stream-cancel-architecture.md §2.3。
+                if request_id not in self._thread_interrupt_flags:
+                    self._thread_interrupt_flags[request_id] = threading.Event()
+                self._thread_interrupt_flags[request_id].set()
+                logger.info(f"[连接管理器] 连接不存在，已设置pending中断标志: {request_id}")
                 return True
 
             connection_info = self._active_connections[request_id]

@@ -13,6 +13,7 @@ Flask → FastAPI 变更:
 
 合并自: base.py, messages.py, stream.py, autonomous.py, plans.py, utils.py
 """
+import asyncio
 import logging
 import queue
 import threading
@@ -673,35 +674,41 @@ async def cancel_streaming_response(task_id: str, conversation_id: str, request:
     - agent_id: 智能体ID，如果提供则只取消该智能体的流式任务
     """
     try:
-        from app.services.conversation.stream_handler import cancel_streaming_task
-
         data = await request.json() if await request.body() else {}
         agent_id = data.get('agent_id')
 
-        success = cancel_streaming_task(task_id, conversation_id, agent_id)
+        def _cancel_blocking():
+            # 整段都是阻塞操作（同步ORM、外部平台停止API、stop_task 的
+            # future.result(timeout=5)），必须放到线程池，否则会拖垮事件循环
+            from app.services.conversation.stream_handler import cancel_streaming_task
 
-        # 如果是会话层面的"停止"（未指定agent_id），并且存在自主任务，顺带停止
-        if success and not agent_id:
-            try:
-                active_autonomous_tasks = AutonomousTask.query.filter_by(
-                    conversation_id=conversation_id,
-                    status='active'
-                ).all()
+            ok = cancel_streaming_task(task_id, conversation_id, agent_id)
 
-                if active_autonomous_tasks:
-                    from app.services.scheduler.task_adapter import stop_task
-                    for auto_task in active_autonomous_tasks:
-                        try:
-                            stop_task(task_id, conversation_id, auto_task.type)
-                            logger.info(
-                                f"已在取消流式响应时停止自主任务: type={auto_task.type}, "
-                                f"conversation_id={conversation_id}"
-                            )
-                        except Exception as e:
-                            logger.error(f"停止自主任务 {auto_task.type} 失败: {str(e)}")
+            # 如果是会话层面的"停止"（未指定agent_id），并且存在自主任务，顺带停止
+            if ok and not agent_id:
+                try:
+                    active_autonomous_tasks = AutonomousTask.query.filter_by(
+                        conversation_id=conversation_id,
+                        status='active'
+                    ).all()
 
-            except Exception as stop_err:
-                logger.error(f"取消流式响应时停止自主任务失败: {str(stop_err)}")
+                    if active_autonomous_tasks:
+                        from app.services.scheduler.task_adapter import stop_task
+                        for auto_task in active_autonomous_tasks:
+                            try:
+                                stop_task(task_id, conversation_id, auto_task.type)
+                                logger.info(
+                                    f"已在取消流式响应时停止自主任务: type={auto_task.type}, "
+                                    f"conversation_id={conversation_id}"
+                                )
+                            except Exception as e:
+                                logger.error(f"停止自主任务 {auto_task.type} 失败: {str(e)}")
+
+                except Exception as stop_err:
+                    logger.error(f"取消流式响应时停止自主任务失败: {str(stop_err)}")
+            return ok
+
+        success = await asyncio.to_thread(_cancel_blocking)
 
         if success:
             if agent_id:

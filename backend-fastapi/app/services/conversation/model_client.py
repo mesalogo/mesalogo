@@ -74,9 +74,12 @@ class AsyncStreamRunner:
     在独立线程中运行 asyncio 事件循环，支持通过 task.cancel() 实现硬取消
     """
     
-    def __init__(self, request_id: str, http_read_timeout: int = 120):
+    def __init__(self, request_id: str, http_read_timeout: int = 120,
+                 poll_interval: float = 2.0):
         self.request_id = request_id
         self.http_read_timeout = http_read_timeout
+        # 队列轮询间隔：决定取消信号的响应速度（默认2s，测试可调小）
+        self.poll_interval = poll_interval
         self.loop = None
         self.task = None
         self.line_queue = queue.Queue()  # 用于传递流式数据
@@ -157,13 +160,13 @@ class AsyncStreamRunner:
     def iter_lines(self):
         """迭代流式数据（同步接口）"""
         consecutive_timeouts = 0
-        # 使用构造时传入的超时配置计算最大轮询次数（每次2秒）
-        max_consecutive_timeouts = int(self.http_read_timeout) // 2
+        # 使用构造时传入的超时配置计算最大轮询次数
+        max_consecutive_timeouts = max(1, int(self.http_read_timeout / self.poll_interval))
         
         while True:
             try:
-                # 使用较短的超时（2秒），以便快速响应取消请求
-                msg_type, data = self.line_queue.get(timeout=2)
+                # 使用较短的轮询超时，以便快速响应取消请求
+                msg_type, data = self.line_queue.get(timeout=self.poll_interval)
                 consecutive_timeouts = 0  # 重置超时计数
                 
                 if msg_type == 'line':
@@ -182,10 +185,14 @@ class AsyncStreamRunner:
                 if connection_manager.is_cancelled(self.request_id) or connection_manager.should_interrupt(self.request_id):
                     logger.info(f"[异步流式] 检测到取消信号，退出迭代: {self.request_id}")
                     break
-                # 达到最大超时次数，退出
+                # 达到最大超时次数：必须抛错而不是静默 break，否则用户看到的是
+                # 一段"正常结束"的截断回复，毫无错误提示
                 if consecutive_timeouts >= max_consecutive_timeouts:
-                    logger.warning(f"[异步流式] 等待数据超时（{consecutive_timeouts * 2}秒）: {self.request_id}")
-                    break
+                    elapsed = consecutive_timeouts * self.poll_interval
+                    logger.warning(f"[异步流式] 等待数据超时（{elapsed:.0f}秒）: {self.request_id}")
+                    raise TimeoutError(
+                        f"等待流式数据超时（{elapsed:.0f}秒），响应可能被截断"
+                    ) from None
                 # 继续等待下一个数据
 
 def cancel_request(task_id: int, conversation_id: int, agent_id: str = None) -> bool:

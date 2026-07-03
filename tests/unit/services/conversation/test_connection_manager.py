@@ -84,6 +84,38 @@ def test_force_close_missing_connection_is_safe():
     assert m.force_close_connection("ghost") is True
 
 
+def test_cancel_before_register_leaves_pending_tombstone():
+    # Repro: user clicks stop in the gap between two streaming rounds (e.g.
+    # during tool execution) when no connection is registered. The cancel must
+    # NOT be lost: it has to leave a set tombstone so the worker's next
+    # check_for_cancel_signal() (which polls should_interrupt) aborts the round.
+    m = _mgr()
+    assert m.force_close_connection("t:c:a") is True
+
+    assert m.should_interrupt("t:c:a") is True
+
+
+def test_pending_tombstone_cleared_by_next_register():
+    # A brand-new request reusing the same request_id must start clean,
+    # same semantics as test_reregister_same_id_resets_flag.
+    m = _mgr()
+    m.force_close_connection("t:c:a")
+    assert m.should_interrupt("t:c:a") is True
+
+    _register_live(m, "t:c:a")
+    assert m.should_interrupt("t:c:a") is False
+    assert m.is_cancelled("t:c:a") is False
+
+
+def test_pending_tombstone_reaped_by_cleanup():
+    m = _mgr()
+    m.force_close_connection("t:c:a")
+    assert "t:c:a" in m._thread_interrupt_flags
+
+    m.cleanup_old_connections(max_age_seconds=3600)
+    assert "t:c:a" not in m._thread_interrupt_flags
+
+
 def test_force_close_by_prefix_closes_only_matching():
     m = _mgr()
     _register_live(m, "1:2:a")

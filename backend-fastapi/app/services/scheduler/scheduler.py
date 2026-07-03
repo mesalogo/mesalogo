@@ -161,6 +161,11 @@ class TaskScheduler:
         
         if task and task.cancel_event:
             task.cancel_event.set()
+            # 执行循环的头部是 `await task.pause_event.wait()` 再查 cancel_event。
+            # 停止一个 PAUSED 任务时必须同时唤醒 pause 等待者，否则协程永远
+            # 阻塞在 wait() 上，成为僵尸（TODO.md 失败模式 #1 的变体）。
+            if task.pause_event:
+                task.pause_event.set()
             task.state = TaskState.STOPPED
             # 同时取消正在进行的流
             from .executor import cancel_task_stream

@@ -166,6 +166,63 @@ def test_responses_stream_stops_on_queue_cancel_signal(monkeypatch):
     assert "SHOULD-NOT-APPEAR" not in "".join(cb.chunks)
 
 
+def test_cancel_check_does_not_reorder_pending_queue_messages(monkeypatch):
+    # check_for_cancel_signal must NOT pop-and-requeue data messages: the same
+    # queue is concurrently drained by queue_to_sse, so a popped message put
+    # back lands at the TAIL and the frontend receives chunks out of order.
+    monkeypatch.setattr(
+        stream_handler.connection_manager, "is_cancelled", lambda rid: False
+    )
+    monkeypatch.setattr(
+        stream_handler.connection_manager, "should_interrupt", lambda rid: False
+    )
+
+    cb = _QueueCallback()
+    # simulate SSE consumer lag: two data messages already pending
+    cb.result_queue.put("PENDING-1")
+    cb.result_queue.put("PENDING-2")
+
+    # single delta line -> odd number of cancel checks; with the old
+    # pop-and-requeue peek the 2-element queue ends up rotated (swapped)
+    lines = [
+        _sse({"type": "response.output_text.delta", "delta": "a"}),
+    ]
+    stream_handler.handle_streaming_response(
+        _FakeStreamResponse(lines), cb, original_messages=[], api_config=_api_config_with_ids()
+    )
+
+    drained = []
+    while not cb.result_queue.empty():
+        drained.append(cb.result_queue.get_nowait())
+    # callback pushes nothing itself (chunks list only), so the queue must
+    # still hold exactly the two pending messages in original order
+    assert drained == ["PENDING-1", "PENDING-2"]
+
+
+def test_queue_cancel_signal_detected_behind_pending_messages(monkeypatch):
+    # The cancel dict may sit BEHIND pending data messages. The check must
+    # still find it (scan, not head-only peek) and abort the stream.
+    monkeypatch.setattr(
+        stream_handler.connection_manager, "is_cancelled", lambda rid: False
+    )
+    monkeypatch.setattr(
+        stream_handler.connection_manager, "should_interrupt", lambda rid: False
+    )
+
+    cb = _QueueCallback()
+    cb.result_queue.put("PENDING-DATA")
+    cb.result_queue.put({"type": "cancel", "agent_id": "agent-7"})
+
+    lines = [
+        _sse({"type": "response.output_text.delta", "delta": "SHOULD-NOT-APPEAR"}),
+    ]
+    result = stream_handler.handle_streaming_response(
+        _FakeStreamResponse(lines), cb, original_messages=[], api_config=_api_config_with_ids()
+    )
+    assert result == ""
+    assert "SHOULD-NOT-APPEAR" not in "".join(cb.chunks)
+
+
 def test_responses_stream_completes_when_not_cancelled(monkeypatch):
     # 对照组：取消源都为 False 时，正常流必须跑完并累积全部文本。
     monkeypatch.setattr(

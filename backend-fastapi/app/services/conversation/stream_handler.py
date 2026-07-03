@@ -76,14 +76,39 @@ def create_sse_response(generator_function: Callable) -> StreamingResponse:
         }
     )
 
-def queue_to_sse(result_queue: queue.Queue) -> Generator[str, None, None]:
-    """将队列内容转换为SSE事件流"""
+def queue_to_sse(result_queue: queue.Queue,
+                 poll_interval_seconds: float = 15.0,
+                 max_idle_seconds: float = 3600.0) -> Generator[str, None, None]:
+    """将队列内容转换为SSE事件流
+
+    带超时轮询而非无限阻塞 get()：生产者线程若异常死亡且未放入 None 哨兵，
+    无限阻塞会让 SSE 生成器永久挂起（前端转圈永不结束，失败模式 #2 变体）。
+    空闲时发送 SSE 注释行（": keepalive"）——前端按 "data: " 前缀解析，
+    注释行被忽略，同时能防止中间代理断开空闲连接。
+    空闲超过 max_idle_seconds 后发送 done 事件并结束流。
+    """
     # 导入格式化函数
     from app.services.conversation.message_formater import format_agent_cancel_done, serialize_message
     from app.models import Agent, Role
 
+    idle_seconds = 0.0
     while True:
-        message = result_queue.get()
+        try:
+            message = result_queue.get(timeout=poll_interval_seconds)
+            idle_seconds = 0.0
+        except queue.Empty:
+            idle_seconds += poll_interval_seconds
+            if idle_seconds >= max_idle_seconds:
+                logger.warning(
+                    f"queue_to_sse 空闲超过 {max_idle_seconds}s（生产者可能已死亡），发送done并结束流"
+                )
+                done_msg = {"content": None, "meta": {"connectionStatus": "done"}}
+                yield f"data: {serialize_message(done_msg)}\n\n"
+                yield "data: \n\n"
+                break
+            yield ": keepalive\n\n"
+            continue
+
         if message is None:  # 结束信号
             # 使用空行或结束事件表示传输结束
             yield "data: \n\n"
@@ -797,19 +822,24 @@ def handle_streaming_response(response, callback, original_messages=None, api_co
                 logger.info(f"[LLM流式响应] 检测到取消信号: {_request_id}")
                 raise StreamCancelledException(_request_id, _agent_id)
 
-        # 检查队列中的取消信号
+        # 检查队列中的取消信号。
+        # 必须非破坏性扫描：同一队列由 queue_to_sse 并发消费，pop-and-requeue
+        # 会把已排队的数据消息挪到队尾，导致前端乱序输出；扫描全队列还能发现
+        # 排在数据消息后面的取消信号。取消消息留在队列里，由 queue_to_sse
+        # 消费并向前端发送 cancel-done 事件。
         if hasattr(callback, 'result_queue') and callback.result_queue:
-            try:
-                message = callback.result_queue.get_nowait()
-                if isinstance(message, dict) and message.get('type') == 'cancel':
-                    is_cancelled = True
-                    cancelled_agent_id = message.get('agent_id')
-                    logger.info(f"[LLM流式响应] 队列检测到取消信号: {message}")
-                    raise StreamCancelledException(_request_id or "unknown", cancelled_agent_id)
-                else:
-                    callback.result_queue.put(message)
-            except queue.Empty:
-                pass
+            rq = callback.result_queue
+            with rq.mutex:
+                cancel_msg = next(
+                    (m for m in rq.queue
+                     if isinstance(m, dict) and m.get('type') == 'cancel'),
+                    None,
+                )
+            if cancel_msg is not None:
+                is_cancelled = True
+                cancelled_agent_id = cancel_msg.get('agent_id')
+                logger.info(f"[LLM流式响应] 队列检测到取消信号: {cancel_msg}")
+                raise StreamCancelledException(_request_id or "unknown", cancelled_agent_id)
         return False
 
     # 处理流式响应 - 仅收集内容，不在流中执行工具调用

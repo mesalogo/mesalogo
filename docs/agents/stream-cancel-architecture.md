@@ -93,6 +93,71 @@ These carried no behavior on any live path and were removed as part of the
 `force_close_connections_by_prefix()` instead of re-implementing the same
 prefix sweep while iterating `_active_connections` **without the lock**.
 
+## 3.5 Pending tombstone: cancel arriving before/without a registered connection (2026-07-03)
+
+`force_close_connection()` on an id with **no** active connection used to be a
+pure no-op ("return True, avoid stuck frontend"). That silently dropped the
+cancel when the user pressed stop in a gap where no connection record existed:
+between tool-call rounds after a prior teardown, after the periodic reaper had
+GC'd everything, or when re-pressing stop on a zombie stream. Now it sets a
+**pending tombstone**: the interrupt flag is created and set even though there
+is no connection dict entry, so the worker's next
+`should_interrupt()` poll (`check_for_cancel_signal`, `iter_lines` 2s poll)
+still observes the cancel.
+
+Bounds: the next `register_connection()` on the same id replaces the flag
+(same "new run starts clean" semantics as §2.3 / the reregister test), and
+`cleanup_old_connections()` reaps orphaned set flags. Known residual window:
+a cancel landing in the sub-100ms gap between `AsyncStreamRunner.start()` and
+its `register_connection()` is still wiped by that register; closing it would
+require distinguishing "pending cancel" from "stale tombstone before a
+legitimate new run", which the current data model cannot do.
+
+Guard tests: `test_cancel_before_register_leaves_pending_tombstone`,
+`test_pending_tombstone_cleared_by_next_register`,
+`test_pending_tombstone_reaped_by_cleanup`.
+
+## 3.6 Queue cancel check must be a non-destructive scan (2026-07-03)
+
+`check_for_cancel_signal()` used to `get_nowait()` one message off
+`callback.result_queue` and `put()` it back when it was not a cancel dict.
+Two bugs: (a) the same queue is concurrently drained by `queue_to_sse`, and a
+popped-then-requeued data message lands at the **tail**, reordering SSE output
+towards the frontend whenever the consumer lags; (b) a cancel dict sitting
+*behind* pending data messages was invisible to a head-only peek. The check
+now scans the whole deque under `queue.mutex` without consuming anything; the
+cancel message itself stays queued for `queue_to_sse`, which emits the
+cancel-done events to the frontend.
+
+Guard tests: `test_cancel_check_does_not_reorder_pending_queue_messages`,
+`test_queue_cancel_signal_detected_behind_pending_messages`.
+
+## 3.7 Timeout dead-ends fixed (2026-07-03)
+
+Two silent-failure paths were converted into loud ones:
+
+- **`AsyncStreamRunner.iter_lines` read-timeout**: after exhausting
+  `http_read_timeout` worth of empty polls it used to `break`, so the user got
+  a "normally finished" truncated reply with no error. It now raises
+  `TimeoutError` (`from None`), which `handle_streaming_response` catches in
+  its `except socket.timeout` branch (Py3.10+: `socket.timeout` **is**
+  `TimeoutError`) and surfaces a `[警告] 模型响应超时…` callback to the user.
+  The poll interval is now a constructor arg (`poll_interval`, default 2.0s)
+  so tests can run at ms scale.
+- **`queue_to_sse` blocking `get()`**: if the producer thread died without
+  pushing the `None` sentinel, the SSE generator hung forever (failure #2
+  variant). It now polls with `poll_interval_seconds` (default 15s), emits SSE
+  comment keepalives (`: keepalive`, ignored by the frontend's `data: ` parser,
+  also prevents proxy idle disconnects), and after `max_idle_seconds` (default
+  1h) emits a `connectionStatus: done` event and terminates.
+
+Guard tests: `tests/unit/services/conversation/test_stream_timeouts.py`.
+
+The cancel-stream route (`conversations.py::cancel_streaming_response`) also
+moved its blocking work (sync ORM query, external-platform stop API,
+`stop_task`'s `future.result(timeout=5)`) into `asyncio.to_thread` so a stop
+click cannot stall the event loop.
+
 ## 4. Periodic reaper (tombstone GC)
 
 `_thread_interrupt_flags` entries are intentionally kept past connection
