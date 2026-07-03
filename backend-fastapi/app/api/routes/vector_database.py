@@ -518,8 +518,9 @@ class MilvusTestOperations(VectorDBTestOperations):
         """断开Milvus连接"""
         try:
             if self.conn_alias:
+                from pymilvus import connections
                 connections.disconnect(self.conn_alias)
-        except:
+        except Exception:
             pass
 
     def create_test_container(self, dimension: int) -> Tuple[bool, str]:
@@ -1128,6 +1129,9 @@ TiDB向量数据库API路由
 from typing import Dict, Any
 
 from app.services.vector_db_tidb.tidb_config import tidb_config_manager, TiDBConfig
+from app.services.vector_db_tidb.tidb_connection import tidb_connection_manager
+from app.services.vector_db_tidb.table_manager import vector_table_manager
+from app.services.vector_db_tidb.vector_operations import vector_operations
 from app.services.vector_db_tidb.models import VectorCollection, VectorDistanceMetric, VectorDataType
 from app.models import ModelConfig
 

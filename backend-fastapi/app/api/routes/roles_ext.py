@@ -25,6 +25,8 @@ router = APIRouter()
 import requests
 import json
 
+from app.services.conversation.adapters.fastgpt_adapter import FastGPTAdapter
+
 import logging
 logger = logging.getLogger(__name__)
 

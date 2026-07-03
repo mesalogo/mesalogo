@@ -557,6 +557,9 @@ async def create_checkout_session(request: Request, current_user=Depends(get_cur
         raise HTTPException(status_code=400, detail={'error': '该计划不支持付费订阅'})
     
     try:
+        # stripe SDK 是可选依赖，只能函数内导入：模块级导入会让未装 stripe 的
+        # 部署在启动时崩溃（下方 except ImportError 即为此兜底）
+        import stripe
         stripe.api_key = config.secret_key_encrypted
         
         # 获取前端回调 URL
@@ -625,6 +628,7 @@ def get_checkout_status(session_id):
         raise HTTPException(status_code=400, detail={'error': 'Stripe 配置不完整'})
     
     try:
+        import stripe
         stripe.api_key = config.secret_key_encrypted
         
         session = stripe.checkout.Session.retrieve(session_id)
@@ -705,6 +709,7 @@ async def stripe_webhook(request: Request):
         raise HTTPException(status_code=400, detail={'error': 'Stripe not configured'})
     
     try:
+        import stripe
         stripe.api_key = config.secret_key_encrypted
         
         # 验证 Webhook 签名

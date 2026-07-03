@@ -22,7 +22,7 @@ router = APIRouter()
 
 处理与用户管理相关的所有API请求
 """
-from app.models import User
+from app.models import ActionSpace, ActionTask, Capability, Knowledge, Role, RuleSet, User
 from app.extensions import db
 # werkzeug.security 已移除 — 密码操作通过 User.set_password() / check_password()
 from app.services.subscription_service import SubscriptionService
@@ -346,8 +346,6 @@ async def update_user(user_id, request: Request, current_user=Depends(get_curren
 
 def get_user_resources_stats(user_id):
     """获取用户资源统计"""
-    from app.models import Role, Knowledge, Capability, ActionSpace, RuleSet, ActionTask
-
     stats = {
         'roles': Role.query.filter_by(created_by=user_id).count(),
         'knowledges': Knowledge.query.filter_by(created_by=user_id).count(),
@@ -629,13 +627,13 @@ async def toggle_user_status(user_id, request: Request, current_user=Depends(get
         if not user:
             raise HTTPException(status_code=404, detail={'error': '用户不存在'})
 
-        # 不能禁用根用户
-        if user.username == 'admin' and not data.get('is_active', True):
-            raise HTTPException(status_code=400, detail={'error': '不能禁用根用户'})
-
         data = await request.json()
         if not data or 'is_active' not in data:
             raise HTTPException(status_code=400, detail={'error': '无效的请求数据'})
+
+        # 不能禁用根用户
+        if user.username == 'admin' and not data.get('is_active', True):
+            raise HTTPException(status_code=400, detail={'error': '不能禁用根用户'})
 
         user.is_active = data['is_active']
         user.set_profile_field('updated_by', current_user.id)

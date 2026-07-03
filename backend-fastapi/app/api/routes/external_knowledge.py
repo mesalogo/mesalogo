@@ -32,6 +32,7 @@ from app.models import (
     ExternalKnowledgeQueryLog, Role, db
 )
 from app.services.external_knowledge import AdapterFactory, ExternalKnowledgeService
+from app.services.knowledge_base.knowledge_capability_service import knowledge_capability_service
 from app.services.user_permission_service import UserPermissionService
 from sqlalchemy.exc import IntegrityError
 import time

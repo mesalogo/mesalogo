@@ -29,6 +29,7 @@ router = APIRouter()
 
 import os
 import json
+import traceback
 import uuid
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError

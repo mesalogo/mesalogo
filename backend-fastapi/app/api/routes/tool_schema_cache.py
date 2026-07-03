@@ -165,8 +165,5 @@ def refresh_all_tools():
             "message": f"刷新所有工具模式缓存失败: {str(e)}"
         })
 
-def register_blueprint(app):
-    """注册工具模式缓存API蓝图到Flask应用"""
-    app.register_blueprint(bp)
-    logger.info("已注册工具模式缓存API路由")
+
 

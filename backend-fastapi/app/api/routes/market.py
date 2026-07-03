@@ -25,6 +25,7 @@ router = APIRouter()
 from app.models import MarketApp, ActionSpace, ActionSpaceApp, db
 from app.services.vnc_proxy import vnc_proxy
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.attributes import flag_modified
 from datetime import datetime
 import logging
 

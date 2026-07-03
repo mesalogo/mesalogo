@@ -23,9 +23,15 @@ router = APIRouter()
 
 import os
 import json
+import shutil
+import traceback
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
+
+from app.services.job_queue import job_manager
+from app.services.knowledge_base.knowledge_capability_service import knowledge_capability_service
+from app.services.vector_db_milvus import get_collection_name, get_vector_db_service
 
 from app.models import Knowledge, RoleKnowledge, SystemSetting, KnowledgeDocument, KnowledgeFileConversion, KnowledgeFileChunk, KnowledgeFileChunking, KnowledgeFileEmbedding, ChunkConfig, db
 from app.services.user_permission_service import UserPermissionService

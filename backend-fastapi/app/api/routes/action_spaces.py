@@ -26,7 +26,7 @@ from sqlalchemy.exc import IntegrityError
 from app.models import (
     ActionSpace, ActionSpaceRole, ActionSpaceTag, ActionSpaceRuleSet, 
     ActionSpaceEnvironmentVariable, ActionSpaceObserver,
-    Role, Tag, RuleSet, RoleVariable, db
+    ModelConfig, Role, Tag, RuleSet, RoleVariable, db
 )
 from app.services.user_permission_service import UserPermissionService
 from app.utils.uuid_utils import UUIDValidator

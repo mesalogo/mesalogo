@@ -7,7 +7,7 @@ import asyncio
 import os
 from typing import Dict, Any
 
-from app.models import KnowledgeFileChunk, KnowledgeDocument, KnowledgeFileConversion, Job, db
+from app.models import Knowledge, KnowledgeFileChunk, KnowledgeDocument, KnowledgeFileConversion, Job, db
 from app.services.knowledge_base.knowledge_vectorizer import KnowledgeVectorizer
 
 logger = logging.getLogger(__name__)
