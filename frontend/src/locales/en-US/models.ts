@@ -14,6 +14,7 @@ export default {
   'modelConfig.deleteModel': 'Delete Model Configuration',
   'modelConfig.testModel': 'Test Model',
   'modelConfig.setDefaults': 'Set Default Models',
+  'modelConfig.paginationTotal': '{{from}}-{{to}} of {{total}} models',
   'modelConfig.modelName': 'Model Name',
   'modelConfig.provider': 'Provider',
   'modelConfig.modelId': 'Model ID',

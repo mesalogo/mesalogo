@@ -206,6 +206,7 @@ export default {
   'batchUpload.selectFiles': '选择文件或文件夹',
   'batchUpload.dragHint': '点击或拖拽文件到此区域上传',
   'batchUpload.dragHintDesc': '支持单个或批量文件上传。',
+  'batchUpload.supportedFileTypes': '支持所有文件类型。推荐类型：{{types}}',
   'batchUpload.selectFolder': '选择文件夹上传',
   'batchUpload.queueTitle': '上传队列',
   'batchUpload.queueTotal': '共 {{count}} 个文件',

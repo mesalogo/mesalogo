@@ -23,7 +23,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import api from '../../../services/api/axios';
 import { useAuth } from '../../../contexts/AuthContext';
-import { canEditUserRole } from '../../../constants/permissions';
+import { canEditUserRole, translateRoleName, translatePermissionName } from '../../../constants/permissions';
 
 const { Text } = Typography;
 
@@ -117,7 +117,7 @@ const UserPermissions = ({ visible, user, onCancel }: any) => {
       render: (text, record) => (
         <Space>
           <SafetyCertificateOutlined />
-          <span>{text}</span>
+          <span>{translateRoleName(record.name, text)}</span>
           {record.is_system && <Tag color="blue">{t('userPermissions.systemTag')}</Tag>}
         </Space>
       )
@@ -183,7 +183,7 @@ const UserPermissions = ({ visible, user, onCancel }: any) => {
                   disabled={true} // 权限通过角色管理，不直接分配
                 >
                   <Space>
-                    <Text>{permission.display_name}</Text>
+                    <Text>{translatePermissionName(permission.name, permission.display_name)}</Text>
                     {hasPermission && <CheckCircleOutlined style={{ color: '#52c41a' }} />}
                   </Space>
                 </Checkbox>

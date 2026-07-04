@@ -14,6 +14,7 @@ export default {
   'memory.graphVisualization': '图谱可视化',
   'memory.graphNotEnabled': '图谱增强未启用',
   'memory.graphNotEnabledDesc': '请先在图谱增强设置中启用图谱增强功能，然后配置记忆分区策略。',
+  'memory.graphNotEnabledDetail': '请先在图谱增强设置中启用 Graphiti 并配置分区策略和消息同步策略。',
   'memory.goToSettings': '前往设置',
   'memory.loadConfigFailed': '加载分区配置失败',
 

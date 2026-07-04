@@ -174,12 +174,12 @@ export default function ConversationHeader({
                       {' '}- {discussionAgentInfo.name}
                       {discussionAgentInfo.turnPrompt
                         ? ` ${discussionAgentInfo.turnPrompt}`
-                        : ` 正在思考 (${discussionAgentInfo.responseOrder}/${discussionAgentInfo.totalAgents})`}
+                        : ` ${t('autoTask.agentThinking', { current: discussionAgentInfo.responseOrder, total: discussionAgentInfo.totalAgents })}`}
                     </span>
                   ) : (
                     <span>
                       {' '}- {discussionAgentInfo.name}
-                      {discussionAgentInfo.turnPrompt ? ` ${discussionAgentInfo.turnPrompt}` : ` 正在总结讨论结果`}
+                      {discussionAgentInfo.turnPrompt ? ` ${discussionAgentInfo.turnPrompt}` : ` ${t('autoTask.agentSummarizing')}`}
                     </span>
                   )}
                 </>

@@ -14,6 +14,7 @@ export default {
   'modelConfig.deleteModel': '删除模型配置',
   'modelConfig.testModel': '测试模型',
   'modelConfig.setDefaults': '设置默认模型',
+  'modelConfig.paginationTotal': '第 {{from}}-{{to}} 项，共 {{total}} 个模型',
   'modelConfig.modelName': '模型名称',
   'modelConfig.provider': '提供商',
   'modelConfig.modelId': '模型ID',

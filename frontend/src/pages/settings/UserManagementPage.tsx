@@ -36,6 +36,7 @@ import UserPermissions from './components/UserPermissions';
 import DeleteUserModal from './components/DeleteUserModal';
 import UserRoleManagement from './components/UserRoleManagement';
 import { userAPI } from '../../services/api/users';
+import { translateRoleName } from '../../constants/permissions';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -302,7 +303,10 @@ const UserManagementPage = () => {
         // 获取角色信息
         const role = roles[0];
         const roleName = role.user_role?.name;
-        const roleDisplayName = role.user_role?.display_name || role.user_role?.name || t('userManagement.unknownRole');
+        const roleDisplayName = translateRoleName(
+          roleName,
+          role.user_role?.display_name || role.user_role?.name || t('userManagement.unknownRole')
+        );
 
         // 根据角色类型设置不同的颜色
         let color = 'blue';

@@ -301,6 +301,8 @@ export default {
   'autoTask.tempMode': '临时会话模式',
   'autoTask.progressTitle': '自主任务进行中',
   'autoTask.roundProgress': '第 {{current}}/{{total}} 轮',
+  'autoTask.agentThinking': '正在思考 ({{current}}/{{total}})',
+  'autoTask.agentSummarizing': '正在总结讨论结果',
   // 自主任务Modal翻译
   'autoTask.modal.title': '启动智能体自主行动',
   'autoTask.modal.taskType': '行动类型',

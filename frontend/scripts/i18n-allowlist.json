@@ -1,0 +1,32 @@
+{
+  "_comment": "String literals that legitimately contain CJK but are NOT user-visible i18n violations. Each entry is matched by exact literal text. Add new entries only with a one-line justification in the matching PR description.",
+  "_categories": {
+    "lookupKey": "Matches a backend-provided category/enum value used as an object key for icon/color lookups. Translating would break the lookup unless the backend value changes too.",
+    "nativeLanguageName": "A language's own name shown in its own script inside a language switcher (i18n convention: language names are not translated).",
+    "testFixture": "Test-only fixture data (setupTests.js, *.test.*) that never renders in the real app."
+  },
+  "lookupKey": [
+    "开发工具",
+    "建模工具",
+    "数据分析",
+    "地理信息",
+    "地理工具",
+    "系统工具",
+    "系统管理",
+    "文档管理",
+    "数据库",
+    "网络工具",
+    "安全工具",
+    "移动应用",
+    "未分类"
+  ],
+  "nativeLanguageName": [
+    "中文"
+  ],
+  "testFixture": [
+    "哲学家",
+    "科学家",
+    "历史学家",
+    "艺术家"
+  ]
+}

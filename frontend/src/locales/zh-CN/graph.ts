@@ -7,6 +7,9 @@
 export default {
 
   // ----- 图增强设置页面翻译 -----
+  'graphEnhancement.title': '图谱增强',
+  'graphEnhancement.tab.longTermMemory': '长期记忆',
+  'graphEnhancement.tab.knowledgeGraph': '知识库图谱',
   'graphEnhancement.subtitle': '配置图谱增强功能，提升知识库检索和会话的准确性与上下文理解能力',
   'graphEnhancement.enableDesc': '图谱增强可以通过知识图谱技术提升检索准确性和上下文理解能力，作用于知识库与会话两套系统',
   'graphEnhancement.configFirst': '请配置完成后点击保存按钮来启用图谱增强',

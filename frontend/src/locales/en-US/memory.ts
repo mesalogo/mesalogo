@@ -14,6 +14,7 @@ export default {
   'memory.graphVisualization': 'Graph Visualization',
   'memory.graphNotEnabled': 'Graph Enhancement Not Enabled',
   'memory.graphNotEnabledDesc': 'Please enable graph enhancement in graph enhancement settings first, then configure memory partition strategy.',
+  'memory.graphNotEnabledDetail': 'Please enable Graphiti in graph enhancement settings first, and configure the partition strategy and message sync strategy.',
   'memory.goToSettings': 'Go to Settings',
   'memory.loadConfigFailed': 'Failed to load partition configuration',
 

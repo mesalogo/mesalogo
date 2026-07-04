@@ -355,6 +355,8 @@ export default {
   'autoTask.tempMode': 'Temporary Conversation Mode',
   'autoTask.progressTitle': 'Autonomous Task in Progress',
   'autoTask.roundProgress': 'Round {{current}}/{{total}}',
+  'autoTask.agentThinking': 'Thinking ({{current}}/{{total}})',
+  'autoTask.agentSummarizing': 'Summarizing discussion results',
   // Autonomous Task Modal Translations
   'autoTask.modal.title': 'Start Agent Autonomous Action',
   'autoTask.modal.taskType': 'Action Type',

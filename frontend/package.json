@@ -74,7 +74,10 @@
     "dev": "craco start",
     "build": "craco build",
     "test": "craco test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "i18n:check-keys": "node scripts/check-i18n-keys.js",
+    "i18n:check-cjk": "node scripts/scan-hardcoded-cjk.js --check",
+    "i18n:report-cjk": "node scripts/scan-hardcoded-cjk.js --md > ../docs/agents/i18n-hardcoded-cjk-report.md"
   },
   "eslintConfig": {
     "extends": [

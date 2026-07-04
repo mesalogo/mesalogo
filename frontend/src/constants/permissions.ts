@@ -167,6 +167,29 @@ export const getRoleDescriptions = () => ({
   [USER_ROLES.VIEWER]: i18n.t('roleDesc.viewer')
 });
 
+const ROLE_NAME_I18N_KEYS: Record<string, string> = {
+  [USER_ROLES.SUPER_ADMIN]: 'roleName.superAdmin',
+  [USER_ROLES.REGULAR_USER]: 'roleName.regularUser',
+  [USER_ROLES.VIEWER]: 'roleName.viewer'
+};
+
+// 将后端返回的内置角色 display_name 翻译到当前语言；非内置角色回退到后端值
+export const translateRoleName = (name?: string, fallback?: string): string => {
+  const key = name ? ROLE_NAME_I18N_KEYS[name] : undefined;
+  if (key) return i18n.t(key);
+  return fallback || name || '';
+};
+
+// 将后端返回的内置权限 display_name 翻译到当前语言；非内置权限回退到后端值
+export const translatePermissionName = (name?: string, fallback?: string): string => {
+  if (!name) return fallback || '';
+  return i18n.t(`permName.${name}`, {
+    keySeparator: false,
+    nsSeparator: false,
+    defaultValue: fallback || name
+  });
+};
+
 // 特殊权限控制辅助函数
 export const canEditUserRole = (currentUser, targetUser) => {
   // 超级管理员不能修改自己的角色

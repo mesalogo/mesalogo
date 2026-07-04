@@ -103,7 +103,7 @@ const MemoryPartitionPage = () => {
             onClick={handleRefresh}
             loading={loading}
           >
-            刷新
+            {t('refresh')}
           </Button>
         </Space>
       </div>
@@ -124,7 +124,7 @@ const MemoryPartitionPage = () => {
                 {t('memory.graphNotEnabledDesc')}
               </div>
               <Text type="secondary">
-                请先在图谱增强设置中启用 Graphiti 并配置分区策略和消息同步策略。
+                {t('memory.graphNotEnabledDetail')}
               </Text>
             </div>
           }

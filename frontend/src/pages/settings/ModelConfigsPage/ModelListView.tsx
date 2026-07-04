@@ -415,7 +415,7 @@ const ModelListView = ({
               current={current}
               pageSize={pageSize}
               total={filteredModels.length}
-              showTotal={(total, range) => `第 ${range[0]}-${range[1]} 项，共 ${total} 个模型`}
+              showTotal={(total, range) => t('modelConfig.paginationTotal', { from: range[0], to: range[1], total })}
               onChange={(page) => setCardPagination({ current: page, pageSize })}
             />
           </div>

@@ -229,7 +229,7 @@ export const PROVIDER_DISPLAY_NAMES = {
 export const validateProviderConfig = (provider, config) => {
   const rules = PROVIDER_CONFIG_RULES[provider];
   if (!rules) {
-    return { valid: false, missing: [], error: `不支持的提供商: ${provider}` };
+    return { valid: false, missing: [], error: i18n.t('vectorDB.error.unsupportedProvider', { provider }) };
   }
 
   const missing = [];
@@ -242,7 +242,7 @@ export const validateProviderConfig = (provider, config) => {
   return {
     valid: missing.length === 0,
     missing,
-    error: missing.length > 0 ? `缺少必需字段: ${missing.join(', ')}` : null
+    error: missing.length > 0 ? i18n.t('vectorDB.error.missingRequiredFields', { fields: missing.join(', ') }) : null
   };
 };
 

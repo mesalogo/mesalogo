@@ -10,6 +10,7 @@ import {
   FileMarkdownOutlined,
   FileUnknownOutlined
 } from '@ant-design/icons';
+import i18n from '../locales';
 
 // 推荐的文件扩展名（常用的知识库文件类型）
 export const RECOMMENDED_EXTENSIONS = ['txt', 'pdf', 'doc', 'docx', 'md', 'json'];
@@ -67,7 +68,8 @@ export const generateUniqueId = () => {
  * @returns {string} 支持的文件类型描述
  */
 export const getSupportedFileTypesDescription = () => {
-  return `支持所有文件类型。推荐类型：${RECOMMENDED_EXTENSIONS.map(ext => ext.toUpperCase()).join('、')}`;
+  const types = RECOMMENDED_EXTENSIONS.map(ext => ext.toUpperCase()).join(', ');
+  return i18n.t('batchUpload.supportedFileTypes', { types });
 };
 
 /**

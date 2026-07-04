@@ -14,6 +14,7 @@ export default {
   'settings.saveSuccess': '系统设置保存成功',
   'settings.resetSuccess': '系统设置已重置',
   'settings.loadDefaultSettings': '获取系统设置失败，已加载默认设置',
+  'settings.pleaseEnterField': '请输入{{field}}',
   // 设置分组标题
   'settings.group.basic': '基础配置',
   'settings.group.conversation': '对话设置',
@@ -229,6 +230,8 @@ export default {
   'vectorDB.test.networkError': '网络错误',
   'vectorDB.test.connectionFailed': '连接测试失败，请检查网络和配置',
   'vectorDB.test.configIncomplete': '配置不完整：{{error}}',
+  'vectorDB.error.unsupportedProvider': '不支持的提供商: {{provider}}',
+  'vectorDB.error.missingRequiredFields': '缺少必需字段: {{fields}}',
   'vectorDB.test.validatingConfig': '正在验证配置参数...',
   'vectorDB.test.configValidated': '配置验证完成',
   'vectorDB.test.connectingDb': '正在连接数据库...',

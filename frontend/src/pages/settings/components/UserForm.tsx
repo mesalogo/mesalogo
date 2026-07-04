@@ -27,7 +27,7 @@ import { userAPI } from '../../../services/api/users';
 import { subscriptionAPI, SubscriptionPlan } from '../../../services/api/subscription';
 import api from '../../../services/api/axios';
 import { useAuth } from '../../../contexts/AuthContext';
-import { canEditUserRole } from '../../../constants/permissions';
+import { canEditUserRole, translateRoleName } from '../../../constants/permissions';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 
@@ -422,7 +422,7 @@ const UserForm = ({ visible, user, onCancel, onSuccess }) => {
                   <Option key={role.id} value={role.id}>
                     <Space>
                       <SafetyCertificateOutlined />
-                      {role.display_name}
+                      {translateRoleName(role.name, role.display_name)}
                     </Space>
                   </Option>
                 ))}

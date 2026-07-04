@@ -37,7 +37,7 @@ const InternalKnowledge = () => {
             icon={<PlusOutlined />}
             onClick={handleCreateClick}
           >
-            新建知识库
+            {t('knowledgeBase.addKnowledgeBase')}
           </Button>
         </div>
       </div>

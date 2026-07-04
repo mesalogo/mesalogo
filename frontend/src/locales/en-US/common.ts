@@ -206,6 +206,7 @@ export default {
   'batchUpload.selectFiles': 'Select Files or Folder',
   'batchUpload.dragHint': 'Click or drag files here to upload',
   'batchUpload.dragHintDesc': 'Supports single or batch file upload.',
+  'batchUpload.supportedFileTypes': 'All file types are supported. Recommended: {{types}}',
   'batchUpload.selectFolder': 'Select Folder to Upload',
   'batchUpload.queueTitle': 'Upload Queue',
   'batchUpload.queueTotal': '{{count}} file(s)',

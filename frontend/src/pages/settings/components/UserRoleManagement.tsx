@@ -26,6 +26,7 @@ import {
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import api from '../../../services/api/axios';
+import { translateRoleName, translatePermissionName } from '../../../constants/permissions';
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -183,7 +184,7 @@ const UserRoleManagement = () => {
       render: (text: string, record: any) => (
         <Space>
           <SafetyCertificateOutlined />
-          <span>{text}</span>
+          <span>{translateRoleName(record.name, text)}</span>
           {record.is_system && <Tag color="blue">{t('userRoleManagement.systemRole')}</Tag>}
         </Space>
       )
@@ -334,7 +335,7 @@ const UserRoleManagement = () => {
         title={
           <Space>
             <SettingOutlined />
-            {t('userRoleManagement.permissionsTitle', { role: selectedRole?.display_name })}
+            {t('userRoleManagement.permissionsTitle', { role: translateRoleName(selectedRole?.name, selectedRole?.display_name) })}
           </Space>
         }
         open={permissionModalVisible}
@@ -367,7 +368,7 @@ const UserRoleManagement = () => {
                     checked={rolePermissions.includes(permission.name)}
                     onChange={(e) => handlePermissionChange(permission.name, e.target.checked)}
                   >
-                    {permission.display_name}
+                    {translatePermissionName(permission.name, permission.display_name)}
                   </Checkbox>
                 </Col>
               ))}

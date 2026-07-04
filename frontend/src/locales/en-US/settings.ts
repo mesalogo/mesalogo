@@ -14,6 +14,7 @@ export default {
   'settings.saveSuccess': 'System settings saved successfully',
   'settings.resetSuccess': 'System settings have been reset',
   'settings.loadDefaultSettings': 'Failed to get system settings, default settings loaded',
+  'settings.pleaseEnterField': 'Please enter {{field}}',
   // Setting Group Titles
   'settings.group.basic': 'Basic Configuration',
   'settings.group.conversation': 'Conversation Settings',
@@ -229,6 +230,8 @@ export default {
   'vectorDB.test.networkError': 'Network Error',
   'vectorDB.test.connectionFailed': 'Connection test failed, please check network and configuration',
   'vectorDB.test.configIncomplete': 'Incomplete configuration: {{error}}',
+  'vectorDB.error.unsupportedProvider': 'Unsupported provider: {{provider}}',
+  'vectorDB.error.missingRequiredFields': 'Missing required fields: {{fields}}',
   'vectorDB.test.validatingConfig': 'Validating configuration parameters...',
   'vectorDB.test.configValidated': 'Configuration validation complete',
   'vectorDB.test.connectingDb': 'Connecting to database...',

@@ -42,7 +42,7 @@ const GraphEnhancementSettingsPage = () => {
             label: (
               <Space>
                 <ShareAltOutlined />
-                长期记忆
+                {t('graphEnhancement.tab.longTermMemory')}
               </Space>
             ),
             children: <GraphitiTab />
@@ -52,7 +52,7 @@ const GraphEnhancementSettingsPage = () => {
             label: (
               <Space>
                 <DatabaseOutlined />
-                知识库图谱
+                {t('graphEnhancement.tab.knowledgeGraph')}
               </Space>
             ),
             children: <LightragTab />

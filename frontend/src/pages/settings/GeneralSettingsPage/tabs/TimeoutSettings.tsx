@@ -97,7 +97,7 @@ const TimeoutSettings = ({ color, initialValues }: any) => {
           t('settings.httpConnectionTimeout'),
           t('settings.httpConnectionTimeout.tooltip')
         )}
-        rules={[{ required: true, message: `请输入${t('settings.httpConnectionTimeout')}` }]}
+        rules={[{ required: true, message: t('settings.pleaseEnterField', { field: t('settings.httpConnectionTimeout') }) }]}
         style={{ marginBottom: '16px' }}
       >
         <InputNumber
@@ -114,7 +114,7 @@ const TimeoutSettings = ({ color, initialValues }: any) => {
           t('settings.httpReadTimeout'),
           t('settings.httpReadTimeout.tooltip')
         )}
-        rules={[{ required: true, message: `请输入${t('settings.httpReadTimeout')}` }]}
+        rules={[{ required: true, message: t('settings.pleaseEnterField', { field: t('settings.httpReadTimeout') }) }]}
         style={{ marginBottom: '16px' }}
       >
         <InputNumber
@@ -131,7 +131,7 @@ const TimeoutSettings = ({ color, initialValues }: any) => {
           t('settings.streamSocketTimeout'),
           t('settings.streamSocketTimeout.tooltip')
         )}
-        rules={[{ required: true, message: `请输入${t('settings.streamSocketTimeout')}` }]}
+        rules={[{ required: true, message: t('settings.pleaseEnterField', { field: t('settings.streamSocketTimeout') }) }]}
         style={{ marginBottom: '16px' }}
       >
         <InputNumber
@@ -148,7 +148,7 @@ const TimeoutSettings = ({ color, initialValues }: any) => {
           t('settings.defaultModelTimeout'),
           t('settings.defaultModelTimeout.tooltip')
         )}
-        rules={[{ required: true, message: `请输入${t('settings.defaultModelTimeout')}` }]}
+        rules={[{ required: true, message: t('settings.pleaseEnterField', { field: t('settings.defaultModelTimeout') }) }]}
         style={{ marginBottom: '16px' }}
       >
         <InputNumber

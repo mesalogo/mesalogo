@@ -7,6 +7,9 @@
 export default {
 
   // ----- GRAPH ENHANCEMENT SETTINGS PAGE TRANSLATIONS -----
+  'graphEnhancement.title': 'Graph Enhancement',
+  'graphEnhancement.tab.longTermMemory': 'Long-term Memory',
+  'graphEnhancement.tab.knowledgeGraph': 'Knowledge Base Graph',
   'graphEnhancement.subtitle': 'Configure graph enhancement features to improve knowledge base retrieval accuracy and contextual understanding capabilities',
   'graphEnhancement.enableDesc': 'Graph enhancement can improve retrieval accuracy and contextual understanding through knowledge graph technology, affecting both knowledge base and conversation systems',
   'graphEnhancement.configFirst': 'Please complete configuration and click save button to enable graph enhancement',
