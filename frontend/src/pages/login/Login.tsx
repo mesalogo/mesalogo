@@ -280,7 +280,7 @@ const Login = () => {
         </Card>
 
         <div className="login-footer">
-          <Text type="secondary">© 2025 MesaLogo. All Rights Reserved.</Text>
+          <Text type="secondary">© 2026 MesaLogo. All Rights Reserved.</Text>
         </div>
       </div>
     </div>

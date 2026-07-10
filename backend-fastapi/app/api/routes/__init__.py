@@ -4,14 +4,22 @@ FastAPI 路由注册中心
 将所有 APIRouter 注册到一个总路由器，再由 main.py include
 """
 import logging
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from core.config import settings
+from core.dependencies import clean_db_session
 
 logger = logging.getLogger(__name__)
 
 # ─── 总路由器（prefix=/api） ───
-api_router = APIRouter()
+# clean_db_session (Depends): every request starts by rolling back the
+# thread-local scoped_session so the next query opens a fresh transaction.
+# Without it, FastAPI sync routes on reused AnyIO worker threads keep serving
+# a stale MariaDB REPEATABLE READ snapshot — e.g. an edited model config not
+# refreshing until an unrelated write or pool_recycle ends the idle
+# transaction. Attaching here covers every business router in one place and
+# stops a newly added router from silently regressing.
+api_router = APIRouter(dependencies=[Depends(clean_db_session)])
 
 # ─── 首启引导路由 ───
 # status 常驻：正常模式也要应答 setup_mode:false，供前端探活。

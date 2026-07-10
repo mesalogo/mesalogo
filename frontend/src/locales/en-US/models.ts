@@ -219,9 +219,7 @@ export default {
 
   // ----- MODEL CAPABILITY TRANSLATIONS -----
   'modelConfig.capability.functionCalling': 'Function/Tool Calling',
-  'modelConfig.capability.reasoning': 'Reasoning',
   'modelConfig.capability.functionCalling.desc': 'Call external functions, tools and APIs',
-  'modelConfig.capability.reasoning.desc': 'Logical reasoning and analysis',
 
   // ----- MODEL PROVIDER TRANSLATIONS -----
   'modelConfig.provider.openai': 'OpenAI',
@@ -257,7 +255,6 @@ export default {
   'modelConfig.form.backendLabel': ' | Backend: {{value}}',
   'modelConfig.form.visionTag': '👁️ Vision',
   'modelConfig.form.toolsTag': '🔧 Tools',
-  'modelConfig.form.reasoningTag': '🧠 Reasoning',
   'modelConfig.form.displayNameLabel': 'Display name: {{value}}',
   'modelConfig.form.inputLimitLabel': 'Input limit: {{value}} tokens',
   'modelConfig.form.outputLimitLabel': ' | Output limit: {{value}} tokens',

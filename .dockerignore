@@ -1,0 +1,41 @@
+# Docker build context is the repo root (see abm-docker/build-docker-image.sh).
+# Both backend.Dockerfile (COPY backend-fastapi/) and frontend.Dockerfile
+# (COPY frontend/ + abm-docker/nginx.conf) share this context, so everything
+# below is excluded to shrink the context (was ~2.2 GB) and keep layer caching
+# stable. Nothing here is referenced by either Dockerfile's COPY steps.
+
+# ── VCS / editor ──
+.git
+.gitignore
+**/.DS_Store
+
+# ── Non-build source trees ──
+docs
+website
+desktop-app
+tests
+tools
+third_party
+**/*.md
+
+# ── Python caches / local runtime artifacts ──
+**/__pycache__
+**/*.py[cod]
+.venv
+**/.venv
+.venv-tests
+backend-fastapi/logs
+backend-fastapi/data
+backend-fastapi/knowledgebase
+backend-fastapi/agent-workspace
+# dev-only secrets; runtime config is volume-mounted from abm-docker/config.conf
+backend-fastapi/config.conf
+
+# ── Node / frontend build artifacts (image runs its own pnpm install) ──
+**/node_modules
+frontend/build
+**/.pnpm-store
+
+# ── Docker-side heavy caches & bind-mount volumes (not needed by any build) ──
+abm-docker/volumes
+abm-docker/dir2map

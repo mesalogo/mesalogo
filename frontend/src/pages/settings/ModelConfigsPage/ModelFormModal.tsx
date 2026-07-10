@@ -44,7 +44,6 @@ const getModelModalities = (t) => [
 
 const getModelCapabilities = (t) => [
   { value: 'function_calling', labelKey: 'modelConfig.capability.functionCalling', icon: '🔧', color: 'geekblue', descKey: 'modelConfig.capability.functionCalling.desc' },
-  { value: 'reasoning', labelKey: 'modelConfig.capability.reasoning', icon: '🧠', color: 'gold', descKey: 'modelConfig.capability.reasoning.desc' },
 ];
 
 const ModelFormModal = ({
@@ -230,11 +229,10 @@ const ModelFormModal = ({
                           {model.replicas !== undefined && t('modelConfig.form.replicasLabel', { ready: model.ready_replicas || 0, total: model.replicas })}
                           {model.backend && t('modelConfig.form.backendLabel', { value: model.backend })}
                         </div>
-                        {(model.meta?.support_vision || model.meta?.support_tool_calls || model.meta?.support_reasoning) && (
+                        {(model.meta?.support_vision || model.meta?.support_tool_calls) && (
                           <div style={{ fontSize: '11px', marginTop: '2px' }}>
                             {model.meta.support_vision && <Tag color="purple" style={{ fontSize: '10px' }}>{t('modelConfig.form.visionTag')}</Tag>}
                             {model.meta.support_tool_calls && <Tag color="geekblue" style={{ fontSize: '10px' }}>{t('modelConfig.form.toolsTag')}</Tag>}
-                            {model.meta.support_reasoning && <Tag color="gold" style={{ fontSize: '10px' }}>{t('modelConfig.form.reasoningTag')}</Tag>}
                           </div>
                         )}
                       </div>

@@ -8,19 +8,16 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Query, Request, Depends
 from fastapi.responses import JSONResponse, StreamingResponse
 from core.config import settings
-from core.dependencies import get_current_user, get_admin_user, clean_db_session
+from core.dependencies import get_current_user, get_admin_user
 from app import db
 from app.services.parallel_experiment_service import ParallelExperimentService
 
 logger = logging.getLogger(__name__)
 
-# 所有并行实验路由使用 clean_db_session 依赖，确保每个请求的 DB session 干净
-# 这是因为：
-# 1. 并行实验涉及大量后台线程写入（experiment_executor），容易导致 MySQL 乐观锁冲突
-# 2. FastAPI sync 路由运行在 AnyIO 线程池中，线程会被复用
-# 3. MySQL REPEATABLE READ 隔离级别下，复用线程的 session 可能看不到其他线程提交的新数据
-# clean_db_session 通过 rollback() 开启新事务，确保能看到最新数据
-router = APIRouter(dependencies=[Depends(clean_db_session)])
+# clean_db_session is now attached once on the aggregate api_router
+# (see app/api/routes/__init__.py), so every request already starts on a
+# fresh DB transaction. Keeping it here too would just run rollback() twice.
+router = APIRouter()
 
 
 

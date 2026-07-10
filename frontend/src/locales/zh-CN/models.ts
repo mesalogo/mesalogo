@@ -219,9 +219,7 @@ export default {
 
   // ----- 模型能力翻译 -----
   'modelConfig.capability.functionCalling': '函数/工具调用',
-  'modelConfig.capability.reasoning': '推理',
   'modelConfig.capability.functionCalling.desc': '调用外部函数、工具和API',
-  'modelConfig.capability.reasoning.desc': '逻辑推理和分析',
 
   // ----- 模型提供商翻译 -----
   'modelConfig.provider.openai': 'OpenAI',
@@ -257,7 +255,6 @@ export default {
   'modelConfig.form.backendLabel': ' | 后端: {{value}}',
   'modelConfig.form.visionTag': '👁️视觉',
   'modelConfig.form.toolsTag': '🔧工具',
-  'modelConfig.form.reasoningTag': '🧠推理',
   'modelConfig.form.displayNameLabel': '显示名称: {{value}}',
   'modelConfig.form.inputLimitLabel': '输入限制: {{value}} tokens',
   'modelConfig.form.outputLimitLabel': ' | 输出限制: {{value}} tokens',

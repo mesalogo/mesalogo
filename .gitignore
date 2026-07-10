@@ -229,7 +229,8 @@ backend-deprecated/app/seed_data/seed_data_models.json
 config.json
 
 # Docker
-.dockerignore
+# .dockerignore is build infrastructure and IS version-controlled so every
+# developer / CI shares the same build context (keeps layer caching stable).
 docker-compose.override.yml
 abm-docker/dir2map/*
 !abm-docker/dir2map/README.md

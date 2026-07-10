@@ -47,7 +47,6 @@ const getModelModalities = (t) => [
 
 const getModelCapabilities = (t) => [
   { value: 'function_calling', labelKey: 'modelConfig.capability.functionCalling', icon: '🔧', color: 'geekblue', descKey: 'modelConfig.capability.functionCalling.desc' },
-  { value: 'reasoning', labelKey: 'modelConfig.capability.reasoning', icon: '🧠', color: 'gold', descKey: 'modelConfig.capability.reasoning.desc' },
 ];
 
 // 获取provider翻译名称的函数

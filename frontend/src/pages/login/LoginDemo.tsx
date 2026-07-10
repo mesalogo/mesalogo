@@ -492,7 +492,7 @@ const LoginDemo: React.FC = () => {
               color: style.subtitleColor,
               transition: 'color 0.3s ease'
             }}>
-              © 2025 MesaLogo. All Rights Reserved.
+              © 2026 MesaLogo. All Rights Reserved.
             </div>
           </div>
         </div>

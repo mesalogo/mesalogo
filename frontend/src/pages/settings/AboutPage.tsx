@@ -230,7 +230,7 @@ const AboutPage = () => {
                 <Title level={3} style={{ margin: 0, color: '#1677ff' }}>{t('system.title')}</Title>
                 <Text type="secondary">{t('system.version')}: v{packageJson.version}</Text>
                 <Paragraph style={{ marginTop: 12, marginBottom: 8 }}>{t('system.description')}</Paragraph>
-                <Text type="secondary">© 2025 MesaLogo. All Rights Reserved.</Text>
+                <Text type="secondary">© 2026 MesaLogo. All Rights Reserved.</Text>
               </div>
             </Space>
           </Card>

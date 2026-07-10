@@ -382,9 +382,6 @@ const ModelConfigsPage = () => {
         if (model.meta?.support_tool_calls) {
           capabilities.push('function_calling');
         }
-        if (model.meta?.support_reasoning) {
-          capabilities.push('reasoning');
-        }
         
         // 自动填充上下文窗口
         const contextWindow = model.meta?.n_ctx || 16000;
