@@ -171,6 +171,49 @@ def test_internal_control_kwargs_never_leak_into_payload(client, patch_httpx):
         assert leaked not in body, f"internal kwarg {leaked!r} must not reach the LLM request body"
 
 
+def test_tool_followup_control_kwargs_never_leak_into_payload(client, patch_httpx):
+    """Repro: on the tool-call follow-up round, stream_handler rebuilds kwargs
+    from api_config, which carries wire-protocol / timeout / tool-call control
+    keys. These must not be spread into the outbound request body."""
+    patch_httpx._response_factory = staticmethod(
+        lambda: _FakeResponse({"choices": [{"message": {"content": "ok"}}]})
+    )
+    client.send_request(
+        _Cfg("openai-compatible"),
+        [{"role": "user", "content": "U"}],
+        is_stream=False,
+        api_format="openai-compatible",
+        stream_socket_timeout=120,
+        tool_call_context_rounds=5,
+        tool_call_correction=False,
+        tool_call_correction_threshold=5,
+    )
+    body = patch_httpx.captured["json"]
+    for leaked in (
+        "api_format",
+        "stream_socket_timeout",
+        "tool_call_context_rounds",
+        "tool_call_correction",
+        "tool_call_correction_threshold",
+    ):
+        assert leaked not in body, f"internal kwarg {leaked!r} must not reach the LLM request body"
+
+
+def test_timeout_kwarg_never_leaks_into_payload(client, patch_httpx):
+    """Repro: summary_service passes timeout=... as a kwarg; the httpx timeout is
+    built independently from SystemSetting, so the kwarg must not reach the body."""
+    patch_httpx._response_factory = staticmethod(
+        lambda: _FakeResponse({"choices": [{"message": {"content": "ok"}}]})
+    )
+    client.send_request(
+        _Cfg("openai-compatible"),
+        [{"role": "user", "content": "U"}],
+        is_stream=False,
+        timeout=300,
+    )
+    assert "timeout" not in patch_httpx.captured["json"]
+
+
 # ── anthropic (Messages) ────────────────────────────────────────────────
 
 

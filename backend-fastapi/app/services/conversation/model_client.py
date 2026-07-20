@@ -377,6 +377,15 @@ class ModelClient:
                 'model_config',
                 'send_target', 'isolation_mode', 'user_id', 'smart_dispatch',
                 'enable_subagent', 'wire_stream', 'response_order',
+                # Wire-protocol / stream-control keys re-threaded from api_config on
+                # the tool-call follow-up round (see stream_handler.handle_tool_calls).
+                # They drive request construction, never the request body.
+                'api_format', 'stream_socket_timeout',
+                'tool_call_context_rounds', 'tool_call_correction',
+                'tool_call_correction_threshold',
+                # HTTP-transport controls consumed locally (httpx.Timeout is built
+                # from SystemSetting), never part of the model request body.
+                'timeout', 'request_timeout',
             ]
 
             # Responses API 用 max_output_tokens 而非 max_tokens
