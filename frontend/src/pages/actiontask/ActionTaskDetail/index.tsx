@@ -8,20 +8,9 @@ import {
   Space,
   Badge,
   Tag,
-  Row,
-  Col,
-  List,
-  Avatar,
-  Tooltip,
-  Empty,
   message,
-  Descriptions,
-  Statistic,
   Result,
-  Table,
-  Spin,
   Dropdown,
-  Menu,
   Splitter
 } from 'antd';
 import {
@@ -34,16 +23,11 @@ import {
   GlobalOutlined,
   ReloadOutlined,
   DownOutlined,
-  SettingOutlined,
-  ImportOutlined,
-  BookOutlined,
   InfoCircleOutlined,
   BranchesOutlined,
   ShopOutlined,
   ShareAltOutlined,
-  WindowsOutlined,
-  CaretDownOutlined,
-  UnorderedListOutlined
+  WindowsOutlined
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { actionTaskAPI } from '../../../services/api/actionTask';
@@ -65,8 +49,9 @@ import { MemoryTab, AuditTab, AppsTab } from './components/tabs/SimpleTabs';
 // 导入自定义 Hooks
 import useTaskData from './hooks/useTaskData';
 import useVariablesRefresh from './hooks/useVariablesRefresh';
+import { archiveTask } from './taskActions';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 // 变量闪烁效果的CSS样式
 const variableFlashStyle = `
@@ -79,6 +64,38 @@ const variableFlashStyle = `
   .variable-flash {
     animation: variableFlash 1s ease-in-out;
     border-radius: 2px;
+  }
+`;
+
+const actionTaskDetailStyles = `
+  .full-height-tabs > .ant-tabs-content-holder {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+  .full-height-tabs > .ant-tabs-content-holder > .ant-tabs-content {
+    height: 100%;
+    position: relative;
+  }
+  .full-height-tabs > .ant-tabs-content-holder > .ant-tabs-content > .ant-tabs-tabpane {
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+  .tab-content-container {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    overflow: auto;
+  }
+  .message-history {
+    position: relative !important;
+    overflow-y: auto !important;
+  }
+  .message-input-area {
+    position: relative !important;
+    z-index: 1 !important;
+    border-top: 1px solid var(--custom-border);
   }
 `;
 
@@ -99,15 +116,14 @@ const ActionTaskDetail = ({ taskIdProp }) => {
     task,
     messages,
     loading,
+    loadError,
     refreshKey,
     activeConversationId,
     setTask,
     setMessages,
     setRefreshKey,
-    setActiveConversationId,
-    fetchTaskData,
-    refreshTaskMessages
-  } = useTaskData(taskId);
+    fetchTaskData
+  } = useTaskData(taskId, activeTaskId === taskId);
   
   // 使用变量刷新 Hook
   const { variablesRefreshKey, refreshVariables } = useVariablesRefresh();
@@ -117,6 +133,7 @@ const ActionTaskDetail = ({ taskIdProp }) => {
   const [fullscreenApp, setFullscreenApp] = useState(null);
   const [exportModalVisible, setExportModalVisible] = useState(false);
   const [publishModalVisible, setPublishModalVisible] = useState(false);
+  const [archivingTask, setArchivingTask] = useState(false);
 
   // 组件引用
   const conversationRef = useRef(null);
@@ -133,6 +150,8 @@ const ActionTaskDetail = ({ taskIdProp }) => {
   
   // 获取所有任务列表
   useEffect(() => {
+    if (activeTaskId !== taskId) return;
+
     const fetchAllTasks = async () => {
       try {
         const tasks = await actionTaskAPI.getAll(false);
@@ -148,7 +167,7 @@ const ActionTaskDetail = ({ taskIdProp }) => {
     // 每30秒刷新一次任务列表
     const interval = setInterval(fetchAllTasks, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [activeTaskId, taskId]);
 
   // 处理应用关闭后的tab切换
   const handleAppClosed = useCallback((appId) => {
@@ -238,47 +257,12 @@ const ActionTaskDetail = ({ taskIdProp }) => {
     }
   };
 
-
-
-  // 添加自定义样式
-  const customStyles = `
-    .full-height-tabs > .ant-tabs-content-holder {
-      flex: 1;
-      overflow: hidden;
-      position: relative;
-    }
-    .full-height-tabs > .ant-tabs-content-holder > .ant-tabs-content {
-      height: 100%;
-      position: relative;
-    }
-    .full-height-tabs > .ant-tabs-content-holder > .ant-tabs-content > .ant-tabs-tabpane {
-      height: 100%;
-      overflow: hidden;
-      position: relative;
-    }
-    .tab-content-container {
-      position: relative;
-      height: 100%;
-      width: 100%;
-      overflow: auto;
-    }
-    .message-history {
-      position: relative !important;
-      overflow-y: auto !important;
-    }
-    .message-input-area {
-      position: relative !important;
-      z-index: 1 !important;
-      border-top: 1px solid var(--custom-border);
-    }
-  `;
-
   // 注入自定义样式
   useEffect(() => {
     // 创建style元素
     const styleEl = document.createElement('style');
     styleEl.setAttribute('id', 'action-task-detail-styles');
-    styleEl.innerHTML = customStyles;
+    styleEl.innerHTML = actionTaskDetailStyles;
     document.head.appendChild(styleEl);
 
     // 清理函数
@@ -299,13 +283,17 @@ const ActionTaskDetail = ({ taskIdProp }) => {
 
   // 归档任务
   const handleTerminateTask = async () => {
+    if (archivingTask) return;
+
+    setArchivingTask(true);
     try {
-      // 实际应用中调用API
-      // await actionTaskAPI.updateStatus(taskId, 'terminated');
+      await archiveTask(taskId, actionTaskAPI.updateStatus);
       setTask({...task, status: 'terminated'});
       message.success(t('actionTaskDetail.taskTerminated'));
     } catch (error) {
       message.error(t('actionTaskDetail.operationFailed') + ': ' + error.message);
+    } finally {
+      setArchivingTask(false);
     }
   };
 
@@ -379,30 +367,48 @@ const ActionTaskDetail = ({ taskIdProp }) => {
         onBack={handleBack}
         onExport={() => setExportModalVisible(true)}
         t={t}
-        customStyles={customStyles}
+        customStyles={actionTaskDetailStyles}
         variableFlashStyle={variableFlashStyle}
       />
     );
   }
 
-  if (!task) {
+  if (!task && loadError) {
+    const isNotFound = loadError.notFound;
     return (
       <Result
-        status="404"
-        title={t('actionTaskDetail.taskNotFound')}
-        subTitle={t('actionTaskDetail.taskNotFoundDesc')}
+        status={isNotFound ? '404' : 'error'}
+        title={isNotFound
+          ? t('actionTaskDetail.taskNotFound')
+          : t('actionTaskDetail.loadFailed')}
+        subTitle={isNotFound
+          ? t('actionTaskDetail.taskNotFoundDesc')
+          : t('actionTaskDetail.loadFailedDesc')}
         extra={
-          <Button type="primary" onClick={handleBack}>
-{t('actionTaskDetail.backToList')}
-          </Button>
+          <Space>
+            <Button onClick={handleBack}>
+              {t('actionTaskDetail.backToList')}
+            </Button>
+            {!isNotFound && (
+              <Button
+                type="primary"
+                icon={<ReloadOutlined />}
+                onClick={() => fetchTaskData()}
+              >
+                {t('actionTaskDetail.retry')}
+              </Button>
+            )}
+          </Space>
         }
       />
     );
   }
 
+  if (!task) return null;
+
   return (
     <div className="action-task-detail-page">
-      <style>{customStyles}</style>
+      <style>{actionTaskDetailStyles}</style>
       <style>{variableFlashStyle}</style>
       <div className="page-header" style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Space>
@@ -530,6 +536,7 @@ const ActionTaskDetail = ({ taskIdProp }) => {
             <Button
               icon={<StopOutlined />}
               danger
+              loading={archivingTask}
               onClick={handleTerminateTask}
             >
               {t('actionTaskDetail.archiveTask')}

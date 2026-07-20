@@ -15,7 +15,7 @@ const AnalysisReportPage = () => {
   // 加载已完成的实验
   const loadExperiments = useCallback(async () => {
     try {
-      const response = await parallelExperimentApi.listExperiments({
+      const response = await parallelExperimentApi.listAllExperiments({
         include_templates: false
       });
       if (response.success && response.experiments) {
@@ -47,7 +47,7 @@ const AnalysisReportPage = () => {
     } finally {
       setPageLoading(false);
     }
-  }, []);
+  }, [message, t]);
 
   useEffect(() => {
     loadExperiments();

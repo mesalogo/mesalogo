@@ -25,6 +25,8 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ReactECharts from 'echarts-for-react';
 import * as parallelExperimentApi from '../../../services/api/parallelExperiment';
+import { actionTaskDetailPath } from './routes';
+import { getParallelExperimentError } from './errorMessage';
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -45,7 +47,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({ experiments }) => {
   const completedExperiments = experiments.filter(e => e.status === 'completed' || e.status === 'stopped');
 
   // 加载实验详情
-  const loadExperimentDetail = async (expId: string) => {
+  const loadExperimentDetail = useCallback(async (expId: string) => {
     setLoading(true);
     try {
       const response = await parallelExperimentApi.getExperiment(expId);
@@ -61,7 +63,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({ experiments }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   // 选择实验时加载详情
   useEffect(() => {
@@ -71,7 +73,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({ experiments }) => {
       setExperimentDetail(null);
       setSelectedIteration(null);
     }
-  }, [selectedExperimentId]);
+  }, [loadExperimentDetail, selectedExperimentId]);
 
   // 使用最佳参数创建任务
   const handleCreateBestTask = async () => {
@@ -80,10 +82,10 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({ experiments }) => {
       const response = await parallelExperimentApi.createBestTask(selectedExperimentId);
       if (response.success) {
         message.success(t('parallelLab.report.taskCreated'));
-        navigate(`/action-tasks/${response.action_task_id}`);
+        navigate(actionTaskDetailPath(response.action_task_id));
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || t('parallelLab.report.createTaskFailed'));
+      message.error(getParallelExperimentError(error, t('parallelLab.report.createTaskFailed')));
     }
   };
 
@@ -553,7 +555,7 @@ const VariableHistoryChart: React.FC<{ experimentId: string; config: any; allRes
     } finally {
       setLoading(false);
     }
-  }, [experimentId]);
+  }, [experimentId, t]);
 
   useEffect(() => {
     loadSteps();

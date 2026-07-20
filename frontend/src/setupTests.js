@@ -3,7 +3,6 @@
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
-import '@testing-library/jest-dom/extend-expect';
 
 // Mock fetch API
 global.fetch = jest.fn(() =>
@@ -15,4 +14,4 @@ global.fetch = jest.fn(() =>
       { id: '4', name: '艺术家', role: 'Artist' }
     ])
   })
-); 
+);

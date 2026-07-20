@@ -168,14 +168,6 @@
         "is_secret": false
     },
     {
-        "key": "stream_socket_timeout",
-        "value": "60",
-        "value_type": "number",
-        "description": "流式响应Socket读取的超时时间（秒）",
-        "category": "timeout",
-        "is_secret": false
-    },
-    {
         "key": "default_model_timeout",
         "value": "60",
         "value_type": "number",

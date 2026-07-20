@@ -20,6 +20,45 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def _positive_query_int(
+    request: Request,
+    name: str,
+    default: int | None = None,
+) -> int | None:
+    """Parse a positive integer query parameter or return a 400 response."""
+    raw_value = request.query_params.get(name)
+    if raw_value in (None, ''):
+        return default
+
+    try:
+        value = int(raw_value)
+    except (TypeError, ValueError):
+        raise HTTPException(
+            status_code=400,
+            detail={'error': f'{name} 必须是正整数'},
+        ) from None
+
+    if value < 1:
+        raise HTTPException(
+            status_code=400,
+            detail={'error': f'{name} 必须是正整数'},
+        )
+    return value
+
+
+def _invalidate_experiment_cache(experiment_id: str) -> None:
+    """Invalidate mutable Parallel Lab detail/status cache entries."""
+    try:
+        from core.cache import invalidate_keys
+
+        invalidate_keys(
+            f"exp_detail:{experiment_id}",
+            f"exp_status:{experiment_id}:cur",
+        )
+    except Exception as e:
+        logger.debug(f"并行实验缓存失效失败: {e!s}")
+
+
 
 @router.get('/parallel-experiments')
 def list_experiments(request: Request):
@@ -31,8 +70,8 @@ def list_experiments(request: Request):
         - include_templates: 是否包含模板（默认 true）
     """
     try:
-        page = int(request.query_params.get('page', 1))
-        limit = int(request.query_params.get('limit', 20))
+        page = _positive_query_int(request, 'page', 1)
+        limit = _positive_query_int(request, 'limit', 20)
         include_templates = request.query_params.get('include_templates', 'true').lower() == 'true'
         
         result = ParallelExperimentService.list_experiments(
@@ -44,6 +83,8 @@ def list_experiments(request: Request):
             'success': True,
             **result
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"获取实验列表失败: {str(e)}")
         db.session.rollback()
@@ -96,6 +137,8 @@ async def create_experiment(request: Request, current_user=Depends(get_current_u
             'message': '实验创建成功'
         }, status_code=201)
         
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=400, detail={'error': str(e)})
     except Exception as e:
@@ -159,12 +202,9 @@ def get_experiment_status(experiment_id, request: Request):
     """
     try:
         include_messages = request.query_params.get('include_messages', 'false').lower() == 'true'
-        iteration_str = request.query_params.get('iteration')
-        iteration = int(iteration_str) if iteration_str else None
-        runs_page_str = request.query_params.get('runs_page')
-        runs_limit_str = request.query_params.get('runs_limit')
-        runs_page = int(runs_page_str) if runs_page_str else None
-        runs_limit = int(runs_limit_str) if runs_limit_str else None
+        iteration = _positive_query_int(request, 'iteration')
+        runs_page = _positive_query_int(request, 'runs_page')
+        runs_limit = _positive_query_int(request, 'runs_limit')
         
         # 不含消息 且 不分页时 才走 Redis 缓存
         if not include_messages and runs_page is None:
@@ -234,6 +274,8 @@ async def create_draft_experiment(request: Request):
             'message': '草稿实验创建成功'
         }, status_code=201)
         
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=400, detail={'error': str(e)})
     except Exception as e:
@@ -250,11 +292,14 @@ async def update_experiment(experiment_id, request: Request):
         success = ParallelExperimentService.update_experiment(experiment_id, data)
         if not success:
             raise HTTPException(status_code=400, detail={'error': '更新实验失败，实验可能不存在或状态不允许更新'})
-        
+
+        _invalidate_experiment_cache(experiment_id)
         return {
             'success': True,
             'message': '实验配置已更新'
         }
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=400, detail={'error': str(e)})
     except Exception as e:
@@ -273,7 +318,8 @@ def start_experiment(experiment_id, current_user=Depends(get_current_user)):
         )
         if not success:
             raise HTTPException(status_code=400, detail={'error': '启动实验失败，实验可能不存在或状态不允许启动'})
-        
+
+        _invalidate_experiment_cache(experiment_id)
         return {
             'success': True,
             'message': '实验已启动'
@@ -316,11 +362,14 @@ def pause_experiment(experiment_id):
         success = ParallelExperimentService.pause_experiment(experiment_id)
         if not success:
             raise HTTPException(status_code=400, detail={'error': '暂停实验失败，实验可能不存在或状态不允许暂停'})
-        
+
+        _invalidate_experiment_cache(experiment_id)
         return {
             'success': True,
             'message': '实验已暂停'
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"暂停实验失败: {str(e)}")
         raise HTTPException(status_code=500, detail={'error': f'暂停实验失败: {str(e)}'})
@@ -333,11 +382,14 @@ def resume_experiment(experiment_id):
         success = ParallelExperimentService.resume_experiment(experiment_id)
         if not success:
             raise HTTPException(status_code=400, detail={'error': '恢复实验失败，实验可能不存在或状态不允许恢复'})
-        
+
+        _invalidate_experiment_cache(experiment_id)
         return {
             'success': True,
             'message': '实验已恢复'
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"恢复实验失败: {str(e)}")
         raise HTTPException(status_code=500, detail={'error': f'恢复实验失败: {str(e)}'})
@@ -350,7 +402,8 @@ def stop_experiment(experiment_id):
         success = ParallelExperimentService.stop_experiment(experiment_id)
         if not success:
             raise HTTPException(status_code=400, detail={'error': '停止实验失败，实验可能不存在或状态不允许停止'})
-        
+
+        _invalidate_experiment_cache(experiment_id)
         return {
             'success': True,
             'message': '实验已停止'
@@ -370,11 +423,14 @@ def delete_experiment(experiment_id):
         success = ParallelExperimentService.delete_experiment(experiment_id)
         if not success:
             raise HTTPException(status_code=404, detail={'error': '删除实验失败，实验可能不存在'})
-        
+
+        _invalidate_experiment_cache(experiment_id)
         return {
             'success': True,
             'message': '实验已删除'
         }
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=400, detail={'error': str(e)})
     except Exception as e:
@@ -519,7 +575,8 @@ async def validate_experiment_config(request: Request):
             'valid': True,
             'message': '配置验证通过'
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"验证实验配置失败: {str(e)}")
         raise HTTPException(status_code=500, detail={'error': f'验证实验配置失败: {str(e)}'})
-

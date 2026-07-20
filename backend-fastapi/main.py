@@ -8,19 +8,20 @@ ABM-LLM FastAPI 应用入口
 启动:
     uvicorn main:app --host 0.0.0.0 --port 19080 --reload
 """
-import os
-import sys
 import logging
+import os
+from contextlib import asynccontextmanager
 
 # ─── 环境编码 ───
 os.environ['PYTHONIOENCODING'] = 'utf-8'
 os.environ['LC_ALL'] = 'en_US.UTF-8'
 os.environ['LANG'] = 'en_US.UTF-8'
 
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
+
 from core.config import settings
 
 # ═══════════════════════════════════════════════════════
@@ -184,12 +185,24 @@ class DBSessionMiddleware(BaseHTTPMiddleware):
 # 创建 FastAPI 应用
 # ═══════════════════════════════════════════════════════
 
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Run the existing startup and shutdown hooks via FastAPI lifespan."""
+    await startup_event()
+    try:
+        yield
+    finally:
+        await shutdown_event()
+
+
 app = FastAPI(
     title='ABM-LLM API',
     version=settings.API_VERSION,
     description='多智能体行动任务系统 API',
     docs_url='/docs',      # Swagger UI（Flask 没有的福利）
     redoc_url='/redoc',
+    lifespan=lifespan,
 )
 
 # ─── CORS ───
@@ -259,7 +272,6 @@ app.include_router(api_router, prefix='/api')
 # 启动事件（替代 Flask with app.app_context() 中的初始化）
 # ═══════════════════════════════════════════════════════
 
-@app.on_event("startup")
 async def startup_event():
     """应用启动时执行"""
     logger.info("=" * 50)
@@ -379,7 +391,6 @@ async def startup_event():
     logger.info(f"✓ FastAPI 启动完成，监听 {settings.HOST}:{settings.PORT}")
 
 
-@app.on_event("shutdown")
 async def shutdown_event():
     """应用关闭时执行"""
     logger.info("FastAPI 正在关闭...")
@@ -399,4 +410,3 @@ async def shutdown_event():
     from core.database import engine
     engine.dispose()
     logger.info("数据库连接池已清理")
-

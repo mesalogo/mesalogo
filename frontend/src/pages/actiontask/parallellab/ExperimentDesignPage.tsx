@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import ExperimentDesign from './ExperimentDesign';
 import * as parallelExperimentApi from '../../../services/api/parallelExperiment';
+import { getParallelExperimentError } from './errorMessage';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
 
 const { Title, Text } = Typography;
@@ -40,7 +41,7 @@ const ExperimentDesignPage = () => {
     } finally {
       setPageLoading(false);
     }
-  }, []);
+  }, [message, t]);
 
   useEffect(() => {
     loadActionSpaces();
@@ -81,7 +82,7 @@ const ExperimentDesignPage = () => {
         navigate('/parallel-lab/monitoring');
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || t('parallelLab.message.experimentFailed'));
+      message.error(getParallelExperimentError(error, t('parallelLab.message.experimentFailed')));
     } finally {
       setLoading(false);
     }

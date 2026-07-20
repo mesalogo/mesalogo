@@ -81,6 +81,10 @@ These carried no behavior on any live path and were removed as part of the
   2s queue-poll in `AsyncStreamRunner.iter_lines()`, not from socket timeouts.
   (Historic: this was real in the old *synchronous* httpx path that streamed a
   true `httpx.Response`; that path is gone.)
+- **`stream_socket_timeout` system setting** — removed from the settings API,
+  seed data, frontend form, and tool-follow-up configuration on 2026-07-20.
+  It only configured the no-op helper above. Streaming reads now use the real
+  `http_read_timeout` / per-model `request_timeout` transport controls.
 - **`ConnectionManager.update_connection()`** — zero callers (only referenced
   by stale docs). Was part of the sync-era flow where the response object was
   attached after the request started.

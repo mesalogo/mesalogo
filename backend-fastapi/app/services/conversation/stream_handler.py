@@ -28,6 +28,7 @@ SSE相关函数:
   - api_config: API配置信息
   - callback: 回调函数
 """
+import asyncio
 import json
 import logging
 import queue
@@ -35,17 +36,17 @@ import re
 import threading
 import traceback
 import uuid
-import asyncio
-import httpx
-from typing import Dict, Any, Callable, Generator, List
+from typing import Any, Callable, Dict, Generator, List, Optional
 
-from starlette.responses import StreamingResponse
+import httpx
 from config import DEBUG_LLM_RESPONSE
-from app.services.conversation.tool_handler import execute_tool_call, parse_tool_calls
-from app.services.conversation.message_formater import format_tool_call, format_tool_result_as_role, serialize_message
-from app.services.conversation.model_client import ModelClient
+from starlette.responses import StreamingResponse
+
 from app.services.conversation.connection_manager import connection_manager
+from app.services.conversation.message_formater import format_tool_result_as_role, serialize_message
+from app.services.conversation.model_client import ModelClient
 from app.services.conversation.tool_call_executor import detect_tool_status, execute_and_format_tool_call
+from app.services.conversation.tool_handler import parse_tool_calls
 from app.services.conversation.tool_json_utils import remove_tool_result_jsons
 
 logger = logging.getLogger(__name__)
@@ -88,8 +89,8 @@ def queue_to_sse(result_queue: queue.Queue,
     空闲超过 max_idle_seconds 后发送 done 事件并结束流。
     """
     # 导入格式化函数
-    from app.services.conversation.message_formater import format_agent_cancel_done, serialize_message
     from app.models import Agent, Role
+    from app.services.conversation.message_formater import format_agent_cancel_done, serialize_message
 
     idle_seconds = 0.0
     while True:
@@ -366,6 +367,83 @@ def cancel_streaming_task(task_id: int, conversation_id: int, agent_id: str = No
 
     return True
 
+
+def _starts_tool_call_round(message: Dict[str, Any], previous_message: Optional[Dict[str, Any]]) -> bool:
+    """Return whether *message* starts one historical tool-call round."""
+    if message.get("role") == "assistant":
+        if message.get("tool_calls"):
+            return True
+        content = message.get("content")
+        if isinstance(content, list) and any(
+            isinstance(block, dict) and block.get("type") == "tool_use"
+            for block in content
+        ):
+            return True
+
+    if message.get("type") == "function_call":
+        return not previous_message or previous_message.get("type") != "function_call"
+
+    return False
+
+
+def _is_tool_protocol_message(message: Dict[str, Any]) -> bool:
+    """Return whether a historical message exists only for tool protocol state."""
+    if message.get("role") == "tool":
+        return True
+    if message.get("type") in {"function_call", "function_call_output"}:
+        return True
+    if message.get("role") == "assistant" and message.get("tool_calls"):
+        return True
+
+    content = message.get("content")
+    if not isinstance(content, list) or not content:
+        return False
+
+    block_types = {
+        block.get("type")
+        for block in content
+        if isinstance(block, dict)
+    }
+    if message.get("role") == "assistant" and "tool_use" in block_types:
+        return True
+    return message.get("role") == "user" and block_types == {"tool_result"}
+
+
+def limit_tool_call_history(
+    messages: List[Dict[str, Any]],
+    max_rounds: int,
+) -> List[Dict[str, Any]]:
+    """Keep anchors and only the most recent tool protocol rounds.
+
+    System/user/plain assistant messages are retained. Older assistant tool
+    calls and their matching tool-result protocol messages are removed.
+    """
+    if isinstance(max_rounds, bool):
+        raise TypeError("tool_call_context_rounds must be a positive integer")
+    try:
+        max_rounds = int(max_rounds)
+    except (TypeError, ValueError) as exc:
+        raise TypeError("tool_call_context_rounds must be a positive integer") from exc
+    if max_rounds <= 0:
+        raise ValueError("tool_call_context_rounds must be greater than zero")
+
+    round_starts: List[int] = []
+    previous_message: Optional[Dict[str, Any]] = None
+    for index, message in enumerate(messages):
+        if _starts_tool_call_round(message, previous_message):
+            round_starts.append(index)
+        previous_message = message
+
+    if len(round_starts) <= max_rounds:
+        return list(messages)
+
+    cutoff = round_starts[-max_rounds]
+    return [
+        message
+        for index, message in enumerate(messages)
+        if index >= cutoff or not _is_tool_protocol_message(message)
+    ]
+
 def call_llm_with_tool_results(original_messages: List[Dict[str, Any]],
                          tool_calls: List[Dict[str, Any]],
                          tool_results: List[Dict[str, Any]],
@@ -397,9 +475,20 @@ def call_llm_with_tool_results(original_messages: List[Dict[str, Any]],
         logger.debug("-"*40)
 
     try:
+        retained_messages = limit_tool_call_history(
+            original_messages,
+            api_config.get("tool_call_context_rounds", 5),
+        )
+        if len(retained_messages) != len(original_messages):
+            logger.info(
+                "[工具调用上下文] 历史消息从 %s 条裁剪为 %s 条",
+                len(original_messages),
+                len(retained_messages),
+            )
+
         # 1. 清理original_messages中的工具调用JSON
         cleaned_messages = []
-        for msg in original_messages:
+        for msg in retained_messages:
             if msg.get('role') == 'assistant' and isinstance(msg.get('content'), str):
                 # 清理assistant消息中的JSON
                 cleaned_content = remove_tool_result_jsons(msg['content'])
@@ -1546,4 +1635,3 @@ def handle_streaming_response(response, callback, original_messages=None, api_co
         return f"Error: {error_msg}"
 
     return full_content
-

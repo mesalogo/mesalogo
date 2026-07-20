@@ -380,7 +380,7 @@ class ModelClient:
                 # Wire-protocol / stream-control keys re-threaded from api_config on
                 # the tool-call follow-up round (see stream_handler.handle_tool_calls).
                 # They drive request construction, never the request body.
-                'api_format', 'stream_socket_timeout',
+                'api_format',
                 'tool_call_context_rounds', 'tool_call_correction',
                 'tool_call_correction_threshold',
                 # HTTP-transport controls consumed locally (httpx.Timeout is built
@@ -506,6 +506,24 @@ class ModelClient:
             except Exception:
                 connection_timeout = 5
                 read_timeout = 120
+
+            # Per-request controls win over the model setting, which wins over
+            # the global HTTP read timeout. ``timeout`` is retained as the
+            # runtime alias used by SummaryService; neither key belongs in the
+            # upstream model payload.
+            configured_read_timeout = kwargs.get('request_timeout')
+            if configured_read_timeout is None:
+                configured_read_timeout = kwargs.get('timeout')
+            if configured_read_timeout is None:
+                configured_read_timeout = getattr(model_config, 'request_timeout', None)
+            if configured_read_timeout is not None:
+                if isinstance(configured_read_timeout, bool):
+                    raise TypeError("request timeout must be a positive number")
+                configured_read_timeout = float(configured_read_timeout)
+                if configured_read_timeout <= 0:
+                    raise ValueError("request timeout must be greater than zero")
+                read_timeout = configured_read_timeout
+
             timeout = httpx.Timeout(float(connection_timeout), read=float(read_timeout))
             
             # 生成请求ID
@@ -619,7 +637,6 @@ class ModelClient:
                     # 线协议，stream_handler 据此选择 SSE 解析分支
                     "api_format": api_format,
                     # 传递系统设置，避免子函数在无Flask上下文时读取数据库
-                    "stream_socket_timeout": read_timeout,
                     "tool_call_context_rounds": tool_call_context_rounds,
                     "tool_call_correction": tool_call_correction,
                     "tool_call_correction_threshold": tool_call_correction_threshold,

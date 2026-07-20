@@ -31,7 +31,6 @@
 | `streaming_enabled` | true | boolean | 是否启用流式输出 |
 | `http_connection_timeout` | 10 | number | HTTP连接超时（秒） |
 | `http_read_timeout` | 300 | number | HTTP读取超时（秒） |
-| `stream_socket_timeout` | 60 | number | 流式响应Socket超时（秒） |
 
 ## 消息处理流程图
 

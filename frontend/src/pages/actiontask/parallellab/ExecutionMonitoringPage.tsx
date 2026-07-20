@@ -3,6 +3,7 @@ import { App, Typography, Skeleton, Select, Space } from 'antd';
 import { useTranslation } from 'react-i18next';
 import ExecutionMonitoring from './ExecutionMonitoring';
 import * as parallelExperimentApi from '../../../services/api/parallelExperiment';
+import { getParallelExperimentError } from './errorMessage';
 
 const { Title, Text } = Typography;
 
@@ -18,7 +19,7 @@ const ExecutionMonitoringPage = () => {
   // 加载实验列表
   const loadExperiments = useCallback(async () => {
     try {
-      const response = await parallelExperimentApi.listExperiments({
+      const response = await parallelExperimentApi.listAllExperiments({
         include_templates: false
       });
       if (response.success && response.experiments) {
@@ -64,7 +65,7 @@ const ExecutionMonitoringPage = () => {
     } finally {
       setPageLoading(false);
     }
-  }, []);
+  }, [message, t]);
 
   // 根据选择的实验ID更新显示的实验
   useEffect(() => {
@@ -121,7 +122,7 @@ const ExecutionMonitoringPage = () => {
         await loadExperiments();
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || t('parallelLab.list.stopFailed'));
+      message.error(getParallelExperimentError(error, t('parallelLab.list.stopFailed')));
     }
   };
 
@@ -133,7 +134,7 @@ const ExecutionMonitoringPage = () => {
         await loadExperiments();
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || t('parallelLab.list.pauseFailed'));
+      message.error(getParallelExperimentError(error, t('parallelLab.list.pauseFailed')));
     }
   };
 
@@ -145,7 +146,7 @@ const ExecutionMonitoringPage = () => {
         await loadExperiments();
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || t('parallelLab.list.resumeFailed'));
+      message.error(getParallelExperimentError(error, t('parallelLab.list.resumeFailed')));
     }
   };
 

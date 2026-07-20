@@ -1,4 +1,12 @@
-import React, { useState, useEffect, useRef, createContext, useContext, useCallback } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  createContext,
+  useContext,
+  useCallback,
+  useMemo,
+} from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 /**
@@ -32,51 +40,50 @@ export const TaskWindowManager = ({
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   const [windows, setWindows] = useState(new Map());
-  const [activeTaskId, setActiveTaskId] = useState(null);
   const windowOrderRef = useRef([]);
-  
+
+  const activeTaskId = useMemo(() => {
+    const match = location.pathname.match(/^\/action-tasks\/detail\/([^/]+)$/);
+    return match ? decodeURIComponent(match[1]) : null;
+  }, [location.pathname]);
+
+  const ensureTaskWindow = useCallback((taskId, taskInfo = null) => {
+    setWindows(prev => {
+      const newMap = new Map(prev);
+      const existingWindow = newMap.get(taskId);
+      const windowLimit = Math.max(1, maxWindows);
+
+      newMap.set(taskId, {
+        taskId,
+        taskInfo: taskInfo || existingWindow?.taskInfo || null,
+        createdAt: existingWindow?.createdAt || Date.now(),
+        lastActiveAt: Date.now()
+      });
+
+      windowOrderRef.current = windowOrderRef.current.filter(id => id !== taskId);
+      windowOrderRef.current.push(taskId);
+
+      while (newMap.size > windowLimit) {
+        const oldestId = windowOrderRef.current.shift();
+        if (oldestId !== undefined) {
+          newMap.delete(oldestId);
+        }
+      }
+
+      return newMap;
+    });
+  }, [maxWindows]);
+
   /**
    * 打开任务窗口
    */
-  const openTaskWindow = (taskId, taskInfo = null) => {
-    
-    setWindows(prev => {
-      const newMap = new Map(prev);
-      
-      if (!newMap.has(taskId)) {
-        newMap.set(taskId, {
-          taskId,
-          taskInfo,
-          createdAt: Date.now(),
-          lastActiveAt: Date.now()
-        });
-        
-        windowOrderRef.current = windowOrderRef.current.filter(id => id !== taskId);
-        windowOrderRef.current.push(taskId);
-        
-        if (newMap.size > maxWindows) {
-          const oldestId = windowOrderRef.current.shift();
-          newMap.delete(oldestId);
-        }
-      } else {
-        const window = newMap.get(taskId);
-        window.lastActiveAt = Date.now();
-        if (taskInfo) {
-          window.taskInfo = taskInfo;
-        }
-        
-        windowOrderRef.current = windowOrderRef.current.filter(id => id !== taskId);
-        windowOrderRef.current.push(taskId);
-      }
-      
-      return newMap;
-    });
-    
-    setActiveTaskId(taskId);
-    window.history.pushState({}, '', `/action-tasks/detail/${taskId}`);
-  };
+  const openTaskWindow = useCallback((taskId, taskInfo = null) => {
+    const normalizedTaskId = String(taskId);
+    ensureTaskWindow(normalizedTaskId, taskInfo);
+    navigate(`/action-tasks/detail/${encodeURIComponent(normalizedTaskId)}`);
+  }, [ensureTaskWindow, navigate]);
   
   /**
    * 更新任务信息（用于显示任务名称）
@@ -84,9 +91,12 @@ export const TaskWindowManager = ({
   const updateTaskInfo = useCallback((taskId, taskInfo) => {
     setWindows(prev => {
       const newMap = new Map(prev);
-      const window = newMap.get(taskId);
-      if (window) {
-        window.taskInfo = taskInfo;
+      const taskWindow = newMap.get(taskId);
+      if (taskWindow) {
+        newMap.set(taskId, {
+          ...taskWindow,
+          taskInfo
+        });
       }
       return newMap;
     });
@@ -95,70 +105,50 @@ export const TaskWindowManager = ({
   /**
    * 关闭任务窗口
    */
-  const closeTaskWindow = (taskId) => {
+  const closeTaskWindow = useCallback((taskId) => {
+    const remainingOrder = windowOrderRef.current.filter(id => id !== taskId);
+
     setWindows(prev => {
       const newMap = new Map(prev);
       newMap.delete(taskId);
       return newMap;
     });
     
-    windowOrderRef.current = windowOrderRef.current.filter(id => id !== taskId);
+    windowOrderRef.current = remainingOrder;
     
     if (taskId === activeTaskId) {
-      if (windowOrderRef.current.length > 0) {
-        const lastTaskId = windowOrderRef.current[windowOrderRef.current.length - 1];
-        setActiveTaskId(lastTaskId);
-        window.history.pushState({}, '', `/action-tasks/detail/${lastTaskId}`);
+      if (remainingOrder.length > 0) {
+        const lastTaskId = remainingOrder[remainingOrder.length - 1];
+        navigate(`/action-tasks/detail/${encodeURIComponent(lastTaskId)}`);
       } else {
-        setActiveTaskId(null);
         navigate('/action-tasks/overview');
       }
     }
-  };
+  }, [activeTaskId, navigate]);
   
   /**
    * 返回任务列表
    */
-  const backToList = () => {
-    setActiveTaskId(null);
+  const backToList = useCallback(() => {
     navigate('/action-tasks/overview');
-  };
+  }, [navigate]);
   
   /**
    * 清除所有窗口
    */
-  const closeAllWindows = () => {
+  const closeAllWindows = useCallback(() => {
     setWindows(new Map());
     windowOrderRef.current = [];
-    setActiveTaskId(null);
-  };
-  
-  useEffect(() => {
-    const match = location.pathname.match(/\/action-tasks\/detail\/([^/]+)/);
-    if (match) {
-      const taskId = match[1];
-      openTaskWindow(taskId);
-    } else {
-      if (activeTaskId) {
-        setActiveTaskId(null);
-      }
+    if (activeTaskId) {
+      navigate('/action-tasks/overview');
     }
-  }, [location.pathname]);
+  }, [activeTaskId, navigate]);
   
   useEffect(() => {
-    const handlePopState = () => {
-      const match = location.pathname.match(/\/action-tasks\/detail\/([^/]+)/);
-      if (match) {
-        const taskId = match[1];
-        setActiveTaskId(taskId);
-      } else if (location.pathname === '/action-tasks/overview') {
-        setActiveTaskId(null);
-      }
-    };
-    
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [location, windows]);
+    if (activeTaskId) {
+      ensureTaskWindow(activeTaskId);
+    }
+  }, [activeTaskId, ensureTaskWindow]);
   
   const contextValue = {
     windows,
@@ -184,7 +174,7 @@ export const TaskWindowManager = ({
             key={taskId}
             style={{
               display: isActive ? 'block' : 'none',
-              height: '100vh-1px',
+              height: 'calc(100vh - 1px)',
               width: '100%',
               position: isActive ? 'relative' : 'absolute',
               top: 0,

@@ -157,8 +157,6 @@ export default {
   'settings.httpConnectionTimeout.tooltip': 'HTTP请求建立连接的超时时间（秒），范围5-120秒，默认10秒',
   'settings.httpReadTimeout': 'HTTP读取超时 (http_read_timeout)',
   'settings.httpReadTimeout.tooltip': 'HTTP请求读取数据的超时时间（秒），范围30-600秒，默认120秒。用于流式响应的长时间读取',
-  'settings.streamSocketTimeout': '流式Socket超时 (stream_socket_timeout)',
-  'settings.streamSocketTimeout.tooltip': '流式响应Socket读取的超时时间（秒），范围10-300秒，默认60秒。影响流式输出的响应速度',
   'settings.defaultModelTimeout': '模型请求默认超时 (default_model_timeout)',
   'settings.defaultModelTimeout.tooltip': '模型配置的默认请求超时时间（秒），范围10-300秒，默认60秒。新建模型配置时的默认值',
   // 文档解析器设置

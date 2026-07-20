@@ -100,6 +100,8 @@ export default {
   'actionTaskDetail.loading': '加载中...',
   'actionTaskDetail.loadingDetail': '加载任务详情',
   'actionTaskDetail.loadFailed': '加载任务详情失败',
+  'actionTaskDetail.loadFailedDesc': '任务服务暂时不可用，任务数据未被更改。',
+  'actionTaskDetail.retry': '重试',
   'actionTaskDetail.conversation': '对话',
   'actionTaskDetail.environment': '环境变量',
   'actionTaskDetail.environmentDesc': '行动任务环境变量（与行动任务相关的系统级变量）',

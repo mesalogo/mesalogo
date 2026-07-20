@@ -30,6 +30,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import * as parallelExperimentApi from '../../../services/api/parallelExperiment';
 import TimelineTrackView from './TimelineTrackView';
+import { actionTaskDetailPath } from './routes';
 
 const { Text } = Typography;
 
@@ -58,10 +59,19 @@ const ExecutionMonitoring: React.FC<ExecutionMonitoringProps> = ({
   const [runsPageSize, setRunsPageSize] = useState<number>(10);
   const [runsCurrentPage, setRunsCurrentPage] = useState<Record<string, number>>({});
   const [runsPagination, setRunsPagination] = useState<Record<string, { total: number; totalPages: number }>>({});
+  const activeRunPollsRef = React.useRef<Set<string>>(new Set());
 
   // 核心请求函数（无 useCallback 依赖问题，page/pageSize 全部由调用方显式传入）
-  const fetchRuns = async (experimentId: string, iteration?: number, page: number = 1, pageSize: number = 10) => {
-    setLoadingRuns(prev => ({ ...prev, [experimentId]: true }));
+  const fetchRuns = useCallback(async (
+    experimentId: string,
+    iteration?: number,
+    page: number = 1,
+    pageSize: number = 10,
+    showLoading: boolean = true
+  ) => {
+    if (showLoading) {
+      setLoadingRuns(prev => ({ ...prev, [experimentId]: true }));
+    }
     try {
       const response = await parallelExperimentApi.getExperimentStatus(
         experimentId, true, iteration, page, pageSize
@@ -103,22 +113,24 @@ const ExecutionMonitoring: React.FC<ExecutionMonitoringProps> = ({
     } catch (error) {
       console.error('加载实验运行状态失败:', error);
     } finally {
-      setLoadingRuns(prev => ({ ...prev, [experimentId]: false }));
+      if (showLoading) {
+        setLoadingRuns(prev => ({ ...prev, [experimentId]: false }));
+      }
     }
-  };
+  }, []);
 
   // 刷新按钮：保持当前页码和轮次
   const loadExperimentRuns = useCallback((experimentId: string, iteration?: number) => {
     const page = runsCurrentPage[experimentId] || 1;
     fetchRuns(experimentId, iteration ?? selectedIterations[experimentId], page, runsPageSize);
-  }, [runsCurrentPage, selectedIterations, runsPageSize]);
+  }, [fetchRuns, runsCurrentPage, selectedIterations, runsPageSize]);
 
   // 切换轮次（重置到第1页）
   const handleIterationChange = useCallback((experimentId: string, iteration: number) => {
     setSelectedIterations(prev => ({ ...prev, [experimentId]: iteration }));
     setRunsCurrentPage(prev => ({ ...prev, [experimentId]: 1 }));
     fetchRuns(experimentId, iteration, 1, runsPageSize);
-  }, [runsPageSize]);
+  }, [fetchRuns, runsPageSize]);
 
   // runs 翻页
   const handleRunsPageChange = useCallback((experimentId: string, page: number, pageSize?: number) => {
@@ -129,7 +141,7 @@ const ExecutionMonitoring: React.FC<ExecutionMonitoringProps> = ({
     setRunsCurrentPage(prev => ({ ...prev, [experimentId]: page }));
     const iteration = selectedIterations[experimentId];
     fetchRuns(experimentId, iteration, page, newPageSize);
-  }, [selectedIterations, runsPageSize]);
+  }, [fetchRuns, selectedIterations, runsPageSize]);
 
   // 初始加载（只在 experiments 列表变化时触发，不依赖回调引用）
   const initializedRef = React.useRef<Set<string>>(new Set());
@@ -143,7 +155,44 @@ const ExecutionMonitoring: React.FC<ExecutionMonitoringProps> = ({
         fetchRuns(exp.id, undefined, 1, runsPageSize);
       }
     });
-  }, [experiments, runsPageSize]);
+  }, [experiments, fetchRuns, runsPageSize]);
+
+  // Keep run-level status live while an experiment is executing. The parent
+  // page polls only aggregate experiment counters, so without this interval
+  // individual rows remain frozen until the user presses Refresh.
+  useEffect(() => {
+    const runningExperiments = experiments.filter(
+      experiment => experiment.status === 'running'
+    );
+    if (runningExperiments.length === 0) return;
+
+    const interval = setInterval(() => {
+      runningExperiments.forEach(async experiment => {
+        if (activeRunPollsRef.current.has(experiment.id)) return;
+
+        activeRunPollsRef.current.add(experiment.id);
+        try {
+          await fetchRuns(
+            experiment.id,
+            selectedIterations[experiment.id],
+            runsCurrentPage[experiment.id] || 1,
+            runsPageSize,
+            false
+          );
+        } finally {
+          activeRunPollsRef.current.delete(experiment.id);
+        }
+      });
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [
+    experiments,
+    fetchRuns,
+    runsCurrentPage,
+    runsPageSize,
+    selectedIterations
+  ]);
 
   // 运行实例表格列定义
   const runColumns = [
@@ -203,7 +252,7 @@ const ExecutionMonitoring: React.FC<ExecutionMonitoringProps> = ({
         <Button 
           size="small" 
           icon={<EyeOutlined />}
-          onClick={() => navigate(`/action-tasks/detail/${record.action_task_id}`)}
+          onClick={() => navigate(actionTaskDetailPath(record.action_task_id))}
           disabled={!record.action_task_id}
         >
           {record.action_task_id ? t('parallelLab.monitor.details') : t('parallelLab.monitor.status.queued')}
@@ -220,7 +269,6 @@ const ExecutionMonitoring: React.FC<ExecutionMonitoringProps> = ({
   // 计算所有运行中实验的活跃运行数
   const allRuns = Object.values(experimentRuns).flat();
   const activeRunsCount = allRuns.filter(r => r.status === 'running').length;
-  const completedRunsCount = allRuns.filter(r => r.status === 'completed').length;
 
   return (
     <div>

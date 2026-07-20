@@ -11,24 +11,41 @@
 import logging
 import random
 from datetime import datetime
-from typing import Dict, List, Any, Optional
 from itertools import product
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm.attributes import flag_modified
 
 from app import db
 from app.models import (
-    ParallelExperiment, ExperimentStep, ActionTask, ActionSpace, ActionSpaceRole,
-    Conversation, ConversationAgent, Agent, AutonomousTask, Message,
-    ActionTaskAgent, ActionTaskEnvironmentVariable,
-    ActionSpaceEnvironmentVariable, ActionSpaceSharedVariable,
-    SharedEnvironmentVariable, RoleVariable, Role, ActionSpaceObserver
+    ActionSpace,
+    ActionSpaceEnvironmentVariable,
+    ActionSpaceObserver,
+    ActionSpaceRole,
+    ActionSpaceSharedVariable,
+    ActionTask,
+    ActionTaskAgent,
+    ActionTaskEnvironmentVariable,
+    Agent,
+    AutonomousTask,
+    Conversation,
+    ExperimentStep,
+    Message,
+    ParallelExperiment,
+    Role,
+    RoleVariable,
+    SharedEnvironmentVariable,
 )
-from app.services.scheduler.task_adapter import start_task
+from app.services.action_task_service import ActionTaskService
 from app.services.agent_service import AgentService
 from app.services.agent_variable_service import AgentVariableService
+from app.services.parallel_experiment_state import (
+    build_orchestration_runs,
+    extract_condition_variable_names,
+    normalize_autonomous_status,
+    should_update_orchestration,
+)
 from app.services.workspace_service import workspace_service
-from app.services.action_task_service import ActionTaskService
 from app.utils.datetime_utils import get_current_time_with_timezone
 
 logger = logging.getLogger(__name__)
@@ -593,6 +610,8 @@ class ParallelExperimentService:
         failed_count = 0
         stopped_count = 0
         total_runs_count = 0
+        status_by_task = {}
+        metrics_by_task = {}
         
         # 获取指定轮次或当前轮次的任务ID列表
         current_iteration = experiment.current_iteration or 0
@@ -627,20 +646,40 @@ class ParallelExperimentService:
             for task_id in current_task_ids:
                 conv = conv_by_task.get(str(task_id))
                 at = auto_task_latest.get(str(conv.id)) if conv else None
-                run_status = 'pending'
-                if at:
-                    if at.status == 'completed':
-                        run_status = 'completed'
-                        completed_count += 1
-                    elif at.status == 'failed':
-                        run_status = 'failed'
-                        failed_count += 1
-                    elif at.status == 'stopped':
-                        run_status = 'stopped'
-                        stopped_count += 1
-                    elif at.status == 'active':
-                        run_status = 'running'
+                run_status = normalize_autonomous_status(at.status if at else None)
+                if run_status == 'completed':
+                    completed_count += 1
+                elif run_status == 'failed':
+                    failed_count += 1
+                elif run_status == 'stopped':
+                    stopped_count += 1
                 status_by_task[str(task_id)] = run_status
+
+            # Scheduling and stop-condition checks must use every run, not only
+            # the visible page. Fetch only variables referenced by conditions.
+            if (
+                should_update_orchestration(
+                    current_iteration=current_iteration,
+                    query_iteration=query_iteration,
+                )
+                and experiment.status == 'running'
+            ):
+                condition_variables = extract_condition_variable_names(
+                    experiment.config.get('stop_conditions', [])
+                )
+                if condition_variables:
+                    condition_values = ActionTaskEnvironmentVariable.query.filter(
+                        ActionTaskEnvironmentVariable.action_task_id.in_(current_task_ids),
+                        ActionTaskEnvironmentVariable.name.in_(condition_variables),
+                    ).all()
+                    for value in condition_values:
+                        task_id = str(value.action_task_id)
+                        if task_id not in metrics_by_task:
+                            metrics_by_task[task_id] = {}
+                        try:
+                            metrics_by_task[task_id][value.name] = float(value.value)
+                        except (ValueError, TypeError):
+                            metrics_by_task[task_id][value.name] = value.value
             
             # ====== 阶段 2：分页 slice 的详细数据（env_vars + messages）======
             total_runs_count = len(current_task_ids)
@@ -657,7 +696,6 @@ class ParallelExperimentService:
             task_map = {str(t.id): t for t in page_tasks}
             
             # 批量查 env_vars（仅分页 slice，最大瓶颈）
-            from app.models import ActionTaskEnvironmentVariable
             page_task_id_strs = [str(tid) for tid in page_task_ids]
             env_vars_by_task = {}
             if page_task_id_strs:
@@ -735,6 +773,12 @@ class ParallelExperimentService:
                         run_data['messages'].append(message_data)
                 
                 runs.append(run_data)
+
+        orchestration_runs = build_orchestration_runs(
+            task_ids=current_task_ids,
+            status_by_task=status_by_task,
+            metrics_by_task=metrics_by_task,
+        )
         
         # 计算待创建任务数（延迟创建模式）—— 提前计算，后续逻辑需要
         pending_task_count = 0
@@ -744,71 +788,81 @@ class ParallelExperimentService:
         
         # === 写操作区域：更新统计 + 检查完成/停止条件 ===
         # 使用 try/except 处理 MySQL 乐观锁冲突（后台线程可能同时在修改同一行）
-        try:
-            # 更新实验统计
-            experiment.completed_runs = completed_count
-            experiment.failed_runs = failed_count  # 仅真正的失败
-            
-            # 检查停止条件是否满足
-            stop_conditions_met = False
-            if experiment.status == 'running':
-                stop_conditions_met = ParallelExperimentService._check_stop_conditions(experiment, runs)
-            
-            # 检查是否全部完成或停止条件满足
-            # 注意：延迟创建模式下，需要同时检查 pending_combinations 是否为空
-            has_pending_combinations = pending_task_count > 0
-            all_created_done = completed_count + failed_count + stopped_count >= len(current_task_ids)  # 所有已创建的任务都结束了
-            
-            if stop_conditions_met:
-                logger.info(f"实验 {experiment.name} 满足停止条件，正在停止...")
-                ParallelExperimentService._finalize_experiment(experiment)
-            elif all_created_done and not has_pending_combinations and experiment.status == 'running':
-                # 所有任务都完成了（包括没有剩余待创建的）
-                ParallelExperimentService._finalize_experiment(experiment)
-            elif experiment.status == 'running':
-                # 并发池：检查是否需要启动更多任务或创建新任务
-                ParallelExperimentService._check_and_start_pending_tasks(experiment, runs)
-            
-            db.session.commit()
-        except Exception as e:
-            # MySQL 乐观锁冲突（1020 Record has changed）或其他写冲突
-            # rollback 后重新读取最新状态，但不再尝试写入（避免死循环）
-            logger.warning(f"实验状态更新冲突（后台线程竞争），忽略本次写入: {str(e)[:100]}")
-            db.session.rollback()
-            # 重新读取实验最新状态（用于返回值）
-            experiment = ParallelExperiment.query.get(experiment_id)
-            if not experiment:
-                return None
+        if should_update_orchestration(
+            current_iteration=current_iteration,
+            query_iteration=query_iteration,
+        ):
+            try:
+                # 更新实验统计
+                experiment.completed_runs = completed_count
+                experiment.failed_runs = failed_count  # 仅真正的失败
+
+                # 检查停止条件是否满足
+                stop_conditions_met = False
+                if experiment.status == 'running':
+                    stop_conditions_met = ParallelExperimentService._check_stop_conditions(
+                        experiment,
+                        orchestration_runs,
+                    )
+
+                # 检查是否全部完成或停止条件满足
+                # 注意：延迟创建模式下，需要同时检查 pending_combinations 是否为空
+                has_pending_combinations = pending_task_count > 0
+                all_created_done = completed_count + failed_count + stopped_count >= len(current_task_ids)  # 所有已创建的任务都结束了
+
+                if stop_conditions_met:
+                    logger.info(f"实验 {experiment.name} 满足停止条件，正在停止...")
+                    ParallelExperimentService._finalize_experiment(experiment)
+                elif all_created_done and not has_pending_combinations and experiment.status == 'running':
+                    # 所有任务都完成了（包括没有剩余待创建的）
+                    ParallelExperimentService._finalize_experiment(experiment)
+                elif experiment.status == 'running':
+                    # 并发池：检查是否需要启动更多任务或创建新任务
+                    ParallelExperimentService._check_and_start_pending_tasks(
+                        experiment,
+                        orchestration_runs,
+                    )
+
+                db.session.commit()
+            except Exception as e:
+                # MySQL 乐观锁冲突（1020 Record has changed）或其他写冲突
+                # rollback 后重新读取最新状态，但不再尝试写入（避免死循环）
+                logger.warning(f"实验状态更新冲突（后台线程竞争），忽略本次写入: {str(e)[:100]}")
+                db.session.rollback()
+                # 重新读取实验最新状态（用于返回值）
+                experiment = ParallelExperiment.query.get(experiment_id)
+                if not experiment:
+                    return None
         
         # 获取查询轮次的结果摘要
         query_results_summary = None
         if experiment.results_summary and query_iteration:
             query_results_summary = experiment.results_summary.get(str(query_iteration))
         
-        # 重新计算 pending_task_count（finalize 或 stop 可能已清空 pending_combinations）
-        pending_task_count = 0
+        # 重新计算 pending 队列（finalize 或 stop 可能已清空）
+        pending_list = []
         if experiment.pending_combinations and query_iteration:
-            pending_list = experiment.pending_combinations.get(str(query_iteration), [])
-            pending_task_count = len(pending_list) if isinstance(pending_list, list) else 0
-        
-        # 生成未创建任务的占位行（"排队中"状态）
-        created_count = len(runs)
-        for i in range(pending_task_count):
-            run_number = created_count + i + 1
-            # 从 pending_combinations 中获取参数组合（用于展示）
-            pending_params = {}
-            if experiment.pending_combinations and query_iteration:
-                pending_list = experiment.pending_combinations.get(str(query_iteration), [])
-                if i < len(pending_list):
-                    pending_params = pending_list[i]
-            
-            runs.append({
-                'run_number': run_number,
-                'action_task_id': None,  # 未创建，无 task_id
-                'status': 'queued',  # 排队中（区别于 pending = 已创建未启动）
-                'parameters': pending_params,
-                'current_metrics': {}
-            })
+            stored_pending = experiment.pending_combinations.get(
+                str(query_iteration),
+                [],
+            )
+            if isinstance(stored_pending, list):
+                pending_list = stored_pending
+        pending_task_count = len(pending_list)
+
+        # Paginate created and queued runs as one logical list. Previously every
+        # page appended the entire pending queue and runs_total omitted it.
+        from app.services.parallel_experiment_pagination import (
+            build_queued_run_page,
+        )
+
+        queued_rows, total_runs_count = build_queued_run_page(
+            created_count=len(current_task_ids),
+            pending_combinations=pending_list,
+            page=runs_page,
+            limit=runs_limit,
+        )
+        runs.extend(queued_rows)
         
         result = {
             'experiment_id': experiment_id,

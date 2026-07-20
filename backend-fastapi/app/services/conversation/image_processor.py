@@ -11,9 +11,9 @@
 import base64
 import io
 import logging
-from typing import Dict, Any, Tuple, Optional
+from typing import Any, Dict, Optional, Tuple
+
 from PIL import Image
-import imghdr
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +92,9 @@ class ImageProcessor:
         """
         try:
             # 获取MIME类型
-            image_format = imghdr.what(None, h=file_data)
+            image_format = self._detect_image_format(file_data)
+            if image_format is None:
+                raise ValueError("unsupported or invalid image data")
             mime_type = self._get_mime_type(image_format)
             
             # Base64编码
@@ -221,6 +223,17 @@ class ImageProcessor:
             'gif': 'image/gif'
         }
         return format_mime_map.get(image_format, 'image/jpeg')
+
+    @classmethod
+    def _detect_image_format(cls, file_data: bytes) -> Optional[str]:
+        """Detect and verify a supported format with Pillow."""
+        try:
+            with Image.open(io.BytesIO(file_data)) as image:
+                image_format = (image.format or "").lower()
+                image.verify()
+        except (OSError, ValueError):
+            return None
+        return image_format if image_format in cls.SUPPORTED_FORMATS else None
     
     @classmethod
     def is_base64_image(cls, data: str) -> bool:
@@ -236,13 +249,15 @@ class ImageProcessor:
         try:
             # 检查data URI格式
             if data.startswith('data:image/'):
-                return ';base64,' in data
+                if ';base64,' not in data:
+                    return False
+                data = data.split(',', 1)[1]
             
             # 尝试Base64解码
             if len(data) % 4 == 0:  # Base64长度必须是4的倍数
-                decoded = base64.b64decode(data)
+                decoded = base64.b64decode(data, validate=True)
                 # 检查是否为图像
-                return imghdr.what(None, h=decoded) is not None
+                return cls._detect_image_format(decoded) is not None
                 
             return False
             

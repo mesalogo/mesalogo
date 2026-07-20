@@ -11,14 +11,6 @@ import asyncio
 import httpx
 from typing import List, Dict, Any, Optional, Union, Tuple
 
-try:
-    from sentence_transformers import SentenceTransformer
-    import numpy as np
-    SENTENCE_TRANSFORMERS_AVAILABLE = True
-except ImportError:
-    SentenceTransformer = None
-    SENTENCE_TRANSFORMERS_AVAILABLE = False
-
 from app.models import ModelConfig
 from app.services.conversation.model_client import ModelClient
 
@@ -74,12 +66,14 @@ class EmbeddingService:
     def _load_sentence_transformer_model(self, model_id: str) -> Optional[Any]:
         """加载SentenceTransformer模型"""
         try:
-            if not SENTENCE_TRANSFORMERS_AVAILABLE:
-                raise ImportError("sentence-transformers库不可用")
-            
             # 检查缓存
             if model_id in self._model_cache:
                 return self._model_cache[model_id]
+
+            # Local-ML dependencies are intentionally imported only for the
+            # builtin provider. API-backed embedding requests must not import
+            # torch/CUDA merely by importing this service package.
+            from sentence_transformers import SentenceTransformer
             
             # 加载模型
             self.logger.info(f"加载SentenceTransformer模型: {model_id}")
@@ -109,7 +103,7 @@ class EmbeddingService:
             embeddings = model.encode(texts, convert_to_tensor=False, show_progress_bar=False)
             
             # 转换为列表格式
-            if isinstance(embeddings, np.ndarray):
+            if hasattr(embeddings, "tolist"):
                 embeddings = embeddings.tolist()
             
             return True, embeddings

@@ -17,6 +17,7 @@ under test itself.
 from __future__ import annotations
 
 import json
+from typing import ClassVar
 
 import pytest
 
@@ -40,10 +41,11 @@ class _FakeResponse:
 class _CapturingClient:
     """Stand-in for httpx.Client that records the outbound request."""
 
-    captured: dict = {}
+    captured: ClassVar[dict] = {}
+    init_kwargs: ClassVar[dict] = {}
 
     def __init__(self, *args, **kwargs):
-        pass
+        type(self).init_kwargs = kwargs
 
     def post(self, url, headers=None, json=None):
         type(self).captured = {"url": url, "headers": headers or {}, "json": json or {}}
@@ -75,6 +77,7 @@ def patch_httpx(monkeypatch):
 
     monkeypatch.setattr(mc.httpx, "Client", _CapturingClient)
     _CapturingClient.captured = {}
+    _CapturingClient.init_kwargs = {}
     return _CapturingClient
 
 
@@ -183,7 +186,6 @@ def test_tool_followup_control_kwargs_never_leak_into_payload(client, patch_http
         [{"role": "user", "content": "U"}],
         is_stream=False,
         api_format="openai-compatible",
-        stream_socket_timeout=120,
         tool_call_context_rounds=5,
         tool_call_correction=False,
         tool_call_correction_threshold=5,
@@ -191,7 +193,6 @@ def test_tool_followup_control_kwargs_never_leak_into_payload(client, patch_http
     body = patch_httpx.captured["json"]
     for leaked in (
         "api_format",
-        "stream_socket_timeout",
         "tool_call_context_rounds",
         "tool_call_correction",
         "tool_call_correction_threshold",
@@ -212,6 +213,34 @@ def test_timeout_kwarg_never_leaks_into_payload(client, patch_httpx):
         timeout=300,
     )
     assert "timeout" not in patch_httpx.captured["json"]
+
+
+def test_model_request_timeout_controls_http_transport(client, patch_httpx):
+    config = _Cfg("openai-compatible")
+    config.request_timeout = 17
+
+    client.send_request(
+        config,
+        [{"role": "user", "content": "U"}],
+        is_stream=False,
+    )
+
+    assert patch_httpx.init_kwargs["timeout"].read == 17
+
+
+def test_explicit_request_timeout_overrides_model_config(client, patch_httpx):
+    config = _Cfg("openai-compatible")
+    config.request_timeout = 17
+
+    client.send_request(
+        config,
+        [{"role": "user", "content": "U"}],
+        is_stream=False,
+        request_timeout=41,
+    )
+
+    assert patch_httpx.init_kwargs["timeout"].read == 41
+    assert "request_timeout" not in patch_httpx.captured["json"]
 
 
 # ── anthropic (Messages) ────────────────────────────────────────────────

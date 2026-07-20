@@ -100,6 +100,8 @@ export default {
   'actionTaskDetail.loading': 'Loading...',
   'actionTaskDetail.loadingDetail': 'Loading task details',
   'actionTaskDetail.loadFailed': 'Failed to load task details',
+  'actionTaskDetail.loadFailedDesc': 'The task service is temporarily unavailable. Your task was not changed.',
+  'actionTaskDetail.retry': 'Retry',
   'actionTaskDetail.conversation': 'Conversation',
   'actionTaskDetail.environment': 'Environment Variables',
   'actionTaskDetail.environmentDesc': 'Action task environment variables (system-level variables related to action tasks)',

@@ -99,7 +99,6 @@ export const useGeneralSettings = () => {
         assistant_generation_model: 'default',
         http_connection_timeout: 30,
         http_read_timeout: 300,
-        stream_socket_timeout: 60,
         default_model_timeout: 60,
         document_parser_tool: 'mineru',
         document_parser_mineru_config: {

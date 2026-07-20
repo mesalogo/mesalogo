@@ -27,9 +27,7 @@ import {
   StopOutlined,
   CopyOutlined,
   SearchOutlined,
-  ExperimentOutlined,
   InfoCircleOutlined,
-  BarChartOutlined,
   EyeOutlined,
   ClockCircleOutlined,
   SettingOutlined,
@@ -38,8 +36,8 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import * as parallelExperimentApi from '../../../services/api/parallelExperiment';
+import { getParallelExperimentError } from './errorMessage';
 import ExperimentDesign from './ExperimentDesign';
-import AnalysisReport from './AnalysisReport';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
 import { modelConfigAPI } from '../../../services/api/model';
 import { settingsAPI } from '../../../services/api/settings';
@@ -77,7 +75,9 @@ const ExperimentListPage = () => {
 
   const loadExperiments = useCallback(async () => {
     try {
-      const response = await parallelExperimentApi.listExperiments({ include_templates: true });
+      const response = await parallelExperimentApi.listAllExperiments({
+        include_templates: true
+      });
       if (response.success && response.experiments) {
         setExperiments(response.experiments);
       }
@@ -87,7 +87,7 @@ const ExperimentListPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [message, t]);
 
   const loadActionSpaces = useCallback(async () => {
     try {
@@ -160,7 +160,7 @@ const ExperimentListPage = () => {
         setModalVisible(false);
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || t('parallelLab.list.cloneFailed'));
+      message.error(getParallelExperimentError(error, t('parallelLab.list.cloneFailed')));
     }
   };
 
@@ -173,7 +173,7 @@ const ExperimentListPage = () => {
         loadExperiments();
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || t('parallelLab.list.stopFailed'));
+      message.error(getParallelExperimentError(error, t('parallelLab.list.stopFailed')));
     }
   };
 
@@ -186,7 +186,7 @@ const ExperimentListPage = () => {
         loadExperiments();
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || t('parallelLab.list.pauseFailed'));
+      message.error(getParallelExperimentError(error, t('parallelLab.list.pauseFailed')));
     }
   };
 
@@ -199,7 +199,7 @@ const ExperimentListPage = () => {
         loadExperiments();
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || t('parallelLab.list.resumeFailed'));
+      message.error(getParallelExperimentError(error, t('parallelLab.list.resumeFailed')));
     }
   };
 
@@ -221,7 +221,7 @@ const ExperimentListPage = () => {
             loadExperiments();
           }
         } catch (error: any) {
-          message.error(error.response?.data?.error || t('parallelLab.list.deleteFailed'));
+          message.error(getParallelExperimentError(error, t('parallelLab.list.deleteFailed')));
         }
       }
     });
@@ -257,7 +257,7 @@ const ExperimentListPage = () => {
         }
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || t('parallelLab.list.createFailed'));
+      message.error(getParallelExperimentError(error, t('parallelLab.list.createFailed')));
     } finally {
       setCreateLoading(false);
     }
@@ -294,7 +294,7 @@ const ExperimentListPage = () => {
         setSelectedExperiment(updated);
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || t('parallelLab.list.saveConfigFailed'));
+      message.error(getParallelExperimentError(error, t('parallelLab.list.saveConfigFailed')));
     } finally {
       setEditLoading(false);
     }
@@ -321,7 +321,7 @@ const ExperimentListPage = () => {
         navigate('/parallel-lab/monitoring');
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || t('parallelLab.list.startFailed'));
+      message.error(getParallelExperimentError(error, t('parallelLab.list.startFailed')));
     } finally {
       setEditLoading(false);
     }
@@ -347,7 +347,7 @@ const ExperimentListPage = () => {
         navigate('/parallel-lab/monitoring');
       }
     } catch (error: any) {
-      message.error(error.response?.data?.error || t('parallelLab.list.startFailed'));
+      message.error(getParallelExperimentError(error, t('parallelLab.list.startFailed')));
     }
   };
 
@@ -473,7 +473,7 @@ const ExperimentListPage = () => {
       await loadExperiments();
       setSelectedExperiment({ ...selectedExperiment, name, description });
     } catch (error: any) {
-      message.error(error.response?.data?.error || t('parallelLab.list.saveFailed'));
+      message.error(getParallelExperimentError(error, t('parallelLab.list.saveFailed')));
     }
   };
 

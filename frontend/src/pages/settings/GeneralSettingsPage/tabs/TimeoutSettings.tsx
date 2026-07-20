@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Form, InputNumber, Space, Tooltip, Button, Divider, App } from 'antd';
 import {
   ClockCircleOutlined,
-  ThunderboltOutlined,
   FieldTimeOutlined,
   InfoCircleOutlined,
   SaveOutlined,
@@ -23,7 +22,6 @@ const TimeoutSettings = ({ color, initialValues }: any) => {
       form.setFieldsValue({
         http_connection_timeout: initialValues.http_connection_timeout || 30,
         http_read_timeout: initialValues.http_read_timeout || 300,
-        stream_socket_timeout: initialValues.stream_socket_timeout || 60,
         default_model_timeout: initialValues.default_model_timeout || 60
       });
     }
@@ -58,7 +56,6 @@ const TimeoutSettings = ({ color, initialValues }: any) => {
       await settingsAPI.updateSettings({
         http_connection_timeout: values.http_connection_timeout,
         http_read_timeout: values.http_read_timeout,
-        stream_socket_timeout: values.stream_socket_timeout,
         default_model_timeout: values.default_model_timeout
       });
 
@@ -80,7 +77,6 @@ const TimeoutSettings = ({ color, initialValues }: any) => {
       form.setFieldsValue({
         http_connection_timeout: initialValues.http_connection_timeout || 30,
         http_read_timeout: initialValues.http_read_timeout || 300,
-        stream_socket_timeout: initialValues.stream_socket_timeout || 60,
         default_model_timeout: initialValues.default_model_timeout || 60
       });
       message.success(t('settings.resetSuccess'));
@@ -120,23 +116,6 @@ const TimeoutSettings = ({ color, initialValues }: any) => {
         <InputNumber
           min={30}
           max={600}
-          style={{ width: '100%' }}
-        />
-      </Form.Item>
-
-      <Form.Item
-        name="stream_socket_timeout"
-        label={renderLabel(
-          <ThunderboltOutlined />,
-          t('settings.streamSocketTimeout'),
-          t('settings.streamSocketTimeout.tooltip')
-        )}
-        rules={[{ required: true, message: t('settings.pleaseEnterField', { field: t('settings.streamSocketTimeout') }) }]}
-        style={{ marginBottom: '16px' }}
-      >
-        <InputNumber
-          min={10}
-          max={300}
           style={{ width: '100%' }}
         />
       </Form.Item>
@@ -184,4 +163,3 @@ const TimeoutSettings = ({ color, initialValues }: any) => {
 };
 
 export default TimeoutSettings;
-

@@ -58,7 +58,7 @@ export const actionTaskAPI = {
 
   // 更新行动任务状态
   updateStatus: async (id, status) => {
-    const response = await api.put(`/action-tasks/${id}/status`, { status });
+    const response = await api.put(`/action-tasks/${id}`, { status });
     return response.data;
   },
 

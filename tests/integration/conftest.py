@@ -18,8 +18,7 @@ def pytest_collection_modifyitems(items):
             item.add_marker(pytest.mark.integration)
 
 
-# 集成测试常用的 client fixture - 占位实现
-# TODO: 待 app 工厂稳定后接通真实 FastAPI app + httpx.AsyncClient
+# 集成测试常用的 client fixture：真实 FastAPI app + httpx.AsyncClient
 @pytest.fixture
 async def client():
     """

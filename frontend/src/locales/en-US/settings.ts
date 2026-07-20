@@ -157,8 +157,6 @@ export default {
   'settings.httpConnectionTimeout.tooltip': 'Timeout for establishing HTTP request connections (seconds), range 5-120 seconds, default 10 seconds',
   'settings.httpReadTimeout': 'HTTP Read Timeout (http_read_timeout)',
   'settings.httpReadTimeout.tooltip': 'Timeout for reading HTTP request data (seconds), range 30-600 seconds, default 120 seconds. Used for long-time reading of streaming responses',
-  'settings.streamSocketTimeout': 'Streaming Socket Timeout (stream_socket_timeout)',
-  'settings.streamSocketTimeout.tooltip': 'Timeout for streaming response socket reading (seconds), range 10-300 seconds, default 60 seconds. Affects streaming output response speed',
   'settings.defaultModelTimeout': 'Default Model Request Timeout (default_model_timeout)',
   'settings.defaultModelTimeout.tooltip': 'Default request timeout for model configurations (seconds), range 10-300 seconds, default 60 seconds. Default value when creating new model configurations',
   // Document Parser Settings

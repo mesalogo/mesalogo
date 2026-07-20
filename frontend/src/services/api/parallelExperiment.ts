@@ -148,18 +148,46 @@ export interface ListExperimentsResponse {
   total_pages: number;
 }
 
+export interface ListExperimentsParams {
+  page?: number;
+  limit?: number;
+  include_templates?: boolean;
+}
+
 // API 函数
 
 /**
  * 获取实验列表
  */
-export const listExperiments = async (params?: {
-  page?: number;
-  limit?: number;
-  include_templates?: boolean;
-}): Promise<ListExperimentsResponse> => {
+export const listExperiments = async (
+  params?: ListExperimentsParams
+): Promise<ListExperimentsResponse> => {
   const response = await request.get('/parallel-experiments', { params });
   return response.data;
+};
+
+/**
+ * 获取所有实验，供客户端筛选和选择器使用。
+ */
+export const listAllExperiments = async (
+  params: Omit<ListExperimentsParams, 'page'> = {}
+): Promise<ListExperimentsResponse> => {
+  const limit = params.limit || 100;
+  const firstPage = await listExperiments({ ...params, limit, page: 1 });
+  const totalPages = Math.max(1, Number(firstPage.total_pages) || 1);
+  const experiments = [...firstPage.experiments];
+
+  for (let page = 2; page <= totalPages; page += 1) {
+    const nextPage = await listExperiments({ ...params, limit, page });
+    experiments.push(...nextPage.experiments);
+  }
+
+  return {
+    ...firstPage,
+    experiments,
+    page: 1,
+    limit,
+  };
 };
 
 /**
@@ -306,8 +334,9 @@ export const validateExperimentConfig = async (
   return response.data;
 };
 
-export default {
+const parallelExperimentAPI = {
   listExperiments,
+  listAllExperiments,
   createExperiment,
   createDraftExperiment,
   updateExperiment,
@@ -324,3 +353,5 @@ export default {
   getRunSteps,
   validateExperimentConfig
 };
+
+export default parallelExperimentAPI;

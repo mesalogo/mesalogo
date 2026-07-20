@@ -1,0 +1,7 @@
+-r requirements.txt
+
+# Test and incremental quality gates (测试与增量质量门)
+pytest>=9.0,<10
+fakeredis>=2.30
+aiosqlite>=0.21
+ruff>=0.15,<0.16
