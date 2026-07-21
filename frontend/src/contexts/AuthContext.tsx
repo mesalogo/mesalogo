@@ -148,7 +148,7 @@ export const AuthProvider = ({ children }) => {
       } else {
         console.log('AuthContext: 登录失败:', result.message);
         setLoading(false);
-        return { success: false, message: result.message };
+        return result;
       }
     } catch (error) {
       console.error('AuthContext: login request failed:', error);

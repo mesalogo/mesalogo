@@ -448,7 +448,8 @@ def call_llm_with_tool_results(original_messages: List[Dict[str, Any]],
                          tool_calls: List[Dict[str, Any]],
                          tool_results: List[Dict[str, Any]],
                          api_config: Dict[str, Any],
-                         callback: Callable):
+                         callback: Callable,
+                         protocol_errors: Optional[List[str]] = None):
     """
     在工具调用执行后再次调用LLM
     
@@ -465,6 +466,7 @@ def call_llm_with_tool_results(original_messages: List[Dict[str, Any]],
         tool_results: 当前轮次的工具调用结果列表
         api_config: API配置信息，包含api_url, api_key, model, agent_info等
         callback: 回调函数
+        protocol_errors: 需要返回给LLM修正的工具协议错误
 
     Returns:
         str: LLM的最终回复
@@ -561,7 +563,7 @@ def call_llm_with_tool_results(original_messages: List[Dict[str, Any]],
                     "name": utc["name"],
                     "arguments": json.dumps(args, ensure_ascii=False) if isinstance(args, dict) else str(args)
                 })
-        else:
+        elif unified_tool_calls:
             assistant_message = ToolFormatConverter.to_provider_assistant_message("", unified_tool_calls, provider)
             messages.append(assistant_message)
 
@@ -635,6 +637,16 @@ def call_llm_with_tool_results(original_messages: List[Dict[str, Any]],
                         logger.debug(f"[工具调用后再次调用LLM] 添加OpenAI格式工具结果消息: {tool_call['function']['name']}, ID: {tool_call_id}, 结果长度: {len(result_content)}")
                 else:
                     logger.warning(f"[工具调用后再次调用LLM] 未找到工具调用 {tool_call_id} 的结果")
+
+        if protocol_errors:
+            logger.info(
+                "Returning %s tool protocol error(s) to the model for retry",
+                len(protocol_errors),
+            )
+            messages.append({
+                "role": "user",
+                "content": "\n".join(protocol_errors),
+            })
 
         if DEBUG_LLM_RESPONSE:
             logger.debug(f"[工具调用后再次调用LLM] 最终消息数量: {len(messages)}")
@@ -781,72 +793,6 @@ def handle_streaming_response_with_adapter(adapter, response, callback, api_conf
                     pass
 
         return f"Error: {error_msg}"
-
-def _infer_tool_name_from_args(arguments_str: str, api_config: dict) -> str:
-    """从工具参数推断工具名称
-
-    通过匹配参数的key与已注册工具定义的参数schema来推断工具名称。
-    当某些provider的流式响应中缺少tool name时使用。
-
-    Args:
-        arguments_str: JSON格式的工具参数字符串
-        api_config: API配置，包含agent_info.tools
-
-    Returns:
-        str: 推断出的工具名称，如果无法推断则返回空字符串
-    """
-    if not api_config or not arguments_str:
-        return ''
-
-    try:
-        args = json.loads(arguments_str)
-        if not isinstance(args, dict):
-            return ''
-    except (json.JSONDecodeError, TypeError):
-        return ''
-
-    arg_keys = set(args.keys())
-    if not arg_keys:
-        return ''
-
-    # 从api_config中获取工具定义
-    agent_info = api_config.get('agent_info')
-    if not agent_info or not isinstance(agent_info, dict):
-        return ''
-
-    tools = agent_info.get('tools', [])
-    if not tools:
-        return ''
-
-    # 遍历工具定义，匹配参数key
-    best_match = ''
-    best_score = 0
-
-    for tool_def in tools:
-        if not isinstance(tool_def, dict):
-            continue
-        func = tool_def.get('function', {})
-        tool_name = func.get('name', '')
-        params = func.get('parameters', {})
-        properties = params.get('properties', {})
-
-        if not properties:
-            continue
-
-        tool_param_keys = set(properties.keys())
-
-        # 计算参数key的匹配度
-        if arg_keys.issubset(tool_param_keys):
-            # 调用方的参数是工具定义参数的子集，可能匹配
-            score = len(arg_keys & tool_param_keys)
-            if score > best_score:
-                best_score = score
-                best_match = tool_name
-
-    if best_match:
-        logger.debug(f"[工具名推断] 从参数 {arg_keys} 推断工具名为: {best_match}")
-
-    return best_match
 
 def handle_streaming_response(response, callback, original_messages=None, api_config=None):
     """处理流式响应 - 支持 OpenAI Chat Completions / Responses API / Claude(Anthropic) 格式"""
@@ -1182,18 +1128,17 @@ def handle_streaming_response(response, callback, original_messages=None, api_co
                                 })
 
                             # 更新id和type
-                            if 'id' in delta_tool_call:
+                            if delta_tool_call.get('id'):
                                 openai_tool_calls[tool_call_index]['id'] = delta_tool_call['id']
-                            if 'type' in delta_tool_call:
+                            if delta_tool_call.get('type'):
                                 openai_tool_calls[tool_call_index]['type'] = delta_tool_call['type']
 
                             # 更新函数信息
-                            if 'function' in delta_tool_call:
-                                if 'name' in delta_tool_call['function']:
-                                    openai_tool_calls[tool_call_index]['function']['name'] = delta_tool_call['function']['name']
-                                if 'arguments' in delta_tool_call['function']:
-                                    if delta_tool_call['function']['arguments'] is not None:
-                                        openai_tool_calls[tool_call_index]['function']['arguments'] += delta_tool_call['function']['arguments']
+                            function_delta = delta_tool_call.get('function') or {}
+                            if function_delta.get('name'):
+                                openai_tool_calls[tool_call_index]['function']['name'] = function_delta['name']
+                            if function_delta.get('arguments') is not None:
+                                openai_tool_calls[tool_call_index]['function']['arguments'] += function_delta['arguments']
 
                         openai_tool_call_collecting = True
 
@@ -1373,6 +1318,7 @@ def handle_streaming_response(response, callback, original_messages=None, api_co
     # 提取工具调用
     tool_call_content = []
     tool_result_content = []
+    tool_protocol_errors = []
 
     # 处理XML格式的工具调用
     xml_tool_calls = parse_tool_calls(full_content)
@@ -1433,22 +1379,22 @@ def handle_streaming_response(response, callback, original_messages=None, api_co
                     logger.debug(f"[LLM流式响应] 跳过不完整的OpenAI工具调用（无arguments）: {openai_tool_call}")
                 continue
 
+            # A tool name identifies the operation and must never be inferred.
+            if not openai_tool_call['function']['name']:
+                tool_call_id = openai_tool_call.get('id') or 'unknown'
+                protocol_error = (
+                    f"Tool call protocol error for call_id '{tool_call_id}': "
+                    "function.name is missing. No tool was executed. Retry the call "
+                    "using the exact name of one of the tools provided in this request."
+                )
+                logger.error(f"[LLM流式响应] {protocol_error}")
+                tool_protocol_errors.append(protocol_error)
+                continue
+
             # 补全缺失的id
             if not openai_tool_call['id']:
                 openai_tool_call['id'] = f"call_{uuid.uuid4().hex[:24]}"
                 logger.warning(f"[LLM流式响应] 工具调用缺少id，自动生成: {openai_tool_call['id']}")
-
-            # 补全缺失的name - 从已注册工具定义中推断
-            if not openai_tool_call['function']['name']:
-                inferred_name = _infer_tool_name_from_args(
-                    openai_tool_call['function']['arguments'], api_config
-                )
-                if inferred_name:
-                    openai_tool_call['function']['name'] = inferred_name
-                    logger.warning(f"[LLM流式响应] 工具调用缺少name，从参数推断为: {inferred_name}")
-                else:
-                    logger.warning(f"[LLM流式响应] 工具调用缺少name且无法推断，跳过: {openai_tool_call}")
-                    continue
 
             # 修正参数格式 (确保是有效的JSON字符串)
             try:
@@ -1523,7 +1469,11 @@ def handle_streaming_response(response, callback, original_messages=None, api_co
         return full_content
 
     # 检查是否需要再次调用LLM
-    if tool_call_content and tool_result_content and original_messages and api_config:
+    has_tool_feedback = (
+        bool(tool_call_content and tool_result_content)
+        or bool(tool_protocol_errors)
+    )
+    if has_tool_feedback and original_messages and api_config:
         if DEBUG_LLM_RESPONSE:
             logger.debug("\n[LLM流式响应] 检测到工具调用和结果，将再次调用LLM")
             logger.debug(f"[LLM流式响应] 工具调用数量: {len(tool_call_content)}")
@@ -1573,7 +1523,8 @@ def handle_streaming_response(response, callback, original_messages=None, api_co
             tool_calls=tool_call_content,
             tool_results=tool_result_content,
             api_config=api_config,
-            callback=callback
+            callback=callback,
+            protocol_errors=tool_protocol_errors,
         )
 
         # 不再需要添加HTML注释完成标记

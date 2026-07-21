@@ -97,6 +97,22 @@ const actionTaskDetailStyles = `
     z-index: 1 !important;
     border-top: 1px solid var(--custom-border);
   }
+  .action-task-detail-splitter
+    .ant-splitter-bar-collapse-bar.ant-splitter-bar-collapse-bar-always-visible {
+    opacity: 0.5;
+    color: var(--custom-text-secondary);
+    background: var(--custom-card-bg);
+    border: 1px solid var(--custom-border);
+    transition: opacity 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+  }
+  .action-task-detail-splitter
+    .ant-splitter-bar-collapse-bar.ant-splitter-bar-collapse-bar-always-visible:hover,
+  .action-task-detail-splitter
+    .ant-splitter-bar-collapse-bar.ant-splitter-bar-collapse-bar-always-visible:active {
+    opacity: 1;
+    color: var(--custom-text);
+    background: var(--custom-hover-bg);
+  }
 `;
 
 const ActionTaskDetail = ({ taskIdProp }) => {
@@ -560,6 +576,7 @@ const ActionTaskDetail = ({ taskIdProp }) => {
       <Card styles={{ body: { padding: '12px' } }}>
         <div style={{ height: 'calc(100vh - 168px)', minHeight: '600px' }}>
           <Splitter
+            className="action-task-detail-splitter"
             style={{ height: '100%' }}
           >
             <Splitter.Panel
@@ -596,7 +613,8 @@ const ActionTaskDetail = ({ taskIdProp }) => {
               max="70%"
               collapsible={{
                 start: true,
-                end: false
+                end: false,
+                showCollapsibleIcon: true
               }}
               style={{
                 display: 'flex',
