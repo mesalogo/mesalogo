@@ -28,6 +28,7 @@ import users from './users';
 import account from './account';
 import history from './history';
 import setup from './setup';
+import serviceCenter from './serviceCenter';
 
 export const namespaces = {
   common: common,
@@ -54,6 +55,7 @@ export const namespaces = {
   account: account,
   history: history,
   setup: setup,
+  serviceCenter: serviceCenter,
 };
 
 const merged = {
@@ -81,6 +83,7 @@ const merged = {
   ...account,
   ...history,
   ...setup,
+  ...serviceCenter,
 };
 
 export default merged;

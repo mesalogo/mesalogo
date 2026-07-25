@@ -4,8 +4,9 @@ import { useTranslation } from 'react-i18next';
 import ExecutionMonitoring from './ExecutionMonitoring';
 import * as parallelExperimentApi from '../../../services/api/parallelExperiment';
 import { getParallelExperimentError } from './errorMessage';
+import ParallelLabWorkspaceHeader from './ParallelLabWorkspaceHeader';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const ExecutionMonitoringPage = () => {
   const { message } = App.useApp();
@@ -181,21 +182,7 @@ const ExecutionMonitoringPage = () => {
 
   return (
     <div>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 24
-      }}>
-        <div>
-          <Title level={4} style={{ margin: 0, marginBottom: '8px' }}>
-            {t('parallelLab.executionMonitoring')}
-          </Title>
-          <Text type="secondary">
-            {t('parallelLab.monitorPage.subtitle')}
-          </Text>
-        </div>
-      </div>
+      <ParallelLabWorkspaceHeader activeKey="monitoring" />
 
       {/* 实验选择器 */}
       <div style={{ marginBottom: 16 }}>

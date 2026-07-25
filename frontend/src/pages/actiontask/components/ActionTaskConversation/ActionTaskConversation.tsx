@@ -21,6 +21,7 @@ import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import ConversationModals from './ConversationModals';
 import { PlannerPanel } from './Planner';
+import { prepareImageAttachment } from '../imageAttachment';
 
 /**
  * 对话组件主入口
@@ -89,6 +90,8 @@ const ActionTaskConversation = forwardRef(({
   // 图像相关
   const [attachedImages, setAttachedImages] = useState([]);
   const [showImageUpload, setShowImageUpload] = useState(false);
+  const [activeImageUploadBatches, setActiveImageUploadBatches] = useState(0);
+  const uploadingImages = activeImageUploadBatches > 0;
 
   // 消息辅助
   const [assistingMessage, setAssistingMessage] = useState(false);
@@ -238,6 +241,32 @@ const ActionTaskConversation = forwardRef(({
    */
   const handleImageUpload = (imageData) => {
     setAttachedImages(prev => [...prev, imageData]);
+  };
+
+  const handlePastedImages = async (files: File[]) => {
+    setActiveImageUploadBatches(count => count + 1);
+
+    try {
+      for (const file of files) {
+        try {
+          const { result, imageData } = await prepareImageAttachment(file);
+
+          if (result.success && imageData) {
+            handleImageUpload(imageData);
+            message.success(t('imageUpload.uploadSuccess'));
+          } else {
+            message.error(result.message || t('imageUpload.processFailed'));
+          }
+        } catch (error) {
+          const errorMessage = error.response?.data?.message
+            || error.message
+            || t('imageUpload.uploadFailedGeneric');
+          message.error(errorMessage);
+        }
+      }
+    } finally {
+      setActiveImageUploadBatches(count => Math.max(0, count - 1));
+    }
   };
 
   const removeImage = (imageId) => {
@@ -425,7 +454,7 @@ const ActionTaskConversation = forwardRef(({
       return;
     }
 
-    if (!userMessage.trim() && attachedImages.length === 0) return;
+    if (uploadingImages || (!userMessage.trim() && attachedImages.length === 0)) return;
 
     streamingHandler.setSendingMessage(true);
 
@@ -988,6 +1017,8 @@ const ActionTaskConversation = forwardRef(({
         attachedImages={attachedImages}
         showImageUpload={showImageUpload}
         setShowImageUpload={setShowImageUpload}
+        onPasteImages={handlePastedImages}
+        uploadingImages={uploadingImages}
         sendingMessage={streamingHandler.sendingMessage}
         isResponding={streamingHandler.isResponding}
         isSummarizing={streamingHandler.isSummarizing}

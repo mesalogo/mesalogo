@@ -21,6 +21,7 @@ import {
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { logsAPI } from '../../services/api/logs';
+import { logsPageStyles } from './LogsPage.styles';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -202,8 +203,8 @@ const LogsPage = () => {
   };
 
   return (
-    <div>
-      <div style={{ marginBottom: '24px' }}>
+    <div style={logsPageStyles.shell}>
+      <div style={logsPageStyles.title}>
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -220,13 +221,10 @@ const LogsPage = () => {
       </div>
 
       <Card
-        style={{
-          borderRadius: '12px',
-          boxShadow: 'var(--custom-shadow)',
-          marginBottom: 0
-        }}
+        style={logsPageStyles.card}
+        styles={{ body: logsPageStyles.cardBody }}
       >
-        <div style={{ marginBottom: '16px' }}>
+        <div style={logsPageStyles.controls}>
           <Row gutter={[16, 12]}>
             <Col xs={24}>
               <Space wrap>
@@ -300,9 +298,9 @@ const LogsPage = () => {
           </Row>
         </div>
 
-        <Divider style={{ margin: '12px 0' }} />
+        <Divider style={logsPageStyles.divider} />
 
-        <div style={{ marginBottom: '16px' }}>
+        <div style={logsPageStyles.fileInfo}>
           <Space split={<span style={{ color: 'var(--custom-border-color)', margin: '0 8px' }}>|</span>}>
             <span><Text strong>{t('logs.filePath')}:</Text> <Text>{fileInfo.file_path}</Text></span>
             <span><Text strong>{t('logs.fileSize')}:</Text> <Text>{fileInfo.file_size}</Text></span>
@@ -314,19 +312,7 @@ const LogsPage = () => {
 
         <div
           ref={logContainerRef}
-          style={{
-            height: '70vh',
-            overflow: 'auto',
-            backgroundColor: 'var(--custom-hover-bg)',
-            padding: '12px',
-            borderRadius: '4px',
-            fontFamily: 'monospace',
-            fontSize: '12px',
-            lineHeight: '1.5',
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-all',
-            minHeight: '400px'
-          }}
+          style={logsPageStyles.logViewport}
         >
           {loading ? (
             <div style={{ textAlign: 'center', padding: '20px' }}>

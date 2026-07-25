@@ -1,4 +1,4 @@
-import { Input, Button, Select, Space, Avatar, Dropdown, Switch, Tooltip, Mentions } from 'antd';
+import { Button, Select, Space, Avatar, Badge, Dropdown, Switch, Tooltip, Mentions } from 'antd';
 import {
   SendOutlined,
   RobotOutlined,
@@ -11,12 +11,9 @@ import {
   UserOutlined,
   PictureOutlined,
   InfoCircleOutlined,
-  VerticalAlignBottomOutlined,
   ApartmentOutlined
 } from '@ant-design/icons';
 import { getAgentAvatarStyle } from '../../../../utils/colorUtils';
-
-const { TextArea } = Input;
 
 /**
  * 消息输入组件
@@ -38,6 +35,8 @@ export default function MessageInput({
   attachedImages,
   showImageUpload,
   setShowImageUpload,
+  onPasteImages,
+  uploadingImages = false,
 
   // 发送控制
   sendingMessage,
@@ -112,6 +111,28 @@ export default function MessageInput({
     if (agentId && !targetAgentIds.includes(agentId)) {
       setTargetAgentIds([...targetAgentIds, agentId]);
     }
+  };
+
+  const handlePaste = (event) => {
+    if (isAutoDiscussing || !onPasteImages) {
+      return;
+    }
+
+    const clipboardData = event.clipboardData;
+    const itemImages = Array.from(clipboardData?.items || [])
+      .filter((item: DataTransferItem) => item.kind === 'file' && item.type.startsWith('image/'))
+      .map((item: DataTransferItem) => item.getAsFile())
+      .filter((file): file is File => Boolean(file));
+    const imageFiles = itemImages.length > 0
+      ? itemImages
+      : Array.from(clipboardData?.files || []).filter((file: File) => file.type.startsWith('image/'));
+
+    if (imageFiles.length === 0) {
+      return;
+    }
+
+    event.preventDefault();
+    void onPasteImages(imageFiles);
   };
 
   return (
@@ -198,11 +219,12 @@ export default function MessageInput({
               disabled={task.status !== 'active' || isSummarizing}
               options={agentOptions}
               onSelect={handleMentionSelect}
+              onPaste={handlePaste}
               prefix="@"
               onPressEnter={(e) => {
                 if (e.ctrlKey || e.metaKey) {
                   e.preventDefault();
-                  if (!isSummarizing) {
+                  if (!isSummarizing && !uploadingImages) {
                     onSendMessage();
                   }
                 }
@@ -216,16 +238,21 @@ export default function MessageInput({
             {!isAutoDiscussing && (
               <Button
                 type="text"
-                icon={<PictureOutlined />}
+                icon={(
+                  <Badge count={attachedImages.length} size="small" offset={[4, -4]}>
+                    <PictureOutlined />
+                  </Badge>
+                )}
                
                 onClick={() => setShowImageUpload(!showImageUpload)}
-                disabled={task.status !== 'active'}
+                disabled={task.status !== 'active' || uploadingImages}
+                loading={uploadingImages}
                 style={{
                   position: 'absolute',
                   bottom: '8px',
                   right: '8px',
-                  color: showImageUpload ? '#1677ff' : 'var(--custom-text-secondary)',
-                  backgroundColor: showImageUpload ? 'var(--msg-human-bg)' : 'transparent',
+                  color: showImageUpload || attachedImages.length > 0 ? '#1677ff' : 'var(--custom-text-secondary)',
+                  backgroundColor: showImageUpload || attachedImages.length > 0 ? 'var(--msg-human-bg)' : 'transparent',
                   border: 'none',
                   boxShadow: 'none'
                 }}
@@ -296,8 +323,8 @@ export default function MessageInput({
               danger={isResponding}
               icon={isResponding ? <StopOutlined /> : <SendOutlined />}
               onClick={onSendMessage}
-              loading={sendingMessage || isSummarizing}
-              disabled={task.status !== 'active' || isSummarizing || (!isResponding && !userMessage.trim() && attachedImages.length === 0)}
+              loading={sendingMessage || isSummarizing || (!isResponding && uploadingImages)}
+              disabled={task.status !== 'active' || isSummarizing || (!isResponding && (uploadingImages || (!userMessage.trim() && attachedImages.length === 0)))}
               style={{ height: 'auto', flex: 1 }}
               title={isSummarizing ? t('conversation.summarizing') : (isResponding ? (isAutoDiscussing ? t('conversation.interruptAutoTooltip') : t('conversation.interruptTooltip')) : t('conversation.sendTooltip'))}
             >

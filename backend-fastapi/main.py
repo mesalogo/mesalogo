@@ -162,6 +162,9 @@ class DBSessionMiddleware(BaseHTTPMiddleware):
     - Worker 线程上的 session 由路由层的 try/except + rollback 处理
     """
     async def dispatch(self, request: Request, call_next):
+        if request.url.path in {'/api/health', '/api/health/live'}:
+            return await call_next(request)
+
         # 请求开始前：清理事件循环线程上的脏 session
         # 确保 LicenseMiddleware 和其他内层中间件看到干净的 session
         from core.database import ScopedSession
@@ -264,7 +267,9 @@ async def custom_http_exception_handler(request: Request, exc: HTTPException):
 # 路由注册
 # ═══════════════════════════════════════════════════════
 
-from app.api.routes import api_router
+from app.api.routes import api_router, health_api_router  # noqa: E402
+
+app.include_router(health_api_router, prefix='/api')
 app.include_router(api_router, prefix='/api')
 
 

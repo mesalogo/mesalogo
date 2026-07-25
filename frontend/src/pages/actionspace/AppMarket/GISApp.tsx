@@ -374,9 +374,15 @@ const GISApp = () => {
   };
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div data-testid="gis-app" style={{
+      height: '100%',
+      minHeight: 0,
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
       {/* top toolbar */}
-      <Card style={{ marginBottom: 8 }}>
+      <Card style={{ marginBottom: 8, flexShrink: 0 }}>
         <Row justify="space-between" align="middle">
           <Col>
             <Title level={4} style={{ margin: 0 }}>
@@ -402,10 +408,26 @@ const GISApp = () => {
         </Row>
       </Card>
 
-      <Row gutter={8} style={{ flex: 1 }}>
+      <Row
+        data-testid="gis-layout-content"
+        gutter={8}
+        style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
+      >
         {/* left tool panel */}
-        <Col span={6}>
-          <Card title={t('gisApp.drawTools')} style={{ marginBottom: 8, height: 'fit-content' }}>
+        <Col
+          span={6}
+          style={{
+            height: '100%',
+            minHeight: 0,
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+        >
+          <Card
+            title={t('gisApp.drawTools')}
+            style={{ marginBottom: 8, height: 'fit-content', flexShrink: 0 }}
+          >
             <Space orientation="vertical" style={{ width: '100%' }}>
               {tools.map(tool => (
                 <Tooltip key={tool.key} title={tool.description} placement="right">
@@ -423,10 +445,16 @@ const GISApp = () => {
           </Card>
 
           <Card
+            data-testid="gis-annotation-list"
             title={t('gisApp.annotationList', { count: annotations.length })}
            
-            style={{ height: 'calc(100vh - 250px)' }}
-            bodyStyle={{ padding: '8px', height: 'calc(100% - 57px)', overflow: 'auto' }}
+            style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
+            bodyStyle={{
+              padding: '8px',
+              height: 'calc(100% - 57px)',
+              minHeight: 0,
+              overflow: 'auto'
+            }}
           >
             {annotations.length > 0 ? (
               <List
@@ -486,8 +514,9 @@ const GISApp = () => {
         </Col>
 
         {/* right map area */}
-        <Col span={18}>
+        <Col span={18} style={{ height: '100%', minHeight: 0, overflow: 'hidden' }}>
           <Card
+            data-testid="gis-map-card"
             title={
               <Space>
                 <span>{t('gisApp.mapView')}</span>
@@ -497,18 +526,21 @@ const GISApp = () => {
               </Space>
             }
            
-            style={{ height: '100%' }}
+            style={{ height: '100%', minHeight: 0, overflow: 'hidden' }}
             bodyStyle={{
               height: 'calc(100% - 57px)',
+              minHeight: 0,
+              overflow: 'hidden',
               padding: 0
             }}
           >
             <div
+              data-testid="gis-map"
               ref={mapRef}
               style={{
                 width: '100%',
                 height: '100%',
-                minHeight: '500px'
+                minHeight: 0
               }}
             />
           </Card>

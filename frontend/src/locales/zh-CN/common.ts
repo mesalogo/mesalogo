@@ -110,6 +110,7 @@ export default {
   'menu.entityMarket': '实体应用市场',
   'menu.basicConfiguration': '基本配置',
   'menu.modelConfiguration': '模型配置',
+  'menu.servicesAndIntegrations': '服务与集成',
   'menu.userManagement': '用户管理',
   'menu.mcpServers': 'MCP服务器',
   'menu.imIntegration': 'IM 集成',

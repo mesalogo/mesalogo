@@ -51,6 +51,7 @@ from app.services.tool_schema_cache import tool_schema_cache
 from app.services.workspace_service import WorkspaceService
 
 # 导入拆分的模块
+from app.services.conversation.model_logging import safe_model_settings
 from app.services.conversation.prompt_builder import build_system_prompt
 from app.services.conversation.tool_definition_builder import compress_tool_definition
 
@@ -265,7 +266,11 @@ def process_message_common(conversation_id: int, content: str, target_agent_id=N
                     self.max_output_tokens = config.get('max_tokens', 2000)
 
             role_model = ExternalRoleModel(model_settings)
-            logger.info(f"从外部角色 {agent_role.id} 获取到配置: platform={model_settings.get('platform')}, api_url={model_settings.get('api_url')}")
+            logger.info(
+                "External role model settings resolved: role=%s, settings=%s",
+                agent_role.id,
+                safe_model_settings(model_settings),
+            )
         else:
             logger.warning(f"外部角色 {agent_role.name} 缺少external_config配置")
             return human_message, agent, agent_role, None, None, conversation, None, None, None
@@ -287,7 +292,11 @@ def process_message_common(conversation_id: int, content: str, target_agent_id=N
                     'frequency_penalty': agent_role.frequency_penalty if agent_role.frequency_penalty is not None else 0.0,
                     'presence_penalty': agent_role.presence_penalty if agent_role.presence_penalty is not None else 0.0
                 }
-                logger.info(f"从内部角色 {agent_role.id} 获取到模型配置: {model_settings}")
+                logger.info(
+                    "Role model settings resolved: role=%s, settings=%s",
+                    agent_role.id,
+                    safe_model_settings(model_settings),
+                )
 
         if not role_model:
             # 尝试使用默认文本生成模型
@@ -312,7 +321,10 @@ def process_message_common(conversation_id: int, content: str, target_agent_id=N
                     'frequency_penalty': agent_role.frequency_penalty if agent_role and agent_role.frequency_penalty is not None else 0.0,
                     'presence_penalty': agent_role.presence_penalty if agent_role and agent_role.presence_penalty is not None else 0.0
                 }
-                logger.info(f"使用默认模型配置: {model_settings}")
+                logger.info(
+                    "Default model settings resolved: settings=%s",
+                    safe_model_settings(model_settings),
+                )
 
         if not role_model:
             logger.warning("找不到可用的模型配置，无法生成回复")

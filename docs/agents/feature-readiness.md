@@ -1,6 +1,6 @@
 # Feature readiness snapshot (功能完善度快照)
 
-> Evidence-based snapshot for 2026-07-20. Update this file when the README
+> Evidence-based snapshot for 2026-07-23. Update this file when the README
 > feature catalog, automated test layers, or strategic roadmap changes.
 
 ## Executive assessment
@@ -10,7 +10,7 @@ production-ready. It is suitable today for controlled research, demos, and
 pilot deployments of the established Action Space / Agent / MCP / Planner /
 NetLogo paths. It should not yet be presented as complete for unattended
 enterprise workloads, true parallel multi-agent streaming, visual workflow
-orchestration, Heartbeat-driven simulation, or 5000-concurrency operation.
+orchestration, or Heartbeat-driven simulation.
 
 Avoid compressing this into one percentage. The two useful measurements are:
 
@@ -52,7 +52,6 @@ Avoid compressing this into one percentage. The two useful measurements are:
 - Heartbeat / ABM-tick-driven living agents.
 - True parallel multi-agent execution with isolated output queues.
 - Mesa Python integration and MemoryPalace v0.51.
-- Validated 5000-concurrency architecture.
 
 ## Next release gates
 
@@ -63,5 +62,4 @@ Avoid compressing this into one percentage. The two useful measurements are:
    E2E tests before changing those paths.
 4. Audit blocking I/O by reachable async call path, then migrate in small,
    measured batches.
-5. Implement true parallel isolated streams before building Workflow Graph or
-   claiming large-scale concurrency.
+5. Implement true parallel isolated streams before building Workflow Graph.

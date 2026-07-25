@@ -150,6 +150,7 @@ const ActionTaskDetail = ({ taskIdProp }) => {
   const [exportModalVisible, setExportModalVisible] = useState(false);
   const [publishModalVisible, setPublishModalVisible] = useState(false);
   const [archivingTask, setArchivingTask] = useState(false);
+  const isEmbeddedAppActive = activeSidebarTab.startsWith('app-');
 
   // 组件引用
   const conversationRef = useRef(null);
@@ -423,10 +424,19 @@ const ActionTaskDetail = ({ taskIdProp }) => {
   if (!task) return null;
 
   return (
-    <div className="action-task-detail-page">
+    <div
+      data-testid="action-task-detail-shell"
+      className="action-task-detail-page"
+      style={{
+        height: 'calc(100dvh - 104px)',
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
       <style>{actionTaskDetailStyles}</style>
       <style>{variableFlashStyle}</style>
-      <div className="page-header" style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div data-testid="action-task-detail-header" className="page-header" style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
         <Space>
           {/* 返回/切换任务按钮（合并返回和切换窗口功能） */}
           <Space.Compact>
@@ -573,11 +583,29 @@ const ActionTaskDetail = ({ taskIdProp }) => {
         </Space>
       </div>
 
-      <Card styles={{ body: { padding: '12px' } }}>
-        <div style={{ height: 'calc(100vh - 168px)', minHeight: '600px' }}>
+      <Card
+        style={{
+          flex: 1,
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden'
+        }}
+        styles={{
+          body: {
+            padding: '12px',
+            flex: 1,
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden'
+          }
+        }}
+      >
+        <div data-testid="task-detail-splitter-container" style={{ height: '100%', minHeight: 0 }}>
           <Splitter
             className="action-task-detail-splitter"
-            style={{ height: '100%' }}
+            style={{ height: '100%', minHeight: 0 }}
           >
             <Splitter.Panel
               defaultSize="66%"
@@ -586,13 +614,15 @@ const ActionTaskDetail = ({ taskIdProp }) => {
               style={{
                 display: 'flex',
                 flexDirection: 'column',
+                minHeight: 0,
+                overflow: 'hidden'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
                 <MessageOutlined style={{ marginRight: 4 }} />
                 <Text strong style={{ fontSize: '16px' }}>{t('actionTask.interactionRecord')}</Text>
               </div>
-              <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+              <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
                 <div className="tab-content-container" style={{ height: '100%', overflow: 'hidden', position: 'relative' }}>
                   {task && <ActionTaskConversation
                     ref={conversationRef}
@@ -619,10 +649,21 @@ const ActionTaskDetail = ({ taskIdProp }) => {
               style={{
                 display: 'flex',
                 flexDirection: 'column',
-                overflowY: 'auto'
+                minHeight: 0,
+                overflowY: isEmbeddedAppActive ? 'hidden' : 'auto'
               }}
             >
-              <div style={{ paddingLeft: '8px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <div
+                data-testid="task-sidebar-content"
+                style={{
+                  paddingLeft: '8px',
+                  flex: 1,
+                  minHeight: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  overflow: isEmbeddedAppActive ? 'hidden' : undefined
+                }}
+              >
                 <Tabs
                   activeKey={activeSidebarTab}
                   onChange={handleSidebarTabChange}
@@ -680,8 +721,8 @@ const ActionTaskDetail = ({ taskIdProp }) => {
               )}
 
               {/* 动态应用标签页 */}
-              {activeSidebarTab.startsWith('app-') && (
-                <div style={{ marginBottom: 16, height: 'calc(100vh - 300px)' }}>
+              {isEmbeddedAppActive && (
+                <div style={{ marginBottom: 16, flex: 1, minHeight: 0, overflow: 'hidden' }}>
                   {(() => {
                     const appId = activeSidebarTab.replace('app-', '');
                     const app = appTabManager.getOpenApp(appId);

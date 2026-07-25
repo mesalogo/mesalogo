@@ -61,6 +61,24 @@ The most exciting work in multi-agent systems hasn't happened yet, and much of i
 
 Highlights — full design notes under [`docs/feature-*`](./docs/). Status: **`[x]`** stable · **`[~]`** MVP/Beta · **`[ ]`** spec/planned.
 
+### Current release highlights
+
+- **Research-first ParallelLab workbench.** Frame the research question, inspect
+  portfolio readiness, monitor runs, compare analysis, and trace conclusions
+  back to run evidence from one experiment workspace.
+- **Reviewable AI experiment protocols.** Protocol generation has its own
+  feature switch, prompt template, and model selection. A protocol can be
+  generated before scan variables are complete, then reviewed and edited before
+  it becomes part of an experiment.
+- **Truthful run settlement.** Worker callbacks start with fresh database
+  sessions, scheduler failures propagate into run outcomes, failed runs never
+  enter best-result selection, and an experiment with no successful run settles
+  as failed.
+- **Service Center for operators.** Administrators get one logical-service
+  inventory with health, readiness, dependencies, and image availability.
+  Allowlisted start/stop/restart actions are disabled by default and require the
+  explicit, security-sensitive Docker control overlay.
+
 ### 🧱 Platform foundation
 
 | Status | Feature | One-liner | Design notes |
@@ -88,6 +106,7 @@ Highlights — full design notes under [`docs/feature-*`](./docs/). Status: **`[
 | [~] | Cross-space orchestration (`cross_space`) | SubAgents must explicitly declare crossing space boundaries; the supervisor blocks undeclared crossings. | [`feature-subagent/`](./docs/feature-subagent/) · [`feature-workflow-graph/`](./docs/feature-workflow-graph/) |
 | [x] | Resource-relation visualizer | See the live web of `ActionSpace ↔ Role ↔ Agent ↔ Rule ↔ Variable` in the UI. | [`feature-ui-resource-graph/`](./docs/feature-ui-resource-graph/) |
 | [ ] | Heartbeat — ABM-tick-driven "living" agents | Every Agent has its own beat; even with no one chatting, it runs `observe → reflect/plan → act`. ActionSpace closes ⇒ heartbeat stops. Inspired by Mesa `step()` / NetLogo `tick` / Stanford Generative Agents. | [`feature-heartbeat/`](./docs/feature-heartbeat/) |
+| [ ] | Background brain — adaptive cadence, continuous learning, platform brain | Extends Heartbeat along three axes: beat rate as a function of system pressure × per-agent priority (foreground requests are never starved by background thinking); a learning closure where reflections become skills / rules / preferences only after passing an evaluation gate, with shadow-first rollout, rollback, and decay; and a system-scope platform brain that reads telemetry and writes reviewable insights, never applying changes itself. | [`PLAN-background-brain.md`](./docs/feature-heartbeat/PLAN-background-brain.md) |
 | [ ] | True parallel multi-agent execution | Independent SSE streams + isolated queues per agent; ends shared-stream interleaving. | `TODO.md#7` |
 
 ### 🪆 SubAgent / Agent-as-Tool
@@ -113,7 +132,7 @@ Highlights — full design notes under [`docs/feature-*`](./docs/). Status: **`[
 | [ ] | Workflow Graph — visual DAG editor | ReactFlow-based; node types: agent / condition / parallel / loop. | [`feature-workflow-graph/`](./docs/feature-workflow-graph/) |
 | [x] | Planner — structured plan items | `create_plan` / `update_plan_item` / `get_plan` as MCP tools + frontend `PlannerPanel` + live SSE updates. | [`feature-planner/`](./docs/feature-planner/) |
 | [x] | Autonomous Task — three trigger modes | Time-triggered, variable-triggered, self-driven scheduling. | [`feature-autonomous/`](./docs/feature-autonomous/) |
-| [~] | Parallel Experiment Lab | Parameter sweeps across populations of LLM agents — an old ABM idea, re-applied. | `parallel_experiment_service.py` (74 KB) · [`feature-parallellab/`](./docs/feature-parallellab/) |
+| [~] | Parallel Experiment Lab | Research workbench for parameter sweeps across LLM-agent populations, with reviewable AI behavior protocols, run monitoring, analysis, evidence views, and explicit failed-run accounting. | [`current plan`](./docs/feature-parallellab/PLAN-parallellab.md) · [`v2 research design (draft)`](./docs/feature-parallellab/PLAN-cognitive-simulation-v2.md) |
 | [~] | Job queue / task manager | Redis + thread pool + handler-registry pattern. | [`feature-job-queue/`](./docs/feature-job-queue/) |
 
 ### 🧬 Memory & knowledge
@@ -136,7 +155,7 @@ Highlights — full design notes under [`docs/feature-*`](./docs/). Status: **`[
 | [ ] | Mesa Python integration | Alongside NetLogo. | `TODO.md` Phase 4 |
 | [x] | OpenAI-compatible API + Python SDK | Action spaces, agents, knowledge bases all callable externally; API key mgmt + rate limit + OpenAPI docs. | [`feature-openai-export/`](./docs/feature-openai-export/) |
 | [x] | External role import — Coze & FastGPT | Pull agents from third-party platforms with one line of config. | [`PLAN-role-coze.md`](./docs/feature-role-management/PLAN-role-coze.md) · [`PLAN-role-fastgpt.md`](./docs/feature-role-management/PLAN-role-fastgpt.md) |
-| [x] | Multimodal image input | — | [`feature-image-input/`](./docs/feature-image-input/) |
+| [x] | Multimodal image input | Paste or upload images into task conversations, with attachment preview, removal, and normalized message payload handling. | [`feature-image-input/`](./docs/feature-image-input/) |
 
 ### 🛠️ Engineering & culture
 
@@ -145,6 +164,7 @@ Highlights — full design notes under [`docs/feature-*`](./docs/). Status: **`[
 | [x] | Fully async backend | FastAPI + SQLAlchemy 2.0 + httpx; no blocking I/O on request paths (AGENTS.md red-line). | [`AGENTS.md`](./AGENTS.md) |
 | [x] | SSE streaming with cancel & keep-alive | Long sessions kept alive; mid-stream cancel supported. | [`feature-stream-cancel/`](./docs/feature-stream-cancel/) · [`feature-keep-alive-conversation/`](./docs/feature-keep-alive-conversation/) |
 | [x] | Three-bag `ModelConfig` | Strict split between `custom_headers` / `custom_body` / `additional_params`, merged through `app/services/llm_http`. | [`model-config-custom-params.md`](./docs/agents/model-config-custom-params.md) |
+| [~] | Service Center — runtime inventory & health | Admin-only logical-service inventory and dependency-aware health/readiness checks; allowlisted lifecycle control is opt-in behind a Docker socket overlay. | [`feature-service-center/`](./docs/feature-service-center/) · [`deployment guide`](./abm-docker/README.md) |
 | [x] | Strict i18n | Per-feature namespaces; zh/en key-consistency enforced in CI (`node frontend/scripts/check-i18n-keys.js`); zero hard-coded CJK in frontend source. | [`feature-multi-lang/`](./docs/feature-multi-lang/) · [`docs/agents/i18n.md`](./docs/agents/i18n.md) |
 | [x] | AGENTS.md-driven development culture | An "onboarding manual" for AI coding agents; every red line traces back to a real incident; release contract written down. Rare in open-source — this *is* a feature. | [`docs/agents/failures/`](./docs/agents/failures/) · [`release-flow.md`](./docs/agents/release-flow.md) |
 

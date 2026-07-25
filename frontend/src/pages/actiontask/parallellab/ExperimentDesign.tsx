@@ -10,7 +10,6 @@ import {
   Input,
   Form,
   Space,
-  Divider,
   Table,
   Tooltip,
   Typography,
@@ -18,7 +17,6 @@ import {
   Statistic,
   Modal,
   Empty,
-  Alert,
   message
 } from 'antd';
 import {
@@ -30,14 +28,17 @@ import {
   EditOutlined,
   EyeOutlined,
   WarningOutlined,
-  ThunderboltOutlined,
-  FileTextOutlined
+  ThunderboltOutlined
 } from '@ant-design/icons';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
 import { modelConfigAPI } from '../../../services/api/model';
 import { settingsAPI } from '../../../services/api/settings';
 import { getAssistantGenerationModelId } from '../../../utils/modelUtils';
 import { replaceTemplateVariables } from '../../../utils/templateUtils';
+import {
+  getProtocolGenerationAvailability,
+  type ProtocolGenerationDisabledReason
+} from './protocolGeneration';
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -140,6 +141,31 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
   const [experimentProtocol, setExperimentProtocol] = useState<string>(existingProtocol || '');
   const [protocolModalVisible, setProtocolModalVisible] = useState(false);
   const [generatingProtocol, setGeneratingProtocol] = useState(false);
+  const protocolGenerationAvailability = getProtocolGenerationAvailability({
+    readOnly,
+    selectedSpace,
+    enableAssistantGeneration:
+      globalSettings?.enableAssistantGeneration === true,
+    enableExperimentProtocolGeneration:
+      globalSettings?.enableExperimentProtocolGeneration === true
+  });
+
+  const getProtocolGenerationDisabledMessage = (
+    reason: ProtocolGenerationDisabledReason | null
+  ) => {
+    switch (reason) {
+      case 'read-only':
+        return t('parallelLab.design.msg.protocolReadOnly');
+      case 'assistant-disabled':
+        return t('parallelLab.design.msg.assistantDisabled');
+      case 'protocol-disabled':
+        return t('parallelLab.design.msg.protocolGenerationDisabled');
+      case 'space-required':
+        return t('parallelLab.design.msg.spaceRequired');
+      default:
+        return undefined;
+    }
+  };
 
   // 初始化已有数据（无论是否 readOnly，只要有数据就回填）
   // 注意：不依赖 spaceVariables，避免异步加载导致的时序问题
@@ -549,6 +575,11 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
       return;
     }
 
+    if (!globalSettings?.enableExperimentProtocolGeneration) {
+      message.warning(t('parallelLab.design.msg.protocolGenerationDisabled'));
+      return;
+    }
+
     setGeneratingProtocol(true);
     setExperimentProtocol(''); // 清空现有内容
 
@@ -599,7 +630,10 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
       });
 
       // 获取模型
-      const modelToUse = await getAssistantGenerationModelId(models, globalSettings?.assistantGenerationModel || 'default');
+      const modelToUse = await getAssistantGenerationModelId(
+        models,
+        globalSettings?.experimentProtocolModel || 'default'
+      );
 
       let generatedProtocol = '';
       const handleStreamResponse = (chunk: string) => {
@@ -1466,15 +1500,23 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({
         onCancel={() => setProtocolModalVisible(false)}
         width={800}
         footer={[
-          <Button
-            key="generate"
-            icon={<ThunderboltOutlined />}
-            onClick={handleGenerateProtocol}
-            loading={generatingProtocol}
-            disabled={readOnly || !selectedSpace || variables.length === 0}
+          <Tooltip
+            key="generate-tooltip"
+            title={getProtocolGenerationDisabledMessage(
+              protocolGenerationAvailability.reason
+            )}
           >
-            {t('parallelLab.design.protocolAiGenerate')}
-          </Button>,
+            <span>
+              <Button
+                icon={<ThunderboltOutlined />}
+                onClick={handleGenerateProtocol}
+                loading={generatingProtocol}
+                disabled={!protocolGenerationAvailability.enabled}
+              >
+                {t('parallelLab.design.protocolAiGenerate')}
+              </Button>
+            </span>
+          </Tooltip>,
           <Button key="ok" type="primary" onClick={() => setProtocolModalVisible(false)}>
             {t('parallelLab.design.protocolOk')}
           </Button>

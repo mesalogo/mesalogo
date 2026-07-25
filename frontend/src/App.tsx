@@ -54,7 +54,6 @@ const MarketPage = lazy(() => import('./pages/actionspace/AppMarket/MarketPage')
 // 行动任务组件
 const ActionTaskOverview = lazy(() => import('./pages/actiontask/ActionTaskOverview'));
 const ActionTaskDetail = lazy(() => import('./pages/actiontask/ActionTaskDetail'));
-const ParallelLab = lazy(() => import('./pages/actiontask/parallellab/ParallelLab'));
 
 // 并行实验室子页面
 const ExperimentListPage = lazy(() => import('./pages/actiontask/parallellab/ExperimentListPage'));
@@ -76,6 +75,7 @@ const UserManagementPage = lazy(() => import('./pages/settings/UserManagementPag
 const SubscriptionPage = lazy(() => import('./pages/settings/SubscriptionPage'));
 const SubscriptionManagementPage = lazy(() => import('./pages/settings/SubscriptionManagementPage'));
 const IMIntegrationPage = lazy(() => import('./pages/settings/IMIntegrationPage'));
+const ServiceCenterPage = lazy(() => import('./pages/settings/ServiceCenterPage'));
 
 // 账户页面
 const ProfilePage = lazy(() => import('./pages/account/ProfilePage'));
@@ -215,6 +215,14 @@ const AppContent: React.FC = () => {
                     element={
                       <PermissionGuard requiredPermission={PERMISSIONS.MENU_SETTINGS_ADMIN}>
                         <ModelConfigsPage />
+                      </PermissionGuard>
+                    }
+                  />
+                  <Route
+                    path="/settings/services"
+                    element={
+                      <PermissionGuard requiredPermission={PERMISSIONS.MENU_SETTINGS_ADMIN}>
+                        <ServiceCenterPage />
                       </PermissionGuard>
                     }
                   />

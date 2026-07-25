@@ -271,7 +271,7 @@ const SetupWizard: React.FC<{ defaults?: SetupDefaults; onDone: () => void }> = 
 };
 
 const CenteredCard: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'var(--ant-color-bg-layout, #f5f5f5)' }}>
+  <div data-testid="setup-wizard-shell" style={{ minHeight: '100vh', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'var(--ant-color-bg-layout, #f5f5f5)' }}>
     <Card style={{ width: 600, maxWidth: '100%' }} variant="outlined">{children}</Card>
   </div>
 );

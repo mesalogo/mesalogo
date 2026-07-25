@@ -661,8 +661,15 @@ async def _process_agent_response(task: 'Task', agent: Dict[str, Any], is_summar
             logger.info(f"Task {task.id} cancelled before LLM request for agent {agent['name']}")
             return
         
-        # 使用 asyncio.to_thread 在线程池中执行同步代码
-        response_completed, error_msg = await asyncio.to_thread(_call_service)
+        # A reused worker thread may still hold a REPEATABLE READ transaction
+        # from an earlier task. Reset the scoped session at both boundaries so
+        # newly committed conversations and agents are visible.
+        from .db_session_boundary import run_with_fresh_db_session
+
+        response_completed, error_msg = await asyncio.to_thread(
+            run_with_fresh_db_session,
+            _call_service,
+        )
         
         if response_completed:
             logger.debug(f"Agent {agent['name']} response completed successfully")
@@ -694,7 +701,12 @@ async def _check_and_summarize_context(task: 'Task') -> None:
         return SummaryService.summarize_context(task.conversation_id)
 
     try:
-        result = await asyncio.to_thread(_do_summarize)
+        from .db_session_boundary import run_with_fresh_db_session
+
+        result = await asyncio.to_thread(
+            run_with_fresh_db_session,
+            _do_summarize,
+        )
         if result and task.result_queue:
             from app.services.conversation.message_formater import serialize_message
             

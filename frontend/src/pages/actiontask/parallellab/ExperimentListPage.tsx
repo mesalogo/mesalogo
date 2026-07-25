@@ -18,7 +18,8 @@ import {
   Badge,
   Empty,
   Form,
-  App
+  App,
+  Statistic
 } from 'antd';
 import {
   PlusOutlined,
@@ -31,7 +32,10 @@ import {
   EyeOutlined,
   ClockCircleOutlined,
   SettingOutlined,
-  DeleteOutlined
+  DeleteOutlined,
+  MonitorOutlined,
+  BarChartOutlined,
+  SafetyCertificateOutlined
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -41,8 +45,18 @@ import ExperimentDesign from './ExperimentDesign';
 import { actionSpaceAPI } from '../../../services/api/actionspace';
 import { modelConfigAPI } from '../../../services/api/model';
 import { settingsAPI } from '../../../services/api/settings';
+import AnalysisReport from './AnalysisReport';
+import ExecutionMonitoring from './ExecutionMonitoring';
+import ExperimentEvidencePanel from './ExperimentEvidencePanel';
+import ParallelLabWorkspaceHeader from './ParallelLabWorkspaceHeader';
+import {
+  getEvidenceChecks,
+  getPortfolioStats,
+  toWorkspaceExperiment
+} from './researchWorkbench';
+import { resolveProtocolGenerationSettings } from './protocolGeneration';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const ExperimentListPage = () => {
   const { t } = useTranslation();
@@ -71,7 +85,11 @@ const ExperimentListPage = () => {
 
   // 模型和全局设置
   const [models, setModels] = useState<any[]>([]);
-  const [globalSettings, setGlobalSettings] = useState<any>({});
+  const [globalSettings, setGlobalSettings] = useState<any>({
+    enableAssistantGeneration: false,
+    enableExperimentProtocolGeneration: false,
+    experimentProtocolModel: 'default'
+  });
 
   const loadExperiments = useCallback(async () => {
     try {
@@ -111,10 +129,7 @@ const ExperimentListPage = () => {
         settingsAPI.getSettings()
       ]);
       setModels(modelsData || []);
-      setGlobalSettings({
-        enableAssistantGeneration: settingsData?.enable_assistant_generation !== false,
-        assistantGenerationModel: settingsData?.assistant_generation_model || 'default'
-      });
+      setGlobalSettings(resolveProtocolGenerationSettings(settingsData));
     } catch (error) {
       console.error('load models and settings failed:', error);
     }
@@ -382,12 +397,28 @@ const ExperimentListPage = () => {
   const renderProgress = (exp: any) => {
     if (exp.is_template) return null;
     const total = exp.total_runs || 0;
-    const completed = (exp.completed_runs || 0) + (exp.failed_runs || 0);
+    const succeeded = exp.completed_runs || 0;
+    const failed = exp.failed_runs || 0;
+    const completed = succeeded + failed;
     if (total === 0) return null;
     const percent = Math.round((completed / total) * 100);
+    const successPercent = Math.round((succeeded / total) * 100);
     return (
-      <div style={{ marginTop: 8 }}>
-        <Progress percent={percent} size="small" format={() => `${completed}/${total}`} />
+      <div style={{ marginTop: 14 }}>
+        <Progress
+          percent={percent}
+          success={{ percent: successPercent }}
+          size="small"
+          format={() => `${completed}/${total}`}
+        />
+        <Space size={12} style={{ marginTop: 2 }}>
+          <Text type="secondary" style={{ fontSize: 11 }}>
+            {t('parallelLab.portfolio.completedRuns', { count: succeeded })}
+          </Text>
+          <Text type={failed > 0 ? 'danger' : 'secondary'} style={{ fontSize: 11 }}>
+            {t('parallelLab.portfolio.failedRuns', { count: failed })}
+          </Text>
+        </Space>
       </div>
     );
   };
@@ -482,9 +513,69 @@ const ExperimentListPage = () => {
     if (!selectedExperiment) return null;
     const exp = selectedExperiment;
     const canEdit = exp.status !== 'running' && !exp.is_template;
+    const evidenceChecks = getEvidenceChecks(exp);
+    const readyCount = evidenceChecks.filter(check => check.ready).length;
 
     return (
       <div>
+        <Card
+          size="small"
+          style={{ marginBottom: 16, borderRadius: 10 }}
+          styles={{ body: { padding: 18 } }}
+        >
+          <Row gutter={[16, 16]} align="middle">
+            <Col xs={24} lg={12}>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {t('parallelLab.portfolio.researchQuestion')}
+              </Text>
+              <Typography.Paragraph
+                strong
+                style={{ margin: '5px 0 10px', fontSize: 16 }}
+              >
+                {exp.description || t('parallelLab.portfolio.questionMissing')}
+              </Typography.Paragraph>
+              <Tag color={readyCount === evidenceChecks.length ? 'success' : 'warning'}>
+                {t('parallelLab.portfolio.setupProgress', {
+                  ready: readyCount,
+                  total: evidenceChecks.length
+                })}
+              </Tag>
+            </Col>
+            {!exp.is_template && (
+              <Col xs={24} lg={12}>
+                <Row gutter={[12, 12]}>
+                  <Col span={6}>
+                    <Statistic
+                      title={t('parallelLab.list.totalRuns')}
+                      value={exp.total_runs || 0}
+                    />
+                  </Col>
+                  <Col span={6}>
+                    <Statistic
+                      title={t('parallelLab.list.completed')}
+                      value={exp.completed_runs || 0}
+                      valueStyle={{ color: '#389e0d' }}
+                    />
+                  </Col>
+                  <Col span={6}>
+                    <Statistic
+                      title={t('parallelLab.list.failed')}
+                      value={exp.failed_runs || 0}
+                      valueStyle={exp.failed_runs ? { color: '#cf1322' } : undefined}
+                    />
+                  </Col>
+                  <Col span={6}>
+                    <Statistic
+                      title={t('parallelLab.list.currentRound')}
+                      value={exp.current_iteration || 0}
+                    />
+                  </Col>
+                </Row>
+              </Col>
+            )}
+          </Row>
+        </Card>
+
         {/* 可编辑的基本信息 */}
         {canEdit ? (
           <Card size="small" style={{ marginBottom: 16 }}>
@@ -583,8 +674,8 @@ const ExperimentListPage = () => {
   // 网格展示卡片统一样式
   const gridCardStyle = {
     height: '100%',
-    minHeight: '280px',
-    borderRadius: '8px',
+    minHeight: '318px',
+    borderRadius: '12px',
     position: 'relative' as const,
     display: 'flex',
     flexDirection: 'column' as const
@@ -606,7 +697,7 @@ const ExperimentListPage = () => {
     return (
       <Row gutter={[16, 16]}>
         {filteredExperiments.map(exp => (
-          <Col xs={24} sm={12} md={8} lg={6} key={exp.id}>
+          <Col xs={24} sm={12} xl={8} key={exp.id}>
             <Card
               hoverable
               style={gridCardStyle}
@@ -637,13 +728,33 @@ const ExperimentListPage = () => {
                 <div style={{ marginTop: 4 }}>{renderStatus(exp)}</div>
               </div>
 
-              {/* 描述 */}
-              <div style={{ fontSize: 13, color: 'var(--custom-text-secondary)', minHeight: 40, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any }}>
+              <Text type="secondary" style={{ fontSize: 11, marginBottom: 4 }}>
+                {t('parallelLab.portfolio.researchQuestion')}
+              </Text>
+              <div style={{ fontSize: 13, minHeight: 42, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any }}>
                 {exp.description || t('parallelLab.list.noDescription')}
               </div>
 
               {/* 进度条 */}
               {renderProgress(exp)}
+
+              {!exp.is_template && (
+                <div style={{ marginTop: 12 }}>
+                  {(() => {
+                    const checks = getEvidenceChecks(exp);
+                    const ready = checks.filter(check => check.ready).length;
+                    return (
+                      <Tag color={ready === checks.length ? 'success' : 'warning'}>
+                        <SafetyCertificateOutlined style={{ marginRight: 4 }} />
+                        {t('parallelLab.portfolio.setupProgress', {
+                          ready,
+                          total: checks.length
+                        })}
+                      </Tag>
+                    );
+                  })()}
+                </div>
+              )}
 
               {/* 底部信息 */}
               <div style={{ marginTop: 'auto', paddingTop: 12, fontSize: 12, color: 'var(--custom-text-secondary)' }}>
@@ -695,18 +806,37 @@ const ExperimentListPage = () => {
     );
   }
 
+  const portfolioStats = getPortfolioStats(experiments);
+  const workspaceExperiment = selectedExperiment
+    ? toWorkspaceExperiment(selectedExperiment)
+    : null;
+
   return (
     <div>
-      {/* 页面标题 */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <Title level={4} style={{ margin: 0, marginBottom: 8 }}>{t('parallelLab.title')}</Title>
-          <Text type="secondary">{t('parallelLab.list.subtitle')}</Text>
-        </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateModalVisible(true)}>
-          {t('parallelLab.list.createExperiment')}
-        </Button>
-      </div>
+      <ParallelLabWorkspaceHeader
+        activeKey="studies"
+        showWorkflow
+        extra={
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateModalVisible(true)}>
+            {t('parallelLab.list.createExperiment')}
+          </Button>
+        }
+      />
+
+      <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
+        <Col xs={12} lg={6}>
+          <Card size="small"><Statistic title={t('parallelLab.portfolio.studies')} value={portfolioStats.studies} /></Card>
+        </Col>
+        <Col xs={12} lg={6}>
+          <Card size="small"><Statistic title={t('parallelLab.portfolio.active')} value={portfolioStats.active} /></Card>
+        </Col>
+        <Col xs={12} lg={6}>
+          <Card size="small"><Statistic title={t('parallelLab.portfolio.completed')} value={portfolioStats.completed} /></Card>
+        </Col>
+        <Col xs={12} lg={6}>
+          <Card size="small"><Statistic title={t('parallelLab.portfolio.templates')} value={portfolioStats.templates} /></Card>
+        </Col>
+      </Row>
 
       {/* 搜索和筛选 */}
       <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 16 }}>
@@ -740,11 +870,25 @@ const ExperimentListPage = () => {
 
       {/* 实验详情 Modal */}
       <Modal
-        title={selectedExperiment?.name || t('parallelLab.list.fallbackTitle')}
+        title={
+          selectedExperiment ? (
+            <Space direction="vertical" size={2}>
+              <Space>
+                <Text strong style={{ fontSize: 18 }}>{selectedExperiment.name}</Text>
+                {renderStatus(selectedExperiment)}
+              </Space>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {selectedExperiment.description || t('parallelLab.portfolio.questionMissing')}
+              </Text>
+            </Space>
+          ) : t('parallelLab.list.fallbackTitle')
+        }
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
-        width="80%"
+        width="calc(100vw - 48px)"
+        style={{ top: 24 }}
+        styles={{ body: { maxHeight: 'calc(100vh - 150px)', overflow: 'auto' } }}
         destroyOnHidden
       >
         <Tabs
@@ -753,7 +897,7 @@ const ExperimentListPage = () => {
           items={[
             {
               key: 'detail',
-              label: <span><InfoCircleOutlined /> {t('parallelLab.list.detail')}</span>,
+              label: <span><InfoCircleOutlined /> {t('parallelLab.workbench.detail.overview')}</span>,
               children: renderDetailTab()
             },
             {
@@ -786,7 +930,35 @@ const ExperimentListPage = () => {
                 />
               )
             },
-
+            {
+              key: 'runs',
+              disabled: !workspaceExperiment || selectedExperiment?.is_template,
+              label: <span><MonitorOutlined /> {t('parallelLab.workbench.detail.runs')}</span>,
+              children: workspaceExperiment && (
+                <ExecutionMonitoring
+                  experiments={[workspaceExperiment]}
+                  handleStopExperiment={handleStop}
+                  handlePauseExperiment={handlePause}
+                  handleResumeExperiment={handleResume}
+                />
+              )
+            },
+            {
+              key: 'analysis',
+              disabled: !workspaceExperiment || selectedExperiment?.is_template,
+              label: <span><BarChartOutlined /> {t('parallelLab.workbench.detail.analysis')}</span>,
+              children: workspaceExperiment && (
+                <AnalysisReport experiments={[workspaceExperiment]} />
+              )
+            },
+            {
+              key: 'evidence',
+              disabled: !selectedExperiment || selectedExperiment.is_template,
+              label: <span><SafetyCertificateOutlined /> {t('parallelLab.workbench.detail.evidence')}</span>,
+              children: selectedExperiment && (
+                <ExperimentEvidencePanel experiment={selectedExperiment} />
+              )
+            }
           ]}
         />
       </Modal>

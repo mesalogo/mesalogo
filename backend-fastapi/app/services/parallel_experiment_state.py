@@ -70,3 +70,27 @@ def should_update_orchestration(
 ) -> bool:
     """Return whether a status read may update the active experiment."""
     return current_iteration > 0 and query_iteration == current_iteration
+
+
+def successful_task_ids(
+    task_ids: Iterable[Any],
+    status_by_task: Mapping[str, str],
+) -> list[Any]:
+    """Return only runs that reached the completed terminal state."""
+    return [
+        task_id
+        for task_id in task_ids
+        if status_by_task.get(str(task_id)) == "completed"
+    ]
+
+
+def derive_experiment_terminal_status(statuses: Iterable[str]) -> str:
+    """Derive the experiment terminal state from persisted run outcomes."""
+    run_statuses = list(statuses)
+    if "completed" in run_statuses:
+        return "completed"
+    if "failed" in run_statuses:
+        return "failed"
+    if "stopped" in run_statuses:
+        return "stopped"
+    return "failed"

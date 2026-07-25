@@ -8,21 +8,13 @@ import {
   Badge,
   Row,
   Col,
-  Tabs,
   Skeleton
 } from 'antd';
 import {
   LeftOutlined,
   ExportOutlined,
   GlobalOutlined,
-  InfoCircleOutlined,
-  EnvironmentOutlined,
-  TeamOutlined,
-  EyeOutlined,
-  MessageOutlined,
-  MenuFoldOutlined,
-  ApartmentOutlined,
-  BookOutlined
+  MessageOutlined
 } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
@@ -32,12 +24,21 @@ const { Title, Text } = Typography;
  */
 const LoadingSkeleton = ({ onBack, onExport, t, customStyles, variableFlashStyle }) => {
   return (
-    <div className="action-task-detail-page">
+    <div
+      data-testid="action-task-detail-shell"
+      className="action-task-detail-page"
+      style={{
+        height: 'calc(100dvh - 104px)',
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
       <style>{customStyles}</style>
       <style>{variableFlashStyle}</style>
       
       {/* 显示与实际页面一致的页面头部 */}
-      <div className="page-header" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div data-testid="action-task-detail-header" className="page-header" style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
         <Space>
           <Button
             icon={<LeftOutlined />}
@@ -64,16 +65,36 @@ const LoadingSkeleton = ({ onBack, onExport, t, customStyles, variableFlashStyle
         </Space>
       </div>
 
-      <Card>
-        <Row gutter={16} style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
+      <Card
+        style={{
+          flex: 1,
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden'
+        }}
+        styles={{
+          body: {
+            padding: '12px',
+            flex: 1,
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden'
+          }
+        }}
+      >
+        <Row gutter={16} style={{ height: '100%', minHeight: 0 }}>
           {/* 左侧：交互记录骨架屏 */}
           <Col
             span={16}
             style={{
               height: '100%',
+              minHeight: 0,
               display: 'flex',
               flexDirection: 'column',
-              position: 'relative'
+              position: 'relative',
+              overflow: 'hidden'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
@@ -82,7 +103,7 @@ const LoadingSkeleton = ({ onBack, onExport, t, customStyles, variableFlashStyle
             </div>
             
             {/* 消息列表骨架屏 */}
-            <div style={{ flex: 1, overflowY: 'auto' }}>
+            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
               <Space orientation="vertical" style={{ width: '100%' }} size="large">
                 {[1, 2, 3, 4].map(item => (
                   <Card key={item}>
@@ -103,6 +124,7 @@ const LoadingSkeleton = ({ onBack, onExport, t, customStyles, variableFlashStyle
             span={8}
             style={{
               height: '100%',
+              minHeight: 0,
               overflowY: 'auto',
               borderLeft: '1px solid var(--custom-border)',
               position: 'relative'

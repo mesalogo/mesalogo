@@ -28,6 +28,7 @@ import conversationAPI from '../../services/api/conversation';
 import ConversationExtraction from '../actiontask/components/ConversationExtraction';
 import { getAgentAvatarStyle, getAgentColor } from '../../utils/colorUtils';
 import '../actiontask/css/conversation.css';
+import { conversationHistoryMessageListStyle } from './ConversationHistoryTab.styles';
 
 const { Text, Title } = Typography;
 const { Option } = Select;
@@ -281,17 +282,7 @@ const ConversationHistoryTab = () => {
           </div>
         ) : messages.length > 0 ? (
           <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              maxHeight: 'calc(100vh - 350px)',
-              minHeight: '500px',
-              overflowY: 'auto',
-              padding: '16px',
-              backgroundColor: 'var(--custom-header-bg)',
-              borderRadius: '8px',
-              border: '1px solid var(--custom-border)'
-            }}
+            style={conversationHistoryMessageListStyle}
           >
             {messages.map((msg, index) => renderMessageItem(msg, index))}
           </div>

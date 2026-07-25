@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { configure, fireEvent, render, screen } from '@testing-library/react';
 import TaskWindowManager, { useTaskWindow } from './TaskWindowManager';
 
 let mockCurrentPath = '/action-tasks/overview';
@@ -49,4 +49,17 @@ test('a direct task-detail URL creates and renders its task window', async () =>
   renderManager('/action-tasks/detail/task-7');
 
   expect(await screen.findByTestId('detail-task-7')).toBeInTheDocument();
+});
+
+test('a task window keeps its natural height inside the page layout', async () => {
+  renderManager('/action-tasks/detail/task-7');
+
+  await screen.findByTestId('detail-task-7');
+  configure({ testIdAttribute: 'data-task-window' });
+
+  try {
+    expect(screen.getByTestId('task-7').style.height).toBe('');
+  } finally {
+    configure({ testIdAttribute: 'data-testid' });
+  }
 });

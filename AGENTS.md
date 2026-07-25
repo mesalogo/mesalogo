@@ -144,7 +144,7 @@ Before writing or changing code, read the matching doc as needed (all under `doc
 | Supervisor / rule sandbox | `docs/agents/supervisor-rules.md` |
 | LightRAG / vector store | `docs/feature-knowledge-base/lightrag-PLAN.md` |
 | Workflow Graph orchestration | `docs/feature-workflow-graph/PLAN.md` |
-| Heartbeat / self-driven agents | `docs/feature-heartbeat/PLAN.md` + `policies.md` + `stop-the-world.md` |
+| Heartbeat / self-driven agents | `docs/feature-heartbeat/PLAN.md` + `policies.md` + `stop-the-world.md` + `PLAN-background-brain.md` (⚠️ §1 corrects stale interface assumptions in `PLAN.md`; read it before writing any heartbeat code) |
 | **Adding/editing frontend user-visible strings** | `docs/agents/i18n.md` (namespace layout + `t()` rules; never hard-code CJK) |
 | **Writing or modifying any test** | `tests/AGENTS.md` (30-second decision tree) |
 | **Adding/editing model custom params (headers/body) or touching `ModelConfig.{custom_headers,custom_body,additional_params}`** | `docs/agents/model-config-custom-params.md` (three-bag split + `app/services/llm_http` merge helpers) |
@@ -167,6 +167,8 @@ These have **really happened in TODO.md**. Do not repeat them.
 6. **First `public`-branch push leaked secrets** (`docs/agents/failures/2026-05-13-public-branch-secret-leak.md`): pushing without secret-scan via `git push mesalogo public:main` published real OAuth secrets from `backend-deprecated/config.conf`, MySQL credentials, and `PLAY_HTTP_SECRET_KEY` from `docker-compose.galapagos.yml`. Rotating the leaked credentials afterwards is the only real remediation.
 7. **Disjoint history between `github/main` and `origin/public`** (2026-05-20): without a written-down "source of truth" rule, local `public` accumulated an independent 3-commit chain while `github/main` was 29 commits ahead via a different sync path. A naive `git push github public:main --force` would have wiped 29 legitimate commits (i18n, vector-db, model-client refactor). Contract: **`github/main` is the source of truth; local `public` is a publication staging area aligned to it; mirror to `origin/public` last with `--force-with-lease`.** Full flow in `docs/agents/release-flow.md`. Always check `git merge-base github/main public` is non-empty before any release push.
 8. **Streamed tool identity overwritten by null deltas** (`docs/agents/failures/2026-07-streamed-tool-identity-null-overwrite.md`): continuation chunks may carry `id: null` / `function.name: null`; never let them erase an earlier non-empty identity. Do not guess a missing tool name—preserve the exact streamed name, and return genuinely malformed calls to the model for correction.
+9. **ParallelLab stale worker session + false completion** (`docs/agents/failures/2026-07-parallellab-stale-session-false-completion.md`): a reused worker must remove its scoped DB session at entry and exit. Terminal runs are not automatically successful; only persisted `completed` runs may enter best-result selection, and zero-success experiments must settle as `failed`.
+10. **Model credentials written to logs** (`docs/agents/failures/2026-07-model-credentials-written-to-logs.md`): never serialize resolved model settings directly. Diagnostic logs must use a strict safe-field allowlist that excludes credentials, endpoints, headers, bodies, tokens, and secrets.
 
 Every new incident → write `docs/agents/failures/YYYY-MM-short-description.md`, then add one line back to the list above.
 

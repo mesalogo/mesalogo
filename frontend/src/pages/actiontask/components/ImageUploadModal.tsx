@@ -3,6 +3,7 @@ import { App, Modal, Button, Typography, Spin } from 'antd';
 import { CloseOutlined, CheckCircleOutlined, UploadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import api from '../../../services/api/axios';
+import { prepareImageAttachment } from './imageAttachment';
 
 const { Text } = Typography;
 
@@ -100,15 +101,6 @@ const ImageUploadModal = ({
     }
   }, [visible]);
 
-  const fileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = error => reject(error);
-    });
-  };
-
   const handleFiles = async (files) => {
     const fileArray = Array.from(files);
     setError(null);
@@ -116,25 +108,9 @@ const ImageUploadModal = ({
 
     try {
       for (const file of fileArray) {
-        // 读取文件为Base64
-        const base64 = await fileToBase64(file);
+        const { result, imageData } = await prepareImageAttachment(file as File);
 
-        // 调用后端统一处理（包含验证和信息获取）
-        const response = await api.post('/images/process', {
-          base64,
-          operation: 'info'
-        });
-        const result = response.data;
-
-        if (result.success) {
-          const imageData = {
-            id: Date.now() + Math.random(),
-            file,
-            base64,
-            info: result.data,
-            preview: URL.createObjectURL(file as Blob)
-          };
-
+        if (result.success && imageData) {
           if (onImageUpload) {
             await onImageUpload(imageData);
           }

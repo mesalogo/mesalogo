@@ -61,6 +61,18 @@
 
 精选 —— 完整设计文档在 [`docs/feature-*`](./docs/) 下。状态:**`[x]`** 已稳定 · **`[~]`** MVP/Beta · **`[ ]`** 设计/规划中。
 
+### 当前版本亮点
+
+- **以研究问题为中心的 ParallelLab 工作台。** 在同一个实验空间中定义研究问题、
+  检查实验准备度、监控运行、对比分析,并把结论追溯到具体运行证据。
+- **可审阅的 AI 实验协议。** 实验协议生成拥有独立开关、提示词模板和模型选择;
+  扫描变量尚未配置完成时也能先生成协议,并在写入实验前人工审阅和编辑。
+- **真实反映运行结果。** Worker 回调使用全新数据库会话,调度器失败会传播为运行结果,
+  失败运行不参与最佳结果选择,没有任何成功运行的实验会正确结束为失败。
+- **面向运维人员的 Service Center(服务中心)。** 管理员可以统一查看逻辑服务清单、
+  健康状态、就绪状态、依赖关系和镜像可用性。白名单内的启停/重启能力默认关闭,
+  只有显式启用高权限 Docker 控制覆盖层后才可使用。
+
 ### 🧱 平台底盘
 
 | 状态 | 特性 | 一句话说明 | 设计文档 |
@@ -88,6 +100,7 @@
 | [~] | 跨空间编排 (`cross_space`) | SubAgent 跨空间必须显式声明,监督者拦截非法跨越。 | [`feature-subagent/`](./docs/feature-subagent/) · [`feature-workflow-graph/`](./docs/feature-workflow-graph/) |
 | [x] | 资源关系图可视化 | 在 UI 上看 `ActionSpace ↔ Role ↔ Agent ↔ Rule ↔ Variable` 的实时网。 | [`feature-ui-resource-graph/`](./docs/feature-ui-resource-graph/) |
 | [ ] | Heartbeat —— ABM tick 驱动的"活着的"Agent | 每个 Agent 有自己的心跳节拍,即使没人对话也会 `observe → reflect/plan → act`;ActionSpace 关闭 ⇒ 该空间心跳停。灵感来自 Mesa `step()` / NetLogo `tick` / 斯坦福 Generative Agents。 | [`feature-heartbeat/`](./docs/feature-heartbeat/) |
+| [ ] | 后台大脑 —— 自适应节拍、持续学习、平台大脑 | 在 Heartbeat 之上扩展三个维度:节拍由系统压力 × 每个 Agent 的优先级共同决定(后台思考永不饿死前台请求);持续学习闭环让反思必须通过评估门才能变成技能 / 规则 / 偏好,并支持影子先行、回滚与遗忘;平台自身也有一个 system 级大脑,只读遥测、只产出可人工审阅的改进建议,绝不自行改配置。 | [`PLAN-background-brain.md`](./docs/feature-heartbeat/PLAN-background-brain.md) |
 | [ ] | 真正并行的多智能体执行 | 每个 Agent 独立 SSE 流 + 独立队列,告别共享流交错。 | `TODO.md#7` |
 
 ### 🪆 SubAgent / 智能体即工具
@@ -113,7 +126,7 @@
 | [ ] | Workflow Graph —— 可视化 DAG 编辑器 | 基于 ReactFlow;节点类型:agent / condition / parallel / loop。 | [`feature-workflow-graph/`](./docs/feature-workflow-graph/) |
 | [x] | Planner —— 结构化计划 | `create_plan` / `update_plan_item` / `get_plan` 作为 MCP 工具 + 前端 `PlannerPanel` + 实时 SSE 更新。 | [`feature-planner/`](./docs/feature-planner/) |
 | [x] | 自主任务 —— 三种触发模式 | 时间触发、变量触发、自主调度。 | [`feature-autonomous/`](./docs/feature-autonomous/) |
-| [~] | 并行实验室(Parallel Experiment Lab) | 对 LLM Agent 群体跑参数扫描 —— ABM 思想被重新应用。 | `parallel_experiment_service.py`(74 KB) · [`feature-parallellab/`](./docs/feature-parallellab/) |
+| [~] | 并行实验室(Parallel Experiment Lab) | 面向 LLM Agent 群体参数扫描的研究工作台,包含可审阅的 AI 行为协议、运行监控、分析、证据视图和明确的失败运行统计。 | [`当前方案`](./docs/feature-parallellab/PLAN-parallellab.md) · [`v2 研究设计(草案)`](./docs/feature-parallellab/PLAN-cognitive-simulation-v2.md) |
 | [~] | Job Queue / Task Manager | Redis + 线程池 + 注册式 handler 模式。 | [`feature-job-queue/`](./docs/feature-job-queue/) |
 
 ### 🧬 记忆与知识
@@ -136,7 +149,7 @@
 | [ ] | Mesa Python 集成 | 与 NetLogo 并存。 | `TODO.md` Phase 4 |
 | [x] | OpenAI 兼容 API + Python SDK | 行动空间 / agent / 知识库都可被外部调用;API Key 管理 + 速率限制 + OpenAPI 文档。 | [`feature-openai-export/`](./docs/feature-openai-export/) |
 | [x] | 外部角色导入 —— Coze & FastGPT | 一行配置从第三方平台拉智能体。 | [`PLAN-role-coze.md`](./docs/feature-role-management/PLAN-role-coze.md) · [`PLAN-role-fastgpt.md`](./docs/feature-role-management/PLAN-role-fastgpt.md) |
-| [x] | 多模态图像输入 | — | [`feature-image-input/`](./docs/feature-image-input/) |
+| [x] | 多模态图像输入 | 在任务对话中粘贴或上传图片,支持附件预览、移除和规范化的消息载荷处理。 | [`feature-image-input/`](./docs/feature-image-input/) |
 
 ### 🛠️ 工程与文化
 
@@ -145,6 +158,7 @@
 | [x] | 全 async 后端 | FastAPI + SQLAlchemy 2.0 + httpx;请求路径上无阻塞 I/O(AGENTS.md 红线)。 | [`AGENTS.md`](./AGENTS.md) |
 | [x] | SSE 流式 + 中止 + 保活 | 长会话保活;流中途可取消。 | [`feature-stream-cancel/`](./docs/feature-stream-cancel/) · [`feature-keep-alive-conversation/`](./docs/feature-keep-alive-conversation/) |
 | [x] | 三袋制 `ModelConfig` | `custom_headers` / `custom_body` / `additional_params` 严格分离,经 `app/services/llm_http` 合并。 | [`model-config-custom-params.md`](./docs/agents/model-config-custom-params.md) |
+| [~] | Service Center(服务中心)—— 运行清单与健康状态 | 仅管理员可见的逻辑服务清单和依赖感知健康/就绪检查;白名单生命周期控制需要显式启用 Docker Socket 覆盖层。 | [`feature-service-center/`](./docs/feature-service-center/) · [`部署指南`](./abm-docker/README.md) |
 | [x] | 严格的 i18n 治理 | 按功能划分 namespace;CI 校验中英 key 一致(`node frontend/scripts/check-i18n-keys.js`);前端源码零硬编码中文。 | [`feature-multi-lang/`](./docs/feature-multi-lang/) · [`docs/agents/i18n.md`](./docs/agents/i18n.md) |
 | [x] | AGENTS.md driven 工程文化 | 给 AI 编码助手的"入职手册";每条红线都能追溯到一次真实事故;发布契约写明。开源圈很少见 —— 它本身就是一项特性。 | [`docs/agents/failures/`](./docs/agents/failures/) · [`release-flow.md`](./docs/agents/release-flow.md) |
 

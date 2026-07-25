@@ -110,6 +110,7 @@ export default {
   'menu.entityMarket': 'Entity Market',
   'menu.basicConfiguration': 'Basic Configuration',
   'menu.modelConfiguration': 'Model Configuration',
+  'menu.servicesAndIntegrations': 'Services & Integrations',
   'menu.userManagement': 'Users',
   'menu.mcpServers': 'MCP Servers',
   'menu.imIntegration': 'IM Integration',

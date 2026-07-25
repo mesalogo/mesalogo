@@ -2,15 +2,17 @@
 
 from app.services.parallel_experiment_state import (
     build_orchestration_runs,
+    derive_experiment_terminal_status,
     extract_condition_variable_names,
     normalize_autonomous_status,
     should_update_orchestration,
+    successful_task_ids,
 )
 
 
 def test_orchestration_runs_include_tasks_outside_the_visible_page():
     task_ids = [f"task-{index}" for index in range(12)]
-    statuses = {task_id: "completed" for task_id in task_ids}
+    statuses = dict.fromkeys(task_ids, "completed")
     metrics = {"task-11": {"score": 0.99}}
 
     runs = build_orchestration_runs(
@@ -64,3 +66,24 @@ def test_stop_condition_variables_include_both_non_numeric_operands():
 def test_running_and_active_autonomous_statuses_are_both_running():
     assert normalize_autonomous_status("active") == "running"
     assert normalize_autonomous_status("running") == "running"
+
+
+def test_all_failed_runs_make_the_experiment_failed():
+    assert derive_experiment_terminal_status(["failed", "failed"]) == "failed"
+
+
+def test_at_least_one_success_keeps_a_partially_failed_experiment_completed():
+    assert (
+        derive_experiment_terminal_status(["completed", "failed"])
+        == "completed"
+    )
+
+
+def test_failed_runs_are_excluded_from_result_selection():
+    assert successful_task_ids(
+        ["task-success", "task-failed"],
+        {
+            "task-success": "completed",
+            "task-failed": "failed",
+        },
+    ) == ["task-success"]

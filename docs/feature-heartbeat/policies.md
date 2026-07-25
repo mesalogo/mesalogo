@@ -2,6 +2,12 @@
 
 > 配套主文档: [`PLAN.md`](./PLAN.md)
 >
+> ⚠️ **2026-07-25 更新**: §2.2 `reflect` 的 `memory_layer` 参数(`drawer` / `plan` / `both`)
+> **在当前代码库中没有对应实现** —— 没有 `Memory` 模型也没有分层,只有
+> `memory_partition_service.py` 的 5 种扁平分区。写入落点见
+> [`PLAN-background-brain.md`](./PLAN-background-brain.md) §1 与 §3.2。
+> 另注:`reflect` 只写记忆**不等于学习**,完整闭环见该文 §3。
+>
 > 这份文档面向**两类读者**:
 > 1. 想知道每种内置策略做什么 / 怎么配的用户。
 > 2. 想新增一种策略的开发者。

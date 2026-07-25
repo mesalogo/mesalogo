@@ -11,6 +11,7 @@
 ## 文件说明
 
 - `docker-compose.yml` - 服务编排配置
+- `docker-compose.service-control.yml` - 服务控制可选覆盖层（Docker Socket）
 - `backend.Dockerfile` - 后端镜像
 - `frontend.Dockerfile` - 前端镜像（多阶段构建）
 - `nginx.conf` - Nginx配置
@@ -76,6 +77,67 @@ make up-all         # 启动所有服务（包含核心）
 - `make up` - 只启动核心服务（backend, frontend）
 - `make up-xxx` - 只启动对应的独立服务
 - 如需同时使用，请分别运行或使用 `make up-all`
+
+### 服务启停控制（显式启用）
+
+系统管理中的“服务中心”可以对明确白名单内的可选容器执行启动、停止和重启。
+这项能力默认关闭；启用时会把宿主机的 Docker Socket 绑定到后端容器：
+
+```bash
+make up-control
+```
+
+等价的原生命令是：
+
+```bash
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.service-control.yml \
+  --profile core up -d --no-deps --force-recreate backend
+```
+
+> **高风险权限**：访问 `/var/run/docker.sock` 基本等同于拥有宿主机 root
+> 控制权。只有受信任的管理员和受控网络才能访问后台；不要在多租户或不受信任的
+> 部署中启用，也不要把 Socket 暴露成宿主 TCP 端口。
+
+`up-control` 仅重新创建 `backend`，不会停止或重新创建已运行的 Milvus、Graphiti、
+LightRAG 等可选服务，因此可以与 `.env` 中完整的 `COMPOSE_FILE` 服务集合共存。
+后端还会核对容器的 Compose 项目归属标签；若部署使用自定义项目名，请在 `.env`
+设置 `COMPOSE_PROJECT_NAME`，不要只在命令行临时传入 `docker compose -p`。
+若之后执行会重新创建核心服务的命令（例如 `make up`、`make up-core` 或
+`make up-all`），请在最后再次执行 `make up-control`，确保覆盖层仍然生效。
+
+服务中心只控制已由 Docker Compose 创建、且位于后端固定白名单中的可选容器；
+backend、frontend、MariaDB 和 Redis 不允许通过页面停止。首次安装或创建某个可选
+服务仍需先执行对应命令，例如：
+
+```bash
+make up-milvus
+make up-graphiti
+make up-lightrag
+```
+
+服务目录刷新时也会并发检查这些可选服务所需的本地 Docker 镜像，并区分“全部存在”、
+“部分存在”和“缺失”，展开服务可查看具体镜像引用。该检查完全只读，不会自动 pull、
+build、tag、prune 或创建容器；镜像安装仍由上述 Compose/Makefile 命令负责。
+
+关闭控制能力并移除 Socket 挂载：
+
+```bash
+make disable-control
+```
+
+等价的原生命令是：
+
+```bash
+docker compose \
+  -f docker-compose.yml \
+  --profile core up -d --no-deps --force-recreate backend
+```
+
+`docker-compose.service-control.yml` 故意没有加入 `.env.example` 的默认
+`COMPOSE_FILE`；Compose 覆盖层一旦参与合并，Socket 挂载就会生效，不能仅靠 profile
+安全地“隐藏”该挂载。
 
 ### 服务说明
 - **Graphiti**: 智能体记忆系统，用于对话历史和上下文记忆

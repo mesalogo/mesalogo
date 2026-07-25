@@ -20,11 +20,21 @@ logger = logging.getLogger(__name__)
 # transaction. Attaching here covers every business router in one place and
 # stops a newly added router from silently regressing.
 api_router = APIRouter(dependencies=[Depends(clean_db_session)])
+health_api_router = APIRouter()
 
 # ─── 首启引导路由 ───
 # status 常驻：正常模式也要应答 setup_mode:false，供前端探活。
 from app.api.routes.setup import status_router as setup_status_router
 api_router.include_router(setup_status_router, tags=['首启引导'])
+
+# Health endpoints must remain available while the first-run setup gate is
+# active so container orchestrators can distinguish a live process from an
+# application that is not database-ready yet.
+from app.api.routes.health import liveness_router  # noqa: E402
+from app.api.routes.health import router as health_router  # noqa: E402
+
+health_api_router.include_router(liveness_router, tags=['健康检查'])
+api_router.include_router(health_router, tags=['健康检查'])
 
 if settings.SETUP_MODE:
     # Setup 模式：仅挂载 setup 写接口，**跳过**下面所有业务路由的 import，
@@ -34,14 +44,12 @@ if settings.SETUP_MODE:
     logger.info("Setup 模式：仅挂载 /api/setup 路由，跳过业务路由注册")
 else:
     # ─── Phase 2: 手动转换的简单路由 ───
-    from app.api.routes.health import router as health_router
     from app.api.routes.auth import router as auth_router
     from app.api.routes.agents import router as agents_router
     from app.api.routes.messages import router as messages_router
     from app.api.routes.roles import router as roles_router
     from app.api.routes.settings import router as settings_router
 
-    api_router.include_router(health_router, tags=['健康检查'])
     api_router.include_router(auth_router, prefix='/auth', tags=['认证'])
     api_router.include_router(agents_router, prefix='/agents', tags=['智能体'])
     api_router.include_router(messages_router, prefix='/messages', tags=['消息'])
@@ -96,6 +104,7 @@ else:
         'skills': '技能管理',
         'statistics': '统计',
         'subscription': '订阅管理',
+        'system_services': '服务中心',
         'tool_schema_cache': '工具模式缓存',
         'tools': '工具管理',
         'users': '用户管理',

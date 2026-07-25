@@ -174,7 +174,6 @@ export const TaskWindowManager = ({
             key={taskId}
             style={{
               display: isActive ? 'block' : 'none',
-              height: 'calc(100vh - 1px)',
               width: '100%',
               position: isActive ? 'relative' : 'absolute',
               top: 0,

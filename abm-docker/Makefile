@@ -1,4 +1,4 @@
-.PHONY: build up up-core down restart logs status clean help up-milvus up-graphiti up-lightrag up-onlyoffice up-galapagos up-vscode up-paddleocr up-mariadb up-all
+.PHONY: build up up-core up-control disable-control down restart logs status clean help up-milvus up-graphiti up-lightrag up-onlyoffice up-galapagos up-vscode up-paddleocr up-mariadb up-all
 
 help:
 	@echo "ABM-LLM-V2 Docker 管理命令"
@@ -9,6 +9,8 @@ help:
 	@echo "  build          构建镜像"
 	@echo "  up             启动核心服务 (backend, frontend)"
 	@echo "  up-core        一键启动核心 + 数据库 + Redis (本地常用)"
+	@echo "  up-control     为后端启用服务控制（挂载 Docker Socket）"
+	@echo "  disable-control 关闭服务控制并移除 Docker Socket 挂载"
 	@echo "  up-milvus      启动 Milvus"
 	@echo "  up-graphiti    启动 Graphiti/Neo4j (记忆系统)"
 	@echo "  up-lightrag    启动 LightRAG (知识库系统)"
@@ -47,6 +49,21 @@ up-core:
 	@echo "前端: http://localhost:16000"
 	@echo "后端: http://localhost:16001"
 	@echo "MariaDB: localhost:16011    Redis: localhost:16010"
+
+up-control:
+	@test -S /var/run/docker.sock || { echo "错误: /var/run/docker.sock 不存在或不是 Unix Socket"; exit 1; }
+	@echo "警告: Docker Socket 可提供等同宿主 root 的控制能力，仅在受信任环境启用。"
+	docker compose \
+		-f docker-compose.yml \
+		-f docker-compose.service-control.yml \
+		--profile core up -d --no-deps --force-recreate backend
+	@echo "服务控制已启用，backend 已重新创建。"
+
+disable-control:
+	docker compose \
+		-f docker-compose.yml \
+		--profile core up -d --no-deps --force-recreate backend
+	@echo "服务控制已关闭，Docker Socket 挂载已从 backend 移除。"
 
 up-milvus:
 	docker compose --profile milvus up -d

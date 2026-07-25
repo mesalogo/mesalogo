@@ -41,9 +41,11 @@ from app.services.agent_service import AgentService
 from app.services.agent_variable_service import AgentVariableService
 from app.services.parallel_experiment_state import (
     build_orchestration_runs,
+    derive_experiment_terminal_status,
     extract_condition_variable_names,
     normalize_autonomous_status,
     should_update_orchestration,
+    successful_task_ids,
 )
 from app.services.workspace_service import workspace_service
 from app.utils.datetime_utils import get_current_time_with_timezone
@@ -556,7 +558,16 @@ class ParallelExperimentService:
                 time.sleep(1)
 
         _wait_for_completion()
-        logger.info(f"已启动自主任务: {task_id}, scheduler_task={task.id}, final_state={task.state}")
+        logger.info(
+            "Experiment run settled: action_task=%s, scheduler_task=%s, state=%s",
+            task_id,
+            task.id,
+            task.state,
+        )
+        if task.state is TaskState.FAILED:
+            raise RuntimeError(
+                task.error or f"Scheduler task failed: {task.id}"
+            )
     
     @staticmethod
     def get_experiment(experiment_id: str) -> Optional[Dict[str, Any]]:
@@ -812,10 +823,16 @@ class ParallelExperimentService:
 
                 if stop_conditions_met:
                     logger.info(f"实验 {experiment.name} 满足停止条件，正在停止...")
-                    ParallelExperimentService._finalize_experiment(experiment)
+                    ParallelExperimentService._finalize_experiment(
+                        experiment,
+                        status_by_task,
+                    )
                 elif all_created_done and not has_pending_combinations and experiment.status == 'running':
                     # 所有任务都完成了（包括没有剩余待创建的）
-                    ParallelExperimentService._finalize_experiment(experiment)
+                    ParallelExperimentService._finalize_experiment(
+                        experiment,
+                        status_by_task,
+                    )
                 elif experiment.status == 'running':
                     # 并发池：检查是否需要启动更多任务或创建新任务
                     ParallelExperimentService._check_and_start_pending_tasks(
@@ -1152,8 +1169,11 @@ class ParallelExperimentService:
         return new_task_ids
     
     @staticmethod
-    def _finalize_experiment(experiment: ParallelExperiment):
-        """实验完成后计算最佳结果（当前轮次）
+    def _finalize_experiment(
+        experiment: ParallelExperiment,
+        status_by_task: Dict[str, str],
+    ):
+        """Settle the experiment and calculate results from successful runs.
         
         同时清空 pending_combinations（停止条件满足时可能还有未创建的任务）
         """
@@ -1167,10 +1187,14 @@ class ParallelExperimentService:
         if experiment.cloned_action_task_ids and current_iteration:
             current_task_ids = experiment.cloned_action_task_ids.get(str(current_iteration), [])
         
-        if not current_task_ids:
-            experiment.status = 'completed'
-            experiment.end_time = get_current_time_with_timezone()
-            return
+        run_statuses = [
+            status_by_task.get(str(task_id), 'pending')
+            for task_id in current_task_ids
+        ]
+        successful_ids = successful_task_ids(
+            current_task_ids,
+            status_by_task,
+        )
         
         results = []
         objectives = experiment.config.get('objectives', [])
@@ -1186,7 +1210,7 @@ class ParallelExperimentService:
             except Exception as e:
                 logger.warning(f"记录实验步骤失败 {task_id}: {str(e)}")
         
-        for task_id in current_task_ids:
+        for task_id in successful_ids:
             task = ActionTask.query.get(task_id)
             if not task:
                 continue
@@ -1229,7 +1253,7 @@ class ParallelExperimentService:
                 else:  # minimize
                     best_run = min(results, key=lambda r: r['metrics'].get(obj_var, float('inf')))
         
-        experiment.status = 'completed'
+        experiment.status = derive_experiment_terminal_status(run_statuses)
         experiment.end_time = get_current_time_with_timezone()
         
         # 按轮次存储结果摘要
@@ -1237,7 +1261,11 @@ class ParallelExperimentService:
             experiment.results_summary = {}
         experiment.results_summary[str(current_iteration)] = {
             'best_run': best_run,
-            'all_results': results
+            'all_results': results,
+            'run_statuses': {
+                str(task_id): status_by_task.get(str(task_id), 'pending')
+                for task_id in current_task_ids
+            }
         }
         flag_modified(experiment, 'results_summary')
         
@@ -1248,7 +1276,13 @@ class ParallelExperimentService:
         except Exception as e:
             logger.warning(f"清理 executor 状态失败: {str(e)[:100]}")
         
-        logger.info(f"实验完成: {experiment.name}, 第{current_iteration}轮, 最佳结果: {best_run}")
+        logger.info(
+            "Experiment settled: name=%s, iteration=%s, status=%s, best_run=%s",
+            experiment.name,
+            current_iteration,
+            experiment.status,
+            best_run,
+        )
     
     @staticmethod
     def create_draft_experiment(name: str, description: str, source_action_space_id: str) -> str:

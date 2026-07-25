@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { App, Typography, Skeleton, Row, Col } from 'antd';
+import { App, Skeleton, Row, Col } from 'antd';
 import { useTranslation } from 'react-i18next';
 import AnalysisReport from './AnalysisReport';
 import * as parallelExperimentApi from '../../../services/api/parallelExperiment';
-
-const { Title, Text } = Typography;
+import ParallelLabWorkspaceHeader from './ParallelLabWorkspaceHeader';
 
 const AnalysisReportPage = () => {
   const { message } = App.useApp();
@@ -76,21 +75,7 @@ const AnalysisReportPage = () => {
 
   return (
     <div>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 24
-      }}>
-        <div>
-          <Title level={4} style={{ margin: 0, marginBottom: '8px' }}>
-            {t('parallelLab.analysisReport')}
-          </Title>
-          <Text type="secondary">
-            {t('parallelLab.reportPage.subtitle')}
-          </Text>
-        </div>
-      </div>
+      <ParallelLabWorkspaceHeader activeKey="analysis" />
 
       <AnalysisReport experiments={experiments} />
     </div>

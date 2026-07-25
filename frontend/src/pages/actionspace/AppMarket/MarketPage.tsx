@@ -467,13 +467,23 @@ const MarketPageContent = () => {
   // 如果有运行中的应用，显示应用界面
   if (runningApp) {
     return (
-      <div>
+      <div
+        data-testid="market-running-app"
+        style={{
+          height: 'calc(100dvh - 104px)',
+          minHeight: 0,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
         {/* 应用运行时的标题栏 */}
-        <div style={{
+        <div data-testid="market-running-app-header" style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: 16
+          marginBottom: 16,
+          flexShrink: 0
         }}>
           <Space>
             <Button
@@ -486,80 +496,91 @@ const MarketPageContent = () => {
           </Space>
         </div>
 
-        {runningApp.id === 'gis-mapping' && <GISApp />}
-        {runningApp.id === 'next-rpa' && runningApp.connection?.mode === 'local' && runningApp.connection?.localConfig?.vncUrl && vncToken && vncWsPort && (() => {
-          const proxyUrl = vncProxyService.getProxyUrl(vncWsPort, vncToken);
-          return (
-          <Card
-            title={t('marketPage.remoteDesktopVnc')}
-            extra={
-              <Space>
-                <Text type="secondary">
-                  {runningApp.connection.localConfig.vncUrl}
-                </Text>
-              </Space>
-            }
-            style={{ height: 'calc(100vh - 200px)' }}
-            styles={{ body: { height: 'calc(100% - 57px)', padding: 0 } }}
-          >
-            <VncScreen
-              url={proxyUrl}
-              scaleViewport
-              background="#000000"
-              style={{
-                width: '100%',
-                height: '100%'
-              }}
-              rfbOptions={{
-                credentials: {
-                  password: runningApp.connection.localConfig.vncPassword || ''
+        <div
+          data-testid="market-running-app-content"
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflow: 'auto',
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+        >
+          {runningApp.id === 'gis-mapping' && <GISApp />}
+          {runningApp.id === 'next-rpa' && runningApp.connection?.mode === 'local' && runningApp.connection?.localConfig?.vncUrl && vncToken && vncWsPort && (() => {
+            const proxyUrl = vncProxyService.getProxyUrl(vncWsPort, vncToken);
+            return (
+              <Card
+                title={t('marketPage.remoteDesktopVnc')}
+                extra={
+                  <Space>
+                    <Text type="secondary">
+                      {runningApp.connection.localConfig.vncUrl}
+                    </Text>
+                  </Space>
+                }
+                style={{ height: 'calc(100vh - 200px)' }}
+                styles={{ body: { height: 'calc(100% - 57px)', padding: 0 } }}
+              >
+                <VncScreen
+                  url={proxyUrl}
+                  scaleViewport
+                  background="#000000"
+                  style={{
+                    width: '100%',
+                    height: '100%'
+                  }}
+                  rfbOptions={{
+                    credentials: {
+                      password: runningApp.connection.localConfig.vncPassword || ''
+                    }
+                  }}
+                  onConnect={() => {
+                    message.success(t('marketPage.vncConnected'));
+                  }}
+                  onDisconnect={(e) => {
+                    if (e?.detail?.clean === false || e?.detail?.code === 1011) {
+                      message.error(t('marketPage.vncFailed') + ': ' + (e?.detail?.reason || t('marketPage.vncTargetUnreachable')));
+                    }
+                  }}
+                  onSecurityFailure={(e) => {
+                    message.error(t('marketPage.vncSecurityFailed') + ': ' + (e?.detail?.reason || t('marketPage.unknownError')));
+                  }}
+                />
+              </Card>
+            );
+          })()}
+          {runningApp.id === 'next-rpa' && !(runningApp.connection?.mode === 'local' && runningApp.connection?.localConfig?.vncUrl) && (
+            <NextRPAApp
+              appConfig={runningApp}
+              onConfigChange={async (newConfig) => {
+                try {
+                  await marketService.updateAppConfig(runningApp.id, newConfig);
+                  message.success(t('marketPage.configSaved'));
+                  loadApps();
+                } catch (error) {
+                  message.error(t('marketPage.saveConfigFailed') + ': ' + error.message);
                 }
               }}
-              onConnect={() => {
-                message.success(t('marketPage.vncConnected'));
-              }}
-              onDisconnect={(e) => {
-                if (e?.detail?.clean === false || e?.detail?.code === 1011) {
-                  message.error(t('marketPage.vncFailed') + ': ' + (e?.detail?.reason || t('marketPage.vncTargetUnreachable')));
-                }
-              }}
-              onSecurityFailure={(e) => {
-                message.error(t('marketPage.vncSecurityFailed') + ': ' + (e?.detail?.reason || t('marketPage.unknownError')));
-              }}
+              onClose={handleBackToMarket}
             />
-          </Card>
-          );
-        })()}
-        {runningApp.id === 'next-rpa' && !(runningApp.connection?.mode === 'local' && runningApp.connection?.localConfig?.vncUrl) && (
-          <NextRPAApp
-            appConfig={runningApp}
-            onConfigChange={async (newConfig) => {
-              try {
-                await marketService.updateAppConfig(runningApp.id, newConfig);
-                message.success(t('marketPage.configSaved'));
-                loadApps();
-              } catch (error) {
-                message.error(t('marketPage.saveConfigFailed') + ': ' + error.message);
-              }
-            }}
-            onClose={handleBackToMarket}
-          />
-        )}
-        {runningApp.id === 'data-visualization' && (
-          <div style={{ height: '100%', width: '100%' }}>
-            <iframe
-              src={runningApp.launch?.url || '/visualization'}
-              style={{
-                width: '100%',
-                height: '800px',
-                border: 'none',
-                borderRadius: '8px'
-              }}
-              title={t('marketPage.dataVizTitle')}
-              sandbox="allow-scripts allow-same-origin allow-forms"
-            />
-          </div>
-        )}
+          )}
+          {runningApp.id === 'data-visualization' && (
+            <div style={{ height: '100%', width: '100%' }}>
+              <iframe
+                src={runningApp.launch?.url || '/visualization'}
+                style={{
+                  width: '100%',
+                  height: '800px',
+                  border: 'none',
+                  borderRadius: '8px'
+                }}
+                title={t('marketPage.dataVizTitle')}
+                sandbox="allow-scripts allow-same-origin allow-forms"
+              />
+            </div>
+          )}
+        </div>
       </div>
     );
   }

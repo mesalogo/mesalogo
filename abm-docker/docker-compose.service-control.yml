@@ -1,0 +1,12 @@
+services:
+  backend:
+    environment:
+      - SERVICE_CONTROL_ENABLED=true
+      - DOCKER_SOCKET_PATH=/var/run/docker.sock
+      - SERVICE_CONTROL_COMPOSE_PROJECT=${COMPOSE_PROJECT_NAME:-abm-docker}
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        bind:
+          create_host_path: false

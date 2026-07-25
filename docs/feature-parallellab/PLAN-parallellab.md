@@ -1,5 +1,9 @@
 # 并行实验室 PRD (Product Requirements Document)
 
+> **Document role:** Current MVP/Beta behavior and original product flow.
+> **Proposed v2 direction:** [Validated Cognitive Simulation and Decision Lab](./PLAN-cognitive-simulation-v2.md)
+> **Proposed v2 backlog:** [User stories and acceptance criteria](./USER-STORIES-cognitive-simulation-v2.md)
+
 ## 1. 完整用户故事
 
 ### 场景

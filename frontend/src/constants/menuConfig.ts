@@ -311,6 +311,13 @@ export const menuConfig = [
         adminOnly: true
       },
       {
+        key: 'settings-services',
+        labelKey: 'menu.servicesAndIntegrations',
+        path: '/settings/services',
+        icon: 'CloudServerOutlined',
+        adminOnly: true
+      },
+      {
         key: 'settings-users',
         labelKey: 'menu.userManagement',
         path: '/settings/users',

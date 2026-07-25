@@ -5,6 +5,12 @@
 > **owner**: TBD
 > **依赖**: 现有 `app/services/scheduler/`、`supervisor_rule_checker`、`models.Agent` / `ActionSpace`
 > **关联功能**: MemoryPalace v0.51(产物落地)、Workflow Graph(互补,不替代)、5000 并发(共享 worker 池演进路径)
+>
+> ⚠️ **2026-07-25 更新**: 本文若干接口假设与当前代码库不符(`Agent` 无 `action_space_id`、
+> 无 MemoryPalace Drawer 层、`job_queue` 非 Redis、`ModelClient` 是同步的、gunicorn 多 worker
+> 下单进程 TickClock 假设不成立)。**动手前必读**
+> [`PLAN-background-brain.md`](./PLAN-background-brain.md) §1 的事实偏差表,以及其中提出的
+> 自适应节拍 / 持续学习闭环 / 平台大脑三个扩展维度与交付顺序。
 
 ---
 
