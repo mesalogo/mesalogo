@@ -9,7 +9,7 @@
  * (`error.message.includes('网络')`), and `console.*`/`logger.*` debug
  * calls from strings the END USER actually sees. Those false positives
  * previously inflated the debt count ~15x (720 "violations" vs. ~46 real
- * ones) and made the report useless as a CI gate. This scanner parses each
+ * ones) and made the report useless as a gate. This scanner parses each
  * file with the TypeScript compiler and only flags:
  *   - JSX text nodes containing CJK
  *   - JSX attribute string/template literals containing CJK
@@ -29,7 +29,7 @@
  *
  * Run:
  *   node scripts/scan-hardcoded-cjk.js            # human-readable report
- *   node scripts/scan-hardcoded-cjk.js --check     # CI gate, exits 1 on any violation
+ *   node scripts/scan-hardcoded-cjk.js --check     # pre-commit gate, exits 1 on any violation
  *   node scripts/scan-hardcoded-cjk.js --md > docs/agents/i18n-hardcoded-cjk-report.md
  */
 

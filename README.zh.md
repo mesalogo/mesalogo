@@ -159,7 +159,7 @@
 | [x] | SSE 流式 + 中止 + 保活 | 长会话保活;流中途可取消。 | [`feature-stream-cancel/`](./docs/feature-stream-cancel/) · [`feature-keep-alive-conversation/`](./docs/feature-keep-alive-conversation/) |
 | [x] | 三袋制 `ModelConfig` | `custom_headers` / `custom_body` / `additional_params` 严格分离,经 `app/services/llm_http` 合并。 | [`model-config-custom-params.md`](./docs/agents/model-config-custom-params.md) |
 | [~] | Service Center(服务中心)—— 运行清单与健康状态 | 仅管理员可见的逻辑服务清单和依赖感知健康/就绪检查;白名单生命周期控制需要显式启用 Docker Socket 覆盖层。 | [`feature-service-center/`](./docs/feature-service-center/) · [`部署指南`](./abm-docker/README.md) |
-| [x] | 严格的 i18n 治理 | 按功能划分 namespace;CI 校验中英 key 一致(`node frontend/scripts/check-i18n-keys.js`);前端源码零硬编码中文。 | [`feature-multi-lang/`](./docs/feature-multi-lang/) · [`docs/agents/i18n.md`](./docs/agents/i18n.md) |
+| [x] | 严格的 i18n 治理 | 按功能划分 namespace;`pnpm run i18n:check-keys` 校验中英 key 一致;AST 扫描器(`pnpm run i18n:check-cjk`)保证前端源码零硬编码中文。两项在提交前本地运行。 | [`feature-multi-lang/`](./docs/feature-multi-lang/) · [`docs/agents/i18n.md`](./docs/agents/i18n.md) |
 | [x] | AGENTS.md driven 工程文化 | 给 AI 编码助手的"入职手册";每条红线都能追溯到一次真实事故;发布契约写明。开源圈很少见 —— 它本身就是一项特性。 | [`docs/agents/failures/`](./docs/agents/failures/) · [`release-flow.md`](./docs/agents/release-flow.md) |
 
 ---
