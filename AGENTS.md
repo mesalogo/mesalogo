@@ -169,6 +169,7 @@ These have **really happened in TODO.md**. Do not repeat them.
 8. **Streamed tool identity overwritten by null deltas** (`docs/agents/failures/2026-07-streamed-tool-identity-null-overwrite.md`): continuation chunks may carry `id: null` / `function.name: null`; never let them erase an earlier non-empty identity. Do not guess a missing tool name—preserve the exact streamed name, and return genuinely malformed calls to the model for correction.
 9. **ParallelLab stale worker session + false completion** (`docs/agents/failures/2026-07-parallellab-stale-session-false-completion.md`): a reused worker must remove its scoped DB session at entry and exit. Terminal runs are not automatically successful; only persisted `completed` runs may enter best-result selection, and zero-success experiments must settle as `failed`.
 10. **Model credentials written to logs** (`docs/agents/failures/2026-07-model-credentials-written-to-logs.md`): never serialize resolved model settings directly. Diagnostic logs must use a strict safe-field allowlist that excludes credentials, endpoints, headers, bodies, tokens, and secrets.
+11. **Customer-specific artifacts published publicly** (`docs/agents/failures/2026-08-public-customer-artifact-exposure.md`): public-release scans must cover customer names in paths, content, and commit messages across every retained branch and tag, not only secrets in the default-branch tip.
 
 Every new incident → write `docs/agents/failures/YYYY-MM-short-description.md`, then add one line back to the list above.
 
