@@ -41,11 +41,12 @@ COPY backend-fastapi/ .
 RUN mkdir -p logs data knowledgebase agent-workspace
 
 # 健康检查
-# 用 /api/setup/status（常驻路由，Setup 模式与正常模式都响应）而非 /api/health
-# （后者是业务路由，Setup 模式下不挂载会 404 导致健康检查永远失败）。
+# 用 /api/health/live：进程级存活探针，由 liveness_router 在 Setup 模式与正常
+# 模式下都无条件挂载，且不依赖 DB、不受许可证中间件与业务授权状态影响。
+# 探活只回答“进程活着吗”，不能因许可证过期把健康容器判为 unhealthy。
 # 用 127.0.0.1 避免容器内 localhost 解析到 IPv6 的问题。
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://127.0.0.1:8080/api/setup/status || exit 1
+    CMD curl -f http://127.0.0.1:8080/api/health/live || exit 1
 
 EXPOSE 8080
 

@@ -41,6 +41,7 @@ const RagasEvaluationWrapper = lazy(() => import('./pages/knowledgebase/RagasEva
 
 // 记忆管理
 const MemoryPartitionPage = lazy(() => import('./pages/memory').then(module => ({ default: module.MemoryPartitionPage })));
+const MemoryPalaceDemo = lazy(() => import('./pages/memory/components/MemoryPalaceDemo'));
 
 // 行动空间相关页面
 const ActionSpaceOverview = lazy(() => import('./pages/actionspace/ActionSpaceOverview'));
@@ -113,6 +114,15 @@ const AppContent: React.FC = () => {
               
               {/* 登录风格Demo页面 - 不需要认证 */}
               <Route path="/login-demo" element={<LoginDemo />} />
+
+              {/* MemoryPalace UI Demo - static data only */}
+              <Route path="/memory-demo" element={
+                <Suspense fallback={<PageLoading />}>
+                  <div style={{ minHeight: '100vh', padding: 24 }}>
+                    <MemoryPalaceDemo />
+                  </div>
+                </Suspense>
+              } />
 
               {/* OAuth 回调页面 - 不需要认证 */}
               <Route path="/oauth/callback" element={<OAuthCallback />} />

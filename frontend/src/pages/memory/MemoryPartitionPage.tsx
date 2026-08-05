@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Tabs,
   Button,
@@ -9,6 +9,7 @@ import {
   Space
 } from 'antd';
 import {
+  BulbOutlined,
   EyeOutlined,
   ReloadOutlined,
   ApartmentOutlined
@@ -16,8 +17,10 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api/axios';
+import { useMountEffect } from '../../hooks/useMountEffect';
 import PartitionBrowserTab from './components/PartitionBrowserTab';
 import GraphVisualizationTab from './components/GraphVisualizationTab';
+import MemoryPalaceDemo from './components/MemoryPalaceDemo';
 
 const { Title, Text } = Typography;
 
@@ -26,7 +29,7 @@ const MemoryPartitionPage = () => {
   const { message } = App.useApp();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('browser');
+  const [activeTab, setActiveTab] = useState('palace');
   const [partitionConfig, setPartitionConfig] = useState(null);
   const [memoryOverview, setMemoryOverview] = useState(null);
   const [selectedPartitionId, setSelectedPartitionId] = useState(null);
@@ -67,11 +70,10 @@ const MemoryPartitionPage = () => {
     }
   };
 
-  // 页面初始化
-  useEffect(() => {
+  useMountEffect(() => {
     loadPartitionConfig();
     loadMemoryOverview();
-  }, []);
+  });
 
   // 刷新数据
   const handleRefresh = () => {
@@ -149,50 +151,65 @@ const MemoryPartitionPage = () => {
   return (
     <div>
       {renderHeader()}
-      {renderStatusAlert()}
-
-      {/* 只有在图谱增强启用时才显示Tab */}
-      {partitionConfig?.enabled ? (
-        <Spin spinning={loading}>
-          <Tabs
-            activeKey={activeTab}
-            onChange={setActiveTab}
-            items={[
-              {
-                key: 'browser',
-                label: (
-                  <span>
-                    <EyeOutlined />
-                    {t('memory.partitionBrowser')}
-                  </span>
-                ),
-                children: (
-                  <PartitionBrowserTab
-                    config={partitionConfig}
-                    overview={memoryOverview}
-                    onRefresh={handleRefresh}
-                    onSwitchToGraphTab={handleSwitchToGraphTab}
-                  />
-                )
-              },
-              {
-                key: 'graph',
-                label: (
-                  <span>
-                    <ApartmentOutlined />
-                    {t('memory.graphVisualization')}
-                  </span>
-                ),
-                children: (
-                  <GraphVisualizationTab
-                    initialPartitionId={selectedPartitionId}
-                  />
-                )
-              }
-            ]}
-          />
-        </Spin>
-      ) : null}
+      <Spin spinning={loading && activeTab !== 'palace'}>
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={[
+            {
+              key: 'palace',
+              label: (
+                <span>
+                  <BulbOutlined />
+                  {t('memory.demo.tab')}
+                </span>
+              ),
+              children: <MemoryPalaceDemo />,
+            },
+            {
+              key: 'browser',
+              label: (
+                <span>
+                  <EyeOutlined />
+                  {t('memory.partitionBrowser')}
+                </span>
+              ),
+              children: (
+                <>
+                  {renderStatusAlert()}
+                  {partitionConfig?.enabled ? (
+                    <PartitionBrowserTab
+                      config={partitionConfig}
+                      overview={memoryOverview}
+                      onRefresh={handleRefresh}
+                      onSwitchToGraphTab={handleSwitchToGraphTab}
+                    />
+                  ) : null}
+                </>
+              ),
+            },
+            {
+              key: 'graph',
+              label: (
+                <span>
+                  <ApartmentOutlined />
+                  {t('memory.graphVisualization')}
+                </span>
+              ),
+              children: (
+                <>
+                  {renderStatusAlert()}
+                  {partitionConfig?.enabled ? (
+                    <GraphVisualizationTab
+                      initialPartitionId={selectedPartitionId}
+                    />
+                  ) : null}
+                </>
+              ),
+            },
+          ]}
+        />
+      </Spin>
     </div>
   );
 };

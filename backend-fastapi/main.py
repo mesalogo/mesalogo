@@ -85,9 +85,12 @@ class LicenseMiddleware(BaseHTTPMiddleware):
 
     替代 Flask 的 register_license_middleware()
     """
+    # /api/setup/ 是认证与许可证之前的连通性探活（含容器 healthcheck），
+    # 一旦被许可证拦成 403，前端 SetupGate 会把整个应用判为后端不可达。
     EXEMPT_PATHS = [
         '/api/license', '/api/auth/login', '/api/auth/logout',
         '/api/auth/validate', '/api/auth/user', '/api/health',
+        '/api/setup/',
     ]
 
     async def dispatch(self, request: Request, call_next):
